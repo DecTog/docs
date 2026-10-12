@@ -1,0 +1,113 @@
+---
+title: Installation
+description: Add flutter_dectog to a Flutter app, with the requirements, the dependency ranges, iOS packaging through Swift Package Manager or CocoaPods and the Android toolchain the plugin supports.
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+`flutter_dectog` is the DecTog SDK for Flutter. It opens DecTog links in your app, registers the first launch for install attribution, sends post-install events and can create links from the app. The package is MIT licensed.
+
+## Requirements
+
+| Requirement | Value |
+|---|---|
+| Flutter | 3.29 or newer (`flutter: ">=3.29.0"`) |
+| Dart | 3.7 or newer (`sdk: ">=3.7.0 <4.0.0"`) |
+| iOS | 15.0 or newer |
+| Android | 7.0 (API 24) or newer |
+| Account | A DecTog API key (`dtg_` followed by 32 hex characters). It is shown once when the account is created and can be viewed again in the dashboard's Settings page. |
+
+The SDK targets iOS and Android. On other platforms it compiles and the link API works, but the install registration sends no referrer, no pasteboard URL and no device tier.
+
+## Add the package
+
+```bash
+flutter pub add flutter_dectog
+```
+
+or in `pubspec.yaml`:
+
+```yaml title="pubspec.yaml"
+dependencies:
+  flutter_dectog: ^1.0.0
+```
+
+### Dependency ranges
+
+The ranges are deliberately wide so the SDK drops into apps that already pin these packages. Each floor is the release that introduced the API the SDK calls; each ceiling is the next major version.
+
+| Package | Range | Why the floor |
+|---|---|---|
+| `app_links` | `>=6.0.0 <8.0.0` | 6.0.0 added `uriLinkStream` and `getInitialLink()` |
+| `connectivity_plus` | `>=6.0.1 <8.0.0` | 6.0.1 made `checkConnectivity()` return a list |
+| `device_info_plus` | `>=11.2.0 <14.0.0` | 11.2.0 added `IosDeviceInfo.modelName` |
+| `package_info_plus` | `>=8.3.0 <11.0.0` | 8.3.0 added `installerStore`, `installTime`, `updateTime` and `buildSignature` |
+| `http` | `>=1.0.0 <2.0.0` | |
+| `path_provider` | `>=2.0.0 <3.0.0` | |
+| `rxdart` | `>=0.27.0 <0.29.0` | |
+| `crypto` | `>=3.0.0 <4.0.0` | Request signing |
+
+If your app pins one of these packages outside its range, `flutter pub get` reports the conflict and nothing is installed. Widen your own pin or wait for the SDK release that covers the newer major.
+
+## Platform notes
+
+<Tabs syncKey="platform">
+<TabItem label="iOS">
+
+The iOS side of the plugin is a Swift package in `ios/flutter_dectog` (`Package.swift`, Swift tools 5.9, platform iOS 15.0, library product `flutter-dectog`). Projects that resolve Flutter plugins through Swift Package Manager need no extra steps. Projects that build with CocoaPods get the same sources through `ios/flutter_dectog.podspec` (Swift 5.0, `s.dependency 'Flutter'`).
+
+`Package.swift` declares no dependency on the Flutter framework package. This is deliberate. The Flutter tool vends the Flutter module to plugin packages through its generated package and framework search paths, so a manifest that depended on `../FlutterFramework` would only resolve inside the tool's generated package directory. It would also break CocoaPods builds that reference the package at its real path and pin host apps to Flutter 3.44 or newer. Several widely used plugins ship the same way.
+
+What the package links and bundles:
+
+- **AdServices** is linked for the Apple Search Ads attribution token (`linkedFramework` in Swift Package Manager, `weak_frameworks` in CocoaPods). The Swift code guards it with `canImport` and `#available(iOS 14.3, *)` and returns nothing on the simulator. It is only used when you turn on `collectAppleSearchAdsToken`.
+- **`PrivacyInfo.xcprivacy`**, the Apple privacy manifest, is processed as a package resource (Swift Package Manager) or shipped in the `flutter_dectog_privacy` resource bundle (CocoaPods). See [Device data and privacy](/sdk/device-data-and-privacy/) for its contents.
+
+There are no `Info.plist` or `AppDelegate` changes for the SDK itself. Universal Links and custom schemes are covered in [Platform setup](/sdk/platform-setup/).
+
+</TabItem>
+<TabItem label="Android">
+
+The Android module (`android/build.gradle`, namespace `app.dectog.flutter_dectog`) builds with `minSdk 24`, `compileSdk 36` and Java 17 source and target compatibility. The plugin requests no runtime permissions.
+
+**Kotlin toolchain.** The module's Kotlin sources compile on every current toolchain without configuration:
+
+| Host toolchain | What happens |
+|---|---|
+| AGP 9 or newer, built-in Kotlin (the Flutter 3.47+ default) | AGP compiles Kotlin itself. The module applies no Kotlin plugin, because applying the Kotlin Gradle plugin on top of built-in Kotlin is an error. |
+| AGP 8 on Flutter 3.47 or newer (`android.builtInKotlin=false`) | Flutter's tooling applies the Kotlin Gradle plugin to plugin modules that do not apply it. |
+| AGP 8 on older Flutter | Nobody else applies the Kotlin Gradle plugin, so the module applies `org.jetbrains.kotlin.android` itself through the plugin manager. |
+
+The decision is made by reading the AGP version and the `android.builtInKotlin` Gradle property: built-in Kotlin is used when the property is `true` (or unset) and AGP is 9 or newer. The Kotlin Gradle plugin is only applied when built-in Kotlin is off and neither the host nor Flutter already applied `org.jetbrains.kotlin.android` or `kotlin-android`. The JVM target is set to 17 through whichever DSL is active.
+
+**Bundled dependency.** The module depends on `com.android.installreferrer:installreferrer:2.2`, Google's own client library for the Play Install Referrer. It brings no Play services dependency and no permissions.
+
+**OEM store libraries you add yourself.** The Samsung Galaxy Store and Xiaomi GetApps referrer readers reach their client libraries by reflection and are not declared as dependencies. Add them to your app module only if you ship through those stores:
+
+```groovy title="android/app/build.gradle"
+dependencies {
+    // Samsung Galaxy Store install referrer
+    implementation 'store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0'
+    // Xiaomi GetApps install referrer
+    implementation 'com.miui.referrer:homereferrer:1.0.0.7'
+}
+```
+
+Without them the two readers report `not_available` and everything else works. The Huawei AppGallery and vivo readers need no library.
+
+**Manifest entries merged from the plugin.** The library manifest declares the Huawei `com.huawei.appmarket.service.commondata.permission.GET_COMMON_DATA` permission (normal protection level, no prompt, a no-op on devices without AppGallery) and `<queries>` package-visibility entries for the Facebook, Facebook Lite and Instagram apps, the Play Store, and the Huawei and vivo referrer providers. The `AD_ID` permission is not declared.
+
+<Aside type="note" title="The example app's Kotlin pin">
+The bundled example app sets `android.builtInKotlin=false` in its `gradle.properties` because two of its third-party dependencies (`device_info_plus`, `package_info_plus`) still apply the Kotlin Gradle plugin, and Flutter's migrator re-adds the pin while they do. That pin affects only the example app.
+</Aside>
+
+</TabItem>
+</Tabs>
+
+## Next steps
+
+1. [Platform setup](/sdk/platform-setup/): Universal Links, App Links and custom schemes.
+2. [Initialize and handle links](/sdk/initialize-and-handle-links/): `DectogConfig` and the link stream.
+3. [Install attribution](/sdk/install-attribution/): what `onAppInstalled` delivers.

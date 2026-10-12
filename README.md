@@ -71,7 +71,7 @@ npm run deploy     # astro build && wrangler deploy
 more specific than the main worker's `*.dectog.com/*`, so no change to the main worker is
 needed. Deleting this worker (`npx wrangler delete`) hands the host back to the main worker.
 
-## Licence
+## License
 
 Site code (configuration, components, styles): [MIT](LICENSE).
 Documentation content under `src/content`: [CC BY 4.0](LICENSE-CONTENT).

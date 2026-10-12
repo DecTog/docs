@@ -1,0 +1,182 @@
+---
+title: Platform setup
+description: Make DecTog links open your app directly with iOS Universal Links and Android App Links, add custom schemes, and verify the association files DecTog serves for your account.
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+
+A hosted DecTog link looks like `https://{username}.dectog.com/{slug}`. For a tap to open your installed app without a browser round trip, iOS needs Universal Links and Android needs App Links. Both rely on a file served from your link domain, and DecTog serves those files for you from the app records in the dashboard.
+
+Register the app first in **Dashboard → Apps** (see [Apps](/dashboard/apps/)). The fields that matter here:
+
+| Field | Validation |
+|---|---|
+| iOS bundle ID | Looks like `com.company.app` |
+| Apple Team ID | 10 uppercase letters or digits (Apple Developer → Membership) |
+| Android package | Looks like `com.company.app` |
+| SHA-256 fingerprints | One per line, 32 colon-separated hex pairs, stored uppercase. Include the Play App Signing key, not only the debug key. |
+| iOS / Android app scheme | Letters, digits and `+ - .` only, without `://`. `http`, `https` and `javascript` are rejected. |
+
+Both association files are built for the whole account: every app with the required identifiers appears in them.
+
+<Tabs syncKey="platform">
+<TabItem label="iOS: Universal Links">
+
+<Steps>
+
+1. Save the bundle ID and the Team ID in the app record. The file goes live once both are saved.
+
+2. Add the Associated Domains entitlement. Create `ios/Runner/Runner.entitlements` if it does not exist, and make sure every build configuration and flavor uses an entitlements file that carries it.
+
+   ```xml title="ios/Runner/Runner.entitlements"
+   <?xml version="1.0" encoding="UTF-8"?>
+   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   <plist version="1.0">
+   <dict>
+       <key>com.apple.developer.associated-domains</key>
+       <array>
+           <string>applinks:{username}.dectog.com</string>
+       </array>
+   </dict>
+   </plist>
+   ```
+
+   Replace `{username}` with your DecTog username. The dashboard's setup guide shows the wildcard form `applinks:*.dectog.com`, which Apple also accepts and which covers every tenant subdomain. Enable the Associated Domains capability on the App ID in your Apple Developer account.
+
+3. Rebuild and reinstall the app. iOS downloads and verifies the association file at install or update time, so an already-installed app only picks it up after a reinstall or an update.
+
+4. Test by tapping a real link from Messages or Notes. Typing the URL into Safari's address bar does not open the app.
+
+</Steps>
+
+No `Info.plist` or `AppDelegate` change is needed. Links arrive through the `app_links` plugin, which already handles Universal Links and custom schemes.
+
+**What DecTog serves.** `https://{username}.dectog.com/.well-known/apple-app-site-association` is built from every app in the account that has both a bundle ID and a Team ID:
+
+```json
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["ABCDE12345.com.example.myapp"],
+        "components": [{ "/": "/*" }]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["ABCDE12345.com.example.myapp"]
+  }
+}
+```
+
+Every path on the domain is claimed (`/*`). The `webcredentials` block lists the same app IDs, so password AutoFill can also associate the domain with your app. When no app in the account has both identifiers, the file answers `404 {"error":"Configuration not found"}`.
+
+</TabItem>
+<TabItem label="Android: App Links">
+
+<Steps>
+
+1. Save the Android package and at least one SHA-256 fingerprint in the app record. The file goes live once both are saved. Include the certificate Play App Signing uses for the builds your users install, plus the debug or upload key for the builds you test with. `keytool -list -v -keystore <file>` prints a fingerprint.
+
+2. Add an HTTPS intent filter with `android:autoVerify="true"` to your launcher activity. Intent filters do not support wildcard hosts, so list each host explicitly.
+
+   ```xml title="android/app/src/main/AndroidManifest.xml"
+   <intent-filter android:autoVerify="true">
+       <action android:name="android.intent.action.VIEW" />
+       <category android:name="android.intent.category.DEFAULT" />
+       <category android:name="android.intent.category.BROWSABLE" />
+       <data android:scheme="https" android:host="{username}.dectog.com" />
+   </intent-filter>
+   ```
+
+3. Rebuild and reinstall. Android verifies the domain at install or update time. Check the result with:
+
+   ```bash
+   adb shell pm get-app-links com.example.myapp
+   ```
+
+   Expect `verified` next to your host. A `none` or `legacy_failure` state usually means the fingerprint of the installed build is not in the file.
+
+</Steps>
+
+**What DecTog serves.** `https://{username}.dectog.com/.well-known/assetlinks.json` is built from every app in the account that has a package name:
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.myapp",
+      "sha256_cert_fingerprints": ["AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99"]
+    }
+  }
+]
+```
+
+An app with a package but no saved fingerprints appears with `"sha256_cert_fingerprints": []`, which never verifies. When no app has a package, the file answers `404 {"error":"Configuration not found"}`.
+
+**Until verification succeeds, taps still open the app.** When the app record has both an Android scheme and a package, the link service answers a Chrome-family browser with an `intent://` redirect that carries your scheme and package, with the store as the browser fallback. The app then receives `{scheme}://{username}/{slug}?dtg_click={id}` (or `{scheme}://{deep-link-path}?dtg_click={id}` for links with an Android deep-link path). The bounce is skipped for in-app browsers and for browsers whose user agent carries no `Chrome/` token; those get a plain redirect. Details are on [How a tap is routed](/links/how-a-tap-is-routed/).
+
+</TabItem>
+</Tabs>
+
+## Custom schemes
+
+A custom scheme is optional. Save it in the app record (`myapp`, without `://`) and register it on both platforms:
+
+```xml title="ios/Runner/Info.plist"
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>myapp</string>
+        </array>
+    </dict>
+</array>
+```
+
+```xml title="android/app/src/main/AndroidManifest.xml"
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="myapp" />
+</intent-filter>
+```
+
+How DecTog uses it:
+
+- A link without a deep-link path opens `myapp://{username}/{slug}`. A link with a deep-link path opens `myapp://{path}`, so the path's first segment becomes the URI authority. Universal Links and App Links always deliver the `https://{username}.dectog.com/{slug}` form instead.
+- On iOS a scheme only opens from a direct user tap, such as the "Open in app" buttons on DecTog's pages. A server redirect to a scheme never launches an iOS app; Universal Links are the only automatic mechanism.
+- On Android the scheme, together with the package, enables the `intent://` bounce described above.
+
+<Aside type="caution" title="Scheme URLs and the SDK's parser">
+The SDK recognizes the scheme form `{scheme}://{username}/{slug}` as a DecTog link. A link that has a deep-link path arrives as `{scheme}://{path}`, which the parser reads as `{path's first segment}/{second segment}`. For those URLs, route from `DectogLinkClick.originalUrl` in your own code and ignore the `username` and `slug` the click reports. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+</Aside>
+
+## Verify from the dashboard
+
+Each platform section of the app editor has a **Verify** button next to the file path. It fetches the saved association file for the whole account (through the `?u={username}` form on the dashboard host) and shows a one-line summary:
+
+| File | Messages |
+|---|---|
+| Universal Links | "✓ N app ID(s) served" or "✕ No app IDs configured" |
+| App Links | "N package(s), SHA-256 fingerprints present", "N package(s), MISSING fingerprints" or "No packages configured" |
+
+Both report `Endpoint replied <status>: …` or `Fetch failed: …` when the fetch fails. The check reads what is saved, not what you typed into the form, so save first.
+
+## Self-hosted and local deployments
+
+The association files resolve the account from the request host (`{username}.{root}`) or from an explicit `?u={username}` query, which always wins. Two consequences:
+
+- In path mode (a root domain that starts with `localhost`, the local development default) the host carries no username, so the files are only reachable as `http://localhost:8787/.well-known/apple-app-site-association?u={username}` and `…/assetlinks.json?u={username}`. Without `?u=` the response is `400 {"error":"Subdomain not found in host"}`.
+- Universal Links and App Links require a real HTTPS domain that the OS can fetch. Local hosts such as `http://10.0.2.2` or `https://localhost` never pass verification; on Android 12 and newer they open the app only from explicit intents (`adb`) or after the user enables the link in system settings. Use custom schemes and `adb` or `simctl` during development, as described in [Testing](/sdk/testing/).
+
+Every response carries `x-hostname` and `x-subdomain` headers naming the host and the resolved username. Self-hosted deployments serve the files from their own root domain; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).

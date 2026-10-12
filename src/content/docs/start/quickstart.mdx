@@ -1,0 +1,194 @@
+---
+title: Quickstart
+description: Create an account, register your app, add the Flutter SDK, create a link and see the first attributed install in the dashboard.
+sidebar:
+  order: 1
+---
+
+import { Steps, Tabs, TabItem, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+This page uses the hosted service: the dashboard and API live at `https://app.dectog.com`, links at `https://{username}.dectog.com/{slug}`. Self-hosting changes a few values; the steps call them out. The examples use the username `acme` and the slug `welcome`.
+
+<Steps>
+
+1. **Sign up**
+
+   Open [app.dectog.com/login?tab=signup](https://app.dectog.com/login?tab=signup). The page opens on the **Sign up** tab.
+
+   | Field | Rule |
+   |---|---|
+   | Email | A valid address. It is lowercased and becomes your sign-in name. |
+   | Username | 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit (`^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$`). Reserved names: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`. The form suggests a username from your email until you edit it. |
+   | Password | 8 to 72 characters with at least one uppercase letter, one lowercase letter and one digit. |
+
+   The username is your link subdomain. Every link you create is `https://acme.dectog.com/{slug}`, and the hint under the field reads "Your links live on acme.dectog.com". There is no way to rename an account later.
+
+   Click **Create Account**. The next screen says "Account created" and shows **Your API key**: `dtg_` followed by 32 hex characters, 36 characters in total. You can view and copy it again under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
+
+   <Aside type="note" title="Self-hosting">
+   On your own deployment the first account comes from `POST /api/admin/bootstrap`, not from the signup form. See [Local quick start](/self-hosting/local-quick-start/).
+   </Aside>
+
+2. **Register the app**
+
+   In the dashboard open **Apps** and click **Add app**. The editor is titled "Register your first app" and only **App name** is required; every other field can be filled in later. The bottom bar's **Add app** button saves.
+
+   | Section | Field | What it does |
+   |---|---|---|
+   | General | **App name** | Required. Brands the QR page and the mobile pages. |
+   | General | **Fallback URL (optional)** | The web page a tap lands on when nothing better exists. Must be an http(s) URL. |
+   | iOS | **iOS bundle ID**, **Apple Team ID** | Together they generate your Universal Links file (`apple-app-site-association`). The bundle ID looks like `com.company.app`; the Team ID is 10 uppercase letters or digits. |
+   | iOS | **App Store URL** | Where iPhone taps go when the app is not installed. Must be on `apps.apple.com`. |
+   | iOS | **iOS app scheme** | The custom scheme from `CFBundleURLSchemes`, typed without `://`. Powers the "Open in app" buttons. |
+   | Android | **Android package**, **SHA-256 fingerprints (one per line)** | Together they generate your App Links file (`assetlinks.json`). Fingerprints are 32 hex byte pairs separated by colons; include the Play App Signing key, not only your debug key. |
+   | Android | **Play Store URL** | Where Android taps go when the app is not installed. Must be on `play.google.com`. |
+   | Android | **Android app scheme** | The `android:scheme` of your intent filter. With the package it also enables the `intent://` bounce for unverified taps. |
+
+   Schemes may contain letters, digits, `+`, `-` and `.`; `http`, `https` and `javascript` are rejected. The first app you register is the account's default app: links without an app, and all temporary links, route through it. See [Concepts](/start/concepts/).
+
+3. **Platform setup**
+
+   Both files are served per account at `https://acme.dectog.com/.well-known/...` as soon as the fields from step 2 are saved. The **Verify** buttons on the Apps page fetch the saved files and summarize what they contain.
+
+   <Tabs>
+     <TabItem label="iOS">
+       Add the Associated Domains capability to the Runner target with the entry for your link host:
+
+       ```xml title="ios/Runner/Runner.entitlements"
+       <key>com.apple.developer.associated-domains</key>
+       <array>
+         <string>applinks:acme.dectog.com</string>
+       </array>
+       ```
+
+       iOS downloads `https://acme.dectog.com/.well-known/apple-app-site-association` when the app is installed, so rebuild and reinstall after saving the bundle ID and Team ID. Test by tapping a link in Messages or Notes, not by typing it into Safari.
+     </TabItem>
+     <TabItem label="Android">
+       Add a verified `https` intent filter for your link host to the main activity. Intent filters cannot use wildcards, so list the host explicitly:
+
+       ```xml title="android/app/src/main/AndroidManifest.xml"
+       <intent-filter android:autoVerify="true">
+         <action android:name="android.intent.action.VIEW" />
+         <category android:name="android.intent.category.DEFAULT" />
+         <category android:name="android.intent.category.BROWSABLE" />
+         <data android:scheme="https" android:host="acme.dectog.com" />
+       </intent-filter>
+       ```
+
+       Android verifies `https://acme.dectog.com/.well-known/assetlinks.json` at install time against the package and fingerprints you saved. Until verification passes, taps in Chrome still open the app through an `intent://` redirect, provided the app has both a scheme and a package. If you set an Android app scheme, add a second intent filter for it.
+     </TabItem>
+   </Tabs>
+
+   Custom-scheme links open only from a direct user tap; a redirect can never launch a scheme on iOS. The full walkthrough, including path-mode deployments, is in [Platform setup](/sdk/platform-setup/).
+
+4. **Add the SDK**
+
+   The SDK is `flutter_dectog` 1.0.x. It needs Flutter 3.29 or newer (Dart 3.7), iOS 15 and Android 7 (API 24).
+
+   ```bash
+   flutter pub add flutter_dectog
+   ```
+
+   Initialize it once at startup with your API key, then listen to links and to the install verdict:
+
+   ```dart title="lib/main.dart"
+   import 'package:flutter_dectog/flutter_dectog.dart';
+
+   final dectog = FlutterDectog();
+
+   Future<void> initDectog() async {
+     await dectog.initialize(DectogConfig(
+       apiKey: 'dtg_your_api_key', // Dashboard > Settings > API key
+     ));
+
+     // A link opened the running app (Universal Link, App Link or your scheme).
+     dectog.onLinkClick.listen((click) {
+       final route = click.clickParams?.deepLink; // dec_deeplink on the URL, if any
+       final target = click.targetUrl;            // the link's fallback URL
+       print('${click.username}/${click.slug} route=$route target=$target');
+     });
+
+     // The link that launched the app. Delivered once per process.
+     final initial = await dectog.getInitialLink();
+     if (initial != null) {
+       print('Launched by ${initial.originalUrl}');
+     }
+
+     // The install verdict: on first launch, and again when a late signal upgrades it.
+     dectog.onAppInstalled.listen((install) {
+       final route = install.routing?.deepLink ?? install.deepLink;
+       if (route != null) {
+         // Medium confidence or better: route the new user to the content they tapped.
+       }
+       if (install.matched) {
+         // Guaranteed or high confidence: credit the install to install.slug.
+       }
+     });
+   }
+   ```
+
+   `onAppInstalled` can emit more than once: a Play referrer that was not ready at first launch, or a pasted link, upgrades the verdict later (`claim == 'upgraded'`). `currentAppInstall` always holds the latest one.
+
+   <Aside type="note" title="Self-hosting">
+   Point the SDK at your worker with `baseUrl` (the worker's `PUBLIC_BASE_URL`). Add `linkRootDomain` when your links live on a different host than the API, for example API at `app.example.com` and links at `{username}.example.com`:
+
+   ```dart
+   DectogConfig(
+     apiKey: 'dtg_your_api_key',
+     baseUrl: 'https://app.example.com',
+     linkRootDomain: 'example.com',
+   )
+   ```
+   </Aside>
+
+   Installation details, the dependency ranges and the Android build notes are in [Installation](/sdk/installation/).
+
+5. **Create a link**
+
+   Open **Links** and click **New link**. The form is open already when the account has no links.
+
+   | Field | What to enter |
+   |---|---|
+   | **Fallback URL** | **App fallback URL (default)** uses the app's Fallback URL from step 2; the option is disabled until that URL is set. **Custom URL** takes an http(s) URL for this link. |
+   | **Link URL** | The slug: letters, digits, `_` and `-`, up to 128 characters, unique across your permanent and temporary links. Enter `welcome`. |
+   | **App** | Shown once you have an app. **Default app** means the first app you registered. |
+   | **Expires** | Leave **Never**. Any other value creates a [temporary link](/links/temporary-links/). |
+
+   Click **Create link**. The list now shows `/welcome`; the copy icon next to it copies `https://acme.dectog.com/welcome`. **Advanced options** on the same form hold the per-platform deep-link paths, the Tracking defaults and the custom mobile and desktop destinations, all described in [How a tap is routed](/links/how-a-tap-is-routed/).
+
+   You can also create links from code: `dectog.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your API key and the request signature described in [REST API overview](/api/overview/).
+
+6. **Test an install**
+
+   Use a device that has never had the app installed. A device the SDK has seen before reports a reinstall (`isReinstall: true`), which the Installs KPI leaves out. On an emulator, wipe its data between runs.
+
+   <Tabs>
+     <TabItem label="Android">
+       1. Open `https://acme.dectog.com/welcome` in Chrome on the phone. DecTog sends it to the Play Store with `referrer=dtg_click=<id>&dtg_l=acme/welcome` on the store URL.
+       2. Install the app from the store and open it.
+       3. `onAppInstalled` emits a verdict with `matched: true`, `matchSource: 'referrer'`, `referrerSource: 'google_play'` and `matchConfidence: 'guaranteed'`.
+
+       A debug build pushed with `flutter run` never went through the store, so there is no referrer. The server then falls back to the fingerprint, which needs the tap and the first launch to come from the same network within the window (24 hours with a device model, 2 hours otherwise). The deterministic path needs a Play (or internal testing track) install.
+     </TabItem>
+     <TabItem label="iOS">
+       1. On the Apps page, turn on **iOS tap-to-store** under Advanced and save.
+       2. Open the link in Safari on the iPhone and tap **Get \{app name\}**. The page copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the pasteboard and opens the App Store.
+       3. Install the app (App Store or TestFlight) and open it. On iOS 16 and later the system asks to allow the paste; accept it.
+       4. `onAppInstalled` emits `matched: true`, `matchSource: 'clipboard'` and `matchConfidence: 'guaranteed'`.
+
+       Without tap-to-store, or when the user declines the paste, iOS installs rely on the fingerprint.
+     </TabItem>
+   </Tabs>
+
+   In the dashboard, **Overview** shows the install in the **Installs** card ("1 attributed"), in **Attribution quality** and in the **Match confidence & referrer health** panel. The **Links** list shows it in the **Installs** column of `/welcome`. The next launches of the app are not installs; a link that opens the installed app counts as an **Open**.
+
+</Steps>
+
+## Next steps
+
+<CardGrid>
+  <LinkCard title="How attribution works" href="/start/how-attribution-works/" description="The signals, the confidence levels and what matched means." />
+  <LinkCard title="How a tap is routed" href="/links/how-a-tap-is-routed/" description="Every decision between the tap and the destination." />
+  <LinkCard title="Install attribution in the SDK" href="/sdk/install-attribution/" description="The verdict object, late claims and the install state." />
+  <LinkCard title="Testing" href="/sdk/testing/" description="Local loop, adb and simctl triggers, the end-to-end install test." />
+</CardGrid>

@@ -1,0 +1,221 @@
+---
+title: Initialize and handle links
+description: Configure the SDK with DectogConfig, listen to the link stream, handle the cold-start link once, and understand which URLs the SDK recognizes, filters and reports.
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Initialize
+
+`FlutterDectog()` returns a singleton. Call `initialize` once, early in your app, with your API key:
+
+```dart
+import 'package:flutter_dectog/flutter_dectog.dart';
+
+final dectog = FlutterDectog();
+
+await dectog.initialize(DectogConfig(
+  apiKey: 'dtg_your_api_key',
+));
+```
+
+That is the whole setup for the hosted service: the SDK talks to `https://app.dectog.com` and recognizes links on `{username}.dectog.com`.
+
+What `initialize` does, in order:
+
+1. Loads the persisted SDK state (customer id, opt-out flag, install id).
+2. Starts the event queue and sends the device ping, unless the user opted out.
+3. Subscribes to incoming links and processes the link that launched the app, while **at the same time** registering the install if this is the first launch. The call resolves when both are done.
+4. Schedules the launch-time late claims (a referrer that was not definitive, an Apple Search Ads token that was not ready) in the background.
+
+Rules:
+
+- A second `initialize` throws a `DectogError` of type `configuration` ("FlutterDectog is already initialized"). Concurrent calls during the first initialization share it.
+- A failed `initialize` throws `DectogError` ("Failed to initialize: …") and leaves the SDK uninitialized, so a corrected config can be retried without a restart.
+- Every other method throws a `configuration` error until `initialize` succeeded. `willShowPasteboardPrompt()` is the exception; it works before `initialize`.
+- On the first launch, `initialize` returns only after the install registration finished: the referrer wait (up to `installReferrerTimeout`), the pasteboard read (up to 6 seconds when the user has to answer the iOS alert) and up to two install requests of 15 seconds each. Do not block your first frame on the returned future. Start it, build the UI, and react to the streams.
+
+### DectogConfig
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `apiKey` | `String` | required | Your DecTog API key. Every authenticated call is signed with it. |
+| `baseUrl` | `String?` | `null` → `https://app.dectog.com` | API base URL. Set it only when self-hosting. Trailing slashes are stripped. |
+| `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). Set it when self-hosted links live on a different host than the API. |
+| `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
+| `installReferrerProvider` | `Future<String?> Function()?` | `null` | Replaces the built-in Android referrer readers with your own Play referrer string. |
+| `installReferrerTimeout` | `Duration` | 5 seconds | How long the first-launch registration waits for the Android install referrer. Android only. |
+| `oemStoreReferrers` | `bool` | `true` | Also read the Huawei AppGallery, Samsung Galaxy Store, Xiaomi GetApps and vivo referrers. Android only. |
+| `collectDeviceData` | `bool` | `true` | Send the device tier: device id, hardware, screen, network and carrier. |
+| `readClipboardOnInstall` | `bool?` | `null` → on for iOS, off for Android | Read the pasteboard once at first launch for a copied DecTog link. |
+| `fbAppId` | `String?` | `null` | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
+| `persistDeviceId` | `bool` | `true` | Keep the first iOS IDFV in the Keychain so the device id survives reinstall. |
+| `collectAppleSearchAdsToken` | `bool` | `false` | Read the AdServices attribution token on iOS 14.3 and newer. |
+
+The config also exposes `DectogConfig.defaultBaseUrl` (`https://app.dectog.com`), `DectogConfig.defaultLinkRootDomain` (`dectog.com`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
+
+The attribution options are explained on [Install attribution](/sdk/install-attribution/), [Deterministic attribution](/sdk/deterministic-attribution/) and [Device data and privacy](/sdk/device-data-and-privacy/).
+
+### Self-hosted backends
+
+Set `baseUrl` to your API and, when the links live on a different host, `linkRootDomain`:
+
+```dart
+await dectog.initialize(DectogConfig(
+  apiKey: 'dtg_your_api_key',
+  baseUrl: 'https://app.example.com',
+  linkRootDomain: 'example.com', // links at https://{username}.example.com/{slug}
+));
+```
+
+Against a local worker use `http://10.0.2.2:8787` on the Android emulator and `http://localhost:8787` on the iOS simulator, with no `linkRootDomain` (the local worker runs in path mode, `/r/{username}/{slug}`). See [Testing](/sdk/testing/).
+
+## Which URLs the SDK recognizes
+
+An incoming URL is a DecTog link when it matches one of these forms. `baseHost` is the host of `effectiveBaseUrl`, `root` is `effectiveLinkRootDomain` (or `baseHost` when that is null).
+
+| Form | Example | Used for |
+|---|---|---|
+| `https://{username}.{root}/{slug}` | `https://acme.dectog.com/launch` | Hosted and self-hosted subdomain links. The username must contain no dot, and the host must differ from `baseHost`. |
+| `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
+| any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |
+| `{scheme}://{username}/{slug}` | `myapp://acme/launch` | Custom-scheme opens and the Android `intent://` bounce. Any non-http(s) scheme qualifies. |
+
+Only the first path segment is read as the slug; the rest of the path, the query and the fragment are kept on `originalUrl`. URLs that match none of these forms are still emitted (see below) but carry an error.
+
+## Handle links
+
+Two entry points deliver the same objects:
+
+- `onLinkClick`, a broadcast stream of `DectogLinkClick` for links that arrive while the app runs **and** for the cold-start link.
+- `getInitialLink()`, a future with the link that launched the app, or `null`.
+
+```dart
+dectog.onLinkClick.listen(_handleLink);
+
+final initial = await dectog.getInitialLink();
+if (initial != null) _handleLink(initial);
+
+void _handleLink(DectogLinkClick click) {
+  if (click.error != null) {
+    // Not a DecTog link, or the SDK was not initialized yet.
+    return;
+  }
+  // click.username and click.slug come from the URL itself.
+  // click.linkResolution is set when the public resolve call succeeded.
+  final route = click.clickParams?.deepLink            // dec_deeplink on the opened URL
+      ?? click.linkResolution?.deepLinkPathFor('ios')  // the link's stored in-app route
+      ?? click.linkResolution?.target;                 // the link's web target (may be null)
+  _navigate(slug: click.slug, route: route);
+}
+```
+
+What a `DectogLinkClick` carries:
+
+| Field | Set when |
+|---|---|
+| `originalUrl`, `receivedAt` | Always. |
+| `username`, `slug` | Parsed from the URL; `'unknown'` when parsing failed. |
+| `linkResolution` | The public `GET /api/v1/resolve/{username}/{slug}` answered. It is `null` when the request failed; the click and the open were still reported. |
+| `error` | The URL is not a DecTog link (`Invalid DecTog URL format`), processing failed, or the SDK was not initialized. |
+| `clickParams` (getter) | The URL carries `dec_*` parameters. `deepLink` is the raw `dec_deeplink` value as it appeared in the URL. |
+| `isResolved`, `targetUrl`, `linkType` (getters) | Convenience views on `linkResolution`. |
+
+The `DectogLinkClickX` extension adds `queryParameters`, `queryParameter(key)`, `path`, `host`, `scheme` and `fragment`, all read from `originalUrl`. `DectogLinkResolution` is described on the [API reference](/sdk/api-reference/); its `target` is `null` when the link inherits the app's fallback URL.
+
+### The cold-start link is consumed once
+
+The link that launched the app is processed and emitted **once per process**, however it is delivered:
+
+- Android delivers the launch URL on both `getInitialLink()` and the link stream; the SDK folds the two into one `DectogLinkClick` object, so `onLinkClick` emits once and `getInitialLink()` returns the same object.
+- A later `getInitialLink()` call (from another screen, for example) returns the same click again without logging anything.
+- An identical URL delivered twice within 10 seconds while the app runs is treated as one open.
+- On Android, a task relaunched from the recents screen replays the original intent. The SDK detects `FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY`, ignores that URL, and `getInitialLink()` returns `null` for that launch.
+
+### Sensitive URLs are never clicks
+
+OAuth and social-login callbacks that open the app through `app_links` are neither reported nor emitted:
+
+- Schemes matching `fb<digits>`, `li<digits>`, `pdk<digits>`, `twitterkit-…`, `com.googleusercontent.apps.<digits>-…`, or any scheme containing `oauth`.
+- Any URL whose query or fragment carries `access_token`, `id_token` or `oauth_token`.
+
+### What the SDK reports for an open
+
+For every recognized link the SDK sends, without blocking your handler:
+
+- `POST /api/v1/clicks` with the slug, `is_mobile_app: true`, platform, language, `client_click_time` (when the URL reached the device), the opened URL's `utm_*` and `dec_*` values, the device id and model when `collectDeviceData` is on, and on Android the launching package (`launch_referrer`). When the URL carries `dtg_click` from an `intent://` bounce, the server converts the existing web click row (if it is less than 24 hours old) instead of inserting a second one.
+- `POST /api/v1/app-opens`, which feeds the per-link Opens count and `lastOpen` on attribution re-pulls. Skipped when the user opted out.
+
+Neither call is retried, and a failure never affects the emitted click.
+
+<Aside type="caution" title="Scheme opens with a deep-link path">
+A link that has a deep-link path opens as `{scheme}://{path}` on Android and iOS. The parser then reads the first path segment as the username and the second as the slug, so `username`, `slug` and `linkResolution` are wrong for that click and the reported click lands on an unknown slug. Route such URLs from `originalUrl` in your own code.
+</Aside>
+
+## Complete example
+
+A small service that initializes the SDK, routes opens and reacts to install attribution. `_openRoute` stands for your navigation.
+
+```dart
+import 'dart:async';
+
+import 'package:flutter_dectog/flutter_dectog.dart';
+
+class DectogService {
+  DectogService._();
+  static final DectogService instance = DectogService._();
+
+  final FlutterDectog _dectog = FlutterDectog();
+  StreamSubscription<DectogLinkClick>? _links;
+  StreamSubscription<DectogAppInstallResponse>? _installs;
+
+  Future<void> start({required String apiKey}) async {
+    _links = _dectog.onLinkClick.listen(_onLink);
+    _installs = _dectog.onAppInstalled.listen(_onInstall);
+    await _dectog.initialize(DectogConfig(
+      apiKey: apiKey,
+      enableDebugLogging: true,
+    ));
+    // The cold-start link was already delivered on onLinkClick; calling
+    // getInitialLink() here returns the same object and logs nothing twice.
+  }
+
+  void _onLink(DectogLinkClick click) {
+    if (click.error != null) return;
+    final route = click.clickParams?.deepLink ??
+        click.linkResolution?.deepLinkPathFor('android') ??
+        click.slug;
+    _openRoute(route);
+  }
+
+  void _onInstall(DectogAppInstallResponse install) {
+    // Route on any candidate (medium confidence or better) ...
+    final route = install.routing?.deepLink ?? install.deepLink;
+    if (route != null) _openRoute(route);
+    // ... but only credit the link when the server granted credit.
+    if (install.matched) {
+      _creditReferral(install.slug!, install.clickParams?.campaign);
+    }
+  }
+
+  void _openRoute(String route) {
+    // Push the matching screen with your router.
+  }
+
+  void _creditReferral(String slug, String? campaign) {
+    // Your own bookkeeping.
+  }
+
+  Future<void> stop() async {
+    await _links?.cancel();
+    await _installs?.cancel();
+    await _dectog.dispose();
+  }
+}
+```
+
+`onAppInstalled` is a replaying stream: a listener that subscribes after the first launch finished still receives the latest verdict, and `currentAppInstall` reads it synchronously. The verdict fields are explained on [Install attribution](/sdk/install-attribution/).
+
+`dispose()` cancels the subscriptions, closes both streams, flushes the event queue and closes the HTTP client. After `dispose()` the SDK cannot be initialized again in the same process, so call it only when the app shuts down.
