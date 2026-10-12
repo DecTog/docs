@@ -49,7 +49,7 @@ dectog.onAppInstalled.listen((install) {
 
 ### Fraud flags and strict mode
 
-`fraudFlags` lists the rules the install tripped: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`. By default the attribution stands and the flags are informational. With the app's strict fraud mode on, a flagged install comes back with `matched: false` and `matchSource: null`, while `referrerSource`, `matchConfidence` and `slug` keep their values as evidence. Strict mode is read from the account's oldest app (see [Apps](/dashboard/apps/)).
+`fraudFlags` lists the rules the install tripped: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`. By default the attribution stands and the flags are informational. With the app's strict fraud mode on, a flagged install comes back with `matched: false` and `matchSource: null`, while `referrerSource` and `matchConfidence` keep their values as evidence; `slug`, `link` and the other attribution fields are absent from the verdict (the server keeps the matched slug on its record and the install webhook still carries it). Strict mode is read from the account's oldest app (see [Apps](/dashboard/apps/)).
 
 ### Other fields
 
@@ -94,7 +94,7 @@ The SDK classifies every registration client-side and sends it as `install_state
 
 An `update` is an existing user whose app merely updated to a build that ships the SDK. The server never fingerprint-matches an update, so a stale click from the orphan pool cannot be credited to a long-time user. Deterministic signals still apply.
 
-`isReinstall` is set when the client reported `reinstall` or when the server has seen this device id on an earlier install of the same account. Reinstalls go through the normal ladder and fingerprint; the dashboard's Installs number excludes them. On iOS the reinstall detection depends on `persistDeviceId` (the Keychain-held IDFV) and the Keychain install dates; with `persistDeviceId: false` a reinstall looks like a new device unless a referrer or the pasteboard attributes it.
+`isReinstall` is set when the client reported `reinstall` or when the server has seen this device id on an earlier non-reinstall install of the same account. Reinstalls are not kept out of matching: they run the full deterministic ladder and the fingerprint exactly like a fresh install and can come back `matched: true`. The flag only excludes them from the dashboard's Installs number and the per-link install counts. On iOS the reinstall detection depends on `persistDeviceId` (the Keychain-held IDFV) and the Keychain install dates; with `persistDeviceId: false` a reinstall looks like a new device unless a referrer or the pasteboard attributes it.
 
 The SDK also sends `first_install_ts`: the package's `firstInstallTime` on Android, the Keychain first-install date (or the Documents directory's creation date) on iOS.
 

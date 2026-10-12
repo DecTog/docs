@@ -1,0 +1,190 @@
+---
+title: Local quick start
+description: Run the DecTog worker, a local D1 database and the dashboard on your machine, seed demo data and tap your first link.
+sidebar:
+  order: 1
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+A local DecTog is two processes. The Cloudflare Worker runs on port 8787 with a local D1 database under `apps/worker/.wrangler/state`: it serves the REST API, the admin API, the redirect engine and the well-known files. The Next.js app runs on port 3000 and proxies every `/api/*`, `/r/*` and `/.well-known/*` request to the worker (`apps/web/next.config.ts`), so the dashboard's session cookie stays same-origin. You do not need a Cloudflare account; `wrangler dev` runs everything locally.
+
+## Prerequisites
+
+- Node 20 or newer, and npm.
+- A clone of the server repository: `git clone https://github.com/DecTog/dectog`.
+- Flutter 3.29 or newer, only if you also run the example app. See [Testing](/sdk/testing/).
+
+## Start the worker
+
+<Steps>
+
+1. Install dependencies and create the local database schema.
+
+   ```bash
+   cd apps/worker
+   npm install
+   npm run db:migrate        # wrangler d1 migrations apply DB --local
+   ```
+
+   `db:migrate` applies every file in `apps/worker/migrations/` in filename order to the local D1 database. Re-run it whenever you pull new migrations.
+
+2. Create `.dev.vars` from the example and fill in the secrets.
+
+   ```bash
+   cp .dev.vars.example .dev.vars
+   ```
+
+   ```text title="apps/worker/.dev.vars"
+   JWT_SECRET=<openssl rand -hex 32>
+   IP_SALT=<openssl rand -hex 32>
+   BOOTSTRAP_TOKEN=
+   GOOGLE_CLIENT_ID=
+   GOOGLE_CLIENT_SECRET=
+   ```
+
+   Set `JWT_SECRET` before you bootstrap: it signs the dashboard session and also encrypts the viewable copy of each API key, so a key created while it is empty can only be shown as a mask. Leave `IP_SALT` empty and the worker falls back to `dtg-default-salt` with a console warning (production refuses to start a request without it). Leave `BOOTSTRAP_TOKEN` empty and the bootstrap call needs no header. The Google fields stay empty unless you test Sign in with Google (the redirect URI is `http://localhost:3000/api/auth/google/callback`).
+
+3. Start the worker.
+
+   ```bash
+   npm run dev               # wrangler dev --port 8787
+   ```
+
+   `curl -s http://localhost:8787/healthz` returns `{"ok":true,"service":"dectog","version":"v1","host":"localhost:8787"}`.
+
+</Steps>
+
+## Bootstrap the database
+
+`POST /api/admin/bootstrap` creates the first account. It works only while the `users` table is empty and has two forms.
+
+<Tabs>
+  <TabItem label="Demo seed (empty body)">
+
+```bash
+curl -s -X POST http://localhost:8787/api/admin/bootstrap
+# with BOOTSTRAP_TOKEN set in .dev.vars:
+curl -s -X POST -H 'x-bootstrap-token: <BOOTSTRAP_TOKEN>' http://localhost:8787/api/admin/bootstrap
+```
+
+```json
+{"ok":true,"email":"demo@dectog.local","username":"demo","api_key":"dtg_…","demo":true}
+```
+
+The demo password is `demo1234`; it is not in the response. The demo account's key is stored hash-only, so Settings shows the masked prefix until you regenerate it. Copy the key from this response if you want to use it with the SDK.
+
+  </TabItem>
+  <TabItem label="One owner account (JSON body)">
+
+```bash
+curl -s -X POST http://localhost:8787/api/admin/bootstrap \
+  -H 'content-type: application/json' \
+  -d '{"email":"you@example.com","password":"a-long-password-12","username":"acme"}'
+```
+
+```json
+{"ok":true,"email":"you@example.com","username":"acme","api_key":"dtg_…","demo":false}
+```
+
+This creates exactly that account with role `owner` and no demo data. The key is shown here and, because `JWT_SECRET` was set, again in Settings.
+
+  </TabItem>
+</Tabs>
+
+The exact rules, from `apps/worker/src/api_admin.ts` and `bootstrap.ts`:
+
+| Rule | Response |
+|---|---|
+| `BOOTSTRAP_TOKEN` is set (non-empty), or `ENVIRONMENT=production` | The `x-bootstrap-token` header must equal the token. Otherwise `403 {"error":"Bootstrap not permitted"}`. In production with no token configured every call is 403. |
+| Empty body, or a body that is not valid JSON | Demo seed. In production: `403 {"error":"Demo seed is disabled in production — provide email, password and username"}`. |
+| Body with any of `email`, `password`, `username` | All three are required. `400` with one of: `email, password and username are required`, `email is not a valid address`, `password must be at least 12 characters`, `username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `username '<name>' is reserved` (reserved: `app www api links dashboard admin mail static cdn`). Email and username are trimmed and lowercased. |
+| Any user already exists | `409 {"error":"Already bootstrapped"}` (both forms). |
+| Success | `201 {"ok":true,"email","username","api_key","demo"}`. |
+
+Bootstrap has no rate limit. The owner password rule (at least 12 characters) differs from the signup rule (8 to 72 characters with an upper-case letter, a lower-case letter and a digit); see [Account and sign-in](/dashboard/account-and-sign-in/).
+
+### What the demo seed contains
+
+`apps/worker/src/seed.ts` uses a fixed random seed, so every seed looks the same apart from the weekday pattern.
+
+| Item | Content |
+|---|---|
+| User | `demo@dectog.local` / `demo1234`, username `demo`, role `owner`, `api_key_enc` null |
+| App | "Demo App": iOS bundle `com.example.demoapp`, Team ID `8H7C9JL2K3`, App Store URL `https://apps.apple.com/app/id6470000000`; Android package `com.example.demoapp`, one placeholder SHA-256 fingerprint (`AA:BB:CC:…`), Play URL `https://play.google.com/store/apps/details?id=com.example.demoapp`. No schemes, fallback URL, social preview, webhook, interstitial, tap-to-store, strict mode or OEM store URLs. |
+| Links | 6, all bound to the app: `welcome` (direct, 18 %), `launch-ph` (Product Hunt, 22 %), `social-x` (X, 16 %), `reddit-ama` (Reddit, 12 %), `tiktok-demo` (TikTok, 14 %), `newsletter` (Newsletter, 18 %). Targets are `https://example.com/<path>`. The campaign is stored in both `links.campaign` and `metadata.campaign`. |
+| Clicks | About 1,880 over the last 90 days: a base of `14 + round(0.12 × days since start)` per day, weekends at 55 %, plus a spike of +45 / +220 / +90 on days 31, 30 and 29 ago (the "Product Hunt launch"). Devices 48 % iOS, 37 % Android, 15 % desktop. Countries US 32 %, DE 12 %, GB 11 %, IN 10 %, FR 7 %, BR 7 %, JP 6 %, CA 6 %, AU 5 %, NL 4 %. About 400 distinct fake IP hashes (`seed_<n>`), fake `10.x.x.x` raw IPs, `utm_source` and `utm_campaign` set to the campaign name with `utm_medium=link`, `origin` `redirect`. |
+| Installs | About 7 % of clicks, roughly 130. About 60 % are attributed: all Android, `match_source` `referrer`, `referrer_source` `google_play`, `install_referrer` `dtg_click=<id>`, `match_confidence` `guaranteed`. About 40 % are organic: all iOS. About 8 % are reinstalls of an earlier seeded device. `ip_hash` is null on every seeded install, so seeded installs never take part in fingerprint matching. |
+| Not seeded | Temporary links, events, customers, revenue, device pings, app opens, blog posts, categories, contact messages. |
+
+## Start the dashboard
+
+```bash
+cd apps/web
+npm install
+npm run dev                 # next dev -p 3000
+```
+
+Sign in at `http://localhost:3000/login` with `demo@dectog.local` / `demo1234` (or the owner account you bootstrapped). The dev build shows a demo-login hint on that page; the static export used in production does not. The dashboard is at `http://localhost:3000/dashboard`.
+
+`npm run serve` (`next build && next start -p 3000`) runs a production-style server; restart it after every rebuild. Set `WORKER_ORIGIN` if your worker is not on `http://localhost:8787`.
+
+## Open a link
+
+In local development `LINK_URL_MODE` is `path` and `ROOT_DOMAIN` is `localhost:8787`, so the URLs the API and the dashboard generate look like `http://localhost:8787/r/demo/welcome`. The worker also answers the other forms:
+
+| URL | Notes |
+|---|---|
+| `http://localhost:8787/r/demo/welcome` | Path form. Works on every host, in every environment. |
+| `http://localhost:8787/?user=demo/welcome` | Query form. Works on every host except `APP_HOST`. |
+| `http://demo.localhost:8787/welcome` | Subdomain form. `*.localhost` counts as a tenant host and browsers resolve it to the loopback address. |
+| `http://localhost:8787/api/v1/resolve/demo/welcome` | Public resolve endpoint, no auth. See [Links](/api/links/). |
+| `http://localhost:8787/.well-known/apple-app-site-association?u=demo` | AASA. Locally `?u=` is required: subdomain resolution of well-known files is off while `ROOT_DOMAIN` starts with `localhost`. |
+| `http://localhost:8787/.well-known/assetlinks.json?u=demo` | Asset links, same rule. |
+
+A desktop browser lands on the branded QR page (the demo app has no fallback URL, so there is nowhere else to go). A phone, or a mobile User-Agent, gets a 302 to the store with the click tag:
+
+```bash
+curl -sI -A 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/UP1A) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36' \
+  http://localhost:8787/r/demo/welcome
+# location: https://play.google.com/store/apps/details?id=com.example.demoapp&referrer=dtg_click%3D<id>%26dtg_l%3Ddemo%2Fwelcome
+```
+
+Each of these requests records a click; the Overview updates within its 15 s refresh. The full decision order is on [How a tap is routed](/links/how-a-tap-is-routed/).
+
+## Android emulator
+
+The emulator cannot reach `localhost`; it reaches the host machine at `10.0.2.2`. Start the worker with
+
+```bash
+npm run dev:android         # wrangler dev --port 8787 --var PUBLIC_BASE_URL:http://10.0.2.2:8787
+```
+
+so that generated link URLs use `http://10.0.2.2:8787/r/<username>/<slug>`. Only `PUBLIC_BASE_URL` changes; `ROOT_DOMAIN` stays `localhost:8787`. Point the example app at the same origin (`baseUrl: 'http://10.0.2.2:8787'`) and trigger links with `adb`; see [Testing](/sdk/testing/).
+
+## Useful commands
+
+```bash
+cd apps/worker
+npm test                    # vitest, 28 files, isolated D1 per test
+npm run typecheck           # tsc --noEmit
+cd ../web && npm run typecheck
+```
+
+Reset the local database (bootstrap answers 409 once any user exists):
+
+```bash
+cd apps/worker
+rm -rf .wrangler/state
+npm run db:migrate
+```
+
+Run the scheduled jobs locally. `npm run dev` does not fire cron triggers; start wrangler with `--test-scheduled` and call the test endpoint:
+
+```bash
+npx wrangler dev --port 8787 --test-scheduled
+curl "http://localhost:8787/__scheduled?cron=17+3+*+*+*"    # daily sweep
+curl "http://localhost:8787/__scheduled?cron=7+*+*+*+*"     # hourly Apple Search Ads retry
+```
+
+What each trigger does is on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). When you are ready for a real domain, continue with [Deploy to Cloudflare](/self-hosting/deploy/).

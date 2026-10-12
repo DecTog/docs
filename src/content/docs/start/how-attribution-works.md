@@ -26,7 +26,7 @@ On the first launch the SDK registers the install once (an idempotent `install_a
 
 - the Google Play install referrer, or the Huawei, Samsung, Xiaomi or vivo one, waiting at most 5 seconds (`installReferrerTimeout`);
 - the pasteboard, on iOS by default (`readClipboardOnInstall`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
-- Meta's on-device install referrer on Android, when the app has a Facebook App ID;
+- Meta's on-device install referrer on Android, when `DectogConfig.fbAppId` is set;
 - the device tier (model, OS, language, screen, connectivity, carrier) when `collectDeviceData` is on, which the fingerprint needs;
 - the Apple Search Ads token when `collectAppleSearchAdsToken` is on.
 
@@ -112,7 +112,7 @@ Every install is checked against explainable rules. The hits ride on the verdict
 | `stale_referrer` | The referrer or clipboard click is older than 30 days |
 | `click_reuse` | A deterministic signal named a click another device's install already consumed |
 
-With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; it keeps `referrer_source`, `match_confidence` and the matched slug, and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
+With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict shows the first two but no slug; the install webhook carries the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
 
 ## Apple Search Ads
 

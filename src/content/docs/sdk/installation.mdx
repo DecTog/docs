@@ -95,7 +95,7 @@ dependencies {
 }
 ```
 
-Without them the two readers report `not_available` and everything else works. The Huawei AppGallery and vivo readers need no library.
+Without them the two readers report `not_available` and everything else works. The Huawei AppGallery and vivo readers need no library. Whether each OEM store passes the tagged `referrer` value through to the app has not been verified on devices; see the caution on [Deterministic attribution](/sdk/deterministic-attribution/).
 
 **Manifest entries merged from the plugin.** The library manifest declares the Huawei `com.huawei.appmarket.service.commondata.permission.GET_COMMON_DATA` permission (normal protection level, no prompt, a no-op on devices without AppGallery) and `<queries>` package-visibility entries for the Facebook, Facebook Lite and Instagram apps, the Play Store, and the Huawei and vivo referrer providers. The `AD_ID` permission is not declared.
 

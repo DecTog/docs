@@ -1,0 +1,128 @@
+---
+title: Privacy and data
+description: What a DecTog server stores about visitors, devices and customers, for how long, what the SDK sends, what a tenant can delete, and what to put in a privacy policy.
+sidebar:
+  order: 7
+---
+
+This page lists the personal data a self-hosted DecTog handles, table by table, with the retention each column gets from the daily sweep (`RETENTION_DAYS`, default 400). The sweep itself is specified on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). "Forever" means no code ever removes the value; "retention" means it is set to `NULL` once the row is older than the cutoff.
+
+## IP addresses
+
+Every request's address is read from `CF-Connecting-IP` (else the first `X-Forwarded-For` entry, else `0.0.0.0`).
+
+- **Hashed:** `sha256("<IP_SALT>:<address>")`. IPv6 addresses are cut to their /64 prefix before hashing, because privacy extensions rotate the interface id between the browser tap and the app's first launch; IPv4-mapped addresses are hashed as the plain IPv4, and addresses whose /64 prefix is all zeros (loopback) are hashed in full. The hash is the join key for fingerprint matching, the beacon, the `install_velocity_ip` and `click_storm_ip` rules, the per-IP rate limits and the Overview's "unique visitors". It is only as private as `IP_SALT`.
+- **Raw:** the plain address is also stored, in `clicks.ip_raw`, `app_installs.ip_raw` and `events.ip_raw`, until retention. It is shown in the dashboard (Customers detail, the Events feed) and returned by the admin API. Matching never uses it.
+
+| Table | Hashed | Raw | Until |
+|---|---|---|---|
+| `clicks` | `ip_hash` | `ip_raw` | both nulled at retention |
+| `app_installs` | `ip_hash` | `ip_raw` | both nulled at retention |
+| `events` | none | `ip_raw` | nulled at retention |
+| `app_opens` | `ip_hash` | none | nulled at retention |
+| `rate_limits` | in the key | none | rows deleted after the window passes |
+
+Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click row. Link taps set no cookies; the only cookies are the dashboard session and the two Google sign-in cookies.
+
+## Clicks
+
+| Data | Column | Source | Until |
+|---|---|---|---|
+| Device family, OS label, browser | `device_type`, `os`, `browser`, `os_major` | User-Agent; `Sec-CH-UA-Platform-Version` for the Android version | forever |
+| Device model | `device_model` | `Sec-CH-UA-Model` client hint or the WebView `Build/` token, lower-cased; from the SDK on in-app clicks | retention |
+| CPU family | `ua_arch` | `Sec-CH-UA-Arch` | forever |
+| Raw User-Agent | `ua_raw` | header, cut to 512 characters | retention |
+| Language | `accept_language` (128 characters), `lang` (primary tag) | `Accept-Language` | `accept_language` at retention; `lang` forever |
+| Geo and network | `country`; `region`, `city`, `asn`, `as_org` (128 characters) | Cloudflare's `cf` object | `country` forever; the rest at retention |
+| Screen profile | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `connection_type` | the interstitial beacon, only for apps with the mobile interstitial on | screen fields after `min(RETENTION_DAYS, 30)` days; `connection_type` forever |
+| Traffic source | `referrer` | `Referer` header reduced to its origin; null for the deployment's own hosts | forever |
+| Campaign | `utm_*`, `link_params` (`dec_*` values) | the link URL's query string | forever |
+| Bot score | `bot_score` | Cloudflare bot management, scores of 30 and above | forever |
+| SDK-reported opens | `device_id`, `session_id`, `client_click_time`, `launch_referrer` | the SDK's `POST /api/v1/clicks` | `device_id` and `launch_referrer` at retention; the rest forever |
+
+## Installs
+
+| Data | Columns | Source | Until |
+|---|---|---|---|
+| Device id | `device_id` | the SDK's device tier: IDFV on iOS (persisted in the Keychain by default) or `ANDROID_ID` | retention |
+| Hardware | `device_model`, `device_manufacturer`, `device_kind`, `cpu_type`, `os_build` | device tier | retention; `cpu_family` (derived) forever |
+| Screen | `screen_width`, `screen_height`, `screen_density` | device tier | retention |
+| Network | `connectivity_type`, `carrier_mcc`, `carrier_mnc` | device tier | retention |
+| ASN | `asn` | Cloudflare | forever |
+| OS, locale | `os`, `os_version`, `os_major`, `language`, `lang`, `timezone` | always sent | forever |
+| App | `app_platform`, `app_version`, `app_build_number`, `package_name`, `installer_package`, `install_time`, `update_time`, `first_install_ts`, `install_state`, `is_physical_device` | always sent | forever |
+| WebView User-Agent | `web_user_agent` (512 characters) | SDK | retention |
+| Store referrer | `install_referrer` (2048 characters), `referrer_store`, `referrer_status`, the click and install-begin timestamps | Play, Huawei, Samsung, Xiaomi or vivo referrer | forever. The string carries `dtg_click=<id>` and `dtg_l=<username>/<slug>`, plus whatever else the store put in it. |
+| Meta referrer | `meta_referrer` (512 characters), `meta_referrer_ts`, `meta_referrer_is_ct` | Meta's on-device provider, only when the app has a Facebook App ID | `meta_referrer` at retention; the rest forever |
+| Copied link | `clipboard_slug` | the pasteboard; only the slug and click id are extracted, the clipboard text itself is never stored | forever |
+| Apple Search Ads | `asa_token`; `asa_attribution` (campaign, ad group, keyword and ad ids, dates, country) | AdServices, only with `collectAppleSearchAdsToken: true` | the token is nulled as soon as the status settles, or at retention; the record forever |
+| Verdict and fraud | `matched*`, `match_*`, `referrer_source`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `fraud_flags` | the Worker | forever |
+| Free-form | `metadata` | whatever the app put in the request's `metadata` | forever |
+
+### Advertising identifiers
+
+`POST /api/v1/app-installs` accepts `ad_id` and `ad_tracking_limited` and stores them in `ad_identifiers`, keyed by install id. No query joins that table to `app_installs` or to `device_id`; it is written once and deleted by the sweep. flutter_dectog 1.0.x never sends these fields: it reads neither the GAID nor the IDFA and has no advertising-id dependency. The table only fills if you write your own client that sends them. See [Device data and privacy](/sdk/device-data-and-privacy/).
+
+### What the SDK sends per tier
+
+`DectogConfig.collectDeviceData` is `true` by default and `persistDeviceId` is `true` by default. With the device tier on, every install registration and in-app click carries the device id, hardware, screen and network fields above. With it off, those fields are absent: the server then cannot detect reinstalls by device, the fingerprint has no model or screen signal, and `GET /api/v1/attribution` works by `install_id` only. The OS, locale, app and referrer fields are sent regardless. The iOS pasteboard read is on by default (`readClipboardOnInstall` null means iOS on, Android off) and triggers the system paste notice on iOS 16 and later; the Apple Search Ads token is off by default.
+
+## Customers and events
+
+- `customers.name` (200 characters), `email` (254) and `phone` (32) are stored **in plain text**, exactly as your app sends them in `identify` events (`apps/worker/src/api_events.ts`). A later identify that sends a field overwrites it; a field it omits keeps its old value. Only `first_install_id` is first-seen. They are nulled once the customer's `updated_at` is older than the retention cutoff. `customer_id`, the identifier your app chose, is kept forever.
+- Every event row keeps `type`, `event_name`, `revenue`, `currency`, `install_id` and `matched_slug` forever; `device_id`, `customer_id`, `metadata` (free JSON from your app) and `ip_raw` are nulled at retention.
+- `device_pings` rows (device id, app version, OS, time) are deleted at retention.
+- `app_opens` keep the slug and time forever; `device_id`, `install_id`, `click_id` and `ip_hash` are nulled at retention.
+
+The dashboard masks the email in the Customers list (`e****@domain`) but shows it in full on the detail page, together with the attributed click's raw IP, geo and network. See [Customers](/dashboard/customers/).
+
+## Data that leaves the server
+
+- **Install webhook:** each delivery to your endpoint includes `device_id`, `device_model`, `device_manufacturer`, OS, connectivity, carrier codes, `ip_hash`, the matched link and click params, fraud flags and the Apple Search Ads record. The URL and secret are stored in plain text on the app and returned by `GET /api/admin/apps`. See [Install webhook](/api/install-webhook/).
+- **Apple:** the AdServices token is posted to `api-adservices.apple.com`.
+- **Resend:** the password-reset email (recipient address, reset link) when `RESEND_API_KEY` is set.
+- **Google:** the OAuth code exchange when Sign in with Google is configured.
+- **Cloudflare:** everything is processed in Workers and stored in D1. D1 chooses a region when the database is created; `wrangler d1 create --location` pins it.
+
+## Accounts
+
+`users` keeps the email, a PBKDF2-SHA256 password hash (100,000 iterations), the username, the SHA-256 of the API key with its 8-character prefix, the AES-GCM encrypted copy of the key, the role and the Google `sub`. Nothing in `users` is ever anonymized. `password_resets` stores token hashes with expiry and use time, never pruned. `contact_messages` stores name, email, subject and message from the public form until an owner deletes them.
+
+## What a tenant can delete
+
+| Action | Effect |
+|---|---|
+| Delete a link (dashboard, `DELETE /api/admin/links/:slug`, `DELETE /api/v1/links/:slug`) | In one batch: events whose `matched_slug` is the link or whose install was attributed through its clicks; the link's app opens; `customers.first_install_id` cleared where it pointed at those installs; the attributed installs; every click on the link; the link row. The data disappears from Overview and per-link analytics. |
+| Delete a temporary link | The same cascade. |
+| "Delete expired" temporary links | Only the `temp_links` rows; clicks and installs stay. |
+| Delete an app | Its links fall back to the oldest remaining app; installs and clicks are untouched. |
+| Regenerate the API key | The old key stops working immediately. |
+
+There is no way through the dashboard or the API to delete an account, a customer, a single install, click or event, or to rename a username. A data-subject request therefore needs direct database access, always scoped to the tenant:
+
+```bash
+# everything recorded for one device id of one tenant (replace both placeholders)
+npx wrangler d1 execute dectog --remote --env production --command \
+  "DELETE FROM events WHERE user_id = '<user_id>' AND device_id = '<device_id>';
+   DELETE FROM app_opens WHERE user_id = '<user_id>' AND device_id = '<device_id>';
+   DELETE FROM device_pings WHERE user_id = '<user_id>' AND device_id = '<device_id>';
+   DELETE FROM ad_identifiers WHERE install_id IN (SELECT id FROM app_installs WHERE user_id = '<user_id>' AND device_id = '<device_id>');
+   DELETE FROM app_installs WHERE user_id = '<user_id>' AND device_id = '<device_id>';"
+```
+
+Deleting an install row frees its click for a future fingerprint match (the `NOT EXISTS` check in the candidate query), which is the intended consequence of removing the record.
+
+## For your privacy policy
+
+A self-hosted DecTog makes you the controller of this data. Items a policy and the store declarations usually need to cover, with where each comes from:
+
+1. **Link taps:** IP address (hashed and, until retention, raw), country, region and city, ASN, User-Agent and client hints, language, referrer origin, UTM parameters; purpose: routing, install attribution, fraud detection, analytics.
+2. **App installs and opens:** the vendor-scoped device identifier (IDFV persisted in the Keychain, or `ANDROID_ID`), hardware model and manufacturer, OS and version, screen metrics, connectivity and carrier codes (Android), app version and install dates, IP address; purpose: install attribution, reinstall detection, analytics. Declare the persisted identifier in the App Store privacy answers and the Play Data safety form.
+3. **Store install referrers** (Play, Huawei, Samsung, Xiaomi, vivo) and, if you set a Facebook App ID, Meta's on-device install referrer.
+4. **Pasteboard access on iOS** on first launch (system notice on iOS 16 and later), if you leave `readClipboardOnInstall` at its default.
+5. **Apple Search Ads attribution token**, if you enable `collectAppleSearchAdsToken`.
+6. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
+7. **Retention:** personal columns anonymized after `RETENTION_DAYS` (400 by default), screen profiles after 30 days, Apple tokens as soon as resolved; aggregate rows kept.
+8. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
+
+Adjust `RETENTION_DAYS` on the [Configuration reference](/self-hosting/configuration-reference/) if 400 days is longer than your policy allows.

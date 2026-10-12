@@ -13,7 +13,7 @@ An account is one tenant, one username and one link subdomain. The username is t
 
 Each account has exactly one API key, `dtg_` followed by 32 hex characters. The SDK authenticates with it as a Bearer token and signs every request with it. Regenerating the key under **Settings** invalidates the old one immediately.
 
-Everything an account stores is scoped to it. There is no cross-account view; the only privilege level is the owner role, which unlocks the Blog and Messages screens on a self-hosted deployment. See [Account and sign-in](/dashboard/account-and-sign-in/).
+Everything an account stores is scoped to it. There is no cross-account view; the only extra privilege is the owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
 
 ## Apps and the default app
 
@@ -96,7 +96,7 @@ After the install the SDK can report:
 | Object | SDK call | What it is |
 |---|---|---|
 | Event | `trackConversion`, `trackEvent`, `identify` | Typed rows (`conversion`, `custom`, `lead`, `identify`) stamped with the install's matched link, so leads and revenue appear per link. `identify` is stored as an event too; the first identify of a new user on a fresh install is the `lead`. Batches of up to 100 events. |
-| Customer | `identify(customerId: ...)` | Your user id with optional name, email and phone, bound to the device's install attribution. First-seen values win; later calls only fill blanks. Browse them under **Customers**. |
+| Customer | `identify(customerId: ...)` | Your user id with optional name, email and phone, bound to the device's install attribution. A later call overwrites the fields it sends and keeps the ones it omits; the install association stays with the first install. Browse them under **Customers**. |
 | App open | Automatic | A DecTog link opened the already-installed app. Counted as **Opens** on the Overview and per link. |
 
 See [Events](/sdk/events/) and [Events and attribution](/api/events-and-attribution/).

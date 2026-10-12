@@ -7,31 +7,59 @@ hero:
   image:
     file: ../../assets/logo.svg
   actions:
+    - text: Quickstart
+      link: /start/quickstart/
+      icon: right-arrow
+    - text: Flutter SDK
+      link: /sdk/installation/
+      variant: minimal
     - text: dectog.com
       link: https://dectog.com
       icon: external
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 
 <CardGrid stagger>
-	<Card title="Start here" icon="rocket">
-		Create an account, register your app, add the SDK and ship your first attributed install.
-	</Card>
-	<Card title="Links & routing" icon="random">
-		What happens when someone taps a link: app, store, QR page, bots, and every `dec_*` parameter.
-	</Card>
-	<Card title="Flutter SDK" icon="seti:dart">
-		Installation, platform setup, deferred deep links, install attribution, events and the full API reference.
-	</Card>
-	<Card title="Dashboard" icon="bars">
-		Every screen and every number on it, defined exactly as the server computes it.
-	</Card>
-	<Card title="REST API" icon="document">
-		Authentication, request signing, rate limits, links, installs, events and the install webhook.
-	</Card>
-	<Card title="Self-hosting" icon="cloud-download">
-		Run DecTog on your own Cloudflare account: deploy, configure, operate and keep your data.
-	</Card>
+	<LinkCard
+		title="Start here"
+		href="/start/quickstart/"
+		description="Create an account, register your app, add the SDK and ship your first attributed install."
+	/>
+	<LinkCard
+		title="Links & routing"
+		href="/links/how-a-tap-is-routed/"
+		description="What happens when someone taps a link: app, store, QR page, bots, and every dec_* parameter."
+	/>
+	<LinkCard
+		title="Flutter SDK"
+		href="/sdk/installation/"
+		description="Installation, platform setup, deferred deep links, install attribution, events and the full API reference."
+	/>
+	<LinkCard
+		title="Dashboard"
+		href="/dashboard/overview/"
+		description="Every screen and every number on it, defined exactly as the server computes it."
+	/>
+	<LinkCard
+		title="REST API"
+		href="/api/overview/"
+		description="Authentication, request signing, rate limits, links, installs, events and the install webhook."
+	/>
+	<LinkCard
+		title="Self-hosting"
+		href="/self-hosting/local-quick-start/"
+		description="Run DecTog on your own Cloudflare account: deploy, configure, operate and keep your data."
+	/>
+	<LinkCard
+		title="Guides"
+		href="/guides/troubleshooting/"
+		description="Troubleshooting, migrating from Firebase Dynamic Links or Branch, automation and AI agents."
+	/>
+	<LinkCard
+		title="Contributing"
+		href="/contributing/"
+		description="Repository layout, tests, migration rules and the licenses of the server, the SDK and these docs."
+	/>
 </CardGrid>

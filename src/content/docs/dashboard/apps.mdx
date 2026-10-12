@@ -1,0 +1,144 @@
+---
+title: Apps
+description: Register iOS and Android apps, with every field, its validation, the status chips, the Auto-fill, Verify and Send test actions, and which app's settings the server actually applies.
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The Apps screen, at https://app.dectog.com/dashboard/apps, holds the identifiers DecTog needs to route taps and open your app. Its header reads "Register your iOS and Android apps. Their identifiers power store routing, deep links and the Universal Links / App Links files DecTog serves for you."
+
+An **Add app** button opens the editor. While the editor is closed, a status line shows "Saved ✓", "Deleted ✓" or the last error.
+
+<Aside type="caution" title="Which app's settings apply">
+Most settings belong to the app a link is bound to: the link's **App**, or your oldest app when a link has none. Three settings do not. **Strict fraud mode**, the **Low-entropy attribution window** and the **Install webhook** are always read from your **oldest app**, whichever app the link or the install belongs to. On an account with one app this makes no difference. On an account with several apps, set those three on the oldest app; the same controls on younger apps are saved but never consulted.
+</Aside>
+
+## App cards
+
+Each registered app is a card with two-letter initials, the name, the iOS bundle ID or Android package (or "No identifiers yet"), **Edit**, **Delete** and five status chips. A chip is green when its condition holds and gray otherwise.
+
+| Chip | Green when | Hover text |
+|---|---|---|
+| **iOS links** | Both the iOS bundle ID and the Apple Team ID are set. | Universal Links: iOS bundle ID + Apple Team ID |
+| **Android links** | The Android package and at least one SHA-256 fingerprint are set. | App Links: package + SHA-256 fingerprints |
+| **Store routing** | An App Store URL or a Play Store URL is set. | App Store / Play Store URL |
+| **Scheme** | Shows the scheme: `myapp://` when both platforms share one, `iOS a:// · Android b://` when they differ, or **No scheme**. | Custom URL scheme for deep links |
+| **Fallback URL** | A fallback URL is set. | Web fallback for desktop and missing destinations |
+
+The oldest app is the account's default app. It serves links created with **Default app**, every temporary link, and links whose app was deleted.
+
+## The editor
+
+The editor is titled `Edit <name>`, **Register your first app** or **Register an app**, with the subtitle "Only the name is required — fill in each platform as you set it up." On wide screens a side menu jumps to the six sections below. The editor is always open while the account has no app.
+
+### General
+
+Section text: "The app's name and the web page links fall back to when the app can't serve them (desktop continue button, last mobile fallback)."
+
+| Field | What to enter | Rules |
+|---|---|---|
+| **App name** | Placeholder `My App`. | Required when creating: `App name is required`. When editing, an emptied name keeps the old one. |
+| **Fallback URL (optional)** | Placeholder `https://myapp.com`. The web page a tap lands on when nothing else applies: desktop visitors (instead of the QR page) and phones with no store URL to go to. Links created with **App fallback URL (default)** inherit it. | http(s), or `fallback_url must be a valid http(s) URL`. |
+
+### iOS
+
+Section text: "Bundle ID and Team ID generate your Universal Links file; the store URL and scheme route taps."
+
+| Field | What to enter | Rules |
+|---|---|---|
+| **iOS bundle ID** | Placeholder `com.example.myapp`. | Must look like `com.company.app`: at least two dot-separated parts of letters, digits and underscores, each starting with a letter. Error: `ios_bundle_id must look like com.company.app`. |
+| **Apple Team ID** | Placeholder `10-char team id`. Hint: "Required for Universal Links". | Exactly 10 uppercase letters or digits. Error: `ios_team_id must be a 10-character Apple Team ID (e.g. 8H7C9JL2K3)`. |
+| **App Store URL** | Placeholder `https://apps.apple.com/app/id123`. Where iPhone taps go when the app is not installed. | The host must be exactly `apps.apple.com`. Error: `ios_store_url must be an apps.apple.com URL`. |
+| **iOS app scheme** | The scheme only, shown with a `://` suffix (placeholder `myapp`). ⓘ "The custom URL scheme declared in the iOS app's Info.plist (CFBundleURLSchemes). DecTog builds deep links as scheme://username/slug — type the scheme only." | A letter followed by letters, digits, `+`, `-` or `.`; a pasted trailing `://` is removed. `http`, `https`, `ws`, `wss`, `javascript`, `file`, `data`, `blob`, `about` and `intent` are rejected with `ios_app_scheme must be a custom app scheme — the browser handles http/https/javascript itself, so it can never open the app`. Other invalid values get `ios_app_scheme must be a URL scheme (letters, digits, +, -, .) without :// — e.g. myapp`. |
+
+Below the fields, **Universal Links file** `/.well-known/apple-app-site-association` has a **Verify** button and an ⓘ bubble with a four-step guide: the bundle ID and Team ID generate the file once both are saved; add an Associated Domains entitlement in Xcode; rebuild and reinstall, because iOS reads the file when the app is installed; and custom-scheme links only open from a direct user tap, never from a redirect. The bubble, and the setup prompt its **⧉ Copy for AI** button copies (with your domain, username, bundle ID and Team ID filled in), name the entitlement as the wildcard `applinks:*.your-root-domain`. Use the explicit host instead: `applinks:your-username.dectog.com`. For a wildcard entry iOS fetches the file from the parent domain, and `https://dectog.com/.well-known/apple-app-site-association` answers `400` with `Subdomain not found in host`, because only the `your-username.dectog.com` host (or `?u=your-username`) identifies the account. The platform side is covered in [Platform setup](/sdk/platform-setup/).
+
+### Android
+
+Section text: "Package name and SHA-256 fingerprints generate your App Links file; the store URL and scheme route taps."
+
+| Field | What to enter | Rules |
+|---|---|---|
+| **Android package** | Placeholder `com.example.myapp`. | Same shape as the bundle ID. Error: `android_package must look like com.company.app`. |
+| **Play Store URL** | Placeholder `https://play.google.com/store/apps/details?id=…`. Where Android taps go when the app is not installed. | The host must be exactly `play.google.com`. Error: `android_store_url must be a play.google.com URL`. |
+| **Android app scheme** | Placeholder `myapp`, with the `://` suffix. ⓘ "The android:scheme registered in the app's intent filters. Leave it equal to the iOS one if both platforms share a scheme." | The same rules and messages as the iOS scheme, prefixed `android_app_scheme`. |
+| **Facebook App ID (optional)** | Placeholder `1234567890123456`. ⓘ "When set, the Android SDK also reads Meta's on-device install referrer (Facebook/Instagram apps) as an extra deterministic attribution signal for your own app." | Free text, trimmed. The server only stores this value; nothing reads it back. The Android SDK reads Meta's install referrer only when `DectogConfig.fbAppId` is set in the app itself, so set it there. See [Deterministic attribution](/sdk/deterministic-attribution/). |
+| **SHA-256 fingerprints (one per line)** | Placeholder `AA:BB:CC:…`. Hint: "Include your release / Play App Signing key, not only the debug key." | Each line must be 32 hex byte pairs separated by colons. Values are stored in uppercase; blank lines are dropped. Error: `SHA-256 fingerprints must be 32 hex byte pairs separated by colons (AA:BB:…)`. |
+| **Other Android stores**: **Huawei AppGallery URL**, **Samsung Galaxy Store URL**, **Xiaomi GetApps URL**, **vivo store URL** | ⓘ "Optional. Devices from these brands are sent to their own store instead of Google Play — e.g. Huawei phones without Google services. Each store passes the install referrer back to the SDK, so installs still attribute deterministically. Leave empty to always use Google Play." | Huawei: a host under `appgallery.huawei.com`, `appgallery.cloud.huawei.com` or `url.cloud.huawei.com`. Samsung: `galaxystore.samsung.com`, `apps.samsung.com` or `galaxy.store`. Xiaomi: `global.app.mi.com` or `app.mi.com`. vivo: any http(s) URL. Errors read `huawei_store_url must be a appgallery.huawei.com / appgallery.cloud.huawei.com / url.cloud.huawei.com URL` and so on, or `vivo_store_url must be a valid http(s) URL`. An OEM URL is used only for phones of that brand and works without a Play Store URL. |
+
+Below the fields, **App Links file** `/.well-known/assetlinks.json` has its own **Verify** button and ⓘ guide: the package and fingerprints generate the file once both are saved; add an https intent filter with `android:autoVerify="true"` for each tenant host, listed explicitly because intent filters take no wildcards; Chrome verifies at install or update, and until then taps still open the app through an `intent://` redirect carrying your scheme and package. **⧉ Copy for AI** copies the prompt with your package and fingerprints filled in. How brands are detected and store URLs tagged is in [App stores and OEM routing](/links/app-stores-and-oem-routing/).
+
+### Social sharing preview
+
+Section text: "How your links look when shared on social media or in messaging apps. Used for every link without its own preview."
+
+| Field | What to enter | Rules |
+|---|---|---|
+| **Image URL** | Placeholder `https://…/preview.jpg`. Hint: "JPG or PNG. Recommended size 200 × 200 px." | http(s): `og_image_url must be a valid http(s) URL`. |
+| **Title** | Placeholder `My App`. Hint: "Recommended 30 to 60 characters. Maximum 150 characters." | The box does not stop you; the server rejects more than 150 characters with `og_title must be at most 150 characters`. |
+| **Description (optional)** | A short text. | The box stops at 150 characters; the server enforces the same limit. |
+
+A **Live preview** card renders the three values, captioned "How the app default looks when a link is shared on social media or messaging apps." The per-link editor recommends 1200 × 630 px images; both sizes are hints, and each platform crops as it likes. See [Social previews and QR](/links/social-previews-and-qr/).
+
+**Auto-fill from fallback URL** appears in the section header when the Fallback URL is an http(s) address and at least one of the three preview fields is empty. It reads "Fetching…" while running, fills only the empty fields from the page's `og:` and `twitter:` tags, and reports `✓ Filled from your fallback URL — review, then save.` or `✕` followed by the server's error: `No title, description or image found on that page`, `Enter a valid public http(s) URL` (private and loopback hosts are refused), `Couldn't reach that URL`, or a message naming the HTTP status the page returned. The fetch follows redirects, gives up after 8 seconds or 512 KB, and cuts titles and descriptions to 150 characters. Nothing is saved until you save the form.
+
+### Install webhook
+
+Section text: "A signed POST (HMAC-SHA256, `X-Dectog-Signature`) to your server on every app install. Leave empty to disable."
+
+| Field | What to enter | Rules |
+|---|---|---|
+| **Webhook URL** | Placeholder `https://myapp.com/api/dectog/install-webhook`. | http(s): `install_webhook_url must be a valid http(s) URL`. |
+| **Webhook secret** | Placeholder `shared HMAC secret`. The key your server uses to check the signature. | Free text, trimmed. The secret is stored and displayed in plain text; anyone who can open this screen can read it. |
+
+Both values must be saved for deliveries to happen. The server posts `app.installed` on every first launch and `app.install_updated` when a later claim or an Apple Search Ads result upgrades the verdict. Each request is signed as `sha256=` plus the hex HMAC-SHA256 of the raw body and carries an `x-dectog-timestamp` header that is not part of the signed data. There are no retries. The payload and verification code are in [Install webhook](/api/install-webhook/).
+
+**Send test** sits in the section header while you edit an existing app and is disabled while the URL box is empty. Its tooltip: "Sends a signed test event to the saved webhook URL — save changes first if you edited the fields". The server needs both the URL and the secret saved. The test posts an `app.installed` event with `test: true`, `matched: false`, `type: "organic"`, the device model `DecTog test probe` and null for everything else, waits up to 10 seconds, and reports one of:
+
+- `✓ Test event delivered — endpoint replied <status>` for a 2xx response;
+- `✕ Event delivered, but the endpoint replied <status>` for any other status;
+- `✕ Webhook delivery failed: <reason>` when the endpoint could not be reached in time;
+- `✕ Save the webhook URL and secret first` when either value is not saved yet.
+
+Real deliveries go to the webhook of your oldest app only; see the note at the top of this page.
+
+### Advanced
+
+Section text: "Attribution behaviour. Everything here is off by default."
+
+| Setting | Control | What it does, as the screen describes it |
+|---|---|---|
+| **Strict fraud mode** | Switch | "Off: installs that trip a fraud rule (emulator, impossible click-to-install timing, install velocity per IP, click storm, stale referrer) keep their attribution and carry the flags. On: flagged installs count as organic — the click they claimed stays consumed either way." With the switch on, a flagged install is stored as unmatched, but the server keeps the referrer source, the confidence and the matched slug on the record, and the webhook still carries the slug next to `matched: false`. |
+| **Mobile beacon interstitial** | Switch | "Off: mobile taps get an instant redirect to the store or app. On: taps see a brief “Opening the app…” page that records the screen profile on the click, which sharpens install matching. Adds roughly half a second." When iOS tap-to-store is on, the row shows an **Android only** badge and continues "iPhone taps are handled by iOS tap-to-store (its page sends the same beacon), so this switch now affects Android only."; otherwise it continues "On iPhone, iOS tap-to-store takes over when it is on; Android taps still get this page." |
+| **iOS tap-to-store** | Switch | "Off: iPhone taps go straight to the App Store. On: taps see a one-button page whose “Get the app” tap copies the link to the clipboard before opening the App Store. The SDK reads it on first launch, so iOS installs attribute deterministically instead of by IP. Inside Instagram and Facebook the page offers “Open in app” first. There is no automatic redirect: Safari only lets the page copy from a tap. On iPhone this replaces the beacon interstitial." The page is used only when the tap's destination is the App Store. |
+| **Low-entropy attribution window** | Number box, 1 to 720, placeholder `2`, suffix "hours" | "Hours an IP-only click (no device model, or an install on mobile data) stays matchable. Shorter is safer on shared carrier networks. Empty uses the deployment default (2 hours); clicks that carry a device model keep the full 24-hour window." The server accepts a whole number from 1 to 720 or an empty box; anything else gets `low_entropy_window_hours must be a whole number of hours between 1 and 720`. The effective value never exceeds the wide window of 24 hours. |
+
+Strict fraud mode and the low-entropy window are read from the oldest app. The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules, windows and confidence levels are explained in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
+
+## Saving
+
+A sticky bar appears at the bottom once the form differs from what is saved, with **Save changes** (or **Add app** for a new app) and **Cancel**. While nothing is wrong it reads "Changes apply to new link taps right after saving." or "New apps can be edited any time." A rejected save keeps the bar up and replaces that text with the server's message. On success the editor closes and the status line shows "Saved ✓".
+
+Updates are partial on the server: a field left out keeps its value, and an emptied field clears it (except the name). Identifier fields are validated after trimming but saved exactly as typed, so avoid leading or trailing spaces.
+
+## Verify
+
+Each **Verify** button fetches the account's well-known file through the dashboard host with `?u=your-username`, which returns exactly what `https://your-username.dectog.com/.well-known/…` serves publicly. It checks the **saved** configuration of **every app** in the account, not the unsaved editor, and shows one line:
+
+| Button | Result |
+|---|---|
+| Universal Links file | `✓ <n> app ID(s) served`, or `✕ No app IDs configured` when no app has both a bundle ID and a Team ID. |
+| App Links file | `✓ <n> package(s), SHA-256 fingerprints present`; `✕ <n> package(s), MISSING fingerprints` when no package has a fingerprint; or `✕ No packages configured`. |
+| Either | `✕ Endpoint replied <status>: <error>` (the server answers `404` with `Configuration not found` while no app qualifies) or `✕ Fetch failed: <reason>`. |
+
+The AASA file lists every app that has both a bundle ID and a Team ID, as `TEAMID.bundle`, under `applinks` and `webcredentials`. The assetlinks file lists every app that has a package, with its fingerprints (an empty list when none are set). Both are described in [Well-known, SEO and routing](/api/well-known-seo-and-routing/).
+
+## Deleting an app
+
+The trash icon asks `Delete app "<name>"? Links using it will fall back to your default app. This cannot be undone.` Links bound to the app lose their binding and are served by the oldest remaining app from the next tap on. Clicks and installs recorded for the app stay. The status line shows "Deleted ✓".
+
+<Aside type="note" title="Self-hosting">
+The well-known files are served on your own root domain, so the Associated Domains entry becomes `applinks:your-username.your-root-domain` and the intent-filter hosts become `your-username.your-root-domain`. In path mode (a root domain that starts with `localhost`) the files are reachable only with `?u=your-username`, and on-device verification, which fetches them from the link host over https, is not possible.
+</Aside>

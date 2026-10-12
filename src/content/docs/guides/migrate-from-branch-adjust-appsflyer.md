@@ -1,0 +1,116 @@
+---
+title: Migrate from Branch, Adjust or AppsFlyer
+description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to DecTog links, dec_* parameters, the SDK verdict and the install webhook, with a plain list of what DecTog does not do.
+sidebar:
+  order: 2
+---
+
+This guide is for teams moving deep links and install attribution from Branch, Adjust or AppsFlyer. It maps names and behaviors, nothing else. Vendor terms are written as they appear in those products' documentation. It assumes the hosted service: the API at `https://app.dectog.com` and links at `https://{username}.dectog.com/{slug}`.
+
+:::note[Self-hosting]
+On your own deployment the API base is `PUBLIC_BASE_URL`, links use your `ROOT_DOMAIN`, and the fingerprint windows come from `ATTRIBUTION_WINDOW_HOURS` and `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS`. See [Configuration reference](/self-hosting/configuration-reference/).
+:::
+
+## The verdict in their terms
+
+Every install report returns one `DectogAppInstallResponse`. This table places the vocabulary of the three products on its fields.
+
+| Concept | DecTog |
+|---|---|
+| The install came from a link (Branch `+clicked_branch_link`, AppsFlyer `af_status: Non-organic`, Adjust attribution with a tracker) | `matched: true`, `type: 'non-organic'`. `matched` is attribution credit. It is granted only at `matchConfidence` `guaranteed` or `high`. |
+| Deterministic match (Branch `+match_guaranteed`) | `matchConfidence: 'guaranteed'`, `matchSource` `referrer` or `clipboard`, and `referrerSource` naming the store: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo` or `meta`. |
+| Probabilistic match (AppsFlyer "probabilistic modeling", Branch "fingerprint") | `matchSource: 'fingerprint'`. `high` is credited. `medium` is not credited but returns a `routing` candidate (`slug`, `deepLink`, `clickParams`, `confidence`). `low` returns nothing. |
+| Deferred deep link (Branch `$deeplink_path`, Adjust deferred deep link callback, AppsFlyer `deep_link_value`) | `install.deepLink` (the `dec_deeplink` of the tapped URL) or `install.routing?.deepLink`. For the link's stored paths call `dectog.resolveLink(username, slug)` and read `deepLinkPathFor('ios')` or `('android')`. |
+| First session (Branch `+is_first_session`, AppsFlyer `is_first_launch`) | The `onAppInstalled` emission itself. `installState` is `install`, `reinstall` or `update`. App updates never run the fingerprint. Reinstalls run the full ladder and carry `isReinstall: true`; the dashboard leaves them out of the Installs KPI and the per-link counts. |
+| Referring link (Branch `~referring_link`) | `install.link?.url` and `install.slug` |
+| Campaign fields (Branch `~campaign`, `~channel`, `~feature`, `~tags`; Adjust `campaign`, `adgroup`, `creative`, `label`; AppsFlyer `pid`, `c`, `af_adset`, `af_ad`, `af_channel`) | The link's Tracking fields `label`, `campaign`, `adgroup`, `creative`, overridden per tap by `dec_label`, `dec_campaign`, `dec_adgroup`, `dec_creative`, plus `dec_tracker`. Returned as `install.clickParams`. `utm_*` is stored as well and feeds the Overview charts. |
+| Custom link data (Branch link data, AppsFlyer `deep_link_sub1` to `deep_link_sub10`) | Link `metadata` (any JSON), returned as `install.customParameters` |
+| Identity (Branch `setIdentity`, AppsFlyer `setCustomerUserId`) | `dectog.identify(customerId: ..., name: ..., email: ..., phone: ...)`; `dectog.logout()` forgets it |
+| Events (Branch `BranchEvent`, Adjust event tokens, AppsFlyer `logEvent` with `af_revenue`) | `dectog.trackConversion(revenue: ..., currency: ...)` and `dectog.trackEvent(name)`. The first `identify` of a new customer on a fresh install records the signup lead. See [Events](/sdk/events/). |
+| Attribution read-back (AppsFlyer `onConversionDataSuccess`, Adjust attribution callback) | `onAppInstalled`, `currentAppInstall`, and `getAttributionData()`, which re-pulls `GET /api/v1/attribution` after a restart |
+| Server postback (Branch webhooks, Adjust callbacks, AppsFlyer Push API) | The install webhook: `app.installed`, and `app.install_updated` when a late claim upgrades the verdict or Apple Search Ads resolves with attribution. HMAC-SHA256 signed, no retries. See [Install webhook](/api/install-webhook/). |
+| Request signing (AppsFlyer `af_sig`) | Every SDK call carries `x-dectog-timestamp` and `x-dectog-signature`. Unsigned requests get 401. |
+
+## Branch
+
+| Branch | DecTog |
+|---|---|
+| Quick Link `https://xyz.app.link/abc` | `https://{username}.dectog.com/{slug}`, created on the Links page or with `POST /api/v1/links` |
+| `$deeplink_path`, `$ios_deeplink_path`, `$android_deeplink_path` | `ios_deep_link_path` and `android_deep_link_path` on the link; `dec_deeplink` per tap |
+| `$fallback_url` | The link's `target` is the last mobile fallback, after the app's `fallback_url` |
+| `$desktop_url` | The link's `fallback_url`, or `dec_fallback` per tap. The default is the branded QR page. |
+| `$ios_url`, `$android_url` | `dec_redirect_ios` and `dec_redirect_android` per tap; the link's `redirect_url` for both platforms |
+| `$og_title`, `$og_description`, `$og_image_url` | `og_title`, `og_description`, `og_image_url` on the link, with the app's values as defaults |
+| `$web_only`, `$uri_redirect_mode` | No equivalent |
+| NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`readClipboardOnInstall`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `DectogPasteButton` renders `UIPasteControl` for late pastes. |
+| Install referrer readers (Play, Huawei, Samsung, Xiaomi) | Built in, with retries. Play, Huawei and vivo need no extra library. Samsung and Xiaomi activate when the host app adds their libraries. See [Deterministic attribution](/sdk/deterministic-attribution/). |
+| Reinstall event | `isReinstall: true`, `installState: 'reinstall'`. A reinstall goes through the ladder and the fingerprint like a first install; the dashboard leaves it out of the Installs KPI and the per-link counts. |
+| Journeys, Universal Email, Deepviews, Data Feeds, Data Export API | No equivalent |
+
+## Adjust
+
+Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
+
+| Adjust | DecTog |
+|---|---|
+| Tracker `https://app.adjust.com/<token>` | A link. `dec_tracker` records a tracker name per tap; it has no routing effect. |
+| `campaign`, `adgroup`, `creative`, `label` | `dec_campaign`, `dec_adgroup`, `dec_creative`, `dec_label`, falling back to the link's Tracking defaults |
+| `deep_link` | `dec_deeplink` |
+| `redirect`, `redirect_ios`, `redirect_android`, `redirect_macos`, `redirect_windows` | `dec_redirect`, `dec_redirect_ios`, `dec_redirect_android`, `dec_redirect_macos`, `dec_redirect_windows`, plus `dec_redirect_linux` |
+| `fallback` | `dec_fallback` |
+| `AdjustAttribution` (`trackerToken`, `trackerName`, `campaign`, `adgroup`, `creative`, `clickLabel`) | `install.clickParams` (`tracker`, `campaign`, `adgroup`, `creative`, `label`), `install.slug`, `install.link` |
+| Deferred deep link callback | `onAppInstalled` with `deepLink` or `routing` |
+| LinkMe | The pasteboard read plus the iOS tap-to-store page |
+| Install referrer with retries | Up to three connection attempts, 3 seconds apart, for transient Play errors. The first-launch registration waits up to `installReferrerTimeout` (default 5 seconds); a referrer that arrives later is sent as a late claim and `onAppInstalled` emits again. |
+| `retry_in` | The SDK honors `Retry-After`: up to 10 seconds in-process, longer waits defer to the next launch |
+| Apple Search Ads through AdServices | `collectAppleSearchAdsToken: true` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
+| Server callbacks | The install webhook |
+| Reattribution | No equivalent. A late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. |
+| SKAdNetwork, ad-network integrations | None |
+
+## AppsFlyer
+
+| AppsFlyer | DecTog |
+|---|---|
+| OneLink `https://xyz.onelink.me/abc/...` | `https://{username}.dectog.com/{slug}` |
+| `af_dp`, `deep_link_value` | `dec_deeplink` per tap; `ios_deep_link_path` and `android_deep_link_path` on the link |
+| `deep_link_sub1` to `deep_link_sub10` | Link `metadata` (returned as `customParameters`), or the `dec_*` tracking fields |
+| `af_web_dp` | The link's `fallback_url` or `dec_fallback` |
+| `af_ios_url`, `af_android_url` | `dec_redirect_ios`, `dec_redirect_android`, or the link's `redirect_url` |
+| `af_r` | `dec_redirect` |
+| `pid`, `c`, `af_adset`, `af_ad`, `af_channel` | `utm_source` and `utm_campaign` (the Overview charts group by these) plus `dec_label`, `dec_campaign`, `dec_adgroup`, `dec_creative` |
+| Unified Deep Linking (`subscribeForDeepLink`, `DeepLinkResult`) | `onLinkClick` for direct opens; `onAppInstalled.routing` and `deepLink` for deferred opens |
+| Conversion data (`onConversionDataSuccess`: `af_status`, `is_first_launch`, `media_source`, `campaign`) | `onAppInstalled`: `type`, `matched`, `matchSource`, `matchConfidence`, `clickParams`; `getAttributionData()` on later launches |
+| `setDeepLinkTimeout` | `installReferrerTimeout` (default 5 seconds) plus late claims |
+| `setCustomerUserId` | `identify(customerId: ...)` |
+| `logEvent` with `af_revenue` and `af_currency` | `trackConversion(revenue: ..., currency: ...)` |
+| `af_sig` | The request signature on every SDK call |
+| Push API | The install webhook. Only installs are delivered; events are not. |
+| Pull API, Master API | `GET /api/v1/links` (lifetime `click_count`) and the dashboard |
+| Protect360 | Six rules: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`. Strict fraud mode makes flagged installs count as organic. |
+| Apple Search Ads | `appleSearchAds` on the verdict |
+| SKAdNetwork, Conversion Studio, ad-network integrations | None |
+
+AppsFlyer separates routing (UDL) from attribution data (GCD). DecTog separates them inside one object: `routing` says where to send a new user, `matched` and `clickParams` say who gets credit.
+
+## How attribution differs
+
+- Deterministic signals win in this order: store install referrer, pasteboard, Meta referrer. Then the fingerprint. Then organic. See [How attribution works](/start/how-attribution-works/).
+- One install per click. A click another install already consumed moves the ladder on to the next signal; `click_reuse` is flagged only when nothing later matches.
+- Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that carry a device model and 2 hours for model-less clicks and installs on cellular. The 2-hour window can be set per account (1 to 720 hours) in the oldest app's Advanced settings.
+- App updates (`install_state: update`) never run the fingerprint. Reinstalls do, and carry `is_reinstall: true`. Late claims never run the fingerprint.
+- Strict fraud mode, the low-entropy window and the install webhook are read from the account's oldest app. On a single-app account that is the app you expect.
+- Apple Search Ads is resolved server-side and arrives later: `pending`, then `resolved`, `no_attribution`, `invalid`, `expired` or `failed`. Only `resolved` and `no_attribution` are final.
+
+## What DecTog does not do
+
+- No SKAdNetwork or AdAttributionKit. No conversion values, no postbacks.
+- No ad-network integrations. DecTog does not talk to Meta Ads, Google Ads, TikTok Ads or any other network. The only ad-platform signals are the Apple Search Ads token (AdServices, resolved with Apple) and Meta's on-device install referrer from the Facebook and Instagram apps, which the SDK reads only when the app passes `fbAppId` in `DectogConfig` (the Facebook App ID field on the Apps page is stored but does not switch the read on), and which attributes to a DecTog link, not to an ad.
+- No cross-tenant or cross-app identity. Device IDs are vendor-scoped (`ANDROID_ID`, IDFV) and stay inside one account. The SDK never reads GAID or IDFA. There is no identity graph.
+- No reattribution and no multi-touch. An install is credited at most once, to the click that matched.
+- No uninstall tracking. Re-engagement is limited to counting app opens through links.
+- No cohort, LTV or retention reports. The Overview covers 7, 30 and 90-day windows; per-link numbers are lifetime. See [Overview](/dashboard/overview/).
+- No raw-data export API. `GET /api/v1/links` returns click counts; everything else is on the dashboard, whose admin API uses a cookie session.
+- No web SDK. Web clicks exist only through the link redirect.
+- No custom link domain on the hosted service. Self-host to serve links on your own domain.
+- No SDKs for other platforms. The SDK is Flutter only. See [Porting the SDK](/contributing/porting-the-sdk/).
