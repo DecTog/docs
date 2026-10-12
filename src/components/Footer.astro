@@ -1,0 +1,16 @@
+---
+// Wraps Starlight's footer (edit link, last-updated date, prev/next) and adds the
+// version note and the licence split that apply to every page.
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default><slot /></Default>
+
+<div class="dectog-footer">
+	<span>Applies to flutter_dectog 1.0.x and the DecTog server at migration 0027.</span>
+	<span>
+		Content <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a> ·
+		site code <a href="https://github.com/DecTog/docs/blob/main/LICENSE">MIT</a> ·
+		<a href="https://github.com/DecTog/docs/issues/new">report a mistake</a>
+	</span>
+</div>

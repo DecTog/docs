@@ -1,0 +1,37 @@
+---
+title: DecTog documentation
+description: Deep links, install attribution and real-time analytics for mobile apps. Hosted at dectog.com or on your own Cloudflare account.
+template: splash
+hero:
+  tagline: Short links that open your app, route new users through the stores and tell you which link brought each install. One Flutter SDK, one dashboard, your own infrastructure if you want it.
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: dectog.com
+      link: https://dectog.com
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+	<Card title="Start here" icon="rocket">
+		Create an account, register your app, add the SDK and ship your first attributed install.
+	</Card>
+	<Card title="Links & routing" icon="random">
+		What happens when someone taps a link: app, store, QR page, bots, and every `dec_*` parameter.
+	</Card>
+	<Card title="Flutter SDK" icon="seti:dart">
+		Installation, platform setup, deferred deep links, install attribution, events and the full API reference.
+	</Card>
+	<Card title="Dashboard" icon="bars">
+		Every screen and every number on it, defined exactly as the server computes it.
+	</Card>
+	<Card title="REST API" icon="document">
+		Authentication, request signing, rate limits, links, installs, events and the install webhook.
+	</Card>
+	<Card title="Self-hosting" icon="cloud-download">
+		Run DecTog on your own Cloudflare account: deploy, configure, operate and keep your data.
+	</Card>
+</CardGrid>
