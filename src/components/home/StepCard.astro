@@ -1,0 +1,96 @@
+---
+// One card of the home page steps; its number is its position in <StepCards>.
+// The slot takes a code fence or a sentence.
+interface Props {
+	title: string;
+	href: string;
+	/** Text of the link to the page that covers this step. */
+	link: string;
+}
+
+const { title, href, link } = Astro.props;
+---
+
+<li class="step-card">
+	<span class="number" aria-hidden="true"></span>
+	<h3>{title}</h3>
+	<div class="body"><slot /></div>
+	<a href={href}>{link}</a>
+</li>
+
+<style>
+	.step-card {
+		counter-increment: step;
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		border-radius: 1rem;
+		padding: 1.25rem;
+		background-color: var(--dt-raised);
+		box-shadow: var(--dt-raised-shadow);
+	}
+	.number {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		border-radius: 50%;
+		background-color: var(--dt-ink);
+		color: var(--dt-page);
+		font-family: var(--dt-font-display);
+		font-size: var(--sl-text-sm);
+		font-weight: 600;
+		line-height: 1;
+	}
+	.number::before {
+		content: counter(step);
+	}
+	h3 {
+		margin-top: 1rem;
+		font-family: var(--dt-font-display);
+		font-size: 1.25rem;
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--dt-ink);
+	}
+	.body {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		margin-top: 1rem;
+		min-width: 0;
+	}
+	/* Code sits at the foot of the card, next to the link that explains it. */
+	.body:has(:global(.expressive-code)) {
+		justify-content: flex-end;
+	}
+	.body :global(p) {
+		font-size: 0.9375rem;
+		line-height: 1.6;
+		color: var(--dt-secondary);
+	}
+	/* A code well, not a full code frame: tighter type and padding so the lines fit the card. */
+	.body :global(.expressive-code) {
+		--ec-codeFontSize: 0.8125rem;
+		--ec-codeLineHt: 1.6;
+		--ec-codePadBlk: 0.75rem;
+		--ec-codePadInl: 0.75rem;
+		--ec-brdCol: transparent;
+	}
+	.body :global(.expressive-code .frame) {
+		--ec-frm-edBg: var(--dt-well);
+		--ec-frm-trmBg: var(--dt-well);
+	}
+	a {
+		align-self: flex-start;
+		margin-top: 1rem;
+		color: var(--dt-link);
+		font-size: var(--sl-text-sm);
+		text-decoration: none;
+	}
+	a:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+</style>

@@ -1,0 +1,120 @@
+---
+// Index of the documentation on the home page: one card per sidebar section with its first pages.
+// The sections, pages and counts are read from the sidebar, so the grid follows the content.
+import SectionHeader from './SectionHeader.astro';
+
+interface Props {
+	title: string;
+	/** One line per section, keyed by the section's sidebar label. */
+	descriptions?: Record<string, string>;
+	/** How many pages each card lists before "+N more". */
+	limit?: number;
+}
+
+const { title, descriptions = {}, limit = 3 } = Astro.props;
+
+/**
+ * The sidebar exists only on a Starlight page. Other renderers of this content (llms.txt) get the
+ * described sections without their page links.
+ */
+function readSections() {
+	try {
+		return Astro.locals.starlightRoute.sidebar.flatMap((item) =>
+			item.type === 'group'
+				? [{ label: item.label, pages: item.entries.filter((entry) => entry.type === 'link') }]
+				: []
+		);
+	} catch {
+		return Object.keys(descriptions).map((label) => ({ label, pages: [] }));
+	}
+}
+
+const sections = readSections();
+const pageCount = sections.reduce((count, section) => count + section.pages.length, 0);
+const summary = pageCount > 0 ? `${pageCount} pages in ${sections.length} sections` : undefined;
+---
+
+<SectionHeader {title} meta={summary} />
+
+<div class="section-grid not-content">
+	{
+		sections.map(({ label, pages }) => (
+			<section>
+				<h3>{label}</h3>
+				{descriptions[label] && <p>{descriptions[label]}</p>}
+				{pages.length > 0 && (
+					<ul>
+						{pages.slice(0, limit).map((page) => (
+							<li>
+								<a href={page.href}>{page.label}</a>
+							</li>
+						))}
+						{pages.length > limit && <li class="more">+{pages.length - limit} more</li>}
+					</ul>
+				)}
+			</section>
+		))
+	}
+</div>
+
+<style>
+	.section-grid {
+		display: grid;
+		gap: 1rem;
+	}
+	section {
+		border-radius: 1.25rem;
+		padding: 1.5rem;
+		background-color: var(--dt-surface);
+	}
+	h3 {
+		font-family: var(--dt-font-display);
+		font-size: 1.25rem;
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--dt-ink);
+	}
+	p {
+		margin-top: 0.5rem;
+		font-size: var(--sl-text-sm);
+		line-height: 1.6;
+		color: var(--dt-secondary);
+	}
+	ul {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-top: 1rem;
+		border-top: 1px solid var(--dt-hairline);
+		padding: 1rem 0 0;
+		list-style: none;
+		font-size: var(--sl-text-sm);
+		line-height: 1.45;
+	}
+	a {
+		color: var(--dt-ink);
+		text-decoration: none;
+		transition: color var(--dt-ease);
+	}
+	a:hover {
+		color: var(--dt-link);
+	}
+	.more {
+		color: var(--dt-secondary);
+	}
+
+	@media (min-width: 40rem) {
+		.section-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (min-width: 72rem) {
+		.section-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+		/* Room for four lines of description, so the hairlines of a row line up. */
+		p {
+			min-height: calc(4 * 1.6em);
+		}
+	}
+</style>

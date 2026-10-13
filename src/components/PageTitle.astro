@@ -1,0 +1,51 @@
+---
+// Title block of a doc page: the sidebar section the page belongs to, the title, then the page's
+// frontmatter description as the lead paragraph.
+const { entry, sidebar } = Astro.locals.starlightRoute;
+
+type SidebarEntry = (typeof sidebar)[number];
+const holdsCurrentPage = (item: SidebarEntry): boolean =>
+	item.type === 'link' ? item.isCurrent : item.entries.some(holdsCurrentPage);
+const section = sidebar.find((item) => item.type === 'group' && holdsCurrentPage(item));
+---
+
+{
+	/* The section label comes after the h1 in the markup and is moved above it with `order`:
+	   Starlight's table of contents marks "Overview" from the h1 and the elements that follow it. */
+}
+<div class="title-block">
+	<h1 id="_top">{entry.data.title}</h1>
+	{section && <p class="dt-eyebrow" data-pagefind-ignore>{section.label}</p>}
+	{entry.data.description && <p class="lead">{entry.data.description}</p>}
+</div>
+
+<style>
+	.title-block {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.dt-eyebrow {
+		order: -1;
+		margin-bottom: 1rem;
+	}
+	h1 {
+		font-family: var(--dt-font-display);
+		font-size: var(--sl-text-h1);
+		font-weight: 500;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+		color: var(--dt-ink);
+	}
+	.lead {
+		margin-top: 1rem;
+		font-size: 1.0625rem;
+		line-height: 1.6;
+		color: var(--dt-secondary);
+	}
+	@media (min-width: 50rem) {
+		.lead {
+			font-size: var(--sl-text-lg);
+		}
+	}
+</style>

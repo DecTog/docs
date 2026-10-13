@@ -1,0 +1,84 @@
+---
+// Header in the dectog.com layout: logo and "Docs" on the left, search in the middle, GitHub,
+// theme and the account links on the right. Below 800px the right group moves into the menu
+// (MobileMenuFooter.astro) and the search field becomes an icon.
+import config from 'virtual:starlight/user-config';
+import Search from 'virtual:starlight/components/Search';
+import SiteTitle from 'virtual:starlight/components/SiteTitle';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import AccountLinks from './AccountLinks.astro';
+
+/** Same rule as Starlight's header: render search when Pagefind is on or the component is overridden. */
+const shouldRenderSearch =
+	config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
+---
+
+<div class="header">
+	<div class="start"><SiteTitle /></div>
+	<div class="search">{shouldRenderSearch && <Search />}</div>
+	<div class="end">
+		<SocialIcons />
+		<ThemeSelect />
+		<AccountLinks />
+	</div>
+</div>
+
+<style>
+	.header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--sl-nav-gap);
+		height: 100%;
+	}
+	.search {
+		display: flex;
+	}
+	.end {
+		display: none;
+		align-items: center;
+		gap: 1.5rem;
+	}
+	.end :global(a[rel='me']) {
+		color: var(--dt-ink);
+		font-size: 1.25rem;
+	}
+	.end :global(a[rel='me']:hover) {
+		color: var(--dt-secondary);
+	}
+
+	@media (min-width: 50rem) {
+		.header {
+			gap: 1.5rem;
+		}
+		/* Equal sides keep the search field centered; neither side gets narrower than its content. */
+		.start,
+		.end {
+			flex: 1 1 0;
+			min-width: max-content;
+		}
+		.search {
+			flex: 0 1 26.25rem;
+			justify-content: center;
+			min-width: 0;
+		}
+		.end {
+			display: flex;
+			justify-content: flex-end;
+		}
+	}
+	/* Between 800 and 1024px there is no room for both account links; the button leads to the same page. */
+	@media (min-width: 50rem) and (max-width: 63.99rem) {
+		.end :global(.login) {
+			display: none;
+		}
+	}
+
+	@media print {
+		.search,
+		.end {
+			display: none;
+		}
+	}
+</style>

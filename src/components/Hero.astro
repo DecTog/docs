@@ -1,0 +1,128 @@
+---
+// Home page hero in the dectog.com manner: centered, one large Outfit headline, pill actions.
+// The content comes from the page's `hero` frontmatter, as with Starlight's own hero.
+import { Icon } from '@astrojs/starlight/components';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero || {};
+---
+
+<div class="hero">
+	<p class="dt-eyebrow">Documentation</p>
+	<h1 id="_top" data-page-title set:html={title} />
+	{tagline && <p class="tagline" set:html={tagline} />}
+	{
+		actions.length > 0 && (
+			<div class="actions">
+				{actions.map(({ attrs = {}, icon, link, text, variant }) => (
+					<a class:list={['action', variant]} href={link} {...attrs}>
+						{text}
+						{variant === 'primary' ? (
+							<span class="disc">
+								<svg
+									viewBox="0 0 24 24"
+									width="14"
+									height="14"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d="M7 7h10v10" />
+									<path d="M7 17 17 7" />
+								</svg>
+							</span>
+						) : (
+							icon?.name && <Icon name={icon.name} />
+						)}
+					</a>
+				))}
+			</div>
+		)
+	}
+</div>
+
+<style>
+	.hero {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding-top: clamp(2.5rem, 8vw, 6rem);
+		text-align: center;
+	}
+	h1 {
+		margin-top: 1.5rem;
+		font-family: var(--dt-font-display);
+		font-size: clamp(2.5rem, 7vw, 4.5rem);
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: -0.02em;
+		color: var(--dt-ink);
+	}
+	.tagline {
+		margin-top: 1.5rem;
+		max-width: 42.5rem;
+		font-size: var(--sl-text-lg);
+		line-height: 1.6;
+		color: var(--dt-secondary);
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.75rem;
+		margin-top: 2rem;
+	}
+	.action {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		height: 3rem;
+		border: 1px solid transparent;
+		border-radius: var(--dt-radius-pill);
+		padding-inline: 1.75rem;
+		font-family: var(--dt-font-display);
+		font-size: 0.9375rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition:
+			background-color var(--dt-ease),
+			color var(--dt-ease);
+	}
+	.primary {
+		background-color: var(--dt-ink);
+		color: var(--dt-page);
+	}
+	.disc {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 50%;
+		background-color: var(--dt-page);
+		color: var(--dt-ink);
+		transition: transform var(--dt-ease);
+	}
+	.primary:hover .disc {
+		transform: scale(1.08);
+	}
+	.secondary {
+		border-color: var(--dt-hairline);
+		background-color: var(--dt-page);
+		color: var(--dt-ink);
+	}
+	.secondary:hover {
+		background-color: var(--dt-surface);
+	}
+	.minimal {
+		gap: 0.5rem;
+		padding-inline: 1.25rem;
+		color: var(--dt-secondary);
+	}
+	.minimal:hover {
+		color: var(--dt-ink);
+	}
+</style>

@@ -1,0 +1,35 @@
+---
+// Bottom of the menu below 800px: the account links and controls the header has no room for.
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import AccountLinks from './AccountLinks.astro';
+---
+
+<div class="menu-footer">
+	<AccountLinks stacked />
+	<div class="preferences">
+		<SocialIcons />
+		<ThemeSelect />
+	</div>
+</div>
+
+<style>
+	.menu-footer {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-top: 1rem;
+		border-top: 1px solid var(--dt-hairline);
+		padding-block: 1.5rem;
+	}
+	.preferences {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding-inline: 0.75rem;
+	}
+	.preferences :global(a[rel='me']) {
+		color: var(--dt-ink);
+		font-size: 1.25rem;
+	}
+</style>

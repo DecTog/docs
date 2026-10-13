@@ -4,62 +4,96 @@ description: Deep links, install attribution and real-time analytics for mobile 
 template: splash
 hero:
   tagline: Short links that open your app, route new users through the stores and tell you which link brought each install. One Flutter SDK, one dashboard, your own infrastructure if you want it.
-  image:
-    file: ../../assets/logo.svg
   actions:
     - text: Quickstart
       link: /start/quickstart/
-      icon: right-arrow
     - text: Flutter SDK
       link: /sdk/installation/
-      variant: minimal
+      variant: secondary
     - text: dectog.com
       link: https://dectog.com
       icon: external
       variant: minimal
 ---
 
-import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import Chips from '../../components/home/Chips.astro';
+import LiveBand from '../../components/home/LiveBand.astro';
+import SectionGrid from '../../components/home/SectionGrid.astro';
+import SectionHeader from '../../components/home/SectionHeader.astro';
+import StepCard from '../../components/home/StepCard.astro';
+import StepCards from '../../components/home/StepCards.astro';
 
-<CardGrid stagger>
-	<LinkCard
-		title="Start here"
-		href="/start/quickstart/"
-		description="Create an account, register your app, add the SDK and ship your first attributed install."
-	/>
-	<LinkCard
-		title="Links & routing"
-		href="/links/how-a-tap-is-routed/"
-		description="What happens when someone taps a link: app, store, QR page, bots, and every dec_* parameter."
-	/>
-	<LinkCard
-		title="Flutter SDK"
-		href="/sdk/installation/"
-		description="Installation, platform setup, deferred deep links, install attribution, events and the full API reference."
-	/>
-	<LinkCard
-		title="Dashboard"
-		href="/dashboard/overview/"
-		description="Every screen and every number on it, defined exactly as the server computes it."
-	/>
-	<LinkCard
-		title="REST API"
-		href="/api/overview/"
-		description="Authentication, request signing, rate limits, links, installs, events and the install webhook."
-	/>
-	<LinkCard
-		title="Self-hosting"
-		href="/self-hosting/local-quick-start/"
-		description="Run DecTog on your own Cloudflare account: deploy, configure, operate and keep your data."
-	/>
-	<LinkCard
-		title="Guides"
-		href="/guides/troubleshooting/"
-		description="Troubleshooting, migrating from Firebase Dynamic Links or Branch, automation and AI agents."
-	/>
-	<LinkCard
-		title="Contributing"
-		href="/contributing/"
-		description="Repository layout, tests, migration rules and the licenses of the server, the SDK and these docs."
-	/>
-</CardGrid>
+<Chips label="Popular">
+
+- [Platform setup](/sdk/platform-setup/)
+- [URL parameters](/links/url-parameters/)
+- [API overview](/api/overview/)
+- [Local quick start](/self-hosting/local-quick-start/)
+- [Troubleshooting](/guides/troubleshooting/)
+
+</Chips>
+
+<SectionHeader
+	eyebrow="Flutter SDK"
+	title="Live in three steps"
+	text="Add the Flutter SDK, initialize it with your API key and create a link. The first attributed install appears in the dashboard."
+/>
+
+<StepCards>
+
+<StepCard title="Install the SDK" href="/sdk/installation/" link="Installation">
+
+```bash
+flutter pub add flutter_dectog
+```
+
+</StepCard>
+
+<StepCard
+	title="Initialize & listen"
+	href="/sdk/initialize-and-handle-links/"
+	link="Initialize and handle links"
+>
+
+```dart
+final dectog = FlutterDectog();
+
+await dectog.initialize(DectogConfig(
+  apiKey: 'dtg_your_api_key',
+));
+```
+
+</StepCard>
+
+<StepCard
+	title="Create links with attribution"
+	href="/sdk/create-links-from-the-app/"
+	link="Create links from the app"
+>
+
+Create a link in the dashboard, over the REST API or from the app.
+
+</StepCard>
+
+</StepCards>
+
+<LiveBand
+	title="Watch it live"
+	text="Clicks, installs and events arrive in the dashboard in real time."
+	href="/dashboard/overview/"
+	link="Dashboard overview"
+/>
+
+<SectionGrid
+	title="Browse the documentation"
+	descriptions={{
+		'Start here': 'Create an account, register your app, add the SDK and ship your first attributed install.',
+		'Links & routing': 'What happens when someone taps a link: app, store, QR page, bots, and every dec_* parameter.',
+		'Flutter SDK': 'Installation, platform setup, deferred deep links, install attribution, events and the full API reference.',
+		Dashboard: 'Every screen and every number on it, defined exactly as the server computes it.',
+		'REST API': 'Authentication, request signing, rate limits, links, installs, events and the install webhook.',
+		'Self-hosting': 'Run DecTog on your own Cloudflare account: deploy, configure, operate and keep your data.',
+		Guides: 'Troubleshooting, migrating from Firebase Dynamic Links or Branch, automation and AI agents.',
+		Contributing: 'Repository layout, tests, migration rules and the licenses of the server, the SDK and these docs.',
+	}}
+/>

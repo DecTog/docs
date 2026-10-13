@@ -15,28 +15,41 @@ export default defineConfig({
 		starlight({
 			title: 'DecTog Docs',
 			description,
-			logo: { src: './src/assets/logo.svg', alt: 'DecTog' },
 			favicon: '/favicon.svg',
-			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/DecTog' },
-				{ icon: 'external', label: 'dectog.com', href: 'https://dectog.com' },
-			],
+			// dectog.com is reached from the logo (src/components/SiteTitle.astro).
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/DecTog' }],
 			editLink: { baseUrl: 'https://github.com/DecTog/docs/edit/main/' },
 			lastUpdated: true,
-			customCss: ['./src/styles/custom.css'],
-			components: { Footer: './src/components/Footer.astro' },
+			customCss: [
+				// Self-hosted variable fonts: Outfit for headings, Inter for text, Fira Code for code.
+				'@fontsource-variable/outfit/wght.css',
+				'@fontsource-variable/inter/wght.css',
+				'@fontsource-variable/fira-code/wght.css',
+				'./src/styles/custom.css',
+				'./src/styles/chrome.css',
+				'./src/styles/content.css',
+			],
+			components: {
+				Footer: './src/components/Footer.astro',
+				Header: './src/components/Header.astro',
+				Hero: './src/components/Hero.astro',
+				MobileMenuFooter: './src/components/MobileMenuFooter.astro',
+				PageTitle: './src/components/PageTitle.astro',
+				SiteTitle: './src/components/SiteTitle.astro',
+			},
 			head: [{ tag: 'meta', attrs: { name: 'theme-color', content: '#1E40AF' } }],
 			// Each group lists the pages found in its directory. Order inside a group comes
-			// from the `sidebar.order` frontmatter field of each page.
+			// from the `sidebar.order` frontmatter field of each page. Groups start collapsed;
+			// Starlight opens the one that holds the current page.
 			sidebar: [
-				{ label: 'Start here', items: [{ autogenerate: { directory: 'start' } }] },
-				{ label: 'Links & routing', items: [{ autogenerate: { directory: 'links' } }] },
-				{ label: 'Flutter SDK', items: [{ autogenerate: { directory: 'sdk' } }] },
-				{ label: 'Dashboard', items: [{ autogenerate: { directory: 'dashboard' } }] },
-				{ label: 'REST API', items: [{ autogenerate: { directory: 'api' } }] },
-				{ label: 'Self-hosting', items: [{ autogenerate: { directory: 'self-hosting' } }] },
-				{ label: 'Guides', items: [{ autogenerate: { directory: 'guides' } }] },
-				{ label: 'Contributing', items: [{ autogenerate: { directory: 'contributing' } }] },
+				{ label: 'Start here', collapsed: true, items: [{ autogenerate: { directory: 'start' } }] },
+				{ label: 'Links & routing', collapsed: true, items: [{ autogenerate: { directory: 'links' } }] },
+				{ label: 'Flutter SDK', collapsed: true, items: [{ autogenerate: { directory: 'sdk' } }] },
+				{ label: 'Dashboard', collapsed: true, items: [{ autogenerate: { directory: 'dashboard' } }] },
+				{ label: 'REST API', collapsed: true, items: [{ autogenerate: { directory: 'api' } }] },
+				{ label: 'Self-hosting', collapsed: true, items: [{ autogenerate: { directory: 'self-hosting' } }] },
+				{ label: 'Guides', collapsed: true, items: [{ autogenerate: { directory: 'guides' } }] },
+				{ label: 'Contributing', collapsed: true, items: [{ autogenerate: { directory: 'contributing' } }] },
 			],
 			plugins: [
 				starlightLlmsTxt({
@@ -65,7 +78,13 @@ export default defineConfig({
 						{ label: 'Self-hosting', paths: ['self-hosting/**'], description: 'Running your own DecTog server.' },
 					],
 				}),
-				starlightLinksValidator(),
+				// Also check the links passed to the home page components.
+				starlightLinksValidator({
+					components: [
+						['StepCard', 'href'],
+						['LiveBand', 'href'],
+					],
+				}),
 			],
 		}),
 	],

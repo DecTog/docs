@@ -11,7 +11,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
 <Steps>
 
-1. **Sign up**
+1. ## Sign up
 
    Open [app.dectog.com/login?tab=signup](https://app.dectog.com/login?tab=signup). The page opens on the **Sign up** tab.
 
@@ -29,7 +29,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
    On your own deployment the first account comes from `POST /api/admin/bootstrap`, not from the signup form. See [Local quick start](/self-hosting/local-quick-start/).
    </Aside>
 
-2. **Register the app**
+2. ## Register the app
 
    In the dashboard open **Apps** and click **Add app**. The editor is titled "Register your first app" and only **App name** is required; every other field can be filled in later. The bottom bar's **Add app** button saves.
 
@@ -46,7 +46,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    Schemes may contain letters, digits, `+`, `-` and `.`; schemes the browser handles itself, such as `http`, `https` and `javascript`, are rejected. The first app you register is the account's default app: links without an app, and all temporary links, route through it. See [Concepts](/start/concepts/).
 
-3. **Platform setup**
+3. ## Platform setup
 
    Both files are served per account at `https://acme.dectog.com/.well-known/...` as soon as the fields from step 2 are saved. The **Verify** buttons on the Apps page fetch the saved files and summarize what they contain.
 
@@ -81,7 +81,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    Custom-scheme links open only from a direct user tap; a redirect can never launch a scheme on iOS. The full walkthrough, including path-mode deployments, is in [Platform setup](/sdk/platform-setup/).
 
-4. **Add the SDK**
+4. ## Add the SDK
 
    The SDK is `flutter_dectog` 1.0.x. It needs Flutter 3.29 or newer (Dart 3.7), iOS 15 and Android 7 (API 24).
 
@@ -143,7 +143,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    Installation details, the dependency ranges and the Android build notes are in [Installation](/sdk/installation/).
 
-5. **Create a link**
+5. ## Create a link
 
    Open **Links** and click **New link**. The form is open already when the account has no links.
 
@@ -158,7 +158,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    You can also create links from code: `dectog.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your API key and the request signature described in [REST API overview](/api/overview/).
 
-6. **Test an install**
+6. ## Test an install
 
    Use a device that has never had the app installed. A device the SDK has seen before reports a reinstall (`isReinstall: true`), which the Installs KPI leaves out. On an emulator, wipe its data between runs.
 

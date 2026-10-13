@@ -1,0 +1,239 @@
+/* What Markdown and the Starlight content components render: headings, links, code, tables,
+   callouts, steps, tabs and link cards. Reading comes first: Inter for text, Outfit for headings only.
+   Code block frames and syntax colors are set in ec.config.mjs. */
+
+/* ---- Headings ---- */
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
+	font-family: var(--dt-font-display);
+}
+.sl-markdown-content :is(h1, h2):not(:where(.not-content *)) {
+	font-weight: 500;
+}
+.sl-markdown-content .sl-anchor-link {
+	color: var(--dt-secondary);
+	text-decoration: none;
+}
+
+/* ---- Text ---- */
+
+/* Underlined at all times: the link color alone is only 3:1 against body text. */
+.sl-markdown-content a:not(:where(.not-content *)) {
+	color: var(--dt-link);
+	text-decoration-line: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+.sl-markdown-content a:hover:not(:where(.not-content *)) {
+	color: var(--dt-link);
+	text-decoration-thickness: 2px;
+}
+.sl-markdown-content strong:not(:where(.not-content *)) {
+	font-weight: 600;
+	color: var(--dt-ink);
+}
+
+/* Code shows the characters you type: no ligatures. */
+.sl-markdown-content code,
+.expressive-code pre {
+	font-variant-ligatures: none;
+}
+.sl-markdown-content code:not(:where(.not-content *)) {
+	border-radius: 0.375rem;
+	color: var(--dt-ink);
+}
+
+/* File name row of a code block: a small file icon before the path. */
+.expressive-code .frame.has-title:not(.is-terminal) .title::before {
+	content: '';
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin-inline-end: 0.5em;
+	vertical-align: -0.125em;
+	background-color: currentColor;
+	-webkit-mask: var(--dt-file-icon) center / contain no-repeat;
+	mask: var(--dt-file-icon) center / contain no-repeat;
+	--dt-file-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E");
+}
+
+/* ---- Tables: a rounded hairline frame with a tinted header row ---- */
+
+.sl-markdown-content table:not(:where(.not-content *)) {
+	width: fit-content;
+	max-width: 100%;
+	border: 1px solid var(--dt-hairline);
+	border-radius: 0.75rem;
+	font-size: var(--sl-text-sm);
+	line-height: 1.6;
+	/* Starlight lets list items break anywhere; inside a table that splits short labels
+	   ("Pass / word"). Words and code tokens stay whole here; a wide table scrolls. */
+	overflow-wrap: break-word;
+}
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+	border-bottom-color: var(--dt-hairline);
+	padding: 0.625rem 1rem;
+	vertical-align: top;
+}
+.sl-markdown-content tbody tr:last-child td:not(:where(.not-content *)) {
+	border-bottom: 0;
+}
+.sl-markdown-content th:not(:where(.not-content *)) {
+	background-color: var(--dt-surface);
+	font-size: var(--sl-text-xs);
+	color: var(--dt-ink);
+	white-space: nowrap;
+}
+
+/* ---- Callouts: a tinted panel, no side bar ---- */
+
+.starlight-aside {
+	--sl-color-asides-text-accent: var(--dt-ink);
+	border-inline-start: 0;
+	border-radius: 0.75rem;
+	background-color: var(--dt-surface);
+	color: var(--dt-body);
+}
+.starlight-aside--tip .starlight-aside__icon {
+	color: var(--dt-accent-light);
+}
+.starlight-aside--caution {
+	--sl-color-asides-text-accent: var(--dt-link);
+	background-color: var(--dt-accent-tint);
+}
+.starlight-aside--danger {
+	--sl-color-asides-text-accent: var(--dt-danger);
+	background-color: var(--dt-danger-tint);
+}
+.starlight-aside__title {
+	font-family: var(--dt-font-display);
+	font-size: 1rem;
+	line-height: 1.4;
+}
+.starlight-aside__content {
+	font-size: 0.9375rem;
+	line-height: 1.6;
+}
+.starlight-aside__content a {
+	color: var(--dt-link);
+}
+.sl-markdown-content .starlight-aside code:not(:where(.not-content *)) {
+	background-color: var(--dt-surface-strong);
+}
+.sl-markdown-content .starlight-aside :is(th, td, hr, blockquote):not(:where(.not-content *)) {
+	border-color: var(--dt-hairline);
+}
+/* A code block inside a callout sits on the page color so it stays visible on the tint. */
+.starlight-aside .expressive-code .frame {
+	--ec-frm-edBg: var(--dt-page);
+	--ec-frm-trmBg: var(--dt-page);
+	--ec-frm-edActTabBg: var(--dt-page);
+	--ec-frm-edTabBarBg: var(--dt-page);
+	--ec-frm-trmTtbBg: var(--dt-page);
+}
+
+/* ---- Steps: ink numerals joined by a hairline ---- */
+
+.sl-steps {
+	--bullet-size: 1.75rem;
+	--bullet-margin: 0.5rem;
+}
+.sl-steps > li::before {
+	background-color: var(--dt-ink);
+	box-shadow: none;
+	color: var(--dt-page);
+	font-family: var(--dt-font-display);
+	font-size: var(--sl-text-sm);
+}
+.sl-steps > li:last-child::after {
+	display: none;
+}
+/* A step that opens with a heading is a section of the page: the heading is set one size down
+   so it sits on the numeral, and the steps stand further apart. */
+.sl-markdown-content .sl-steps > li > .sl-heading-wrapper:first-child {
+	font-size: var(--sl-text-h3);
+}
+.sl-markdown-content .sl-steps > li > .sl-heading-wrapper:first-child > :first-child {
+	font-size: inherit;
+	font-weight: 600;
+}
+.sl-steps > li:has(> .sl-heading-wrapper:first-child):not(:last-child) {
+	padding-bottom: 1.25rem;
+}
+.sl-markdown-content .sl-steps:has(> li > .sl-heading-wrapper:first-child) {
+	margin-top: 2rem;
+}
+
+/* ---- Tabs: a segmented pill ---- */
+
+starlight-tabs [role='tablist'] {
+	display: inline-flex;
+	gap: 0.25rem;
+	border-bottom: 0;
+	border-radius: var(--dt-radius-pill);
+	padding: 0.25rem;
+	background-color: var(--dt-surface);
+}
+starlight-tabs .tab > [role='tab'] {
+	min-height: 2rem;
+	border-radius: var(--dt-radius-pill);
+	padding: 0 1rem;
+	box-shadow: none;
+	color: var(--dt-secondary);
+	font-size: var(--sl-text-sm);
+	font-weight: 500;
+	outline-offset: 2px;
+	transition:
+		background-color var(--dt-ease),
+		color var(--dt-ease);
+}
+starlight-tabs .tab > [role='tab']:hover {
+	color: var(--dt-ink);
+}
+starlight-tabs .tab [role='tab'][aria-selected='true'] {
+	background-color: var(--dt-ink);
+	color: var(--dt-page);
+	font-weight: 500;
+}
+
+/* ---- Link cards ---- */
+
+.card-grid {
+	gap: 1rem;
+}
+.sl-link-card {
+	border: 0;
+	border-radius: 1rem;
+	padding: 1.25rem;
+	background-color: var(--dt-surface);
+	box-shadow: none;
+	transition: background-color var(--dt-ease);
+}
+.sl-link-card:hover {
+	background-color: var(--dt-surface-strong);
+}
+.sl-markdown-content .sl-link-card a {
+	text-decoration: none;
+}
+.sl-link-card .stack {
+	gap: 0.25rem;
+}
+.sl-link-card .title {
+	font-family: var(--dt-font-display);
+	line-height: 1.4;
+}
+.sl-link-card .description {
+	font-size: 0.9375rem;
+	line-height: 1.6;
+	color: var(--dt-secondary);
+}
+.sl-link-card .icon {
+	color: var(--dt-secondary);
+	transition:
+		color var(--dt-ease),
+		transform var(--dt-ease);
+}
+.sl-link-card:hover .icon {
+	color: var(--dt-ink);
+	transform: translateX(2px);
+}

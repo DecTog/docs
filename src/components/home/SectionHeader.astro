@@ -1,0 +1,62 @@
+---
+// Heading row of a home page section: the title on the left, one line of context on the right.
+interface Props {
+	title: string;
+	eyebrow?: string;
+	/** A sentence that introduces the section. */
+	text?: string;
+	/** A short fact about the section, set smaller than `text`. */
+	meta?: string;
+}
+
+const { title, eyebrow, text, meta } = Astro.props;
+---
+
+<div class="section-header not-content">
+	<div>
+		{eyebrow && <p class="dt-eyebrow">{eyebrow}</p>}
+		<h2>{title}</h2>
+	</div>
+	{text && <p class="text">{text}</p>}
+	{meta && <p class="meta">{meta}</p>}
+</div>
+
+<style>
+	.section-header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-block: 4rem 1.5rem;
+	}
+	h2 {
+		font-family: var(--dt-font-display);
+		font-size: var(--sl-text-h2);
+		font-weight: 500;
+		line-height: 1.25;
+		color: var(--dt-ink);
+	}
+	.dt-eyebrow {
+		margin-bottom: 1rem;
+	}
+	.text {
+		max-width: 30rem;
+		color: var(--dt-secondary);
+	}
+	.meta {
+		font-size: var(--sl-text-sm);
+		color: var(--dt-meta);
+	}
+
+	@media (min-width: 50rem) {
+		.section-header {
+			flex-direction: row;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 2rem;
+			margin-block: 5rem 2rem;
+		}
+		.text {
+			text-align: end;
+		}
+	}
+</style>

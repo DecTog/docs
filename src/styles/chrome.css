@@ -1,0 +1,332 @@
+/* The frame around the content: header controls, sidebar, table of contents, pagination, footer.
+   Starlight ships its styles in cascade layers, so these plain selectors win without extra weight.
+   The header's own layout lives in src/components/Header.astro. */
+
+:root {
+	--sl-menu-button-size: 2.5rem;
+	/* Width of the column that holds the table of contents: 40px gap + 220px list. */
+	--dt-toc-column: 16.25rem;
+}
+
+/* ---- Header controls rendered by Starlight ---- */
+
+/* Search: a borderless pill on the surface tone. */
+site-search button[data-open-modal] {
+	color: var(--dt-ink);
+}
+site-search button > kbd {
+	padding-block: 0.25rem;
+	background-color: var(--dt-surface-strong);
+	color: var(--dt-secondary);
+	font-family: var(--__sl-font-mono);
+	transition: background-color var(--dt-ease);
+}
+@media (min-width: 50rem) {
+	site-search button[data-open-modal] {
+		border: 0;
+		border-radius: var(--dt-radius-pill);
+		padding-inline: 1rem 0.5rem;
+		max-width: 26.25rem;
+		background-color: var(--dt-surface);
+		color: var(--dt-secondary);
+		transition:
+			background-color var(--dt-ease),
+			color var(--dt-ease);
+	}
+	site-search button[data-open-modal]:hover {
+		background-color: var(--dt-surface-strong);
+		color: var(--dt-ink);
+	}
+	site-search button[data-open-modal]:hover > kbd {
+		background-color: var(--dt-page);
+	}
+	site-search dialog {
+		border-radius: 1rem;
+	}
+}
+site-search dialog {
+	border-color: var(--dt-hairline);
+	background-color: var(--dt-page);
+}
+
+starlight-theme-select label {
+	color: var(--dt-ink);
+}
+starlight-theme-select label:hover {
+	color: var(--dt-secondary);
+}
+
+/* Menu button below 800px: a plain icon, no floating disc. */
+.sl-menu-button,
+[data-theme='light'] .sl-menu-button {
+	background-color: transparent;
+	color: var(--dt-ink);
+	box-shadow: none;
+}
+.sl-menu-button:has(~ :popover-open),
+[data-theme='light'] .sl-menu-button:has(~ :popover-open) {
+	background-color: var(--dt-surface);
+}
+
+/* ---- Sidebar ---- */
+
+/* Link rules are scoped to the navigation list (.top-level); the menu footer below it has its own. */
+
+.sidebar-content {
+	padding-top: 1.5rem;
+}
+.sidebar-content ul {
+	--sl-sidebar-item-padding-inline: 0.75rem;
+}
+.sidebar-content .top-level > li + li {
+	margin-top: 0.25rem;
+}
+/* Pages sit flush under their section label: no indent, no guide line. */
+.sidebar-content ul ul li {
+	margin-inline-start: 0;
+	border-inline-start: 0;
+	padding-inline-start: 0;
+}
+.sidebar-content ul ul li + li {
+	margin-top: 0.125rem;
+}
+.sidebar-content details > ul {
+	margin-block: 0.25rem 0.5rem;
+}
+
+.sidebar-content summary {
+	min-height: 2.25rem;
+	border-radius: 0.5rem;
+	padding-block: 0;
+	transition: background-color var(--dt-ease);
+}
+.sidebar-content summary:hover {
+	background-color: var(--dt-surface);
+}
+.sidebar-content .large {
+	font-family: var(--dt-font-display);
+	font-size: 1.0625rem;
+	font-weight: 600;
+	color: var(--dt-ink);
+}
+.sidebar-content .caret {
+	font-size: 1rem;
+	color: var(--dt-secondary);
+}
+
+.sidebar-content .top-level a {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 2.5rem;
+	border-radius: 1.25rem;
+	padding-block: 0.375rem;
+	color: var(--dt-secondary);
+	transition:
+		background-color var(--dt-ease),
+		color var(--dt-ease);
+}
+.sidebar-content .top-level a:hover,
+.sidebar-content .top-level a:focus {
+	background-color: var(--dt-surface);
+	color: var(--dt-ink);
+}
+/* Current page: a surface pill with a tangerine dot. */
+.sidebar-content .top-level a[aria-current='page'],
+.sidebar-content .top-level a[aria-current='page']:hover,
+.sidebar-content .top-level a[aria-current='page']:focus {
+	background-color: var(--dt-surface);
+	color: var(--dt-ink);
+	font-weight: 600;
+}
+.sidebar-content .top-level a[aria-current='page']::before {
+	content: '';
+	flex-shrink: 0;
+	width: 0.375rem;
+	height: 0.375rem;
+	border-radius: 50%;
+	background-color: var(--dt-accent);
+}
+
+@media (min-width: 50rem) {
+	.sidebar-content .large {
+		font-size: 0.9375rem;
+	}
+	.sidebar-content .top-level a {
+		min-height: 2rem;
+		border-radius: 1rem;
+	}
+}
+
+/* ---- Page columns ---- */
+
+/* Title block and content read as one column: no rule between the two panels. */
+.content-panel:has(+ .content-panel) {
+	padding-block: 2rem 0;
+}
+.content-panel + .content-panel {
+	border-top: 0;
+	padding-block: 2rem 5rem;
+}
+
+@media (min-width: 72rem) {
+	.content-panel:has(+ .content-panel) {
+		padding-top: 3rem;
+	}
+
+	/* Starlight sizes the right column like the sidebar. The table of contents is narrower here,
+	   so the reading column and the list are centered as one group. */
+	.right-sidebar-container {
+		width: max(
+			var(--dt-toc-column),
+			calc(var(--dt-toc-column) + (100% - var(--sl-content-width) - var(--dt-toc-column)) / 2)
+		);
+	}
+	[data-has-sidebar][data-has-toc] .main-pane {
+		width: min(
+			calc(100% - var(--dt-toc-column)),
+			calc(var(--sl-content-width) + (100% - var(--sl-content-width) - var(--dt-toc-column)) / 2)
+		);
+	}
+}
+
+/* ---- Table of contents ---- */
+
+.right-sidebar {
+	border-inline-start: 0;
+}
+.right-sidebar-panel {
+	padding: 3rem 1.25rem 2rem 2.5rem;
+}
+.right-sidebar-panel .sl-container {
+	width: 13.75rem;
+}
+.right-sidebar-panel h2 {
+	margin-bottom: 0.75rem;
+	font-size: var(--sl-text-xs);
+	line-height: 1.6;
+	color: var(--dt-ink);
+}
+/* A hairline rail; the section being read carries a tangerine bar on it. */
+.right-sidebar-panel nav > ul {
+	border-inline-start: 1px solid var(--dt-hairline);
+}
+.right-sidebar-panel a {
+	--pad-inline: 1rem;
+	margin-inline-start: -1px;
+	border-inline-start: 2px solid transparent;
+	border-radius: 0;
+	padding-block: 0.375rem;
+	color: var(--dt-secondary);
+	line-height: 1.4;
+	transition: color var(--dt-ease);
+}
+.right-sidebar-panel a:hover {
+	color: var(--dt-ink);
+}
+.right-sidebar-panel a[aria-current='true'] {
+	border-inline-start-color: var(--dt-accent);
+	color: var(--dt-ink);
+	font-weight: 500;
+}
+
+/* Below 1152px the list is Starlight's "On this page" bar under the header. */
+mobile-starlight-toc nav {
+	border-top-color: var(--dt-hairline);
+}
+mobile-starlight-toc .toggle {
+	border: 0;
+	border-radius: var(--dt-radius-pill);
+	padding-inline: 0.875rem 0.625rem;
+	background-color: var(--dt-surface);
+	color: var(--dt-ink);
+}
+mobile-starlight-toc .dropdown {
+	border-color: var(--dt-hairline);
+	background-color: var(--dt-page);
+}
+mobile-starlight-toc .dropdown a {
+	border-top-color: var(--dt-hairline);
+}
+
+/* ---- Footer: edit link, date, previous and next, version note ---- */
+
+main footer > .meta {
+	margin-top: 4rem;
+	border-top: 1px solid var(--dt-hairline);
+	padding-top: 2rem;
+	color: var(--dt-secondary);
+}
+main footer > .meta a:hover {
+	color: var(--dt-ink);
+}
+/* Pages without an edit link or a date (the 404 page) get no empty rule. */
+main footer > .meta:not(:has(*)) {
+	display: none;
+}
+
+/* Previous and next are raised cards, each in its own half. */
+.pagination-links a {
+	justify-content: space-between;
+	gap: 1rem;
+	border: 0;
+	border-radius: 1rem;
+	padding: 1.25rem;
+	background-color: var(--dt-raised);
+	box-shadow: var(--dt-raised-shadow);
+	color: var(--dt-secondary);
+	font-size: var(--sl-text-xs);
+	line-height: 1.4;
+}
+.pagination-links a[rel='prev'] {
+	text-align: end;
+}
+.pagination-links a[rel='next'] {
+	text-align: start;
+}
+.pagination-links .link-title {
+	display: inline-block;
+	margin-top: 0.25rem;
+	font-family: var(--dt-font-display);
+	font-size: 1.25rem;
+	font-weight: 600;
+	line-height: 1.4;
+	color: var(--dt-ink);
+}
+.pagination-links svg {
+	color: var(--dt-ink);
+	font-size: 1.25rem;
+	transition: transform var(--dt-ease);
+}
+.pagination-links a[rel='prev']:hover svg {
+	transform: translateX(-2px);
+}
+.pagination-links a[rel='next']:hover svg {
+	transform: translateX(2px);
+}
+@media (min-width: 50rem) {
+	.pagination-links {
+		grid-template-columns: 1fr 1fr;
+	}
+	.pagination-links a[rel='next'] {
+		grid-column: 2;
+	}
+}
+
+/* Line added by src/components/Footer.astro */
+.dectog-footer {
+	margin-top: 2rem;
+	font-size: var(--sl-text-xs);
+	line-height: 1.6;
+	color: var(--dt-meta);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1.25rem;
+}
+.dectog-footer a {
+	color: inherit;
+	transition: color var(--dt-ease);
+}
+.dectog-footer a:hover {
+	color: var(--dt-ink);
+}

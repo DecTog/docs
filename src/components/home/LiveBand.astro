@@ -1,0 +1,75 @@
+---
+// The home page's one dark panel: what the three steps lead to, with a link to the page about it.
+import { Icon } from '@astrojs/starlight/components';
+
+interface Props {
+	title: string;
+	text: string;
+	href: string;
+	/** Text of the link. */
+	link: string;
+}
+
+const { title, text, href, link } = Astro.props;
+---
+
+<div class="live-band not-content">
+	<span class="dot" aria-hidden="true"></span>
+	<h3>{title}</h3>
+	<p>{text}</p>
+	<a href={href}>{link}<Icon name="right-arrow" /></a>
+</div>
+
+<style>
+	.live-band {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 1rem;
+		margin-top: 1rem;
+		border-radius: 1rem;
+		padding: 1.25rem 1.5rem;
+		background-color: var(--dt-feature);
+	}
+	/* On the dark page the panel is darker than its surroundings; a ring keeps its edge. */
+	:global([data-theme='dark']) .live-band {
+		box-shadow: 0 0 0 1px var(--dt-hairline);
+	}
+	.dot {
+		flex-shrink: 0;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background-color: var(--dt-accent);
+	}
+	h3 {
+		font-family: var(--dt-font-display);
+		font-size: 1.25rem;
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--dt-on-feature);
+	}
+	p {
+		font-size: 0.9375rem;
+		line-height: 1.6;
+		color: var(--dt-on-feature-dim);
+	}
+	a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		color: var(--dt-accent-light);
+		font-size: var(--sl-text-sm);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+	a:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	@media (min-width: 50rem) {
+		a {
+			margin-inline-start: auto;
+		}
+	}
+</style>

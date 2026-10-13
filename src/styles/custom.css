@@ -1,57 +1,145 @@
-/* DecTog brand palette on top of Starlight's defaults.
-   Brand blue #1E40AF (logo), accent orange #fb5a0c (buttons on dectog.com). */
+/* dectog.com identity on top of Starlight: white page, near-black ink, one rationed tangerine.
+   Light values are dectog.com's own; the dark column is derived from them.
+   This file holds the tokens. chrome.css styles the frame around the content, content.css the content. */
 
 :root {
-	--sl-color-accent-low: #3b1a08;
-	--sl-color-accent: #fb5a0c;
-	--sl-color-accent-high: #ffd0b8;
-	--sl-color-white: #ffffff;
-	--sl-color-gray-1: #eeeeee;
-	--sl-color-gray-2: #c2c2c2;
-	--sl-color-gray-3: #8b8b8b;
-	--sl-color-gray-4: #585858;
-	--sl-color-gray-5: #383838;
-	--sl-color-gray-6: #272727;
-	--sl-color-black: #181818;
+	--dt-page: #141414;
+	--dt-surface: #1f2420;
+	--dt-surface-strong: #2a2f2b;
+	--dt-hairline: #2e332f;
+	--dt-ink: #ffffff;
+	--dt-body: #e8ecea;
+	--dt-secondary: #a7b0a9;
+	--dt-meta: #8a918c;
+	/* Tangerine: the fill is for the one call to action, the light tone for small markers. */
+	--dt-accent: #fb510e;
+	--dt-accent-light: #ff7732;
+	--dt-link: #ff7732;
+	--dt-accent-tint: #3b1a08;
+	--dt-danger: #fca5a5;
+	--dt-danger-tint: #3a1516;
+	/* Raised cards lift with a shadow on white and with a hairline ring on the dark page. */
+	--dt-raised: #1f2420;
+	--dt-raised-shadow: 0 0 0 1px var(--dt-hairline);
+	/* Code set into a raised card: one step away from the card's own tone. */
+	--dt-well: #141414;
+	/* The one dark panel a page may carry. */
+	--dt-feature: #0c0d0c;
+	--dt-on-feature: #f7f8f7;
+	--dt-on-feature-dim: #a7b0a9;
+	--dt-logo: #ffffff;
+
+	--dt-font-display: 'Outfit Variable', Outfit, var(--__sl-font);
+	--dt-radius-pill: 999px;
+	--dt-ease: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :root[data-theme='light'] {
-	--sl-color-accent-low: #fff3ec;
-	--sl-color-accent: #d94d05;
-	--sl-color-accent-high: #6b2403;
-	--sl-color-white: #181818;
-	--sl-color-gray-1: #272727;
-	--sl-color-gray-2: #383838;
-	--sl-color-gray-3: #585858;
-	--sl-color-gray-4: #8b8b8b;
-	--sl-color-gray-5: #c2c2c2;
-	--sl-color-gray-6: #eeeeee;
-	--sl-color-gray-7: #f6f6f6;
-	--sl-color-black: #ffffff;
+	--dt-page: #ffffff;
+	--dt-surface: #f7f8f7;
+	--dt-surface-strong: #eff1ef;
+	--dt-hairline: #e8e8e8;
+	--dt-ink: #141414;
+	--dt-body: #1f2420;
+	--dt-secondary: #5a6b5d;
+	--dt-meta: #737373;
+	/* #fb510e is 3.3:1 on white, so text links use a darker tone that passes AA. */
+	--dt-link: #c2410c;
+	--dt-accent-tint: #fff3ec;
+	--dt-danger: #b91c1c;
+	--dt-danger-tint: #fef2f2;
+	--dt-raised: #ffffff;
+	--dt-raised-shadow: 0 1px 4px rgba(12, 12, 13, 0.1), 0 1px 4px rgba(12, 12, 13, 0.05);
+	--dt-well: #f7f8f7;
+	--dt-feature: #1f2420;
+	--dt-logo: #22232b;
 }
 
-/* Logo and title sit a little tighter than the default. */
-.site-title img {
-	height: 1.75rem;
+/* Starlight's own tokens, pointed at the palette above. They follow the theme through it. */
+:root,
+::backdrop {
+	--sl-color-white: var(--dt-ink);
+	--sl-color-gray-1: var(--dt-body);
+	--sl-color-gray-2: var(--dt-body);
+	--sl-color-gray-3: var(--dt-secondary);
+	--sl-color-gray-4: var(--dt-meta);
+	--sl-color-gray-5: var(--dt-hairline);
+	--sl-color-gray-6: var(--dt-surface);
+	--sl-color-gray-7: var(--dt-surface);
+	--sl-color-black: var(--dt-page);
+
+	--sl-color-accent-low: var(--dt-accent-tint);
+	--sl-color-accent: var(--dt-accent);
+	--sl-color-accent-high: var(--dt-link);
+
+	--sl-color-text: var(--dt-body);
+	--sl-color-text-accent: var(--dt-link);
+	--sl-color-text-invert: var(--dt-page);
+	--sl-color-bg: var(--dt-page);
+	--sl-color-bg-nav: var(--dt-page);
+	--sl-color-bg-sidebar: var(--dt-page);
+	--sl-color-bg-inline-code: var(--dt-surface-strong);
+	--sl-color-bg-accent: var(--dt-accent);
+	--sl-color-hairline-light: var(--dt-hairline);
+	--sl-color-hairline: var(--dt-hairline);
+	--sl-color-hairline-shade: var(--dt-hairline);
+
+	--sl-font: 'Inter Variable', Inter;
+	--sl-font-mono: 'Fira Code Variable', 'Fira Code';
+
+	--sl-text-h1: 2.125rem;
+	--sl-text-h2: 1.625rem;
+	--sl-text-h3: 1.375rem;
+	--sl-text-h4: 1.125rem;
+	--sl-text-h5: 1rem;
+	--sl-line-height: 1.7;
+	--sl-line-height-headings: 1.25;
+
+	--sl-sidebar-pad-x: 1.25rem;
 }
 
-/* Tables are the main content form in the reference pages: keep them readable. */
-.sl-markdown-content table {
-	font-size: var(--sl-text-sm);
-}
-.sl-markdown-content th {
-	white-space: nowrap;
+@media (min-width: 50em) {
+	:root {
+		--sl-nav-pad-x: 2rem;
+		--sl-text-h1: 2.75rem;
+		--sl-text-h2: 1.875rem;
+	}
 }
 
-/* Footer line added by src/components/Footer.astro */
-.dectog-footer {
-	margin-top: 1.5rem;
-	font-size: var(--sl-text-xs);
-	color: var(--sl-color-gray-3);
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25rem 1.25rem;
+/* The home page has no sidebar; its column is the 1120px of dectog.com. */
+html:root[data-theme]:not([data-has-sidebar]) {
+	--sl-content-width: 70rem;
 }
-.dectog-footer a {
-	color: inherit;
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+	outline: 2px solid var(--dt-accent-light);
+}
+
+/* Small uppercase label above a title: the section name on a page, the kicker on the home page. */
+.dt-eyebrow {
+	display: inline-flex;
+	align-items: center;
+	height: 1.5rem;
+	border-radius: var(--dt-radius-pill);
+	padding-inline: 0.75rem;
+	background-color: var(--dt-surface);
+	color: var(--dt-secondary);
+	font-size: var(--sl-text-2xs);
+	font-weight: 500;
+	line-height: 1;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0s !important;
+	}
 }

@@ -28,7 +28,7 @@ Node 22.12 or newer (`.nvmrc` says 24).
    ```yaml
    ---
    title: Temporary links
-   description: One sentence used in search results and llms.txt.
+   description: One sentence shown under the title and used in search results and llms.txt.
    sidebar:
      order: 5 # position inside the group
    ---
@@ -41,6 +41,21 @@ Node 22.12 or newer (`.nvmrc` says 24).
    internal links fail the build.
 5. Starlight components (`Steps`, `Tabs`, `Aside`, `Card`) come from
    `@astrojs/starlight/components`.
+6. On a step-by-step page, title each step with a `##` heading inside `<Steps>`
+   (`1. ## Sign up`). The steps then appear in "On this page".
+
+### Look and layout
+
+The site wears the dectog.com identity on top of Starlight:
+
+- `src/styles/custom.css` holds the color, type and size tokens for both themes;
+  `chrome.css` styles the header, sidebar, table of contents and footer; `content.css` styles
+  what Markdown renders. Code block frames and syntax colors are in `ec.config.mjs`.
+- `src/components/` overrides Starlight's header, site title, page title, home page hero,
+  mobile menu footer and footer (registered under `components` in `astro.config.mjs`).
+  `src/components/home/` holds the sections of the home page, used from
+  `src/content/docs/index.mdx`.
+- Outfit, Inter and Fira Code are self-hosted through the `@fontsource-variable` packages.
 
 ### Conventions
 

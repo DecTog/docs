@@ -1,0 +1,22 @@
+---
+// The row of numbered cards on the home page. Children are <StepCard> elements.
+---
+
+<ol class="step-cards not-content">
+	<slot />
+</ol>
+
+<style>
+	.step-cards {
+		counter-reset: step;
+		display: grid;
+		gap: 1rem;
+		padding: 0;
+		list-style: none;
+	}
+	@media (min-width: 50rem) {
+		.step-cards {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+</style>
