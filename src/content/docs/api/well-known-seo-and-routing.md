@@ -1,6 +1,6 @@
 ---
 title: Well-known files, SEO and routing
-description: How the worker serves the Apple and Android association files, robots.txt and the sitemap, and which host and path reaches which handler.
+description: How the worker serves the Apple and Android association files, robots.txt, the sitemap and blog post previews, and which host and path reaches which handler.
 sidebar:
   order: 7
 ---
@@ -79,6 +79,24 @@ Sitemap: https://app.dectog.com/sitemap.xml
 
 `GET /sitemap.xml` (`application/xml`) lists `WEB_URL` plus `/`, `/about`, `/blog` and `/contact`, then `/blog/<slug>` for every published post, newest first, with `<lastmod>` set to the post's `updated_at` date (`YYYY-MM-DD`). Drafts are never listed. The origin is `WEB_URL` (`https://app.dectog.com` on the hosted service) because the apex only redirects.
 
+## Blog post pages
+
+The static export has no page per post. `/blog/<slug>` on the dashboard host is answered with the export's article page, `/blog/article`, which loads the post in the browser; `/blog/` is the blog itself. The article page's head has no title, description or share tags of its own. Link unfurlers never run the page's script, so for a published post the worker adds them to the head before sending the page:
+
+| Tag | Value |
+|---|---|
+| `<title>` | `<post title> — DecTog Blog` |
+| `description`, `og:description`, `twitter:description` | The post's excerpt. Left out when the excerpt is empty. |
+| `og:title`, `twitter:title` | The post's title. |
+| `og:url` | `WEB_URL` plus `/blog/<slug>`, the address the sitemap lists. |
+| `og:site_name`, `og:type` | `DecTog`, `article` |
+| `og:image`, `twitter:image` | The post's featured image, else the site card `WEB_URL/media/og-card.png` with its `og:image:width` (1200), `og:image:height` (630) and `og:image:alt`. |
+| `twitter:card` | `summary_large_image` |
+
+Each added tag carries a `data-post-head` attribute; the page removes them when the visitor moves on to another page of the app. The page is sent without the export's `ETag`.
+
+Drafts, unknown slugs and HEAD requests get the article page unchanged. Once the post fails to load, the page shows "Article Not Found" and titles itself `Article Not Found — DecTog Blog`.
+
 ## Host and path routing
 
 Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/robots.txt` and `/sitemap.xml`. Everything else depends on the host. The port is ignored when matching hosts.
@@ -91,11 +109,10 @@ Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/
 | any | `/.well-known/…` | The association files above. |
 | any | `/_/collect` | The interstitial beacon (POST). |
 | any | `/healthz`, `/robots.txt`, `/sitemap.xml` | See this page. |
-| `app.dectog.com` | any other path | The dashboard's static export. `/blog/<slug>` serves the `/blog` page, which reads the slug client-side. `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
+| `app.dectog.com` | any other path | The dashboard's static export. `/blog/<slug>` serves the export's article page, which reads the slug client-side; for a published post the worker adds the post's head tags first (see [Blog post pages](#blog-post-pages)). `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | `dectog.com` | `/` | `302` to `WEB_URL`. |
-| `dectog.com` | `/blog`, `/blog/…` | `301` to `WEB_URL` plus the path. **The query string is dropped.** |
-| `dectog.com` | `/SKILL.md`, `/llms.txt` | Served from the dashboard's static assets, so `curl https://dectog.com/SKILL.md` works without a redirect. Without an assets binding (local development) these `301` to `WEB_URL` plus the path. |
-| `dectog.com` | any other path | `404 {"error": "Not found"}`. |
+| `dectog.com` | `/SKILL.md`, `/llms.txt` | Served from the dashboard's static assets, so `curl https://dectog.com/SKILL.md` works without a redirect. Without an assets binding (local development) these redirect like any other path. |
+| `dectog.com` | any other path | `301` to `WEB_URL` plus the path and the query string: `https://dectog.com/contact?ref=x` goes to `https://app.dectog.com/contact?ref=x`. |
 | `<username>.dectog.com` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or `404 {"error": "Not found"}` when it is unset. `www` is a reserved username, so `www.dectog.com` follows the unknown-host rule. |
 | `<username>.dectog.com` | `/<slug>` | The redirect engine. An unknown username here also follows `UNKNOWN_HOST_REDIRECT`; an unknown slug gets the 404 page and an expired temporary link the 410 page. See [How a tap is routed](/links/how-a-tap-is-routed/). |
 | `<username>.dectog.com` | two or more path segments | `404 {"error": "Not found"}`. |
