@@ -18,7 +18,7 @@ npm run build      # validates internal links, builds the search index, writes d
 npm run serve:cf   # serves dist/ through wrangler on http://localhost:8788 (production-like)
 ```
 
-Node 22 or newer (`.nvmrc` says 24).
+Node 22.12 or newer (`.nvmrc` says 24).
 
 ### Adding a page
 
@@ -47,7 +47,8 @@ Node 22 or newer (`.nvmrc` says 24).
 - State behaviour, not intentions: numbers, limits, defaults and error strings come from the
   server and SDK source, and the page says which.
 - The footer on every page states the versions the docs apply to (`flutter_dectog` 1.0.x,
-  server migration 0027). Bump it in `src/components/Footer.astro` when that changes.
+  server migration 0027). When that changes, bump it in `src/components/Footer.astro` and
+  in the `starlightLlmsTxt` `details` in `astro.config.mjs`, which feed `llms.txt`.
 - `https://docs.dectog.com/llms.txt` and `/llms-full.txt` are generated at build time for AI
   agents; `dectog.com/SKILL.md` links to them.
 
