@@ -29,7 +29,6 @@ DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog
 | `docs/API_CONTRACT.md` | The SDK-to-worker contract, route by route |
 | `docs/ATTRIBUTION-RELIABILITY-PLAN.md` | How attribution works and the status of each follow-up |
 | `docs/DATA-LAYER.md` | The data-layer rules summarized below |
-| `docs/domain-setup.md` | Zone and DNS setup for a deployment |
 
 ### `flutter_dectog` (SDK)
 

@@ -15,7 +15,7 @@ Production is the `production` environment in `apps/worker/wrangler.jsonc`: one 
 - DNS, both proxied (orange cloud): a record for the apex, and a wildcard record `*` pointing at the apex. Worker routes only see traffic that passes through Cloudflare's proxy, so an unproxied record never reaches the Worker. Tenant links live on `<username>.<ROOT_DOMAIN>` and the dashboard on `APP_HOST` (`app.<ROOT_DOMAIN>`), and the wildcard covers both.
 - Two routes with `zone_name` set: `<root>/*` and `*.<root>/*`. A more specific route in the same zone (for example a separate docs site on `docs.<root>/*`) takes precedence over the wildcard without any change here.
 - Usernames `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static` and `cdn` are reserved (`apps/worker/src/bootstrap.ts`), so no tenant can claim those hosts. Any other subdomain you use for something else can be claimed by a signup unless you add it to that list or close signups with `OPEN_SIGNUPS="0"`.
-- Node 20 or newer and a `wrangler login` session on the account that owns the zone (`npx wrangler whoami`).
+- Node 22.12 or newer and a `wrangler login` session on the account that owns the zone (`npx wrangler whoami`).
 
 ## The production environment
 
