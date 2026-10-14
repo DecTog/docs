@@ -48,7 +48,21 @@ Edit `env.production` in `apps/worker/wrangler.jsonc`. The file as shipped carri
 
 `run_worker_first` matters: the Worker decides every request before the asset server does, so `<tenant>.<root>/login` is a link slug, not the dashboard's login page. Every variable is described on the [Configuration reference](/self-hosting/configuration-reference/). Add `"OPEN_SIGNUPS": "0"` to `vars` if only you should have an account, and `"EMAIL_FROM"` with a sender you verified in Resend if you set `RESEND_API_KEY`.
 
-## First-time setup
+## One-command setup
+
+From `apps/worker`, logged in with `npx wrangler login`:
+
+```bash
+npm run setup -- --domain example.com --email you@example.com --username acme
+```
+
+It checks the login, finds or creates the D1 database, writes `wrangler.self-host.jsonc` for your domain (your deployment's config, kept out of git), applies every migration, builds the dashboard, deploys the Worker, sets `JWT_SECRET`, `IP_SALT` and `BOOTSTRAP_TOKEN` only if they are missing, creates your owner account, prints the dashboard URL, the SDK key and the account key once, and deletes `BOOTSTRAP_TOKEN`. Add `--dry-run` to print every step without running any.
+
+It is safe to run again: a finished step is skipped, and existing secrets are never rotated, because a new `IP_SALT` would break every stored hash and a new `JWT_SECRET` every stored key copy and session. DNS is the one manual step: in the Cloudflare dashboard for the zone, add an `A` record for the apex and one for `*`, both proxied. When `https://app.<domain>/readyz` does not answer yet, the script says which records to add and stops; run it again afterwards.
+
+For later releases, use `--config wrangler.self-host.jsonc` instead of `--env production` in the commands below. What it costs to run is on [What it costs to run](/self-hosting/cost/).
+
+## First-time setup (by hand)
 
 <Steps>
 
@@ -167,4 +181,4 @@ Nothing else reads `ENVIRONMENT`. Signup stays open unless `OPEN_SIGNUPS="0"` is
 
 ## Strings that stay hard-coded
 
-A self-hosted instance keeps a few DecTog references in code: the brand name `DecTog` in page titles and the "Powered by DecTog" footer of the QR page (`apps/worker/src/brand.ts`), the `Go to DecTog` button on the 404 and 410 pages (`https://dectog.com/`), the password-reset email's `Reply-To: hello@dectog.com` and default sender (`apps/worker/src/email.ts`), the `.dectog.com` hint under the signup form, and the marketing pages of the Next.js app. Change them in the source before you build if they matter to you.
+`BRAND_NAME` renames the product on the link pages (page titles, "This … link does not exist", the `Go to …` button and the "Powered by" footer of the QR page) and in the password-reset email. A few DecTog references stay in code: the `Go to` button's target (`https://dectog.com/`), the reset email's `Reply-To: hello@dectog.com` and default sender (`apps/worker/src/email.ts`), and the marketing pages of the Next.js app. Change them in the source before you build if they matter to you. The signup form's link-domain hint follows your `ROOT_DOMAIN`.
