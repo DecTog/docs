@@ -149,6 +149,10 @@ With `strict_fraud_mode = 1` on the app the verdict concerns (the app of the cre
 
 With strict mode off (the default) flags are annotations and the attribution stands.
 
+### Same-device reinstall routing
+
+When the ladder and the fingerprint found nothing to credit or route, a reinstall (`is_reinstall = 1`) with a `device_id` gets the click its device's latest credited install consumed as `routing_click_id` with `match_confidence = 'medium'`, provided that tap is younger than the deterministic window of its link's app (`deterministic_window_hours`, default 168). The click stays credited to the first install; `match_details.reinstall_routing` names it. This is decision C6's default.
+
 ### 5. After the insert
 
 The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the install webhook (`app.installed`) of the app the verdict concerns. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.

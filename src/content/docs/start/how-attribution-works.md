@@ -85,7 +85,7 @@ The per-app window is the install's own app's: the app whose package or bundle I
 | Case | How it is detected | What happens |
 |---|---|---|
 | App update | The SDK sees that the app was installed before this build (`install_state: update`) | Registered, never fingerprint-matched. The Overview's quality panel counts these as "kept out of matching". A deterministic signal still applies. |
-| Reinstall | The server has seen the device id before, or the SDK classifies it from the iOS Keychain dates (`install_state: reinstall`) | Registered with `is_reinstall: true`. It still runs the ladder, but the Installs KPI and the per-link install counts exclude it. The quality panel includes it. |
+| Reinstall | The server has seen the device id before, or the SDK classifies it from the iOS Keychain dates (`install_state: reinstall`) | Registered with `is_reinstall: true`. It still runs the ladder, but the Installs KPI and the per-link install counts exclude it. The quality panel includes it. When nothing else matches, it is routed (not credited) to the link its earlier install on the same device came from, if that tap is within the pasted-link window (7 days by default), so the user lands on the same content again. |
 
 The device id survives a reinstall by default (`ANDROID_ID` on Android, the first IDFV kept in the Keychain on iOS with `persistDeviceId`). Repeated test installs on one device therefore show as reinstalls.
 
