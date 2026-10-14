@@ -19,13 +19,13 @@ Everything an account stores is scoped to it. There is no cross-account view; th
 
 An app is a registered iOS and/or Android application: its identifiers, store URLs, custom schemes, social preview, install webhook and attribution options. An account can register any number of apps on the **Apps** page.
 
-The **default app** is the oldest app of the account, the first one you registered. It matters in four places:
+The **default app** is the oldest app of the account, the first one you registered. It matters in these places:
 
 | Situation | What the default app does |
 |---|---|
 | A permanent link created without an app, or whose app was deleted | The link routes through the default app's store URLs, schemes and fallback URL. |
 | Every temporary link | Temporary links have no app of their own and always use the default app. |
-| Strict fraud mode, the low-entropy attribution window and the install webhook | These three settings are read from the default app for every install of the account, whichever app the matched link belongs to. On a single-app account "per app" and "per account" are the same thing. |
+| Strict fraud mode, the low-entropy attribution window and the install webhook | Only as the last resort. These three are read from the app the install concerns: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. |
 | Deleting an app | Its links are re-pointed to the default app. Clicks and installs are untouched. |
 
 The well-known files are account-wide: `apple-app-site-association` lists every app with a bundle ID and Team ID, `assetlinks.json` every app with a package.

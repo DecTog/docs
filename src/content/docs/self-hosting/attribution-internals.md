@@ -51,13 +51,18 @@ WHERE c.user_id = ?1 AND c.source = 'web' AND c.device_type IN ('ios','android')
   AND c.ip_hash = ?3                           -- same salted IP hash
   AND c.clicked_at >= ?4                       -- inside the wide window
   AND NOT EXISTS (SELECT 1 FROM app_installs i WHERE i.matched_click_id = c.id)
+  AND (?5 IS NULL OR c.link_kind != 'permanent' OR NOT EXISTS (   -- the install's app
+        SELECT 1 FROM links l WHERE l.user_id = c.user_id AND l.slug = c.link_slug
+          AND l.app_id IS NOT NULL AND l.app_id != ?5))
 ORDER BY c.clicked_at DESC
 LIMIT 50
 ```
 
+`?5` is the install's own app. A click on a link bound to a different app of the account is no candidate, so one account's two apps cannot take each other's installs. Clicks on temporary links and on links bound to no app stay candidates for every app. When the install's app is unknown (a package name that matches none of several apps) the pool is not scoped.
+
 So the pool is the 50 newest web clicks (recorded by the redirect engine or synthesized; an in-app open that flipped a row to `source = 'mobile_app'` is out) from the same hashed IP, on the same device family, inside the wide window, not yet credited to any install. A routing-only assignment does not consume a click.
 
-**Windows.** `fingerprintWindows` computes `wideHours = clamp(ATTRIBUTION_WINDOW_HOURS, 1, 720)` (default 24) and `lowHours = min(app override or ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS, wideHours)` (default 2). The app override is `low_entropy_window_hours` of the tenant's **oldest app**, not the matched link's app. A candidate keeps the wide window only when the install is not on cellular, the click carries a device model and the install carries one too. Every other candidate must be younger than `lowHours`.
+**Windows.** `fingerprintWindows` computes `wideHours = clamp(ATTRIBUTION_WINDOW_HOURS, 1, 720)` (default 24) and `lowHours = min(app override or ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS, wideHours)` (default 2). The app override is `low_entropy_window_hours` of the install's own app: the app whose Android package or iOS bundle ID equals `package_name`, or the only app of a one-app account (`appOfInstall` in `appscope.ts`). With no such app the deployment default applies. A candidate keeps the wide window only when the install is not on cellular, the click carries a device model and the install carries one too. Every other candidate must be younger than `lowHours`.
 
 **Scoring.** `scoreCandidate` adds points per signal. A signal missing on either side scores 0; absence is never evidence.
 
@@ -130,7 +135,7 @@ When a deterministic signal decided, the fingerprint still runs and writes what 
 | `stale_referrer` | `match_source` is `referrer` or `clipboard` and the click is older than 30 days |
 | `click_reuse` | A deterministic signal named a click that another device's install already holds |
 
-With `strict_fraud_mode = 1` on the tenant's **oldest app**, any flag makes the stored row `matched = 0` and `match_source = NULL` while `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` are kept as evidence. Consequences:
+With `strict_fraud_mode = 1` on the app the verdict concerns (the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app), any flag makes the stored row `matched = 0` and `match_source = NULL` while `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` are kept as evidence. Consequences:
 
 - The click stays consumed, so a replayed signal cannot free it for the next install.
 - The API verdict says `matched: false`, `type: "organic"`, `match_source: null`, but still `referrer_source` and `match_confidence` (for example `guaranteed`); `username`, `slug` and `link` are absent and `routing` is null.
@@ -142,7 +147,7 @@ With strict mode off (the default) flags are annotations and the attribution sta
 
 ### 5. After the insert
 
-The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the install webhook (`app.installed`) of the oldest app. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
+The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the install webhook (`app.installed`) of the app the verdict concerns. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
 
 ## Worked examples
 

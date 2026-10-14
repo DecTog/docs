@@ -12,7 +12,7 @@ The Apps screen, at https://app.dectog.com/dashboard/apps, holds the identifiers
 An **Add app** button opens the editor. While the editor is closed, a status line shows "Saved ✓", "Deleted ✓" or the last error.
 
 <Aside type="caution" title="Which app's settings apply">
-Most settings belong to the app a link is bound to: the link's **App**, or your oldest app when a link has none. Three settings do not. **Strict fraud mode**, the **Low-entropy attribution window** and the **Install webhook** are always read from your **oldest app**, whichever app the link or the install belongs to. On an account with one app this makes no difference. On an account with several apps, set those three on the oldest app; the same controls on younger apps are saved but never consulted.
+Most settings belong to the app a link is bound to: the link's **App**, or your oldest app when a link has none. **Strict fraud mode**, the **Low-entropy attribution window** and the **Install webhook** belong to the app an install concerns: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The app's identifiers matter here: an install whose package name matches none of your apps falls back to the oldest app on an account with several.
 </Aside>
 
 ## App cards
@@ -122,7 +122,7 @@ Both values must be saved for deliveries to happen. The server posts `app.instal
 - `✕ Webhook delivery failed: <reason>` when the endpoint could not be reached in time;
 - `✕ Save the webhook URL and secret first` when either value is not saved yet.
 
-Real deliveries go to the webhook of your oldest app only; see the note at the top of this page.
+Real deliveries go to the webhook of the app the install concerns; see the note at the top of this page.
 
 ### Advanced
 
@@ -135,7 +135,7 @@ Section text: "Attribution behaviour. Everything here is off by default."
 | **iOS tap-to-store** | Switch | "Off: iPhone taps go straight to the App Store. On: taps see a one-button page whose “Get the app” tap copies the link to the clipboard before opening the App Store. The SDK reads it on first launch, so iOS installs attribute deterministically instead of by IP. Inside Instagram and Facebook the page offers “Open in app” first. There is no automatic redirect: Safari only lets the page copy from a tap. On iPhone this replaces the beacon interstitial." The page is used only when the tap's destination is the App Store. |
 | **Low-entropy attribution window** | Number box, 1 to 720, placeholder `2`, suffix "hours" | "Hours an IP-only click (no device model, or an install on mobile data) stays matchable. Shorter is safer on shared carrier networks. Empty uses the deployment default (2 hours); clicks that carry a device model keep the full 24-hour window." The server accepts a whole number from 1 to 720 or an empty box; anything else gets `low_entropy_window_hours must be a whole number of hours between 1 and 720`. The effective value never exceeds the wide window of 24 hours. |
 
-Strict fraud mode and the low-entropy window are read from the oldest app. The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules, windows and confidence levels are explained in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
+Strict fraud mode and the low-entropy window are read from the app the install concerns (see the note at the top of this page). The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules, windows and confidence levels are explained in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
 
 ## Saving
 

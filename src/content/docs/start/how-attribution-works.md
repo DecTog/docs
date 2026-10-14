@@ -78,7 +78,7 @@ Only mobile web clicks of your account, from the same hashed IP (IPv6 at /64) an
 | The click carries a device model, the install carries one too, and the install is not on cellular data | 24 hours (`ATTRIBUTION_WINDOW_HOURS`) |
 | Everything else: a click without a model (iOS Safari sends none), or an install on cellular data | 2 hours (`ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS`), or the app's **Low-entropy attribution window** (1 to 720 hours), never longer than the 24-hour window |
 
-The per-app window is read from the account's default (oldest) app. The deterministic ladder has no window: a referrer older than 30 days still matches, with the fraud flag `stale_referrer`.
+The per-app window is the install's own app's: the app whose package or bundle ID the SDK reports, or the only app of a one-app account. An install is also only matched against clicks on its own app's links, and on links bound to no app. The deterministic ladder has no window: a referrer older than 30 days still matches, with the fraud flag `stale_referrer`.
 
 ## Reinstalls and app updates
 

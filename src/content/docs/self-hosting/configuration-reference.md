@@ -78,7 +78,7 @@ Settings that apply per registered app live on the `apps` row and are edited und
 | Strict fraud mode | `strict_fraud_mode` | 0/1. Flagged installs count as organic. |
 | Low-entropy window | `low_entropy_window_hours` | Whole number 1 to 720, or empty for `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS` |
 
-Three of these are read from the tenant's oldest app, not from the app of the matched link: `strict_fraud_mode`, `low_entropy_window_hours` and the install webhook (`apps/worker/src/api_installs.ts`, `asa.ts`). On an account with several apps, set them on the first app you registered. The redirect engine does use the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
+`strict_fraud_mode`, `low_entropy_window_hours` and the install webhook are read from the app an install concerns (`apps/worker/src/appscope.ts`): the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The redirect engine uses the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
 
 ## Fixed constants
 
