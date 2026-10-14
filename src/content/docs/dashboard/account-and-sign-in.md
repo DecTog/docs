@@ -17,7 +17,7 @@ Sign-in lives at https://app.dectog.com/login. The page is titled **Dashboard Ac
 
 **Create Account** submits. Errors, verbatim from the server: `Please enter a valid email address`; the password rule that failed, such as `Password must include an uppercase letter`; `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`; `Username '{name}' is reserved`; `An account with this email or username already exists`; and `Signup is currently closed` when the deployment has closed signups, in which case the Sign up tab is hidden as well.
 
-On success you are signed in and see **Account created — you are signed in.**, a **Your API key** box with the full key, the note "You can view and copy it any time in Settings." and a **Go to dashboard** button. The same key is shown on the [Settings](/dashboard/settings/) screen afterwards.
+On success you are signed in and see **Account created — you are signed in.** with two keys: **SDK key, for your app** (listed again under Settings → [SDK keys](/dashboard/settings/#sdk-keys)) and **Account key, for servers and scripts**, which this screen shows once: "Copy it now: it is not shown again (Settings can replace it)." Then **Go to dashboard**.
 
 A footer line reads "Your account gets its own link subdomain and API key." Every account created through signup has the `user` role (see [Roles](#roles)).
 

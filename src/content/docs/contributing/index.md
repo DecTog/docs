@@ -94,7 +94,7 @@ The worker talks to D1 with raw, parameterized SQL and no ORM. From `docs/DATA-L
 ## Design decisions to keep
 
 - No billing. There is no billing or subscription code anywhere, and the docs do not describe any.
-- API keys are stored as a SHA-256 hash plus a prefix, with an AES-GCM encrypted copy (keyed from `JWT_SECRET`) so Settings can show the key again. Every SDK call is also HMAC-signed with the key.
+- API keys are stored as a SHA-256 hash plus a prefix. The account key is shown once and kept no other way; SDK and site keys also keep an AES-GCM encrypted copy (keyed from `JWT_SECRET`) so Settings can show them again. Every SDK call is also HMAC-signed with the key.
 - Attribution: deterministic signals first (store referrers, Meta, pasteboard), then a scored, tenant-scoped fingerprint; one install per click; 24-hour window for model-bearing candidates and 2 hours otherwise; credit only at high confidence, routing at medium, nothing on a tie. See [Attribution internals](/self-hosting/attribution-internals/).
 - Privacy: hashed IPs (IPv6 at /64), device-tier anonymization on the retention schedule, ad identifiers in their own table and never joined to device data, no cross-install identifiers. See [Privacy and data](/self-hosting/privacy-and-data/).
 

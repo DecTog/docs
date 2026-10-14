@@ -20,15 +20,16 @@ Apart from the revenue currency and the retention window nothing on this card is
 
 ## Account key
 
-The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `dtg_` followed by 32 lowercase hex characters, 36 characters in total. The card shows it masked as its first 8 characters followed by dots, for example `dtg_3f9a••••••••••••••••••••`.
+The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `dtg_` followed by 32 lowercase hex characters, 36 characters in total. Only owners see this card.
+
+The key is shown once: on the "Account created" screen after sign-up, and right after **Regenerate**. DecTog keeps only its SHA-256 and its first 8 characters, so the card shows those characters followed by dots, for example `dtg_3f9a••••••••••••••••••••••••••••`, and nobody, DecTog included, can show the key again.
 
 | Action | What happens |
 |---|---|
-| **Show** / **Hide** | Reveals or masks the full key. |
-| **Copy** | Copies the full key and shows "Account key copied to clipboard." |
-| **Regenerate** (red) | Asks "Regenerate the account key? Servers and scripts that use it must be updated; SDK keys are not affected." and then replaces the key in one step. The new key is shown unmasked with "New account key generated. Update your servers and scripts: the old key no longer works." Requests that use the old key fail with `401` (`invalid_api_key`) from that moment on. There is no grace period and no password prompt. |
+| **Regenerate** (red) | Asks "Regenerate the account key? Servers and scripts that use it must be updated; SDK keys are not affected." and then replaces the key in one step. The new key is shown in full with **Copy**, and "New account key generated. Copy it now: it is not shown again. The old key no longer works." Requests that use the old key fail with `401` (`invalid_api_key`) from that moment on. There is no grace period and no password prompt. |
+| **Copy** | Shown only with a key just generated: copies it and shows "Account key copied to clipboard." |
 
-Hint under the key: "Full access, including creating and deleting links. Use it on your servers and in scripts; never ship it in an app. Regenerating replaces it at once."
+Hint under the key: "Full access, including creating and deleting links: use it on your servers and in scripts, never in an app. It is shown once, when created; if it is lost, Regenerate replaces it at once."
 
 ## SDK keys
 
@@ -42,19 +43,9 @@ A new account starts with one SDK key, "App key". The card lists every key with 
 | **Copy** | Copies the full key. |
 | **Revoke** | Asks for confirmation, then refuses the key at once: calls answer `401` with code `revoked_api_key`. Release a build with a new key before you revoke the old one. |
 
-### How the key is stored, and when it cannot be shown
+### How the keys are stored
 
-The server authenticates requests with a SHA-256 hash of the key and keeps the 8-character prefix for display. Since database migration 0023 it also keeps an AES-256-GCM encrypted copy, under a key derived from the deployment's `JWT_SECRET`, so this card can show the key again after signup.
-
-When no readable copy exists, the card shows the mask only, without **Show** and **Copy**, and the hint reads: "This key was created before keys were viewable here. Regenerate once to get a key you can view and copy any time (apps using the current key must be updated)." This is the case for:
-
-- keys created before migration 0023;
-- the local demo account created by the demo seed;
-- a self-hosted deployment whose `JWT_SECRET` was unset when the key was created, or has been rotated since.
-
-Authentication keeps working in every one of these cases; only the display is affected. **Regenerate** fixes it.
-
-The key is also shown once on the "Account created" screen right after signup; see [Account and sign-in](/dashboard/account-and-sign-in/). How requests are authenticated and signed with it is in [API overview](/api/overview/).
+Requests are authenticated with a SHA-256 hash of the key; the first characters are kept for display. The account key is stored that way only. SDK and site keys also keep an AES-256-GCM encrypted copy, under a key derived from the deployment's `JWT_SECRET`, so this page can show them again: an SDK key ships inside your app and a site key sits in your pages, so a copy gives nothing away that a build does not. On a deployment whose `JWT_SECRET` changed since a key was created, that key shows masked; revoke it and create another. How requests are authenticated and signed is in [API overview](/api/overview/).
 
 ## Link configuration
 

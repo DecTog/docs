@@ -49,7 +49,7 @@ Password rule for signup and reset: 8 to 72 characters with at least one lowerca
 
 ### Bootstrap
 
-`POST /api/admin/bootstrap` has two body forms. Both answer `409 {"error": {"code": "conflict", "message": "Already bootstrapped"}}` once any user exists, and `201 {"ok": true, "email", "username", "api_key", "sdk_key", "demo"}` on success: `api_key` is the account key, `sdk_key` the first SDK key (`null` for the demo seed). Both can be viewed again in Settings, except the demo account key.
+`POST /api/admin/bootstrap` has two body forms. Both answer `409 {"error": {"code": "conflict", "message": "Already bootstrapped"}}` once any user exists, and `201 {"ok": true, "email", "username", "api_key", "sdk_key", "demo"}` on success: `api_key` is the account key, `sdk_key` the first SDK key (`null` for the demo seed). The SDK key can be viewed again in Settings; the account key is shown only in this response.
 
 | Body | Result |
 |---|---|
@@ -62,8 +62,8 @@ The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` 
 
 | Method and path | Auth | Purpose | Response |
 |---|---|---|---|
-| `GET /api/admin/settings` | session | Account and link configuration. | `200 {email, username, key_prefix, api_key, link_mode, root_domain, public_base_url, example_link}`. `api_key` is the full key decrypted from its stored copy, or `null` for keys created before that copy existed (including the demo seed's key) or when `JWT_SECRET` changed since. Authentication keeps working in every one of those cases. |
-| `POST /api/admin/settings/regenerate-key` | session | Replaces the account key's hash, prefix and stored copy in one update. The old key stops working immediately; SDK keys are untouched. | `200 {api_key, key_prefix}` |
+| `GET /api/admin/settings` | session | Account and link configuration. | `200 {base_currency, retention_days, effective_retention_days, deployment_retention_days, email, username, key_prefix, role, link_mode, root_domain, public_base_url, example_link, custom_domain, default_link_host}`. The account key itself is never returned: it is shown once, by sign-up, bootstrap and regenerate. |
+| `POST /api/admin/settings/regenerate-key` | session | Replaces the account key's hash and prefix in one update. The old key stops working immediately; SDK keys are untouched. | `200 {api_key, key_prefix}`: the only time the new key is shown |
 | `GET /api/admin/keys` | session | SDK keys, active first, newest first. | `200 {keys: [{id, name, kind, prefix, key, scopes, environment, last_used_at, created_at, revoked_at}]}`; `key` is the full key (`null` once revoked or when it cannot be decrypted) |
 | `POST /api/admin/keys` | session | `{name?, links_write?}`. Creates an SDK key; `links_write: true` adds the `links:write` scope. | `201 {id, name, key, prefix, scopes}`; `409` at 20 active keys |
 | `POST /api/admin/keys/:id/revoke` | session | Revokes an SDK key of the account at once. | `200 {ok: true}`; `404 Key not found` (unknown, foreign or already revoked) |
