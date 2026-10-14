@@ -17,7 +17,7 @@ Both leave out the raw network identifiers: the IP (raw or hashed) and the user 
 | Route | Rows |
 |---|---|
 | `GET /api/v1/clicks` | Every tap on a link, and every click the SDK logged |
-| `GET /api/v1/app-installs` | Every install report: first installs, reinstalls (`install_state`) and app updates |
+| `GET /api/v1/app-installs` | Every install report: first installs, reinstalls (`is_reinstall`) and installs that were app updates into an SDK build (`install_state` `update`). The Overview's Installs count only first installs. |
 | `GET /api/v1/app-opens` | Every time a link opened the installed app |
 | `GET /api/v1/events` | Every event, with the link it counts for (`credited_slug`) |
 
@@ -50,12 +50,12 @@ Raw rows live for the retention window (`RETENTION_DAYS`, 400 days by default); 
 
 ### Columns
 
-JSON columns (`link_params`, `fraud_flags`, `metadata`) arrive parsed; `matched` and `via_open` are booleans. A CSV has the same columns in the same order, JSON columns as JSON text.
+JSON columns (`link_params`, `fraud_flags`, `metadata`) arrive parsed; `is_reinstall`, `matched` and `via_open` are booleans. A CSV has the same columns in the same order, JSON columns as JSON text.
 
 | Rows | Columns |
 |---|---|
 | Clicks | `id`, `clicked_at`, `link_slug`, `link_kind`, `source`, `origin`, `device_type`, `os`, `os_major`, `browser`, `device_model`, `device_id`, `country`, `region`, `city`, `lang`, `referrer`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `link_params`, `bot_score`, `sdk_name`, `sdk_version`, `metadata` |
-| Installs | `id`, `created_at`, `os`, `os_version`, `app_version`, `app_build_number`, `package_name`, `lang`, `timezone`, `device_id`, `device_model`, `device_manufacturer`, `matched`, `matched_slug`, `matched_click_id`, `match_source`, `match_confidence`, `install_state`, `fraud_flags`, `asa_status`, `claimed_at`, `claim_source`, `sdk_name`, `sdk_version`, `metadata` |
+| Installs | `id`, `created_at`, `os`, `os_version`, `app_version`, `app_build_number`, `package_name`, `lang`, `timezone`, `device_id`, `device_model`, `device_manufacturer`, `is_reinstall`, `matched`, `matched_slug`, `matched_click_id`, `match_source`, `match_confidence`, `install_state`, `fraud_flags`, `asa_status`, `claimed_at`, `claim_source`, `sdk_name`, `sdk_version`, `metadata` |
 | App opens | `id`, `created_at`, `slug`, `click_id`, `device_id`, `install_id`, `app_version`, `os` |
 | Events | `id`, `created_at`, `type`, `event_name`, `revenue`, `currency`, `revenue_base`, `transaction_type`, `purchase_type`, `store`, `product_id`, `transaction_id`, `original_transaction_id`, `quantity`, `install_id`, `device_id`, `customer_id`, `matched_slug`, `credited_slug`, `via_open`, `client_event_id`, `client_timestamp`, `metadata` |
 
@@ -68,7 +68,7 @@ JSON columns (`link_params`, `fraud_flags`, `metadata`) arrive parsed; `matched`
 | `data` | The file |
 |---|---|
 | `analytics` (default) | The analytics answer as a table: a column per `group_by` dimension, then one per metric, then `conversion` when both clicks and installs are in it |
-| `clicks`, `installs`, `opens`, `events` | The raw rows of the window that pass the filters, oldest first |
+| `clicks`, `installs`, `opens`, `events` | The raw rows of the window that pass the filters, oldest first. Installs include reinstalls and updates. A filter on a dimension those rows do not have, such as clicks by `match_source`, answers `400`. |
 
 It is a session route: the dashboard's **Export CSV** button and **Raw rows** menu call it. The file starts with a UTF-8 byte order mark so Excel reads accents right, separates rows with CRLF, and quotes a field holding a comma, a quote or a line break. A text that starts with `=`, `+`, `-` or `@` gets a leading `'`, so a spreadsheet shows a campaign called `=HYPERLINK(…)` instead of running it. Numbers are left alone.
 
