@@ -97,6 +97,8 @@ The SDK only produces `identify`, `conversion` and `custom` events (`lead` is ac
 
 The server denormalizes `matched_slug` when it stores an event: from the batch's `install_id` when that install was credited, else from the device's latest credited install. Events from organic installs carry no slug and appear only in account-wide totals. The Customers page shows each customer's events (latest 200) next to the link that brought them in; see [Customers](/dashboard/customers/).
 
+When a DecTog link opens the already-installed app, the SDK remembers it (`slug`, click id, time) and stamps every later event with `open_slug`, `open_click_id` and `open_at`, plus a `session_id` that is new for every app process. An event within the re-engagement window after that open (7 days by default, set per app on the Apps page) counts for the re-opening link instead of the link that brought the install. The window is applied when the dashboard reads the numbers, so changing it changes past credit too.
+
 ## Turning collection off
 
 ```dart

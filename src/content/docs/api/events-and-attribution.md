@@ -35,6 +35,10 @@ Each event:
 | `purchase_type` | `one_time` or `subscription` | no | Conversions. |
 | `quantity` | integer 1 to 10000 | no | Conversions. |
 | `transaction_type` | `purchase`, `refund` or `cancel` | no | Conversions, default `purchase`. A refund subtracts its `revenue`; a cancel counts nothing and needs no `revenue`. |
+| `open_slug` | string, 128 | no | The link that last opened the app before this event. With it, `open_at` is required. |
+| `open_click_id` | string, 8 to 32 of `A-Z a-z 0-9 - _` | no | That open's click id. |
+| `open_at` | ISO 8601 date | with `open_slug` | When that link opened the app. A time after the request is stored as the request time. |
+| `session_id` | string, 64 | no | The app process the event came from (the SDK sends a new id per process). |
 | `client_event_id` | string, 8 to 64 of `A-Z a-z 0-9 - _` | no | Your id for the event, unique per account. A resend with an id the account already stored is a duplicate and changes nothing. The SDK sends a UUID it stamps when the event is queued. |
 | `name`, `email`, `phone` | string 200, 254, 32 | no | Read on `identify` only. |
 
@@ -71,6 +75,8 @@ The per-event errors in `rejected`:
 | `store must be one of app_store, play` |
 | `purchase_type must be one of one_time, subscription` |
 | `quantity must be a whole number from 1 to 10000` |
+| `open_at must be an ISO 8601 date` |
+| `open_click_id is not a click id` |
 
 ### What each type does
 
@@ -78,7 +84,7 @@ The per-event errors in `rejected`:
 - **Automatic signup lead.** The first `identify` of a customer the account has not seen before, sent from a fresh install (the batch's `install_id`, else the device's latest install, created within the last 30 days and not a reinstall), also stores a `lead` event with `event_name: "signup"` and `metadata: {"auto": true, "source": "identify"}`. A `lead` with `event_name: "signup"` that you post for a customer who already has one is counted in `duplicates` and not stored.
 - **`lead`**, **`conversion`**, **`custom`** are stored as sent. `conversion` requires `revenue` unless it is a `cancel`. A conversion whose `store` + `transaction_id` + `transaction_type` the account already has is a duplicate. Net revenue, the figure every dashboard total shows, adds purchases and subtracts refunds, in the account's revenue currency. See [Revenue](/sdk/revenue/).
 
-Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row only when the deployment sets `STORE_RAW_IP=1`.
+Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. Per-link numbers credit an event to `open_slug` instead when it happened within the re-engagement window after that open: the window of the re-opening link's app (`reengagement_window_hours`, the default app's for a link bound to none), else `REENGAGEMENT_WINDOW_HOURS` (default 168 hours). It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row only when the deployment sets `STORE_RAW_IP=1`.
 
 ```bash title="Identify a user and record a purchase"
 dectog POST /api/v1/events '{

@@ -74,8 +74,8 @@ Two tabs, **Permanent {n}** and **Temporary {n}**, sit above a table. The **Sear
 | **Clicks** | The link's click counter. It increases on every web tap, every click reported by the SDK and every click the server reconstructs from an install referrer, and it never decreases. A green `+{n} 7d` underneath counts the clicks of the last 7 days. | Lifetime; the `7d` line covers a rolling 7 days |
 | **Installs** | Installs matched to one of this link's clicks, excluding reinstalls. Underneath, `{n}% conv.` is installs ÷ the click counter, rounded to a whole percent, shown only when both are above 0. | Lifetime |
 | **Opens** | Times this link opened the already installed app. | Lifetime |
-| **Leads** | Events of type `lead` attributed to this link. | Lifetime |
-| **Revenue** | The sum of `revenue` over every event attributed to this link, in every currency, shown with `$`; `—` when 0. | Lifetime |
+| **Leads** | Events of type `lead` credited to this link: those from installs it brought, plus those within the re-engagement window after it re-opened the app. | Lifetime |
+| **Revenue** | Net revenue (purchases minus refunds) credited to this link, in your revenue currency; `—` when 0. A second line, `… after re-open`, shows the part credited because the link re-opened the installed app within the app's re-engagement window. | Lifetime |
 | **Created** | The creation date, such as `Oct 12, 2026`. | |
 
 All per-link numbers are all-time totals, which is why they do not match the Overview's 7-, 30- or 90-day figures.
