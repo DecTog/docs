@@ -47,16 +47,22 @@ Rules:
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
 | `installReferrerProvider` | `Future<String?> Function()?` | `null` | Replaces the built-in Android referrer readers with your own Play referrer string. |
 | `installReferrerTimeout` | `Duration` | 5 seconds | How long the first-launch registration waits for the Android install referrer. Android only. |
-| `oemStoreReferrers` | `bool` | `true` | Also read the Huawei AppGallery, Samsung Galaxy Store, Xiaomi GetApps and vivo referrers. Android only. |
+| `oemStoreReferrers` | `bool?` | `null` → the app's dashboard setting, on unless turned off | Also read the Huawei AppGallery, Samsung Galaxy Store, Xiaomi GetApps and vivo referrers. Android only. |
 | `collectDeviceData` | `bool` | `true` | Send the device tier: device id, hardware, screen, network and carrier. |
-| `readClipboardOnInstall` | `bool?` | `null` → on for iOS, off for Android | Read the pasteboard once at first launch for a copied DecTog link. |
-| `fbAppId` | `String?` | `null` | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
+| `readClipboardOnInstall` | `bool?` | `null` → the app's dashboard setting, else on for iOS, off for Android | Read the pasteboard once at first launch for a copied DecTog link. |
+| `fbAppId` | `String?` | `null` → the Facebook App ID saved in the dashboard | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
 | `persistDeviceId` | `bool` | `true` | Keep the first iOS IDFV in the Keychain so the device id survives reinstall. |
 | `collectAppleSearchAdsToken` | `bool` | `false` | Read the AdServices attribution token on iOS 14.3 and newer. |
 
 The config also exposes `DectogConfig.defaultBaseUrl` (`https://app.dectog.com`), `DectogConfig.defaultLinkRootDomain` (`dectog.com`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
 
 The attribution options are explained on [Install attribution](/sdk/install-attribution/), [Deterministic attribution](/sdk/deterministic-attribution/) and [Device data and privacy](/sdk/device-data-and-privacy/).
+
+### Settings from the dashboard
+
+`initialize` also reads the app's settings from the server (`GET /api/v1/sdk-config`): the Facebook App ID, the OEM store referrers switch and the pasteboard setting saved on the Apps page, the app's custom schemes and identifiers, and the hosts its links live on. They apply wherever the corresponding `DectogConfig` field is left `null`, so a change in the dashboard reaches installed apps without a release. The SDK caches the answer for an hour: a launch with a fresh cache makes no request, the very first launch waits at most 1.5 seconds before registering the install, and a stale cache is refreshed in the background.
+
+`FlutterDectog().diagnostics()` compares the build with that record and returns warnings, also printed with `enableDebugLogging`: a bundle ID or package that differs from the dashboard's, an iOS URL scheme missing from `CFBundleURLTypes`, and on Android 12 and newer every link host the system has not verified for App Links. It never stops the SDK; call it from a debug screen or a test build.
 
 ### Self-hosted backends
 

@@ -67,6 +67,10 @@ With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emu
 - `onAppInstalled` emits once per install, plus once more when a late claim upgrades the verdict. `currentAppInstall` holds the latest verdict. To retest, uninstall the app; on Android `adb shell pm clear <package>` also works. The SDK keeps its state in `.dectog_install.json` in a backup-excluded directory and validates it against the package's first-install time, so a restored backup does not suppress a real install.
 - Set `enableDebugLogging: true` and look for the install POST. A 401 means the key was regenerated or is wrong; the server's four 401 bodies are listed under [Automation and agents](/guides/automation-and-agents/). A 429 is retried after `Retry-After` (up to 10 seconds in-process, otherwise on the next launch).
 
+## Check the app against the dashboard
+
+Call `FlutterDectog().diagnostics()` from a debug build. It reads the app's record from the server and reports a bundle ID or package that differs, an iOS URL scheme missing from `Info.plist`, and on Android 12 and newer each link host the system has not verified for App Links (`none` means verification failed or never ran). With `enableDebugLogging` the warnings are also printed.
+
 ## App Links do not verify (Android)
 
 | Symptom | Cause | Fix |

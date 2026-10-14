@@ -62,6 +62,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `flush` | `Future<void> flush()` | Sends up to 100 queued events now (`POST /api/v1/events`). |
 | `logout` | `Future<void> logout()` | Flushes, then forgets the customer id. |
 | `setEnabled` | `Future<void> setEnabled(bool enabled)` | Persisted, default `true`. `false` records nothing: no click, app-open, install, claim, pasteboard or device-ping reports; new events are discarded and the queue cleared. `true` restarts the sender and registers the install if it never was. Links are still delivered. |
+| `diagnostics` | `Future<DectogDiagnostics> diagnostics()` | Compares this build with the dashboard's record of the app (`GET /api/v1/sdk-config`): bundle ID or package, the iOS URL scheme in `CFBundleURLTypes`, and on Android 12+ the App Links verification of each link host. Returns the warnings and logs them with `enableDebugLogging`; never blocks the SDK. |
 | `isEnabled` | `Future<bool> isEnabled()` | The persisted flag. |
 
 Background calls the SDK makes on its own: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on every initialize with the device tier on.
@@ -76,7 +77,7 @@ const DectogConfig({
   bool enableDebugLogging = false,
   InstallReferrerProvider? installReferrerProvider,
   Duration installReferrerTimeout = const Duration(seconds: 5),
-  bool oemStoreReferrers = true,
+  bool? oemStoreReferrers,
   bool collectDeviceData = true,
   bool? readClipboardOnInstall,
   String? fbAppId,
@@ -93,10 +94,10 @@ const DectogConfig({
 | `enableDebugLogging` | `bool` | Print SDK logs. |
 | `installReferrerProvider` | `InstallReferrerProvider?` | Custom Play referrer source, Android only. |
 | `installReferrerTimeout` | `Duration` | First-launch wait for the Android referrer. |
-| `oemStoreReferrers` | `bool` | Read Huawei, Samsung, Xiaomi and vivo referrers too. |
+| `oemStoreReferrers` | `bool?` | Read Huawei, Samsung, Xiaomi and vivo referrers too. `null` takes the app's setting from the dashboard, on unless turned off there. |
 | `collectDeviceData` | `bool` | Send the device, hardware, screen and network tier. |
-| `readClipboardOnInstall` | `bool?` | Pasteboard read at first launch; `null` means iOS on, Android off. |
-| `fbAppId` | `String?` | Enables Meta's on-device referrer on Android. |
+| `readClipboardOnInstall` | `bool?` | Pasteboard read at first launch; `null` takes the app's dashboard setting, else iOS on, Android off. |
+| `fbAppId` | `String?` | Enables Meta's on-device referrer on Android; `null` takes the Facebook App ID saved in the dashboard. |
 | `persistDeviceId` | `bool` | Keep the first IDFV in the iOS Keychain. |
 | `collectAppleSearchAdsToken` | `bool` | Read the AdServices token on iOS 14.3 and newer. |
 | `defaultBaseUrl` | `static const String` | `'https://app.dectog.com'` |
@@ -295,6 +296,32 @@ Arguments of `trackConversion`, sent as their `wire` value.
 | `DectogStore` | `appStore` (`app_store`), `play` (`play`) | The store of the transaction. A transaction id is unique per store. |
 | `DectogPurchaseType` | `oneTime` (`one_time`), `subscription` (`subscription`) | What was bought |
 | `DectogTransactionType` | `purchase`, `refund`, `cancel` | A `refund` subtracts its `revenue` from net revenue; a `cancel` (auto-renew turned off) counts nothing |
+
+## App settings
+
+At `initialize` the SDK reads the app's settings from the server (`GET /api/v1/sdk-config`) and caches them for an hour: a launch with a fresh cache makes no request, a first launch waits at most 1.5 seconds, a stale cache is refreshed in the background. An explicit `DectogConfig` value always wins over the server's.
+
+### DectogSdkConfig
+
+| Field | Type | Meaning |
+|---|---|---|
+| `appId` | `String` | The app the settings belong to |
+| `fbAppId` | `String?` | The Facebook App ID for Meta's install referrer |
+| `oemStoreReferrers` | `bool` | Read the OEM store referrers |
+| `readClipboardOnInstall` | `bool?` | The pasteboard read; `null` is the platform default |
+| `iosTapToStore` | `bool` | Whether the app uses iOS tap-to-store |
+| `iosAppScheme`, `androidAppScheme` | `String?` | The custom schemes registered in the dashboard |
+| `iosBundleId`, `androidPackage` | `String?` | The identifiers registered in the dashboard |
+| `linkHosts` | `List<String>` | The hosts the account's links live on |
+| `cacheSeconds` | `int` | How long the SDK keeps them |
+
+### DectogDiagnostics
+
+| Field | Type | Meaning |
+|---|---|---|
+| `serverConfig` | `DectogSdkConfig?` | The settings read, or `null` when the server could not be reached |
+| `warnings` | `List<String>` | What does not match; empty when the setup agrees with the dashboard |
+| `ok` | `bool get` | `warnings.isEmpty` |
 
 ## Errors
 
