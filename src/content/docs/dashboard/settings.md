@@ -1,11 +1,11 @@
 ---
 title: Settings
-description: Your account details, the account key for servers and the SDK keys for apps, how to view, copy, create, revoke and regenerate them, and the link configuration of the deployment.
+description: Your account details, the account key for servers and the SDK keys for apps, how to view, copy, create, revoke and regenerate them, the link configuration of the deployment, and the audit log of every change.
 sidebar:
   order: 5
 ---
 
-The Settings screen, at https://app.dectog.com/dashboard/settings, has five cards: **Account**, **Account key**, **SDK keys**, **Link configuration** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
+The Settings screen, at https://app.dectog.com/dashboard/settings, has eight cards: **Account**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Audit log** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
@@ -74,6 +74,25 @@ Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name
 ## Custom domain
 
 Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. On a deployment without Cloudflare for SaaS the card says custom domains are not set up. The whole flow is in [Custom domains](/links/custom-domains/).
+
+## Audit log
+
+Every change to the account, newest first, 25 at a time (**Show older** loads more):
+
+- links, temporary links, link templates, apps, webhooks, SDK keys, site keys, the account key, the custom domain and the revenue currency, whether changed in the dashboard or through the API;
+- every sign-in, wrong password, sign-out and password reset;
+- every CSV export.
+
+Each entry has its number, when it happened, what happened and to what (the link, app, key or webhook), who did it, and the fields that changed, before and after. Who is the email of the person signed in, the account key (by its prefix), an SDK key (by name and prefix), **DecTog** for changes DecTog made itself, or **Someone not signed in** for a wrong password or a reset request. DecTog's own changes are a webhook turned off after 20 failed deliveries, a custom domain's status moving (for example to **Active**), and a removed domain deleted at the end of its grace.
+
+What is never recorded:
+
+- **Secrets.** A key, a webhook secret, a password or a token never enters the log. A field whose name or value looks like one shows as `[redacted]`. A webhook URL is kept as its origin only (`https://hooks.slack.com`), because the path of a Slack-style URL is a credential.
+- **IP addresses.** The log keeps the same salted hash as clicks.
+
+What is not recorded: what apps and websites report (installs, clicks, events, opens, pings), the share links apps make (temporary links and referral links through the SDK), store notifications, and the card's own once-a-minute domain check. A change that fails, and deleting something that is not there, write nothing. A wrong password is recorded only when the email belongs to an account, in that account's log.
+
+Entries are numbered 1, 2, 3… and are never changed or removed. **Check for gaps** confirms the numbering has no hole ("Complete: 42 entries, numbered 1 to 42 with none missing") or lists the missing numbers. The numbering shows a deleted entry. It cannot show an entry rewritten by someone with direct access to the database: the log is a plain append-only table, not a hash chain. The log is kept as long as the account. The same entries come from [`GET /api/admin/audit`](/api/admin-api/#audit-log).
 
 ## Flutter SDK quickstart
 

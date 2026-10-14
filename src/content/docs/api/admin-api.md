@@ -70,6 +70,33 @@ The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` 
 
 See [Dashboard: Settings](/dashboard/settings/).
 
+## Audit log
+
+| Method and path | Auth | Purpose | Response |
+|---|---|---|---|
+| `GET /api/admin/audit` | session | The account's audit log. `?limit=` 1 to 500 (default 50). Newest first, `?before_seq=` pages back; or `?after_seq=` reads forward, oldest first, to copy the log elsewhere. | `200 {data: [entry], next_before_seq}`, or `next_after_seq` with `after_seq`; `null` on the last page |
+| `GET /api/admin/audit/verify` | session | Checks that the entries run 1, 2, 3… with none missing. | `200 {ok, count, first_seq, last_seq, gaps: [[from, to]]}` |
+
+An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_id, created_at}`:
+
+- `actor` is `{type: "user", id, email}`, `{type: "account_key", prefix}`, `{type: "sdk_key", id, prefix, name}`, `{type: "system"}` (DecTog itself) or `{type: "anonymous"}` (a wrong password, a reset request).
+- `target` is `{type, id?, name?}`: a link by slug, an app, webhook or key by id with its name, a webhook by its URL's origin.
+- `changes` is `{field: [before, after]}`, or `null`. Secret fields hold `"[redacted]"`.
+- `request_id` matches the `x-request-id` of the response that made the change.
+
+| Area | Actions |
+|---|---|
+| Links | `link.created`, `link.updated`, `link.deleted`, `link.restored`, `link.bulk_created` (with the slugs), `temp_link.created`, `temp_link.updated`, `temp_link.deleted`, `temp_link.restored`, `temp_link.expired_deleted`, `template.created`, `template.updated`, `template.deleted` |
+| Apps | `app.created`, `app.updated`, `app.deleted`, `app.store_notifications_enabled`, `app.store_notifications_rotated`, `app.store_notifications_updated`, `app.store_notifications_disabled` |
+| Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by DecTog) |
+| Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by DecTog) |
+| Keys and settings | `sdk_key.created`, `sdk_key.revoked`, `site_key.created`, `site_key.updated`, `site_key.revoked`, `account_key.regenerated`, `settings.base_currency_changed` |
+| Sign-in | `account.created`, `account.bootstrapped`, `auth.login`, `auth.google_login`, `auth.google_linked`, `auth.login_failed`, `auth.logout`, `auth.password_reset_requested`, `auth.password_reset` |
+| Data | `data.exported` (the file name and row count) |
+| Blog (owner) | `blog.post_created`, `blog.post_updated`, `blog.post_deleted`, `blog.category_created`, `blog.category_updated`, `blog.category_deleted`, `blog.message_deleted` |
+
+The SDK's data plane writes none: installs, clicks, events, opens, pings, web events, store notifications, and the temporary and referral links apps create.
+
 ## Links
 
 | Method and path | Auth | Purpose | Response |

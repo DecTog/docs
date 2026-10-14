@@ -15,11 +15,13 @@ Measured by the worker's test suite (`apps/worker/test/cost.test.ts`), which cal
 |---|---|---|---|---|
 | A tap on a link (redirect) | 1 | 5 | 5 | about 670 bytes |
 | First-launch install registration | 1 | 12, plus up to 50 when the fingerprint scans candidates | 6 | about 960 bytes |
-| Event batch (one conversion) | 1 | 3 | 7 | about 570 bytes |
+| Event batch (one conversion) | 1 | 3 | 8 | about 570 bytes |
 | App start ping | 1 | 1 | 3 | about 270 bytes |
 | Link opened in the installed app (click plus open) | 2 | 5 | 10 | about 1 KB |
-| Creating a link | 1 | 3 | 3 | small |
+| Creating a link | 1 | 4 | 4 | small |
 | The daily rollup, per day | none (cron) | about 2 per raw row of that day | one per link and platform active that day | about 100 bytes per written row |
+
+Creating a link includes its [audit log](/dashboard/settings/#audit-log) row: one row read for the entry's number and one written. Every change to an account's configuration (a link, an app, a webhook, a key, a sign-in) pays the same; taps, installs, events, pings and the other SDK traffic write no audit rows.
 
 The rate limits on authenticated `/api/v1` calls and on the interstitial beacon are counted by Cloudflare's [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) bindings, which `wrangler.jsonc` and the setup script declare (`RL_TENANT`, `RL_DEVICE`, `RL_IP`, `RL_BEACON`). A deployment without them falls back to counters in D1, which add 2 read and 4 written rows to every v1 call. The sign-in and password-reset limits stay in D1.
 
@@ -29,10 +31,10 @@ Assumptions, per month: one install for every five taps; each install starts the
 
 | Taps a month | Requests | Rows read | Rows written | Storage added | Monthly bill |
 |---|---|---|---|---|---|
-| 100,000 | 0.4 M | 2.5 M | 1.6 M | 0.17 GB | $5 |
-| 1,000,000 | 3.6 M | 25 M | 16 M | 1.7 GB | $5, plus storage beyond 5 GB |
-| 3,000,000 | 10.8 M | 75 M | 49 M | 5.2 GB | about $6, plus storage beyond 5 GB |
-| 10,000,000 | 36 M | 251 M | 162 M | 17 GB | about $128, plus storage; see the ceiling below |
+| 100,000 | 0.4 M | 2.5 M | 1.7 M | 0.17 GB | $5 |
+| 1,000,000 | 3.6 M | 25 M | 17 M | 1.7 GB | $5, plus storage beyond 5 GB |
+| 3,000,000 | 10.8 M | 75 M | 50 M | 5.2 GB | about $6, plus storage beyond 5 GB |
+| 10,000,000 | 36 M | 251 M | 168 M | 17 GB | about $134, plus storage; see the ceiling below |
 
 Rows read include the fingerprint's candidate scan at its maximum and the daily rollup; they never come near the 25 billion included.
 

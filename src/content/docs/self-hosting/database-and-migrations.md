@@ -9,7 +9,7 @@ DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. 
 
 ## Tables
 
-The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by `user_id` (the tenant) except the four platform tables at the end.
+The schema at migration 0057 has 32 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by `user_id` (the tenant) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
 
 | Table | One line |
 |---|---|
@@ -42,6 +42,7 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |
 | `export_jobs` | CSV exports past `EXPORT_STREAM_MAX_ROWS` rows: the query, progress, the R2 key and when the file goes |
 | `device_models`, `device_model_refresh` | Marketing names (brand, name) for the Android models installs reported, keyed by the lowercased model, and when Google's list was last read |
+| `audit_events` | The audit log: per account, entries numbered by `seq` (the key, with `user_id`), the action, who acted, the target, the changed fields with secrets redacted, hashed IP, user agent, request id. Only ever inserted; kept as long as the account |
 | `custom_domains` | Each account's custom link domain: the Cloudflare hostname id, the state, the DNS records to add, errors, the checks, the suspension and its end. The active one is also `users.custom_domain`. |
 
 There are no foreign-key constraints. Cascades (deleting a link, deleting an app, unlinking a category) are done in the API layer.
@@ -109,6 +110,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0054_device_models` | `device_models` and `device_model_refresh`: marketing names for the device models installs report |
 | `0055_click_routing_rule` | `clicks.routing_rule`: the routing rule (geo, language, schedule or A/B variant) a tap matched |
 | `0056_events_install_index` | An index on `events(user_id, install_id)`, for the `ltv` metric |
+| `0057_audit_events` | `audit_events`, the audit log (P4.2), keyed by `(user_id, seq)` without a rowid |
 
 ### Commands
 
