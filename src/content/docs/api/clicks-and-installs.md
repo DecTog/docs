@@ -139,7 +139,7 @@ Epoch values must fall between 1970 and 2100, otherwise they become `null`.
 
 ### Strict fraud mode on the wire
 
-With strict mode on, a flagged install's response has `"matched": false`, `"type": "organic"`, `"match_source": null` and no `username`, `slug`, `link`, `custom_params`, `click_params`, `deep_link` or `clicked_at`, while `referrer_source` and `match_confidence` (for example `"guaranteed"`) still show what was found. The slug is kept on the row: the webhook payload carries it as `slug` next to `"matched": false`. Strict mode, like the low-entropy window and the webhook, is read from the account's oldest app, so it is account-wide in practice. See [Dashboard: Apps](/dashboard/apps/).
+With strict mode on, a flagged install's response has `"matched": false`, `"type": "organic"`, `"match_source": null` and no `username`, `slug`, `link`, `custom_params`, `click_params`, `deep_link` or `clicked_at`, while `referrer_source` and `match_confidence` (for example `"guaranteed"`) still show what was found. The slug is kept on the row as evidence but is never sent: the webhook payload has `slug`, `link`, `clicked_at`, `click_params` and `deep_link` set to `null` whenever `matched` is false. Strict mode, like the low-entropy window and the webhook, is read from the account's oldest app, so it is account-wide in practice. See [Dashboard: Apps](/dashboard/apps/).
 
 ### The verdict
 

@@ -78,7 +78,7 @@ npx wrangler d1 execute dectog --local --command "SELECT name FROM sqlite_master
 npx wrangler d1 execute dectog --remote --env production --command "SELECT COUNT(*) FROM users"
 ```
 
-`DB` is the binding name and `dectog` the database name; `migrations` accepts the binding, `execute` is shown with the name. The local database lives under `apps/worker/.wrangler/state/v3/d1`; delete that directory to start over. `npm run db:migrate:remote` exists but lacks `--env production` and therefore targets the placeholder id `local-dev`; use the explicit command.
+`DB` is the binding name and `dectog` the database name; `migrations` accepts the binding, `execute` is shown with the name. The local database lives under `apps/worker/.wrangler/state/v3/d1`; delete that directory to start over. `npm run db:migrate:remote` runs the production command above.
 
 ### The append-only rule
 

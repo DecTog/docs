@@ -48,7 +48,7 @@ Four tiles: **Events**, **Leads** (events of type `lead`), **Conversions** (even
 
 ### Profile
 
-Subtitle: "Set by identify(); first-seen values win, later calls only fill blanks."
+Subtitle: "Set by identify(). A later call replaces each field it sends; fields it leaves out keep their value."
 
 | Field | Value |
 |---|---|

@@ -126,7 +126,7 @@ Run these in order from `apps/worker`:
 6. The smoke checks below.
 
 <Aside type="danger" title="Do not use the npm scripts for production">
-`npm run deploy` runs plain `wrangler deploy`, which reads the top-level (development) configuration: `ROOT_DOMAIN=localhost:8787`, `LINK_URL_MODE=path`, `WEB_URL=http://localhost:3000`, no `ENVIRONMENT`, no routes, no assets binding and the placeholder D1 id `local-dev`. It never touches your production routes, but it creates or updates a separate `dectog-worker` Worker with that configuration. The same applies to `npm run db:migrate:remote` (`wrangler d1 migrations apply DB --remote` without `--env production`), which targets the placeholder id. Always pass `--env production` to `wrangler` directly.
+`npm run deploy` runs plain `wrangler deploy`, which reads the top-level (development) configuration: `ROOT_DOMAIN=localhost:8787`, `LINK_URL_MODE=path`, `WEB_URL=http://localhost:3000`, no `ENVIRONMENT`, no routes, no assets binding and the placeholder D1 id `local-dev`. It never touches your production routes, but it creates or updates a separate `dectog-worker` Worker with that configuration. `npm run db:migrate:remote` is safe: it runs `wrangler d1 migrations apply DB --remote --env production`. For anything else, pass `--env production` to `wrangler` directly.
 </Aside>
 
 ## Smoke checks

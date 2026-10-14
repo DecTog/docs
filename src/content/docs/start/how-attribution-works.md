@@ -112,7 +112,7 @@ Every install is checked against explainable rules. The hits ride on the verdict
 | `stale_referrer` | The referrer or clipboard click is older than 30 days |
 | `click_reuse` | A deterministic signal named a click another device's install already consumed |
 
-With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict shows the first two but no slug; the install webhook carries the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
+With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the install webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
 
 ## Apple Search Ads
 

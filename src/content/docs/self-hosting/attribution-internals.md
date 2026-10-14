@@ -132,7 +132,7 @@ With `strict_fraud_mode = 1` on the tenant's **oldest app**, any flag makes the 
 
 - The click stays consumed, so a replayed signal cannot free it for the next install.
 - The API verdict says `matched: false`, `type: "organic"`, `match_source: null`, but still `referrer_source` and `match_confidence` (for example `guaranteed`); `username`, `slug` and `link` are absent and `routing` is null.
-- The webhook payload carries `slug: <matched_slug>` with `matched: false` and `link: null`.
+- The webhook payload carries `matched: false` with `slug`, `link`, `clicked_at`, `click_params` and `deep_link` all `null`, so a consumer cannot credit it by accident.
 - A later claim finds `matched_click_id` set with `match_source` not `fingerprint` and answers `claim: "unchanged"`, `claim_reason: "already_deterministic"`: a strict-zeroed verdict is final.
 - Overview counts the install as organic.
 

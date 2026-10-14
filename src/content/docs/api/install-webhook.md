@@ -82,12 +82,12 @@ The signature covers the body bytes only. The timestamp header is **not** part o
 | `is_reinstall` | boolean | |
 | `fraud_flags` | string array | Rule names from [Clicks and installs](/api/clicks-and-installs/); empty when clean. |
 | `username` | string | Your username. |
-| `slug` | string or null | The matched link's slug. With strict fraud mode on, a flagged install arrives with `"matched": false` **and** the `slug` it was zeroed from. |
+| `slug` | string or null | The matched link's slug; `null` whenever `matched` is false, including a strict-mode install that was zeroed (its `fraud_flags`, `referrer_source` and `match_confidence` still show what was found). |
 | `link` | object or null | `slug`, `target`, `url`, `created_at` of the matched **permanent** link. `null` for organic installs, temporary-link matches and strict-mode zeroed installs. There is no `metadata` here, unlike the install verdict. |
 | `device` | object | `device_id`, `device_model`, `device_manufacturer`, `os`, `os_version`, `connectivity_type`, `carrier_mcc`, `carrier_mnc`; each `null` when the SDK did not send it. |
 | `ip_hash` | string or null | The salted SHA-256 of the install request's IP (IPv6 cut to /64). |
-| `clicked_at` | string or null | The matched click's time. |
-| `click_params` | object or null | `deep_link`, `label`, `campaign`, `adgroup`, `creative`, `tracker` from the matched click; `null` when organic or when the click carried none. |
+| `clicked_at` | string or null | The matched click's time; `null` when `matched` is false. |
+| `click_params` | object or null | `deep_link`, `label`, `campaign`, `adgroup`, `creative`, `tracker` from the matched click; `null` when `matched` is false or when the click carried none. |
 | `deep_link` | string or null | Mirrors `click_params.deep_link`. |
 | `apple_search_ads` | object or null | Same object as on the verdict: `null` until a token was sent, then `status`, `attribution`, `resolved_at` and, once Apple answered, the campaign record. An `app.install_updated` triggered by Apple has `"status": "resolved"`. |
 | `processed_at` | string | When the payload was built. |

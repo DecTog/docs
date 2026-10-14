@@ -54,7 +54,7 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 
 ### Strict fraud mode made it organic
 
-With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`) is stored with `matched: false` and `match_source: null`. It keeps `match_confidence`, `referrer_source` and `matched_slug`, so the webhook carries `slug` next to `matched: false`. The click stays consumed. Strict mode is read from the account's oldest app. The fraud box on the Overview and the chips on a customer's detail page show the rules that fired.
+With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`) is stored with `matched: false` and `match_source: null`. It keeps `match_confidence`, `referrer_source` and `matched_slug` on the record; the verdict and the webhook send the first two but never the slug. The click stays consumed. Strict mode is read from the account's oldest app. The fraud box on the Overview and the chips on a customer's detail page show the rules that fired.
 
 ### iOS specifics
 
@@ -86,7 +86,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 |---|---|---|
 | Verify shows `No app IDs configured` or `Endpoint replied 404: Configuration not found` | The AASA is built only from apps that have both a bundle ID and a Team ID | Save both on the Apps page. The file then serves at `https://{username}.dectog.com/.well-known/apple-app-site-association` and includes `webcredentials`. |
 | Taps open Safari although the file verifies | The entitlement is missing or the app was not reinstalled | Add `applinks:{username}.dectog.com` to the Associated Domains entitlement of every build configuration, enable the capability on the App ID, then reinstall. iOS fetches the AASA at install and update; an installed app never picks up a change. |
-| The entitlement is `applinks:*.dectog.com`, as the Apps page tooltip and its "Copy for AI" prompt suggest | For a wildcard entry iOS fetches the AASA from the parent domain, `https://dectog.com/.well-known/apple-app-site-association`, and the apex answers 400 `{"error":{"code":"invalid_request","message":"Subdomain not found in host"}}` | Use the explicit host: `applinks:{username}.dectog.com`. |
+| The entitlement is a wildcard, `applinks:*.dectog.com` | For a wildcard entry iOS fetches the AASA from the parent domain, `https://dectog.com/.well-known/apple-app-site-association`, and the apex answers 400 `{"error":{"code":"invalid_request","message":"Subdomain not found in host"}}` | Use the explicit host: `applinks:{username}.dectog.com`. |
 | Works from Notes but not from the address bar | Typing a URL into Safari never triggers a Universal Link | Tap the link from Notes, Messages or another app. |
 | Nothing works locally | The AASA must be served from a real domain over HTTPS | Path-mode and `localhost` deployments cannot pass; test against a deployed domain. The Simulator does not open Universal Links either. |
 | A redirect to `myapp://` does nothing | iOS never opens a custom scheme from a server redirect | Custom schemes open only from a direct tap: the "Open in app" button of the tap-to-store page or the buttons on the QR page. |
