@@ -211,6 +211,17 @@ Below the tiles, up to 8 rows list the campaigns behind the attributed installs:
 
 These counts include reinstalls. The lookup lifecycle (three inline attempts, hourly retries, the 24-hour token limit) is described in [Clicks and installs](/api/clicks-and-installs/).
 
+## Recent installs
+
+The 12 newest installs, whatever the range: a chip with how each was matched (`referrer`, `clipboard`, `fingerprint`, or `organic`), the link it was credited to, the OS and device model, a fraud chip when rules fired, and the time. Clicking one opens the **install detail**:
+
+- **Verdict**: credited link or organic, match source, confidence, reinstall, fraud flags.
+- **Why**: the signal that named the click (store referrer, pasted link, Meta referrer, a late claim), or the fingerprint's best and runner-up candidates with each signal marked agree, mismatch or missing (device model, OS version, language, screen, CPU, network), their scores, the gap between them, the window that applied and how many repeat taps were merged. When a deterministic signal decided, the fingerprint's own pick is shown as well. When the fingerprint did not run, the reason is given.
+- **Tap**: the credited (or routed) tap with its time, device and country, and any late claim that upgraded the verdict.
+- **App opens** and **Events** of that install.
+
+Installs recorded before match explanations existed show the verdict without the **Why** part.
+
 ## Numbers that do not add up to each other
 
 These differences are by design. Knowing them saves you from chasing phantom discrepancies.

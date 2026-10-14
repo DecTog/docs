@@ -153,6 +153,21 @@ With strict mode off (the default) flags are annotations and the attribution sta
 
 The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the install webhook (`app.installed`) of the app the verdict concerns. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
 
+## The stored explanation
+
+Every install row keeps `match_details`, a JSON object the dashboard's install detail shows (`GET /api/admin/installs/:id`):
+
+| Field | Meaning |
+|---|---|
+| `method` | `referrer`, `clipboard`, `meta`, `fingerprint`, or null for an uncredited install |
+| `signal`, `referrer_source`, `click_id`, `synthesized` | The deterministic signal that named a click, when one did |
+| `stale` | `stale_clipboard` or `stale_meta` when that signal was older than the window |
+| `fingerprint_skipped` | `no_ip`, `update`, `click_reuse`, `probabilistic_off` or `recovery` when the fingerprint did not run |
+| `candidates`, `collapsed_from`, `window_hours`, `gap`, `confidence` | The fingerprint's pool after collapsing, the merged taps, the window of the best candidate, its lead over the runner-up |
+| `best`, `runner_up` | `{click_id, slug, clicked_at, score, signals, low_entropy}`; `signals` marks `device_model`, `os_major`, `lang`, `screen`, `cpu` and `asn` as `agree`, `mismatch` or `missing` |
+| `shadow` | The same fingerprint fields when a deterministic signal decided |
+| `claim_source`, `before_claim` | After a late claim upgraded the verdict: the claim's source and the explanation it replaced |
+
 ## Worked examples
 
 Each row is a golden scenario the worker's test suite runs end to end on every change (`apps/worker/test/fixtures/attribution-cases.json` in the server repository): taps go through the redirect engine, installs and claims through the signed API. "Same network" means the install came from the tap's IP address. A row marked as a known defect documents today's behaviour; the plan item named there changes it.
