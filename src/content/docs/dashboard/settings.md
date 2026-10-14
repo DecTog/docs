@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-The Settings screen, at https://app.dectog.com/dashboard/settings, has nine cards: **Account**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
+The Settings screen, at https://app.dectog.com/dashboard/settings, has up to ten cards: **Account**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
@@ -75,6 +75,10 @@ Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name
 ## Custom domain
 
 Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. On a deployment without Cloudflare for SaaS the card says custom domains are not set up. The whole flow is in [Custom domains](/links/custom-domains/).
+
+## Team
+
+The people who work in this account: the account itself (always an owner), then each member with their role. Owners change a role with its menu, **Remove** someone, and invite by email: enter the address, choose **member**, **viewer** or **owner**, and select **Invite**. The invite email's link works 7 days, once, for that address only; pending invites are listed with **Revoke** (at most 20 at a time). Someone who belongs to the account but does not own it sees **Leave {account}** at the bottom. What each role can do is in [Teams](/dashboard/account-and-sign-in/#teams).
 
 ## Test environment
 

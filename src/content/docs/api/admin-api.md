@@ -71,6 +71,24 @@ The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` 
 
 See [Dashboard: Settings](/dashboard/settings/).
 
+## Teams
+
+Every session route needs a team role in the account it acts on; the [route table](/api/overview/#routes-at-a-glance) and `API_CONTRACT.md` name it. The role is checked before the handler runs: a role that falls short answers `403 {code: "insufficient_role", role, required_role}`, and a route with no entry in the contract table answers `403` whatever the role. By default a viewer may read and a member may change; reads of keys, raw exports, customers, the audit log and webhook deliveries need a member, and keys, the team, the custom domain, the account's settings, the test environment and erasures need an owner. `GET /api/admin/settings` returns `api_key: null` to anyone but an owner.
+
+| Method and path | Role | Purpose | Response |
+|---|---|---|---|
+| `PUT /api/admin/account` | any | `{account_id}`: the account the dashboard shows (the `dectog_account` cookie, 30 days); also returns to its live data. Re-checked on every request: a membership since removed falls back to your own account. | `200 {account_id, role}`; `404 not_a_member` |
+| `GET /api/admin/team` | member | The account (always an owner) and its members; owners also get the pending invites. | `200 {account, members: [{user_id, email, username, role, since}], invites}` |
+| `POST /api/admin/team/invites` | owner | `{email, role}`: emails a link to `{WEB_URL}/invite?token=…`, valid 7 days, for that address only. | `201 {invite: {id, email, role, expires_at}}`; `409` for a member, the account itself, or 20 pending invites |
+| `DELETE /api/admin/team/invites/:id` | owner | Revokes a pending invite. | `200 {revoked: true}` |
+| `PUT /api/admin/team/members/:userId` | owner | `{role}` | `200 {user_id, role}`; `409` for the account itself |
+| `DELETE /api/admin/team/members/:userId` | owner | Removes a member. | `200 {removed: true}`; `409` for the account itself |
+| `POST /api/admin/team/leave` | any | Leaves the account shown. | `200 {left: true}`; `409` for your own account |
+| `POST /api/admin/team/accept` | any | `{token}`: joins with an invite sent to your email. | `200 {account_id, account, role}`; `403 invite_other_email`; `404 invite_not_found`; `409 invite_used`; `410 invite_expired` |
+| `GET /api/auth/invite?token=` | public | What the invite page shows before sign-in. | `200 {account, email, role, expired, accepted}`; `404` |
+
+`GET /api/admin/me` also returns `role` (yours in the account shown), `live_account` (`{id, username}`, the account selected even while its test environment is shown) and `accounts` (`[{id, username, role}]`, your own first).
+
 ## Test environment
 
 An account's test environment is a second account, `t-<username>`, with the same apps and link templates; see [Settings: Test environment](/dashboard/settings/#test-environment).
@@ -116,6 +134,7 @@ An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_
 | Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by DecTog) |
 | Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by DecTog) |
 | Test environment | `test_environment.created` (in the live account's log; changes made in the test environment go to its own log) |
+| Team | `team.invited`, `team.invite_revoked`, `team.joined` (by the person who joined), `team.role_changed`, `team.member_removed`, `team.member_left` |
 | Keys and settings | `sdk_key.created`, `sdk_key.revoked`, `site_key.created`, `site_key.updated`, `site_key.revoked`, `account_key.regenerated`, `settings.base_currency_changed`, `settings.retention_changed` |
 | Sign-in | `account.created`, `account.bootstrapped`, `auth.login`, `auth.google_login`, `auth.google_linked`, `auth.login_failed`, `auth.logout`, `auth.password_reset_requested`, `auth.password_reset` |
 | Data | `data.exported` (the file name and row count), `data.subject_exported`, `data.device_erased`, `data.customer_erased` (the target a `sha256:` prefix, never the id; the changes the rows per table) |

@@ -63,9 +63,27 @@ The email, with the subject "Reset your DecTog password", carries a link to `htt
 
 The reset page ("Choose a new password for your account") has **New password** and **Confirm new password** boxes and an **Update Password** button. Errors: `This reset link is missing its token — open the link from your email.`, the password rules, `Passwords do not match`, `This reset link is invalid or has expired`, `This reset link has already been used`. Success: "Password updated — sign in with your new password." The reset does not sign you in and does not end existing sessions.
 
+## Teams
+
+Several people can work in one account. Each person signs in as themselves, to their own account, and the account's owners invite others from Settings → [Team](/dashboard/settings/#team), each with a role:
+
+| Role | Can |
+|---|---|
+| **Owner** | Everything: links, apps, webhooks, customers and exports, plus the keys, the team, the custom domain, the revenue currency, the retention window, the test environment, and erasing a device or a customer. |
+| **Member** | Links, link templates, temporary links, apps, webhooks, customers, exports and the audit log. Sees the SDK keys but does not create or revoke them. |
+| **Viewer** | Reads the numbers: Overview, Links, Apps and the parts of Settings without keys. No customers, exports, keys or audit log. |
+
+The person who owns an account is always its owner, and cannot be removed or demoted. Owners can make others owners too.
+
+### Joining by invite
+
+An invite email links to `{WEB_URL}/invite?token=…`. The link works for 7 days, once, and only for the invited address: sign in, or create an account, with that email, and select **Join**. A person signed in with another address is told so. Every person has an account of their own, with its own username and keys, whether they use it or not.
+
+After joining, an **Account** menu at the top of the sidebar lists your own account and every account you belong to, each with your role there; choosing one reloads the dashboard on it, on its live data. **Leave** at the bottom of the Team card leaves the account shown; an owner has to invite you again. When an owner removes you, your next request lands on your own account.
+
 ## Roles
 
-Every account has a role: `owner` or `user`.
+Every account also has a platform role: `owner` or `user`. It is separate from the team roles above.
 
 - **Users** see Overview, Links, Apps, Customers and Settings, scoped to their own account. There is no cross-account view.
 - The **owner** additionally sees **Blog** and **Messages** in the sidebar; see [Blog and messages](/dashboard/blog-and-messages/). Non-owners who open `/dashboard/blog` or `/dashboard/messages` by URL are sent back to the Overview, and the API answers `403 Owner access required`.
@@ -76,6 +94,7 @@ The owner is the account created by the deployment's bootstrap call, or by the l
 
 - **Renaming the username.** It is your link subdomain; there is no endpoint to change it.
 - **Changing the email.**
+- **Transferring an account.** Owners can add owners, but the account's own login stays its owner.
 - **Deleting the account.** Links can be deleted one by one, which removes their data; the account itself cannot. Contact the operator of the deployment.
 - **Changing the password while signed in.** Use **Forgot password?** and the emailed link.
 - **Ending other sessions.** A session ends when its token expires, 30 days after sign-in.

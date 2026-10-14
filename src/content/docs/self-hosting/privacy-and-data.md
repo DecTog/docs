@@ -100,6 +100,10 @@ When a `/api/v1` call is refused as malformed, the server stores the account, th
 
 `users` keeps the email, a PBKDF2-SHA256 password hash (100,000 iterations), the username, the SHA-256 of the API key with its 8-character prefix, the AES-GCM encrypted copy of the key, the role and the Google `sub`. Nothing in `users` is ever anonymized. `password_resets` stores token hashes with expiry and use time, never pruned. `contact_messages` stores name, email, subject and message from the public form until an owner deletes them.
 
+## Teams
+
+`invites` keeps the invited email address and role, with the SHA-256 of the link's token, after it is accepted or expires; `memberships` keeps who belongs to which account. Neither is anonymized or pruned.
+
 ## Audit log
 
 `audit_events` records every change to an account's configuration, every sign-in, wrong password, sign-out and password reset, and every CSV export ([Settings: Audit log](/dashboard/settings/#audit-log)). Each entry holds the email of the person who acted (or the key's prefix and name), the salted IP hash, the user agent and the request id. It holds no secret: fields that look like one are stored as `[redacted]`, and webhook URLs only as their origin. Entries are never anonymized or pruned: `RETENTION_DAYS` does not apply to them, and they are kept as long as the account.

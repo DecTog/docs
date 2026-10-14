@@ -9,7 +9,7 @@ DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. 
 
 ## Tables
 
-The schema at migration 0058 has 33 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by `user_id` (the tenant) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
+The schema at migration 0060 has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by the account (`user_id`, or `tenant_id` in `memberships` and `invites`) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
 
 | Table | One line |
 |---|---|
@@ -42,6 +42,8 @@ The schema at migration 0058 has 33 tables (`apps/worker/src/db/tables.ts`). Eve
 | `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |
 | `export_jobs` | CSV exports past `EXPORT_STREAM_MAX_ROWS` rows: the query, progress, the R2 key and when the file goes |
 | `device_models`, `device_model_refresh` | Marketing names (brand, name) for the Android models installs reported, keyed by the lowercased model, and when Google's list was last read |
+| `memberships` | A person's role (`owner`, `member`, `viewer`) in another person's account; keyed by account and person |
+| `invites` | Team invitations: the account, the invited email and role, the SHA-256 of the token, expiry and when accepted |
 | `erasures` | One row per erased device or customer for 8 days: the SHA-256 of the account, the kind and the id, never the id itself, with when it was erased; events queued earlier are dropped on arrival |
 | `audit_events` | The audit log: per account, entries numbered by `seq` (the key, with `user_id`), the action, who acted, the target, the changed fields with secrets redacted, hashed IP, user agent, request id. Only ever inserted; kept as long as the account |
 | `custom_domains` | Each account's custom link domain: the Cloudflare hostname id, the state, the DNS records to add, errors, the checks, the suspension and its end. The active one is also `users.custom_domain`. |
@@ -114,6 +116,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0057_audit_events` | `audit_events`, the audit log (P4.2), keyed by `(user_id, seq)` without a rowid |
 | `0058_erasure` | `users.retention_days` (the account's own window) and `users.erasures_until`; `erasures`, the tombstones of erased devices and customers (P4.1) |
 | `0059_test_environment` | `users.test_of`: on an account's test environment, the live account it belongs to (P4.4) |
+| `0060_teams` | `memberships` (a person's role in another account) and `invites` (by email, the token as its SHA-256) (P4.3) |
 
 ### Commands
 
