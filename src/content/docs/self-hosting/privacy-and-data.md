@@ -38,6 +38,7 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 | Traffic source | `referrer` | `Referer` header reduced to its origin; null for the deployment's own hosts | forever |
 | Campaign | `utm_*`, `link_params` (`dec_*` values) | the link URL's query string | forever |
 | Bot score | `bot_score` | Cloudflare bot management, scores of 30 and above | forever |
+| Page button | `cta`, `cta_at` | the link page's beacon: which store, app or website button was tapped first | forever |
 | SDK-reported opens | `device_id`, `session_id`, `client_click_time`, `launch_referrer` | the SDK's `POST /api/v1/clicks` | `device_id` and `launch_referrer` at retention; the rest forever |
 
 ## Installs

@@ -65,9 +65,9 @@ Desktop visitors land on the QR page when no other destination applies: no `dec_
 | Brand line | The app's name, else "DecTog" |
 | QR code | An SVG (220 px) of the canonical link URL, `https://acme.dectog.com/welcome`, without any query string. Scanning it is a fresh mobile tap with its own click and store tag. |
 | Heading | "Scan to open on your phone", then "Point your camera at the code to continue to {host} in the app." when a target exists |
-| Store buttons | **App Store** and **Google Play**, linking to the plain store URLs without an attribution tag |
+| Store badges | Apple's **Download on the App Store** badge (the US/UK one in every language) and Google's **Get it on Google Play** badge in the page's language, linking to the plain store URLs without an attribution tag |
 | Scheme buttons | **Open in the iOS app** and **Open in the Android app**, one per configured scheme, or a single **Open in app** when both platforms share a scheme (the Android deep-link path is preferred). These carry no `dtg_click`. |
 | Continue link | "Continue to {host} on desktop", only when the link has a target or inherits an app fallback |
 | Footer | "Powered by DecTog" when the page is branded with an app name |
 
-The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `dec_deeplink` from the URL; without a path they open `scheme://acme/welcome`.
+The texts are in the visitor's language (English, German, French, Spanish or Italian), and which button the visitor took is recorded on the click; see [The link pages](/links/how-a-tap-is-routed/#the-link-pages). The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `dec_deeplink` from the URL; without a path they open `scheme://acme/welcome`.

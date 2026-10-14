@@ -80,11 +80,12 @@ With a destination in hand, the response depends on the app's settings and the b
 | # | Condition | Response | Click recorded |
 |---|---|---|---|
 | a | iOS, **iOS tap-to-store** is on for the link (its own setting, else the app's), and the destination is the App Store (a tagged `apple.com` custom redirect, or no custom redirect and an App Store URL) | `200` tap-to-store page | Before the response |
-| b | **Mobile beacon interstitial** is on for the link (its own setting, else the app's) and a destination exists | `200` interstitial page. Hint-less Chromium first gets a one-shot `302` to the same URL with `?_ch=1` and `Critical-CH`, which inserts nothing. | Before the response |
-| c | Hint-less Chromium (see below) | `302` with `Critical-CH` | **Not yet.** Chrome retries the navigation with the model hint and the retry records it. |
-| d | Android intent bounce applies | `302` to an `intent://` URL | Before the response |
-| e | Any other destination | `302` | After the response, in the background |
-| f | No destination | Shared tail | After the response, in the background |
+| b | Android, inside the Facebook or Instagram in-app browser (`FB_IAB`, `FB4A`, `FBAV` or `Instagram` in the user agent), the app has an **Android app scheme** and an **Android package**, and a destination exists | `200` opening page that tries the intent and falls back by itself (see below) | Before the response |
+| c | **Mobile beacon interstitial** is on for the link (its own setting, else the app's) and a destination exists | `200` interstitial page. Hint-less Chromium first gets a one-shot `302` to the same URL with `?_ch=1` and `Critical-CH`, which inserts nothing. | Before the response |
+| d | Hint-less Chromium (see below) | `302` with `Critical-CH` | **Not yet.** Chrome retries the navigation with the model hint and the retry records it. |
+| e | Android intent bounce applies | `302` to an `intent://` URL | Before the response |
+| f | Any other destination | `302` | After the response, in the background |
+| g | No destination | Shared tail | After the response, in the background |
 
 ### Android intent bounce
 
@@ -96,9 +97,13 @@ intent://{path or username/slug}?dtg_click=<id>#Intent;scheme={scheme};package={
 
 `{path}` is `dec_deeplink`, else the link's **Android deep link path**. The SDK reads `dtg_click` from the opened URL and converts the web click into the app's own click instead of logging a second one. Verified App Links bypass the browser, and the server, entirely.
 
+### Facebook and Instagram on Android
+
+Their in-app browsers open an installed app from an `intent://` URL but ignore its `S.browser_fallback_url`, so a visitor without the app would stay on a blank page. They get the interstitial page instead, whatever the interstitial setting: after 450 ms it navigates to the same `intent://` URL, and when the page is still visible 1.5 seconds later (the app did not take over), it goes to the destination itself. With the app installed the tap lands in the app; without it, on the tagged store page. Other WebViews (`; wv)`) keep the plain `302` to the destination.
+
 ### The interstitial page
 
-Turned on per app with **Mobile beacon interstitial**, and on or off for a single link under **Mobile landing pages** in the link drawer (`mobile_interstitial: true | false`; `null` follows the app). The page is titled "Opening the app…", carries `noindex`, and on load POSTs the screen width and height, pixel ratio, touch points and connection type to `/_/collect`, which updates the click row once. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
+Turned on per app with **Mobile beacon interstitial**, and on or off for a single link under **Mobile landing pages** in the link drawer (`mobile_interstitial: true | false`; `null` follows the app). The page is titled "Opening the app…", carries `noindex`, and on load sends the screen width and height, pixel ratio, touch points and connection type to `/_/collect`, which updates the click row once. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
 
 ### The iOS tap-to-store page
 
@@ -130,7 +135,16 @@ Desktop never redirects to the link's target automatically. The target only appe
 | 410 | "Link paused" / "This link is paused and not available right now." | A paused link |
 | 410 | "Link expired" / "This link has expired and is no longer available." | An expired link without an expired URL; for a temporary link until the daily purge removes it (after that: 404) |
 
-Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at `https://dectog.com/` and the footer "Check the link for typos, or ask whoever shared it for a new one." Two or more path segments on a tenant host return JSON `404 {"error":{"code":"not_found","message":"Not found"}}` instead.
+Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at `https://dectog.com/` and the footer "Check the link for typos, or ask whoever shared it for a new one." They are in the visitor's language like every link page (see [The link pages](#the-link-pages)). Two or more path segments on a tenant host return JSON `404 {"error":{"code":"not_found","message":"Not found"}}` instead.
+
+## The link pages
+
+The QR page, the interstitial, the tap-to-store page and the error pages share three things.
+
+- **Language.** English, German, French, Spanish or Italian, the first of them in the browser's `Accept-Language` by weight; English when none matches. `<html lang>` says which.
+- **Content-Security-Policy.** Each response has its own random nonce, and only the page's own script and style blocks carrying it run: `default-src 'none'; script-src 'nonce-…'; style-src 'nonce-…'` (plus Google Fonts on the pages that use Outfit), `img-src data:`, `connect-src 'self'` for the beacon, `base-uri 'none'`, `form-action 'none'`, `frame-ancestors 'none'`. Nothing on the page can be framed, and nothing injected into it can run.
+- **Which way out.** A tap on a store badge or the **Get** button, an **Open in app** button, or the QR page's website link sends `/_/collect` `{c: <click id>, a: "cta_ios" | "cta_android" | "cta_open" | "cta_web"}` with `sendBeacon`, which survives the navigation the tap starts. The first one is kept on the click as `cta` with `cta_at`, from the same network within an hour of the tap. The Overview's Breakdown shows it as **Page button**, the analytics query as the `cta` dimension: how many QR-page visitors went to a store, to the app or to the website.
+
 
 ## When the click is recorded
 
@@ -139,7 +153,7 @@ Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at
 | `HEAD`, bot user agent, or Cloudflare bot score below 30 | None |
 | 404, 410, unknown username | None |
 | `x-dectog-no-track: 1` header or `?dtg_nt=1` on the link | None. Routing is exactly that of a real tap; use it for QA taps and uptime monitors. The parameter never reaches the destination. |
-| Tap-to-store page, interstitial page, intent bounce | Written before the response is sent |
+| Tap-to-store page, interstitial page (also the Facebook and Instagram one), intent bounce | Written before the response is sent |
 | Hint-less Chromium plain redirect | None on the first request; the hinted retry writes it |
 | Every other redirect and the QR page | Written in the background after the response |
 | A verified Universal Link or App Link opening the installed app | The browser never contacts the server. The SDK reports the open as a click with `source: mobile_app` and as an app open. |

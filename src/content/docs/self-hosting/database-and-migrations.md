@@ -101,6 +101,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0048_mmp_handoff` | `apps.mmp_handoff`, `apps.mmp_pid` |
 | `0049_webhooks` | `webhooks` and `webhook_deliveries`; copies each app's 0008 webhook into `webhooks`, then **drops** `apps.install_webhook_url` and `apps.install_webhook_secret`. Deploy the worker right after applying it: the previous worker still writes those columns when an app is saved. |
 | `0050_export_jobs` | `export_jobs`: CSV exports too large to stream, written to the optional `EXPORTS` R2 bucket |
+| `0051_click_cta` | `cta`, `cta_at` on `clicks`: the first button a visitor took on a link page |
 
 ### Commands
 

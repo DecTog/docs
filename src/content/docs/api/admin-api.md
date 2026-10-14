@@ -159,7 +159,7 @@ One query answers "how many, by what, where": any of the metrics over a window, 
 | `limit` | 100 | Rows (or, by time and a dimension, values of the dimension), 1 to 1000; past it `truncated` is true |
 | a dimension | none | A filter: `country=US,DE` keeps those values, `country=-US` leaves them out. One dimension cannot do both. |
 
-The dimensions are `link`, `campaign`, `adgroup`, `creative` (the link's tracking fields or the URL's `dec_*` values), `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `country`, `region`, `city`, `browser`, `referrer`, `device` (`ios`, `android`, `desktop`, `other`), `os`, `os_version`, `lang`, `app_version` and `match_source`.
+The dimensions are `link`, `campaign`, `adgroup`, `creative` (the link's tracking fields or the URL's `dec_*` values), `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `country`, `region`, `city`, `browser`, `referrer`, `device` (`ios`, `android`, `desktop`, `other`), `os`, `os_version`, `lang`, `app_version`, `match_source` and `cta` (the button a visitor took on a link page: `cta_ios`, `cta_android`, `cta_open`, `cta_web`).
 
 An install takes the dimensions of the tap that won it; an event those of the link it counts for (the link that last opened the app within its re-engagement window, else the install's), and an open those of its tap. What no link brought is `(organic)`; a link that carried no value for a dimension is `(none)`. Both are values like any other, so `country=-US` keeps the rows without a country and `utm_source=(none)` finds the taps without one.
 
