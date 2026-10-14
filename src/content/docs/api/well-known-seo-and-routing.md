@@ -20,9 +20,9 @@ Universal Links and App Links need two files on the account host. The worker gen
 
 1. A `?u=<username>` query parameter always wins. This is how the dashboard's Verify buttons fetch the file on the app host, and the only form that works in path mode or on `localhost`.
 2. Otherwise, when `ROOT_DOMAIN` does not start with `localhost`, the first label of the Host header: `acme.dectog.com` serves the account `acme`.
-3. Otherwise: `400 {"error": "Subdomain not found in host"}`.
+3. Otherwise: `400 {"error": {"code": "invalid_request", "message": "Subdomain not found in host"}}`.
 
-An unknown username, or a known one with no qualifying app, answers `404 {"error": "Configuration not found"}`.
+An unknown username, or a known one with no qualifying app, answers `404 {"error": {"code": "not_found", "message": "Configuration not found"}}`.
 
 ### Response
 
@@ -113,9 +113,9 @@ Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/
 | `dectog.com` | `/` | `302` to `WEB_URL`. |
 | `dectog.com` | `/SKILL.md`, `/llms.txt` | Served from the dashboard's static assets, so `curl https://dectog.com/SKILL.md` works without a redirect. Without an assets binding (local development) these redirect like any other path. |
 | `dectog.com` | any other path | `301` to `WEB_URL` plus the path and the query string: `https://dectog.com/contact?ref=x` goes to `https://app.dectog.com/contact?ref=x`. |
-| `<username>.dectog.com` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or `404 {"error": "Not found"}` when it is unset. `www` is a reserved username, so `www.dectog.com` follows the unknown-host rule. |
+| `<username>.dectog.com` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or `404 {"error": {"code": "not_found", "message": "Not found"}}` when it is unset. `www` is a reserved username, so `www.dectog.com` follows the unknown-host rule. |
 | `<username>.dectog.com` | `/<slug>` | The redirect engine. An unknown username here also follows `UNKNOWN_HOST_REDIRECT`; an unknown slug gets the 404 page and an expired temporary link the 410 page. See [How a tap is routed](/links/how-a-tap-is-routed/). |
-| `<username>.dectog.com` | two or more path segments | `404 {"error": "Not found"}`. |
+| `<username>.dectog.com` | two or more path segments | `404 {"error": {"code": "not_found", "message": "Not found"}}`. |
 
 In the hosted deployment `WEB_URL` and `PUBLIC_BASE_URL` are both `https://app.dectog.com`, so the apex and account roots send visitors to the dashboard host.
 

@@ -280,12 +280,14 @@ The verdict on `onAppInstalled`, `currentAppInstall`, `getAttributionData()` and
 
 | Field | Type | Meaning |
 |---|---|---|
-| `message` | `String` | The server's `error` string for API errors, else the SDK's description |
+| `message` | `String` | The server's `error.message` for API errors, else the SDK's description |
 | `statusCode` | `int?` | HTTP status for API errors |
+| `code` | `String?` | The server's `error.code` for API errors, such as `conflict`, `invalid_request`, `rate_limited` or `invalid_signature` ([Errors](/api/overview/#errors)); null otherwise |
+| `requestId` | `String?` | The server's `error.request_id`, else the `x-request-id` header; quote it when reporting a problem |
 | `type` | `DectogErrorType` | |
-| `details` | `Map<String, dynamic>?` | The server's JSON body; `retry_after_ms` is added when the response carried `Retry-After` |
+| `details` | `Map<String, dynamic>?` | Every field of the server's `error` object (for example `slug` on a 409); `retry_after_ms` is added when the response carried `Retry-After` |
 
-Factories: `DectogError.apiError({required String message, required int statusCode, Map<String, dynamic>? details})`, `DectogError.networkError(String message)`, `DectogError.configError(String message)`, `DectogError.linkError(String message)`. `toString()` renders `DectogError: <message> (Status: <code>) Details: <details>`.
+Factories: `DectogError.apiError({required String message, required int statusCode, Map<String, dynamic>? details, String? code, String? requestId})`, `DectogError.fromResponse({required int statusCode, required String body, required String fallbackMessage, String? headerRequestId, Map<String, dynamic> extraDetails})` (parses the server's error envelope), `DectogError.networkError(String message)`, `DectogError.configError(String message)`, `DectogError.linkError(String message)`. `toString()` renders `DectogError: <message> (Status: <status>, <code>) [request <requestId>] Details: <details>`.
 
 ### DectogErrorType
 

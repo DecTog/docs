@@ -21,7 +21,7 @@ A temporary link is a slug with an expiry. It routes like a permanent link until
 | Lifetime click counter | `click_count` | None (`null` in the resolve response) |
 | Per-link numbers in the Links list | Clicks, installs, opens, leads, revenue | Only the expiry |
 
-Slugs share one namespace: a temporary link cannot take a permanent link's slug and vice versa. The API answers `409 {"error":"Slug already exists","slug":"..."}`.
+Slugs share one namespace: a temporary link cannot take a permanent link's slug and vice versa. The API answers `409 {"error":{"code":"conflict","message":"Slug already exists","slug":"..."}}`.
 
 ## Creating one
 
@@ -31,7 +31,7 @@ Slugs share one namespace: a temporary link cannot take a permanent link's slug 
 | API | `POST /api/v1/temp-links` with `ttlSeconds` (a number; omitted means 900), an optional `slug`, an optional `target` and optional `og_*` fields. The admin route `POST /api/admin/temp-links` takes the same body. |
 | SDK | `dectog.createTempLink(target: ..., slug: ..., ttlSeconds: 3600)`; `ttlSeconds` defaults to 900. |
 
-`ttlSeconds` is floored to a whole number and clamped to the range 60 to 2,592,000 (30 days). A value of `0` becomes the default of 900 seconds. A non-numeric value is rejected with `400 {"error":"ttlSeconds must be a number"}`. The response carries `expires_at` and `ttl_seconds`:
+`ttlSeconds` is floored to a whole number and clamped to the range 60 to 2,592,000 (30 days). A value of `0` becomes the default of 900 seconds. A non-numeric value is rejected with `400 {"error":{"code":"invalid_request","message":"ttlSeconds must be a number"}}`. The response carries `expires_at` and `ttl_seconds`:
 
 ```json title="POST /api/v1/temp-links → 201"
 {
@@ -64,7 +64,7 @@ The edit drawer on the **Temporary** tab and `PUT /api/v1/temp-links/{slug}` (SD
 |---|---|---|---|
 | Before `expires_at` | Routed normally | `200` with `type: "temporary"`, `is_expired: false`, `expires_at`, `ttl_seconds` | Green chip with the time left, for example "3h 5m left" |
 | After `expires_at`, before the purge | `410` page "Link expired" / "This temporary link has expired and is no longer available.", for bots too | `200` with `is_expired: true` | Red **Expired** chip; the **Delete expired** button appears |
-| After the purge | `404` page "Link not found" | `404 {"error":"Link not found"}` | Gone from the list |
+| After the purge | `404` page "Link not found" | `404 {"error":{"code":"not_found","message":"Link not found"}}` | Gone from the list |
 
 The purge runs in the daily cron at 03:17 UTC and deletes temporary links whose `expires_at` is more than 24 hours in the past. A link expires at a precise second but can therefore stay visible as an expired link for up to two days. Once purged, its slug is free to reuse.
 

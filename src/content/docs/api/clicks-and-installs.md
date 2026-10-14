@@ -15,7 +15,7 @@ Records a click that happened inside the app: the app was already installed and 
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
-| `slug` | string | yes | One of your permanent or temporary slugs. Unknown slugs answer `404 {"error": "Link not found"}`. |
+| `slug` | string | yes | One of your permanent or temporary slugs. Unknown slugs answer `404 {"error": {"code": "not_found", "message": "Link not found"}}`. |
 | `click_id` | string | no | The `dtg_click` id the app received through an Android intent bounce. See the flip rules below. |
 | `platform` | string | no | `ios` or `android` (any case). Sets the click's device type and the OS label (`iOS 17.5`, `Android 14`). |
 | `os_version` | string | no | Up to 32 characters; combined with `platform` into the OS label and the OS major. |
@@ -47,7 +47,7 @@ SDK clicks are never fingerprint candidates: only `source: "web"` clicks from th
 
 ## POST /api/v1/app-installs
 
-The first-launch report. Every field is optional; a malformed optional field is stored as `null`, never rejected. The only client error is `400 {"error": "Invalid JSON body"}`. The response is the verdict described below.
+The first-launch report. Every field is optional; a malformed optional field is stored as `null`, never rejected. The only client error is `400 {"error": {"code": "invalid_request", "message": "Invalid JSON body"}}`. The response is the verdict described below.
 
 ### Request body
 
@@ -227,13 +227,13 @@ Without strict mode the flags are annotations only; attribution stands.
 
 ## POST /api/v1/app-installs/:id/claim
 
-Hands in a deterministic signal that arrived after the first launch: a store referrer the service delivered on a later launch, a pasted link, a late Meta read, or an Apple Search Ads token. `:id` is the `install_id` from the verdict; an id that is not yours answers `404 {"error": "Install not found"}`.
+Hands in a deterministic signal that arrived after the first launch: a store referrer the service delivered on a later launch, a pasted link, a late Meta read, or an Apple Search Ads token. `:id` is the `install_id` from the verdict; an id that is not yours answers `404 {"error": {"code": "not_found", "message": "Install not found"}}`.
 
 The body accepts the **Deterministic signals** fields above, plus `attempt` and `claim_source`. Device, app and reliability fields are ignored here.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `claim_source` | string | `late_referrer`, `paste_control` or `clipboard`. Any other string answers `400 {"error": "claim_source must be one of late_referrer, paste_control, clipboard"}`. The value is validated and then neither stored nor used. |
+| `claim_source` | string | `late_referrer`, `paste_control` or `clipboard`. Any other string answers `400 {"error": {"code": "invalid_request", "message": "claim_source must be one of late_referrer, paste_control, clipboard"}}`. The value is validated and then neither stored nor used. |
 | `attempt` | integer 1 to 1000 | Stored as the larger of the sent and stored values. |
 
 Every call refreshes telemetry first: non-null signal fields overwrite the stored ones, `clipboard_slug` is set when it was empty, and `updated_at` is stamped. The verdict changes at most once. The response is the verdict plus `claim` and, except on `upgraded`, `claim_reason`:

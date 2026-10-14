@@ -72,7 +72,7 @@ No `Info.plist` or `AppDelegate` change is needed. Links arrive through the `app
 }
 ```
 
-Every path on the domain is claimed (`/*`). The `webcredentials` block lists the same app IDs, so password AutoFill can also associate the domain with your app. When no app in the account has both identifiers, the file answers `404 {"error":"Configuration not found"}`.
+Every path on the domain is claimed (`/*`). The `webcredentials` block lists the same app IDs, so password AutoFill can also associate the domain with your app. When no app in the account has both identifiers, the file answers `404 {"error":{"code":"not_found","message":"Configuration not found"}}`.
 
 </TabItem>
 <TabItem label="Android: App Links">
@@ -117,7 +117,7 @@ Every path on the domain is claimed (`/*`). The `webcredentials` block lists the
 ]
 ```
 
-An app with a package but no saved fingerprints appears with `"sha256_cert_fingerprints": []`, which never verifies. When no app has a package, the file answers `404 {"error":"Configuration not found"}`.
+An app with a package but no saved fingerprints appears with `"sha256_cert_fingerprints": []`, which never verifies. When no app has a package, the file answers `404 {"error":{"code":"not_found","message":"Configuration not found"}}`.
 
 **Until verification succeeds, taps still open the app.** When the app record has both an Android scheme and a package, the link service answers a Chrome-family browser with an `intent://` redirect that carries your scheme and package, with the store as the browser fallback. The app then receives `{scheme}://{username}/{slug}?dtg_click={id}` (or `{scheme}://{deep-link-path}?dtg_click={id}` for links with an Android deep-link path). The bounce is skipped for in-app browsers and for browsers whose user agent carries no `Chrome/` token; those get a plain redirect. Details are on [How a tap is routed](/links/how-a-tap-is-routed/).
 
@@ -176,7 +176,7 @@ Both report `Endpoint replied <status>: …` or `Fetch failed: …` when the fet
 
 The association files resolve the account from the request host (`{username}.{root}`) or from an explicit `?u={username}` query, which always wins. Two consequences:
 
-- In path mode (a root domain that starts with `localhost`, the local development default) the host carries no username, so the files are only reachable as `http://localhost:8787/.well-known/apple-app-site-association?u={username}` and `…/assetlinks.json?u={username}`. Without `?u=` the response is `400 {"error":"Subdomain not found in host"}`.
+- In path mode (a root domain that starts with `localhost`, the local development default) the host carries no username, so the files are only reachable as `http://localhost:8787/.well-known/apple-app-site-association?u={username}` and `…/assetlinks.json?u={username}`. Without `?u=` the response is `400 {"error":{"code":"invalid_request","message":"Subdomain not found in host"}}`.
 - Universal Links and App Links require a real HTTPS domain that the OS can fetch. Local hosts such as `http://10.0.2.2` or `https://localhost` never pass verification; on Android 12 and newer they open the app only from explicit intents (`adb`) or after the user enables the link in system settings. Use custom schemes and `adb` or `simctl` during development, as described in [Testing](/sdk/testing/).
 
 Every response carries `x-hostname` and `x-subdomain` headers naming the host and the resolved username. Self-hosted deployments serve the files from their own root domain; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).

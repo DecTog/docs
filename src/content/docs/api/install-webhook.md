@@ -103,7 +103,7 @@ The payload has no `routing` object and no `install_attempt_id`.
 
 ## Test event
 
-"Send test" in [Dashboard: Apps](/dashboard/apps/) calls `POST /api/admin/apps/:id/test-webhook`. It needs a saved URL **and** secret (`400 {"error": "Save the webhook URL and secret first"}`), signs the body exactly like a real delivery, waits up to 10 seconds, and reports `{"delivered": true, "ok": <2xx?>, "status": <http status>}`. A network failure or timeout answers `502 {"error": "Webhook delivery failed: <message>"}`.
+"Send test" in [Dashboard: Apps](/dashboard/apps/) calls `POST /api/admin/apps/:id/test-webhook`. It needs a saved URL **and** secret (`400 {"error": {"code": "invalid_request", "message": "Save the webhook URL and secret first"}}`), signs the body exactly like a real delivery, waits up to 10 seconds, and reports `{"delivered": true, "ok": <2xx?>, "status": <http status>}`. A network failure or timeout answers `502 {"error": {"code": "bad_gateway", "message": "Webhook delivery failed: <message>"}}`.
 
 The test payload is an `app.installed` with `"test": true`, `install_id` starting with `test_`, `"matched": false`, `"type": "organic"`, `device.device_model` `"DecTog test probe"`, `device.os` `"test"` and null or empty values elsewhere. It omits `match_confidence`, `install_state`, `is_reinstall` and `apple_search_ads`, which real deliveries always include. Real deliveries never carry `test`.
 

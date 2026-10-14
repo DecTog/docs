@@ -134,12 +134,12 @@ Run these in order from `apps/worker`:
 | Command | Expected |
 |---|---|
 | `curl -s https://app.example.com/healthz` | `{"ok":true,"service":"dectog","version":"v1","host":"app.example.com"}` |
-| `curl -s https://app.example.com/api/v1/links` | `401 {"error":"Unauthorized"}` |
+| `curl -s https://app.example.com/api/v1/links` | `401 {"error":{"code":"missing_api_key","message":"Missing API key",…}}` |
 | `curl -sI https://app.example.com/` | `200`, `text/html` (the dashboard's static export) |
 | `curl -sI https://example.com/` | `302` to `WEB_URL` |
 | `curl -sI https://no-such-user.example.com/` | `302` to `UNKNOWN_HOST_REDIRECT` (or `404` when it is unset) |
 | `curl -sI https://<username>.example.com/<slug>` with a desktop User-Agent | `200` QR page, or `302` to a desktop redirect or fallback URL if the link has one |
-| `curl -s https://<username>.example.com/.well-known/apple-app-site-association` | The AASA JSON once an app with bundle id and Team ID exists, otherwise `404 {"error":"Configuration not found"}` |
+| `curl -s https://<username>.example.com/.well-known/apple-app-site-association` | The AASA JSON once an app with bundle id and Team ID exists, otherwise `404 {"error":{"code":"not_found","message":"Configuration not found"}}` |
 | `npx wrangler deployments list --env production` | The new version at the top |
 | Cloudflare dashboard, Worker, Settings, Triggers | Cron triggers `17 3 * * *` and `7 * * * *` |
 

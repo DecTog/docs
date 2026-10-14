@@ -99,15 +99,16 @@ Every method throws a `DectogError`:
 try {
   await dectog.createLink(slug: 'spring-sale', target: 'https://example.com');
 } on DectogError catch (e) {
-  switch (e.statusCode) {
-    case 409:
+  switch (e.code) {
+    case 'conflict':
       // Slug already exists; e.details?['slug'] names it.
       break;
-    case 400:
+    case 'invalid_request':
       // Validation: e.message is the server's message, e.g. 'Unknown app_id'.
       break;
     default:
       // e.type: api, network, configuration or linkResolution.
+      // Log e.requestId with API errors: it finds the request in the server logs.
       break;
   }
 }
@@ -124,7 +125,7 @@ try {
 | 409 | `Slug already exists` | The slug is taken by a permanent or temporary link; `details` carries `slug` |
 | 429 | | Rate limited; `details['retry_after_ms']` carries the `Retry-After` value |
 
-For API errors `e.type` is `DectogErrorType.api`, `e.statusCode` is the HTTP status and `e.details` is the server's JSON body. Network failures and timeouts (30 seconds per request) throw `DectogErrorType.network` with no status code. Calling any of these methods before `initialize` throws `DectogErrorType.configuration`.
+For API errors `e.type` is `DectogErrorType.api`, `e.statusCode` is the HTTP status, `e.code` the server's error code, `e.requestId` the request id, and `e.details` every field of the server's `error` object. Network failures and timeouts (30 seconds per request) throw `DectogErrorType.network` with no status code. Calling any of these methods before `initialize` throws `DectogErrorType.configuration`.
 
 :::note[Invalid social fields on create]
 `updateLink` and `updateTempLink` answer 400 for an `ogTitle` or `ogDescription` over 150 characters or a non-`http(s)` `ogImageUrl`. On `createLink` and `createTempLink` the same input currently surfaces as a server error (HTTP 500) instead of a 400. Validate those fields in the app before creating.

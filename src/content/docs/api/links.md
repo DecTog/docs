@@ -58,7 +58,7 @@ Every permanent-link route returns the full object, including fields you never s
 
 - Allowed characters: `A-Z`, `a-z`, `0-9`, `_` and `-`. Length 1 to 128.
 - The slug is used exactly as sent. Leading or trailing whitespace makes it invalid. Slugs are case-sensitive: `Sale` and `sale` are two different links.
-- One namespace per account for permanent **and** temporary links. Creating either kind with a slug the other kind holds returns `409 {"error": "Slug already exists", "slug": "<slug>"}`.
+- One namespace per account for permanent **and** temporary links. Creating either kind with a slug the other kind holds returns `409 {"error": {"code": "conflict", "message": "Slug already exists", "slug": "<slug>"}}`.
 - A slug becomes free again when the link is deleted, or when an expired temporary link is purged.
 
 ## Create a link
@@ -81,15 +81,15 @@ Checks run in this order and stop at the first failure:
 
 | Status | Body |
 |---|---|
-| 400 | `{"error": "Invalid JSON body"}` |
-| 400 | `{"error": "slug is required"}` |
-| 400 | `{"error": "Invalid slug: only letters, numbers, hyphens and underscores are allowed"}` |
-| 400 | `{"error": "Invalid target: must be a valid http(s) URL"}` |
-| 409 | `{"error": "Slug already exists", "slug": "spring-sale"}` |
-| 400 | `{"error": "Unknown app_id"}` (the id is not one of your apps) |
-| 400 | `{"error": "Invalid label: max 255 characters"}`, `{"error": "Invalid campaign: control characters are not allowed"}`, `{"error": "Invalid adgroup: must be a string"}` (checked in the order `label`, `campaign`, `adgroup`, `creative`) |
-| 400 | `{"error": "Invalid ios_deep_link_path: must be a relative path, not a full URL (no \":\": no scheme, no spaces, no \"#\"/\";\")"}`, `{"error": "Invalid android_deep_link_path: deep link path is too long (max 512 chars)"}` |
-| 400 | `{"error": "Invalid redirect_url: must be a valid http(s) URL"}`, same for `fallback_url` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Invalid JSON body"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "slug is required"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Invalid slug: only letters, numbers, hyphens and underscores are allowed"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Invalid target: must be a valid http(s) URL"}}` |
+| 409 | `{"error": {"code": "conflict", "message": "Slug already exists", "slug": "spring-sale"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Unknown app_id"}}` (the id is not one of your apps) |
+| 400 | `{"error": {"code": "invalid_request", "message": "Invalid label: max 255 characters"}}`, `{"error": {"code": "invalid_request", "message": "Invalid campaign: control characters are not allowed"}}`, `{"error": {"code": "invalid_request", "message": "Invalid adgroup: must be a string"}}` (checked in the order `label`, `campaign`, `adgroup`, `creative`) |
+| 400 | `{"error": {"code": "invalid_request", "message": "Invalid ios_deep_link_path: must be a relative path, not a full URL (no \":\": no scheme, no spaces, no \"#\"/\";\")"}}`, `{"error": {"code": "invalid_request", "message": "Invalid android_deep_link_path: deep link path is too long (max 512 chars)"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Invalid redirect_url: must be a valid http(s) URL"}}`, same for `fallback_url` |
 
 The server also rejects `og_title` or `og_description` longer than 150 characters and an `og_image_url` that is not an http(s) URL. On `POST` the response for those is not a clean 400, so validate the three preview fields before sending them; `PUT` returns the 400 strings listed below.
 
@@ -111,11 +111,11 @@ dectog POST /api/v1/links '{
 | Route | Response |
 |---|---|
 | `GET /api/v1/links` | `200` with an array of Link objects, newest first. No pagination, no filters. |
-| `GET /api/v1/links/:slug` | `200` with the Link, or `404 {"error": "Link not found"}`. A temporary link's slug also answers 404 here. |
+| `GET /api/v1/links/:slug` | `200` with the Link, or `404 {"error": {"code": "not_found", "message": "Link not found"}}`. A temporary link's slug also answers 404 here. |
 
 ## Update a link
 
-`PUT /api/v1/links/:slug` applies a partial update and returns `200` with the full Link. Unknown slugs return `404 {"error": "Link not found"}`.
+`PUT /api/v1/links/:slug` applies a partial update and returns `200` with the full Link. Unknown slugs return `404 {"error": {"code": "not_found", "message": "Link not found"}}`.
 
 | In the body | Effect |
 |---|---|
@@ -124,7 +124,7 @@ dectog POST /api/v1/links '{
 | `""` | Clears every field except `metadata`. `"metadata": ""` is stored as the JSON string `""` and comes back as `""`; send `null` to clear metadata. |
 | `slug`, `app_id` | Ignored. Neither can be changed after creation. |
 
-Validation is the same as on create. Errors come back as `400` with the same strings, plus `{"error": "og_title must be at most 150 characters"}`, `{"error": "og_description must be at most 150 characters"}` and `{"error": "og_image_url must be a valid http(s) URL"}`.
+Validation is the same as on create. Errors come back as `400` with the same strings, plus `{"error": {"code": "invalid_request", "message": "og_title must be at most 150 characters"}}`, `{"error": {"code": "invalid_request", "message": "og_description must be at most 150 characters"}}` and `{"error": {"code": "invalid_request", "message": "og_image_url must be a valid http(s) URL"}}`.
 
 ```bash title="Clear the target so the link inherits the app fallback"
 dectog PUT /api/v1/links/spring-sale '{"target": null, "label": "launch-week"}'
@@ -132,7 +132,7 @@ dectog PUT /api/v1/links/spring-sale '{"target": null, "label": "launch-week"}'
 
 ## Delete a link
 
-`DELETE /api/v1/links/:slug` returns `200 {"success": true}`. Unknown slugs return `404 {"error": "Link not found"}`.
+`DELETE /api/v1/links/:slug` returns `200 {"success": true}`. Unknown slugs return `404 {"error": {"code": "not_found", "message": "Link not found"}}`.
 
 Deleting a link deletes its history in one atomic batch: the events of installs it attributed and events denormalized to its slug, its app opens, the installs attributed through its clicks (customers that pointed at those installs keep their identity but lose `first_install_id`), its clicks, then the link. The dashboard's totals drop accordingly; see [Dashboard: Links](/dashboard/links/).
 
@@ -172,12 +172,12 @@ Temporary links expire after a TTL. They have no app binding, no deep-link paths
 
 How `ttlSeconds` is interpreted:
 
-- It must be a JSON number when present, otherwise `400 {"error": "ttlSeconds must be a number"}`.
+- It must be a JSON number when present, otherwise `400 {"error": {"code": "invalid_request", "message": "ttlSeconds must be a number"}}`.
 - The value is floored to a whole number. `0`, or anything that floors to `0` (for example `0.5`), becomes `900`.
 - Everything else is clamped to the range 60 to 2,592,000 (30 days): `30` becomes `60`, `-5` becomes `60`, `1e15` becomes `2592000`.
 - `expires_at` is `created_at` plus the resulting `ttl_seconds`.
 
-Other errors: `400 {"error": "Invalid slug"}`, `400 {"error": "Invalid target: must be a valid http(s) URL"}`, `409 {"error": "Slug already exists", "slug": "…"}`. Invalid `og_*` values are rejected as on permanent-link create.
+Other errors: `400 {"error": {"code": "invalid_request", "message": "Invalid slug"}}`, `400 {"error": {"code": "invalid_request", "message": "Invalid target: must be a valid http(s) URL"}}`, `409 {"error": {"code": "conflict", "message": "Slug already exists", "slug": "…"}}`. Invalid `og_*` values are rejected as on permanent-link create.
 
 ```bash title="A link for a CI build that expires in one hour"
 dectog POST /api/v1/temp-links '{"target": "https://example.com/build/1234", "ttlSeconds": 3600}'
@@ -187,9 +187,9 @@ dectog POST /api/v1/temp-links '{"target": "https://example.com/build/1234", "tt
 
 | Route | Response |
 |---|---|
-| `GET /api/v1/temp-links/:slug` | `200` TempLink, or `404 {"error": "Temporary link not found"}`. |
-| `PUT /api/v1/temp-links/:slug` | Partial update of `target` and the three `og_*` fields only; absent keeps, `null` or `""` clears. Returns `200` TempLink, or `404 {"error": "Temporary link not found"}`. The TTL and `expires_at` cannot be changed. |
-| `DELETE /api/v1/temp-links/:slug` | `200 {"success": true}` after deleting the link with the same history cascade as a permanent link, or `404 {"error": "Temporary link not found"}` for a slug that is not yours. |
+| `GET /api/v1/temp-links/:slug` | `200` TempLink, or `404 {"error": {"code": "not_found", "message": "Temporary link not found"}}`. |
+| `PUT /api/v1/temp-links/:slug` | Partial update of `target` and the three `og_*` fields only; absent keeps, `null` or `""` clears. Returns `200` TempLink, or `404 {"error": {"code": "not_found", "message": "Temporary link not found"}}`. The TTL and `expires_at` cannot be changed. |
+| `DELETE /api/v1/temp-links/:slug` | `200 {"success": true}` after deleting the link with the same history cascade as a permanent link, or `404 {"error": {"code": "not_found", "message": "Temporary link not found"}}` for a slug that is not yours. |
 
 There is no list route for temporary links in the v1 API. The dashboard's `GET /api/admin/links` returns them under `temp_links`.
 
@@ -233,4 +233,4 @@ Every key is always present. Which ones carry values depends on the kind of link
 | `metadata` | JSON or `null` | `null` |
 | `ios_deep_link_path`, `android_deep_link_path` | string or `null` | `null` |
 
-`id`, `slug`, `target`, `url` and `created_at` are filled for both kinds. An unknown username or slug answers `404 {"error": "Link not found"}`. The `og_*`, routing and tracking fields are not exposed here.
+`id`, `slug`, `target`, `url` and `created_at` are filled for both kinds. An unknown username or slug answers `404 {"error": {"code": "not_found", "message": "Link not found"}}`. The `og_*`, routing and tracking fields are not exposed here.

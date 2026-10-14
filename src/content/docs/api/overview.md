@@ -41,7 +41,7 @@ Authorization: Bearer dtg_0123456789abcdef0123456789abcdef
 ```
 
 - The key is `dtg_` followed by 32 lowercase hex characters (36 characters in total). You receive it once when the account is created (signup, Google sign-in or bootstrap) and can view, copy and regenerate it in [Dashboard: Settings](/dashboard/settings/).
-- The server stores only the key's SHA-256 for authentication and looks the account up by that hash. A missing, malformed or unknown key answers `401 {"error": "Unauthorized"}` before anything else is checked.
+- The server stores only the key's SHA-256 for authentication and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `401` with code `invalid_api_key`, before anything else is checked.
 - Regenerating the key invalidates the old one immediately. Coordinate a rotation with an app release, because shipped builds embed the key.
 - Keep the key out of source control and only ever send it to your DecTog base URL.
 
@@ -64,12 +64,13 @@ signature = HMAC-SHA256( key = the API key, message = "<timestamp>.<sha256hex(ra
 - The timestamp must be within 1,800 seconds (30 minutes) of the server clock, in either direction. The signature binds the timestamp to the body, so inside that window a captured request can only be repeated as it was, never altered. Creates answer 409 on a repeat and installs replay their stored verdict; clicks and events are recorded again, so do not retry those blindly.
 - The checks run in this order and stop at the first failure: Bearer key, then signature, then the account rate limit, then the device or IP rate limit, then the route handler.
 
-| Status | Body | When |
-|---|---|---|
-| 401 | `{"error": "Unauthorized"}` | No or unknown Bearer key. |
-| 401 | `{"error": "SDK request signature required (upgrade flutter_dectog)"}` | Either signature header is missing. |
-| 401 | `{"error": "SDK request timestamp is stale or invalid"}` | The timestamp is not an integer or is more than 1,800 s from server time. |
-| 401 | `{"error": "Invalid SDK request signature"}` | The HMAC does not match (wrong key, wrong message, re-encoded body, uppercase hex). |
+| Status | `code` | `message` | When |
+|---|---|---|---|
+| 401 | `missing_api_key` | `Missing API key` | No Bearer key, or not in the `Bearer <key>` form. |
+| 401 | `invalid_api_key` | `Invalid API key` | The key is not one the server knows. |
+| 401 | `signature_required` | `SDK request signature required (upgrade flutter_dectog)` | Either signature header is missing. |
+| 401 | `stale_timestamp` | `SDK request timestamp is stale or invalid` | The timestamp is not an integer or is more than 1,800 s from server time. |
+| 401 | `invalid_signature` | `Invalid SDK request signature` | The HMAC does not match (wrong key, wrong message, re-encoded body, uppercase hex). |
 
 ### Worked example
 
@@ -157,7 +158,7 @@ Limits are fixed windows aligned to the wall clock: the window is the current mi
 
 The hashed IP is `sha256(IP_SALT + ":" + ip)` with IPv6 addresses cut to their /64 prefix, so a whole IPv6 network shares one counter.
 
-Over a limit, `/api/v1` answers `429 {"error": "Rate limit exceeded"}` with a `Retry-After` header holding the number of seconds until the current minute ends (1 to 60). Wait at least that long before retrying. The IP counter is per account and IP, so one account's traffic never consumes another account's allowance.
+Over a limit, `/api/v1` answers `429` with code `rate_limited` and a `Retry-After` header holding the number of seconds until the current minute ends (1 to 60). Wait at least that long before retrying. The IP counter is per account and IP, so one account's traffic never consumes another account's allowance.
 
 :::note[Fail-open and fail-closed]
 If the rate-limit counter cannot be written (a database failure), the account, device and IP limiters **let the request through** and log the failure: the limiter never takes the API down with it. The beacon limiter does the opposite and answers 429 when its counter write fails.
@@ -169,29 +170,44 @@ If the rate-limit counter cannot be written (a database failure), the account, d
 
 | Prefix | `access-control-allow-origin` | Other headers |
 |---|---|---|
-| `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-dectog-timestamp, x-dectog-signature`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS` |
-| `/api/admin/*` | `WEB_URL` (`https://app.dectog.com`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type`; same methods |
+| `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-dectog-timestamp, x-dectog-signature, x-request-id`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS`; `access-control-expose-headers: x-request-id` |
+| `/api/admin/*` | `WEB_URL` (`https://app.dectog.com`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type, x-request-id`; same methods; `access-control-expose-headers: x-request-id` |
 
 `OPTIONS` on any `/api/*` path answers `204`. The v1 API never uses cookies, so browser clients only need the headers above.
 
 ## Errors
 
-Every error is JSON with an `error` string, sometimes with extra keys:
+Every error, on every route, is one JSON shape:
 
 ```json
-{ "error": "Slug already exists", "slug": "spring-sale" }
+{
+  "error": {
+    "code": "conflict",
+    "message": "Slug already exists",
+    "request_id": "8d2f4c1b9a7e6f30-AMS",
+    "slug": "spring-sale"
+  }
+}
 ```
 
-| Status | Meaning |
-|---|---|
-| 400 | Validation failed, or the body is not valid JSON (`{"error": "Invalid JSON body"}`). The message names the field. |
-| 401 | Authentication or signature failed; see above. |
-| 404 | The resource is not in your account: `Link not found`, `Temporary link not found`, `Install not found`, `No install found for this device`. |
-| 409 | The slug is taken: `Slug already exists`, with the `slug`. |
-| 413 | An events batch has more than 100 items. |
-| 429 | Rate limited; see above. |
+- `code` is a stable, machine-readable reason. Branch on it, not on `message`.
+- `message` is for people and may be reworded. It names the field that failed validation.
+- `request_id` identifies the request. The same value is in the `x-request-id` response header, which every response carries, errors or not. Quote it when you report a problem: it finds the request in the server's logs. Send your own `x-request-id` (8 to 128 characters from `A-Z a-z 0-9 . _ : -`) and the server uses it instead of generating one.
+- Some errors carry extra keys next to `message`, such as `slug` on a 409.
 
-Error strings on the route pages are quoted exactly as the server sends them.
+| Status | `code` | Meaning |
+|---|---|---|
+| 400 | `invalid_request` | Validation failed, or the body is not valid JSON (`Invalid JSON body`). The message names the field. |
+| 401 | `missing_api_key`, `invalid_api_key`, `signature_required`, `stale_timestamp`, `invalid_signature` | Authentication or signature failed; see above. |
+| 401 | `not_authenticated`, `invalid_session` | Admin API only: no session cookie, or a bad or expired one. |
+| 403 | `forbidden` | Admin API only: the route needs the owner role, or bootstrap is not permitted. |
+| 404 | `not_found` | The resource is not in your account (`Link not found`, `Temporary link not found`, `Install not found`, `No install found for this device`), or no route matches. |
+| 409 | `conflict` | The slug is taken (`Slug already exists`, with the `slug`), or the instance is already bootstrapped. |
+| 413 | `payload_too_large` | An events batch has more than 100 items. |
+| 429 | `rate_limited` | Rate limited; see above. |
+| 500 | `internal_error` | A server fault. The response never carries a stack trace; the `request_id` finds it in the logs. |
+
+The route pages quote errors as `{"error": {"code", "message"}}` and leave out `request_id`, which every error carries. Messages are quoted exactly as the server sends them.
 
 ## Conventions
 

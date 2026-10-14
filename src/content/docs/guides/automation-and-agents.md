@@ -50,14 +50,17 @@ dectog_call() {
 }
 ```
 
-A failed signature returns 401 with one of these bodies:
+A failed key or signature check returns 401 with one of these `error.code` values:
 
-| Body | Cause |
+| `code` | Cause |
 |---|---|
-| `{"error":"Unauthorized"}` | Missing or unknown Bearer key |
-| `{"error":"SDK request signature required (upgrade flutter_dectog)"}` | One of the two headers is missing |
-| `{"error":"SDK request timestamp is stale or invalid"}` | The timestamp is not an integer or is more than 1800 seconds off |
-| `{"error":"Invalid SDK request signature"}` | The HMAC does not match the body that arrived |
+| `missing_api_key` | No Bearer key |
+| `invalid_api_key` | Unknown Bearer key |
+| `signature_required` | One of the two headers is missing |
+| `stale_timestamp` | The timestamp is not an integer or is more than 1800 seconds off |
+| `invalid_signature` | The HMAC does not match the body that arrived |
+
+Every error body is `{"error": {"code", "message", "request_id"}}`; branch on `code`, and quote `request_id` (also in the `x-request-id` header) when asking for help.
 
 The full scheme and the rate limits are on [API overview](/api/overview/).
 
@@ -84,8 +87,8 @@ dectog_call DELETE /api/v1/links/spring-sale
 
 What to expect:
 
-- A taken slug returns 409 `{"error":"Slug already exists","slug":"spring-sale"}`. Slugs are shared between permanent and temporary links.
-- `DELETE` on an unknown slug returns 404 `{"error":"Link not found"}`.
+- A taken slug returns 409 `{"error":{"code":"conflict","message":"Slug already exists","slug":"spring-sale"}}`. Slugs are shared between permanent and temporary links.
+- `DELETE` on an unknown slug returns 404 `{"error":{"code":"not_found","message":"Link not found"}}`.
 - `metadata` comes back to the app as `custom_params` on attributed installs.
 - Leave `target` out for app-only links; they inherit the app's `fallback_url`.
 
@@ -105,13 +108,12 @@ while IFS=, read -r slug target screen; do
   for attempt in 1 2 3; do
     if out=$(dectog_call POST /api/v1/links "$body" 2>/dev/null); then
       echo "created  $slug -> $(jq -r .url <<<"$out")"; break
-    elif grep -q 'Slug already exists' <<<"$out"; then
-      echo "exists   $slug (PUT /api/v1/links/$slug to change it)"; break
-    elif grep -q 'Rate limit exceeded' <<<"$out"; then
-      echo "rate limited, waiting for the next window"; sleep 60
-    else
-      echo "error    $slug: $out" >&2; exit 1
     fi
+    case "$(jq -r .error.code <<<"$out" 2>/dev/null)" in
+      conflict)     echo "exists   $slug (PUT /api/v1/links/$slug to change it)"; break;;
+      rate_limited) echo "rate limited, waiting for the next window"; sleep 60;;
+      *)            echo "error    $slug: $out" >&2; exit 1;;
+    esac
   done
 done < links.csv
 ```
@@ -178,7 +180,7 @@ Every key is always present. Temporary links return `click_count`, `metadata` an
 | 600 per minute | The account plus your IP | Applies to every call without a `device_id`, so every link call from a script |
 | 60 per minute | A `device_id` | SDK calls only |
 
-A 429 returns `{"error":"Rate limit exceeded"}` with `Retry-After` set to the seconds left in the current minute window, at least 1. If the limiter's database is unavailable the request goes through. See [API overview](/api/overview/).
+A 429 returns `{"error":{"code":"rate_limited","message":"Rate limit exceeded"}}` with `Retry-After` set to the seconds left in the current minute window, at least 1. If the limiter's database is unavailable the request goes through. See [API overview](/api/overview/).
 
 ## Resources for AI agents
 

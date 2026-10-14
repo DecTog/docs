@@ -35,20 +35,20 @@ String values are trimmed and truncated to the stated length; empty strings beco
 ### Batch rules
 
 - The whole batch is validated before anything is written. One invalid event rejects all of them with a 400 and nothing is stored.
-- More than 100 events answer `413 {"error": "events batch exceeds 100 items"}`.
+- More than 100 events answer `413 {"error": {"code": "payload_too_large", "message": "events batch exceeds 100 items"}}`.
 - The response is `200 {"accepted": n}`.
 
 | Status | Body |
 |---|---|
-| 400 | `{"error": "Invalid JSON body"}` |
-| 400 | `{"error": "events must be a non-empty array"}` |
-| 413 | `{"error": "events batch exceeds 100 items"}` |
-| 400 | `{"error": "each event must be an object"}` |
-| 400 | `{"error": "event.type must be one of identify, lead, conversion, custom"}` |
-| 400 | `{"error": "identify events require customer_id"}` |
-| 400 | `{"error": "revenue must be a non-negative number"}` |
-| 400 | `{"error": "conversion events require revenue"}` |
-| 400 | `{"error": "metadata is not JSON-serializable"}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Invalid JSON body"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "events must be a non-empty array"}}` |
+| 413 | `{"error": {"code": "payload_too_large", "message": "events batch exceeds 100 items"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "each event must be an object"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "event.type must be one of identify, lead, conversion, custom"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "identify events require customer_id"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "revenue must be a non-negative number"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "conversion events require revenue"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "metadata is not JSON-serializable"}}` |
 
 ### What each type does
 
@@ -82,8 +82,8 @@ Returns the stored verdict for a device or an install, so an app can recover it 
 
 | Status | Body |
 |---|---|
-| 400 | `{"error": "device_id or install_id query parameter is required"}` |
-| 404 | `{"error": "No install found for this device"}`: no install exists for that device or install id. |
+| 400 | `{"error": {"code": "invalid_request", "message": "device_id or install_id query parameter is required"}}` |
+| 404 | `{"error": {"code": "not_found", "message": "No install found for this device"}}`: no install exists for that device or install id. |
 | 200 | The verdict. An organic install answers 200 with `"matched": false`; 404 only means "no install at all". |
 
 `last_open` is always present: `{"username", "slug", "click_id", "opened_at"}` for the latest app open reported for this device (the query's `device_id`, or the install's own) or for this install id, else `null`.
@@ -98,7 +98,7 @@ One row per app start, feeding the daily-active and retention numbers.
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
-| `device_id` | string, 128 | yes | Missing answers `400 {"error": "device_id is required"}`. |
+| `device_id` | string, 128 | yes | Missing answers `400 {"error": {"code": "invalid_request", "message": "device_id is required"}}`. |
 | `app_version` | string, 64 | no | |
 | `os` | string, 32 | no | |
 
@@ -110,7 +110,7 @@ Reports that a DecTog link opened the already-installed app (a warm open through
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
-| `slug` | string, 128 | yes | One of your permanent or temporary slugs. Missing answers `400 {"error": "slug is required"}`; unknown answers `404 {"error": "Link not found"}`. |
+| `slug` | string, 128 | yes | One of your permanent or temporary slugs. Missing answers `400 {"error": {"code": "invalid_request", "message": "slug is required"}}`; unknown answers `404 {"error": {"code": "not_found", "message": "Link not found"}}`. |
 | `click_id` | string, 64 | no | The `dtg_click` id from an intent bounce. Stored as sent; it is not checked against the clicks table. |
 | `device_id` | string, 128 | no | |
 | `install_id` | string, 64 | no | |

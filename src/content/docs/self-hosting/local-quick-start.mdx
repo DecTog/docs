@@ -96,10 +96,10 @@ The exact rules, from `apps/worker/src/api_admin.ts` and `bootstrap.ts`:
 
 | Rule | Response |
 |---|---|
-| `BOOTSTRAP_TOKEN` is set (non-empty), or `ENVIRONMENT=production` | The `x-bootstrap-token` header must equal the token. Otherwise `403 {"error":"Bootstrap not permitted"}`. In production with no token configured every call is 403. |
-| Empty body, or a body that is not valid JSON | Demo seed. In production: `403 {"error":"Demo seed is disabled in production — provide email, password and username"}`. |
+| `BOOTSTRAP_TOKEN` is set (non-empty), or `ENVIRONMENT=production` | The `x-bootstrap-token` header must equal the token. Otherwise `403 {"error":{"code":"forbidden","message":"Bootstrap not permitted"}}`. In production with no token configured every call is 403. |
+| Empty body, or a body that is not valid JSON | Demo seed. In production: `403 {"error":{"code":"forbidden","message":"Demo seed is disabled in production — provide email, password and username"}}`. |
 | Body with any of `email`, `password`, `username` | All three are required. `400` with one of: `email, password and username are required`, `email is not a valid address`, `password must be at least 12 characters`, `username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `username '<name>' is reserved` (reserved: `app www api links dashboard admin mail static cdn`). Email and username are trimmed and lowercased. |
-| Any user already exists | `409 {"error":"Already bootstrapped"}` (both forms). |
+| Any user already exists | `409 {"error":{"code":"conflict","message":"Already bootstrapped"}}` (both forms). |
 | Success | `201 {"ok":true,"email","username","api_key","demo"}`. |
 
 Bootstrap has no rate limit. The owner password rule (at least 12 characters) differs from the signup rule (8 to 72 characters with an upper-case letter, a lower-case letter and a digit); see [Account and sign-in](/dashboard/account-and-sign-in/).

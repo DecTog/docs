@@ -86,7 +86,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 |---|---|---|
 | Verify shows `No app IDs configured` or `Endpoint replied 404: Configuration not found` | The AASA is built only from apps that have both a bundle ID and a Team ID | Save both on the Apps page. The file then serves at `https://{username}.dectog.com/.well-known/apple-app-site-association` and includes `webcredentials`. |
 | Taps open Safari although the file verifies | The entitlement is missing or the app was not reinstalled | Add `applinks:{username}.dectog.com` to the Associated Domains entitlement of every build configuration, enable the capability on the App ID, then reinstall. iOS fetches the AASA at install and update; an installed app never picks up a change. |
-| The entitlement is `applinks:*.dectog.com`, as the Apps page tooltip and its "Copy for AI" prompt suggest | For a wildcard entry iOS fetches the AASA from the parent domain, `https://dectog.com/.well-known/apple-app-site-association`, and the apex answers 400 `{"error":"Subdomain not found in host"}` | Use the explicit host: `applinks:{username}.dectog.com`. |
+| The entitlement is `applinks:*.dectog.com`, as the Apps page tooltip and its "Copy for AI" prompt suggest | For a wildcard entry iOS fetches the AASA from the parent domain, `https://dectog.com/.well-known/apple-app-site-association`, and the apex answers 400 `{"error":{"code":"invalid_request","message":"Subdomain not found in host"}}` | Use the explicit host: `applinks:{username}.dectog.com`. |
 | Works from Notes but not from the address bar | Typing a URL into Safari never triggers a Universal Link | Tap the link from Notes, Messages or another app. |
 | Nothing works locally | The AASA must be served from a real domain over HTTPS | Path-mode and `localhost` deployments cannot pass; test against a deployed domain. The Simulator does not open Universal Links either. |
 | A redirect to `myapp://` does nothing | iOS never opens a custom scheme from a server redirect | Custom schemes open only from a direct tap: the "Open in app" button of the tap-to-store page or the buttons on the QR page. |
@@ -103,7 +103,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 
 | Limit | Scope | Behavior |
 |---|---|---|
-| 3000 per minute | The account | `{"error":"Rate limit exceeded"}` with `Retry-After` |
+| 3000 per minute | The account | `{"error":{"code":"rate_limited","message":"Rate limit exceeded"}}` with `Retry-After` |
 | 60 per minute | A `device_id` (SDK calls) | Same |
 | 600 per minute | The account plus the caller's IP, for calls without a `device_id` (every link call from a script) | Same |
 | 120 per minute | The interstitial beacon `POST /_/collect`, per IP | 429 with an empty body; this limiter also returns 429 when its database write fails |
@@ -159,7 +159,7 @@ A Google sign-in whose verified email matches an existing account links that acc
 | 302 to `https://dectog.com/` | The username does not exist | None (hosted service) |
 | 404 page | The slug does not exist, or a temporary link was purged | `Link not found` and `This DecTog link does not exist.` |
 | 410 page | A temporary link has expired, bots included | `Link expired` and `This temporary link has expired and is no longer available.` |
-| JSON `{"error":"Not found"}` | Two or more path segments on a link host | None |
+| JSON `404 {"error":{"code":"not_found","message":"Not found"}}` | Two or more path segments on a link host | None |
 
 Both HTML pages carry `noindex`, a "Go to DecTog" button and the footer `Check the link for typos, or ask whoever shared it for a new one.`
 

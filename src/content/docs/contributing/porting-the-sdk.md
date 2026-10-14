@@ -150,7 +150,8 @@ export class DectogHttpClient {
     const body = await res.text();
     const json = body ? JSON.parse(body) : undefined;
     if (!res.ok) {
-      throw new DectogError(json?.error ?? 'DecTog API error', 'api', res.status, json);
+      // Error envelope: {"error": {"code", "message", "request_id", ...}}
+      throw new DectogError(json?.error?.message ?? 'DecTog API error', 'api', res.status, json?.error);
     }
     return json as T;
   }

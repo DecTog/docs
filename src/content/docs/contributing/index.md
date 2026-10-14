@@ -43,7 +43,7 @@ DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog
 | `ios/flutter_dectog/` | The Swift package: `DectogIdentifiersPlugin.swift`, `DectogInstallDates.swift`, `DectogKeychain.swift`, `DectogPasteControl.swift`; `ios/flutter_dectog.podspec` for CocoaPods hosts |
 | `example/` | The example app; reads `env/dev.json` for `DECTOG_API_KEY`, `DECTOG_BASE_URL`, `DECTOG_LINK_ROOT_DOMAIN` |
 | `test/` | Unit tests for the models, the referrer service, the state store, the event queue, signing, the retry policy, the URL parser and the paste button |
-| `docs/react_native_port.md` | The draft port guide; see [Porting the SDK](/contributing/porting-the-sdk/) |
+| `doc/react_native_port.md` | The draft port guide; see [Porting the SDK](/contributing/porting-the-sdk/) |
 
 ### `docs` (this site)
 

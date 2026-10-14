@@ -13,11 +13,11 @@ Everything under `/api/admin` and `/api/auth` exists to serve the dashboard. Rou
 
 - Authentication is a cookie, `dectog_session`, set by login, signup and Google sign-in. It holds an HS256 JWT signed with `JWT_SECRET` that expires after 30 days. Flags: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` only when the request came over https. Login without `remember` sets a browser-session cookie (the token inside still lasts 30 days); `remember: true`, signup and Google sign-in set `Max-Age` of 30 days.
 - Logout deletes the cookie; tokens are never revoked server-side. A password reset does not end existing sessions. Rotating `JWT_SECRET` signs everyone out.
-- Routes marked **session** answer `401 {"error": "Not authenticated"}` without a cookie and `401 {"error": "Invalid or expired session"}` for a bad or expired token or a deleted user.
-- Routes marked **owner** additionally require the `owner` role (`403 {"error": "Owner access required"}`). The owner is the account created by bootstrap or the demo seed; signup and Google sign-in always create `user`, and there is no route to change roles. See [Account and sign-in](/dashboard/account-and-sign-in/).
+- Routes marked **session** answer `401` with code `not_authenticated` without a cookie and `401` with code `invalid_session` for a bad or expired token or a deleted user.
+- Routes marked **owner** additionally require the `owner` role (`403 {"error": {"code": "forbidden", "message": "Owner access required"}}`). The owner is the account created by bootstrap or the demo seed; signup and Google sign-in always create `user`, and there is no route to change roles. See [Account and sign-in](/dashboard/account-and-sign-in/).
 - Every query is scoped to the signed-in account. There is no cross-account view.
-- CORS on `/api/admin/*`: `access-control-allow-origin` is `WEB_URL`, with `access-control-allow-credentials: true`, `vary: Origin` and allowed headers `authorization, content-type`. `OPTIONS /api/*` answers 204.
-- Errors use the same `{"error": "<message>"}` shape as the v1 API. A body that is not valid JSON answers `400 {"error": "Invalid JSON body"}`.
+- CORS on `/api/admin/*`: `access-control-allow-origin` is `WEB_URL`, with `access-control-allow-credentials: true`, `vary: Origin` and allowed headers `authorization, content-type, x-request-id`; `x-request-id` is exposed. `OPTIONS /api/*` answers 204.
+- Errors use the same `{"error": {"code", "message", "request_id"}}` envelope as the v1 API ([Errors](/api/overview/#errors)). A body that is not valid JSON answers `400 {"error": {"code": "invalid_request", "message": "Invalid JSON body"}}`.
 
 ```bash title="Log in and call a session route with curl"
 curl -sS -c jar.txt -X POST https://app.dectog.com/api/admin/login \
@@ -49,14 +49,14 @@ Password rule for signup and reset: 8 to 72 characters with at least one lowerca
 
 ### Bootstrap
 
-`POST /api/admin/bootstrap` has two body forms. Both answer `409 {"error": "Already bootstrapped"}` once any user exists, and `201 {"ok": true, "email", "username", "api_key", "demo"}` on success. The API key appears only in this response.
+`POST /api/admin/bootstrap` has two body forms. Both answer `409 {"error": {"code": "conflict", "message": "Already bootstrapped"}}` once any user exists, and `201 {"ok": true, "email", "username", "api_key", "demo"}` on success. The API key appears only in this response.
 
 | Body | Result |
 |---|---|
 | `{"email", "password", "username"}` | Creates exactly that account with role `owner` and no demo data, in any environment. All three fields are required; password at least 12 characters (no other rule); username rules as above. Errors are `400` with `email, password and username are required`, `email is not a valid address`, `password must be at least 12 characters`, `username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `username '<name>' is reserved`, or `409 Username or email already exists`. `demo` is `false`. |
-| empty, not JSON, or a JSON object with none of those three keys | Seeds the demo account `demo@dectog.local` / `demo1234` / username `demo` (role `owner`) with the demo app, links, clicks and installs. `demo` is `true`. In production this answers `403 {"error": "Demo seed is disabled in production — provide email, password and username"}`. |
+| empty, not JSON, or a JSON object with none of those three keys | Seeds the demo account `demo@dectog.local` / `demo1234` / username `demo` (role `owner`) with the demo app, links, clicks and installs. `demo` is `true`. In production this answers `403 {"error": {"code": "forbidden", "message": "Demo seed is disabled in production — provide email, password and username"}}`. |
 
-The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` is set, `x-bootstrap-token` must equal `BOOTSTRAP_TOKEN`, otherwise `403 {"error": "Bootstrap not permitted"}`. In production without a configured token every call is refused. See [Local quick start](/self-hosting/local-quick-start/) and [Deploy](/self-hosting/deploy/).
+The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` is set, `x-bootstrap-token` must equal `BOOTSTRAP_TOKEN`, otherwise `403 {"error": {"code": "forbidden", "message": "Bootstrap not permitted"}}`. In production without a configured token every call is refused. See [Local quick start](/self-hosting/local-quick-start/) and [Deploy](/self-hosting/deploy/).
 
 ## Settings
 

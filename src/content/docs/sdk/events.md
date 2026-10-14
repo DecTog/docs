@@ -76,7 +76,7 @@ Each queued event carries a `client_timestamp` (device clock, ISO 8601) and, whe
 
 | Limit | Behavior |
 |---|---|
-| More than 100 events in one batch | `413 {"error":"events batch exceeds 100 items"}`. The SDK never exceeds it. |
+| More than 100 events in one batch | `413 {"error":{"code":"payload_too_large","message":"events batch exceeds 100 items"}}`. The SDK never exceeds it. |
 | One invalid event in a batch | The whole batch is rejected with 400 and nothing in it is stored. Because that is a permanent rejection, the SDK drops the batch. |
 | `identify` without `customer_id` | 400 |
 | `conversion` without `revenue`, or a negative or non-numeric revenue | 400 |

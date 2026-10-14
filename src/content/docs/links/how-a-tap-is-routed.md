@@ -11,7 +11,7 @@ A link such as `https://acme.dectog.com/welcome` is served by the redirect engin
 
 | Request | Handled when |
 |---|---|
-| `https://{username}.dectog.com/{slug}` | Subdomain mode. Exactly one path segment; two or more return JSON `404 {"error":"Not found"}`. |
+| `https://{username}.dectog.com/{slug}` | Subdomain mode. Exactly one path segment; two or more return JSON `404 {"error":{"code":"not_found","message":"Not found"}}`. |
 | `{base}/r/{username}/{slug}` | Any host, any mode. |
 | `{base}/?user={username}/{slug}` | Any host except the dashboard host. |
 | `https://{username}.dectog.com/` | No slug: a known username is sent to the dashboard, an unknown one to `UNKNOWN_HOST_REDIRECT`. |
@@ -105,7 +105,7 @@ Desktop never redirects to the link's target automatically. The target only appe
 | 404 | "Link not found" / "This DecTog link does not exist." | Unknown slug, or unknown username when `UNKNOWN_HOST_REDIRECT` is unset |
 | 410 | "Link expired" / "This temporary link has expired and is no longer available." | Expired temporary link, until the daily purge removes it (after that: 404) |
 
-Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at `https://dectog.com/` and the footer "Check the link for typos, or ask whoever shared it for a new one." Two or more path segments on a tenant host return JSON `{"error":"Not found"}` instead.
+Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at `https://dectog.com/` and the footer "Check the link for typos, or ask whoever shared it for a new one." Two or more path segments on a tenant host return JSON `404 {"error":{"code":"not_found","message":"Not found"}}` instead.
 
 ## When the click is recorded
 
