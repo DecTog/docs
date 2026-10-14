@@ -12,13 +12,13 @@ This page lists the personal data a self-hosted DecTog handles, table by table, 
 Every request's address is read from `CF-Connecting-IP` (else the first `X-Forwarded-For` entry, else `0.0.0.0`).
 
 - **Hashed:** `sha256("<IP_SALT>:<address>")`. IPv6 addresses are cut to their /64 prefix before hashing, because privacy extensions rotate the interface id between the browser tap and the app's first launch; IPv4-mapped addresses are hashed as the plain IPv4, and addresses whose /64 prefix is all zeros (loopback) are hashed in full. The hash is the join key for fingerprint matching, the beacon, the `install_velocity_ip` and `click_storm_ip` rules, the per-IP rate limits and the Overview's "unique visitors". It is only as private as `IP_SALT`.
-- **Raw:** the plain address is also stored, in `clicks.ip_raw`, `app_installs.ip_raw` and `events.ip_raw`, until retention. It is shown in the dashboard (Customers detail, the Events feed) and returned by the admin API. Matching never uses it.
+- **Raw:** not stored by default. A deployment that sets `STORE_RAW_IP=1` also keeps the plain address in `clicks.ip_raw`, `app_installs.ip_raw` and `events.ip_raw` until retention, where the Customers detail page and the admin API show it. Matching, fraud rules and rate limits never use it. The hosted service leaves it off.
 
 | Table | Hashed | Raw | Until |
 |---|---|---|---|
-| `clicks` | `ip_hash` | `ip_raw` | both nulled at retention |
-| `app_installs` | `ip_hash` | `ip_raw` | both nulled at retention |
-| `events` | none | `ip_raw` | nulled at retention |
+| `clicks` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | both nulled at retention |
+| `app_installs` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | both nulled at retention |
+| `events` | none | `ip_raw`, only with `STORE_RAW_IP=1` | nulled at retention |
 | `app_opens` | `ip_hash` | none | nulled at retention |
 | `rate_limits` | in the key | none | rows deleted after the window passes |
 
@@ -74,7 +74,7 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 - `device_pings` rows (device id, app version, OS, time) are deleted at retention.
 - `app_opens` keep the slug and time forever; `device_id`, `install_id`, `click_id` and `ip_hash` are nulled at retention.
 
-The dashboard masks the email in the Customers list (`e****@domain`) but shows it in full on the detail page, together with the attributed click's raw IP, geo and network. See [Customers](/dashboard/customers/).
+The dashboard masks the email in the Customers list (`e****@domain`) but shows it in full on the detail page, together with the attributed click's geo and network, and its raw IP when the deployment stores one (`STORE_RAW_IP=1`). See [Customers](/dashboard/customers/).
 
 ## Data that leaves the server
 

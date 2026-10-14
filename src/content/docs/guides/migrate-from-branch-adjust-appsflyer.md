@@ -104,13 +104,4 @@ AppsFlyer separates routing (UDL) from attribution data (GCD). DecTog separates 
 
 ## What DecTog does not do
 
-- No SKAdNetwork or AdAttributionKit. No conversion values, no postbacks.
-- No ad-network integrations. DecTog does not talk to Meta Ads, Google Ads, TikTok Ads or any other network. The only ad-platform signals are the Apple Search Ads token (AdServices, resolved with Apple) and Meta's on-device install referrer from the Facebook and Instagram apps, which the SDK reads only when the app passes `fbAppId` in `DectogConfig` (the Facebook App ID field on the Apps page is stored but does not switch the read on), and which attributes to a DecTog link, not to an ad.
-- No cross-tenant or cross-app identity. Device IDs are vendor-scoped (`ANDROID_ID`, IDFV) and stay inside one account. The SDK never reads GAID or IDFA. There is no identity graph.
-- No reattribution and no multi-touch. An install is credited at most once, to the click that matched.
-- No uninstall tracking. Re-engagement is limited to counting app opens through links.
-- No cohort, LTV or retention reports. The Overview covers 7, 30 and 90-day windows; per-link numbers are lifetime. See [Overview](/dashboard/overview/).
-- No raw-data export API. `GET /api/v1/links` returns click counts; everything else is on the dashboard, whose admin API uses a cookie session.
-- No web SDK. Web clicks exist only through the link redirect.
-- No custom link domain on the hosted service. Self-host to serve links on your own domain.
-- No SDKs for other platforms. The SDK is Flutter only. See [Porting the SDK](/contributing/porting-the-sdk/).
+DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, no advertising identifiers, no re-attribution windows, no cohort or LTV reports yet, and an SDK for Flutter only. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).

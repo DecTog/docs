@@ -17,12 +17,12 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, webhook URL and secret, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |
-| `clicks` | One row per recorded tap or in-app open: link, device and browser, geo and ASN, hashed and raw IP, UTM, `link_params`, beacon screen profile, client hints, `origin` (`redirect`, `sdk`, `synthesized_referrer`) |
+| `clicks` | One row per recorded tap or in-app open: link, device and browser, geo and ASN, hashed IP (raw IP only with `STORE_RAW_IP=1`), UTM, `link_params`, beacon screen profile, client hints, `origin` (`redirect`, `sdk`, `synthesized_referrer`) |
 | `app_installs` | One row per install registration: device tier, referrer telemetry, the attribution verdict, fraud flags, shadow match, Apple Search Ads lifecycle, idempotency key |
 | `ad_identifiers` | Advertising id per install, isolated so it is never joined to the device tier |
 | `customers` | The tenant's own user identities from `identify` events: `customer_id`, name, email, phone, `first_install_id` |
-| `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP |
-| `device_pings` | One row per SDK init ping (device, app version, OS) for DAU and retention curves |
+| `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP only with `STORE_RAW_IP=1` |
+| `device_pings` | One row per SDK init ping (device, app version, OS), collected for DAU and retention read-outs that are not built yet; nothing reads the table today |
 | `app_opens` | Warm opens: a link opened an already-installed app (slug, click id, device, hashed IP) |
 | `rate_limits` | Fixed-window counters keyed by account id, `dev:<account>:<device>`, `ip:<account>:<hash>` or `webcollect:<hash>` |
 | `blog_categories` | Marketing-site blog categories (platform-wide, owner-managed) |

@@ -31,7 +31,7 @@ Records a click that happened inside the app: the app was already installed and 
 | `client_click_time` | string | no | ISO 8601, device clock, when the link reached the device. Dropped silently when unparseable; stored up to 64 characters. |
 | `launch_referrer` | string | no | The launching app's referrer (`Activity.getReferrer()` or `referrerURL`), up to 512 characters. |
 
-The body's `username` is ignored; the slug is always looked up in the caller's own account. The request's hashed IP, raw IP, country, region, city, ASN and User-Agent (first 512 characters) are stored on the row, which is marked `origin: "sdk"`.
+The body's `username` is ignored; the slug is always looked up in the caller's own account. The request's hashed IP (and its raw IP only when the deployment sets `STORE_RAW_IP=1`), country, region, city, ASN and User-Agent (first 512 characters) are stored on the row, which is marked `origin: "sdk"`.
 
 Response: always `200 {"success": true, "click_id": "<id>"}`.
 

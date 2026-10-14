@@ -34,7 +34,7 @@ Optional signals ride along when enabled: `meta_referrer` (with `fbAppId`), `cli
 With `collectDeviceData: false`:
 
 - none of the fields above is sent, with the install or with in-app clicks;
-- the device ping (`POST /api/v1/device-ping`, one row per app start for retention curves) is not sent;
+- the device ping (`POST /api/v1/device-ping`, one row per app start, kept for retention read-outs that are not built yet) is not sent;
 - event batches and app-open reports carry the `install_id` only, and `getAttributionData()` re-pulls by `install_id` instead of `device_id`;
 - reinstalls cannot be detected by device id, and the fingerprint has fewer signals to corroborate a candidate, so more installs come back as `routing` only or organic.
 

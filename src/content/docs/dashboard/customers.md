@@ -77,7 +77,7 @@ Subtitle: "The link click that led to this customer's install." Empty state: "No
 | **UTM** | The click's `utm_*` parameters, as `source=… · medium=… · campaign=…`. |
 | **Link params** | The tracking values stored on the click, as `label=… · campaign=… · adgroup=… · creative=… · tracker=…`, from the link's Tracking fields or `dec_*` overrides. |
 | **Deep link** | The `dec_deeplink` route the click carried. |
-| **Click IP** | The raw IP address of the click. |
+| **Click IP** | The raw IP address of the click, when the deployment stores raw IPs (`STORE_RAW_IP=1`); otherwise `—`. |
 | **Fraud flags** | Amber chips with the rule names the install tripped, such as `emulator` or `click_reuse`. |
 
 What each match method and confidence means is explained in [How attribution works](/start/how-attribution-works/).
@@ -90,7 +90,7 @@ Shown only when other customers share a device. Subtitle: "Other customers ident
 
 Subtitle: "Reported by the SDK at install." Shown when the customer has an install; empty values are hidden.
 
-**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report), **Device ID** and **Install ID**.
+**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report, when the deployment stores raw IPs with `STORE_RAW_IP=1`; otherwise `—`), **Device ID** and **Install ID**.
 
 Which of these the SDK sends depends on its data tier; see [Device data and privacy](/sdk/device-data-and-privacy/).
 
