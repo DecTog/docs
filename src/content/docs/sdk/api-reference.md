@@ -33,6 +33,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | Member | Signature | Endpoint |
 |---|---|---|
 | `createLink` | `Future<DectogLink> createLink({required String slug, String? target, Map<String, dynamic>? metadata, String? appId, String? iosDeepLinkPath, String? androidDeepLinkPath, String? redirectUrl, String? fallbackUrl, String? ogTitle, String? ogDescription, String? ogImageUrl, String? label, String? campaign, String? adgroup, String? creative})` | `POST /api/v1/links`, expects 201 |
+| `createReferralLink` | `Future<DectogLink> createReferralLink({required String customerId, String? campaign})` | `POST /api/v1/referral-links`; 201 the first time, 200 with the same link afterwards. Works with a plain SDK key. A new user who installs through it and signs up is recorded as the customer's referral. See [Referral programs](/guides/referral-programs/). |
 | `updateLink` | `Future<DectogLink> updateLink(String slug, {String? target, Map<String, dynamic>? metadata, String? iosDeepLinkPath, String? androidDeepLinkPath, String? redirectUrl, String? fallbackUrl, String? ogTitle, String? ogDescription, String? ogImageUrl, String? label, String? campaign, String? adgroup, String? creative})` | `PUT /api/v1/links/{slug}`. `null` keeps, `''` clears. |
 | `getLinks` | `Future<DectogLinkPage> getLinks({int? limit, String? cursor})` | `GET /api/v1/links`; one page, newest first. `DectogLinkPage` has `links`, `nextCursor` (pass it back as `cursor`) and `hasMore`. |
 | `getLink` | `Future<DectogLink> getLink(String slug)` | `GET /api/v1/links/{slug}` |
@@ -130,6 +131,7 @@ A permanent link as the API returns it. All fields are `final`; `DectogLink.from
 | `redirectUrl` | `String?` | Mobile destination when the app is not installed |
 | `fallbackUrl` | `String?` | Desktop destination |
 | `label`, `campaign`, `adgroup`, `creative` | `String?` | Tracking defaults for every click |
+| `referrerCustomerId` | `String?` | On a referral link, the customer it belongs to |
 
 ### DectogLinkPage
 

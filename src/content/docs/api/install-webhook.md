@@ -28,6 +28,8 @@ The signature covers the body bytes only. The timestamp header is **not** part o
 | `app.installed` | A first-launch report (`POST /api/v1/app-installs`) produced a verdict. Organic installs fire too. Replays (`"replayed": true`) do not. |
 | `app.install_updated` | A late claim upgraded the verdict (`"claim": "upgraded"`), or Apple Search Ads resolved with `attribution: true`. Claims that end `unchanged` or `rejected`, and Apple answering `attribution: false`, send nothing. |
 
+A referral link's app also receives `referral.converted` when a referred user signs up. Its payload is different and is described in [Referral programs](/guides/referral-programs/#3-reward-from-the-webhook).
+
 ## Payload
 
 ```json title="app.installed"
