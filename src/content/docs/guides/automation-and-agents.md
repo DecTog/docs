@@ -1,11 +1,11 @@
 ---
 title: Automation and agents
-description: Script the DecTog API with your account key (signed requests, bulk links, exports, temporary links in CI, QR codes) and point AI agents at SKILL.md and llms.txt.
+description: Connect an AI agent to DecTog's MCP server, script the API with your account key (signed requests, bulk links, exports, temporary links in CI, QR codes), and point agents at SKILL.md and llms.txt.
 sidebar:
   order: 3
 ---
 
-Everything the Flutter SDK does with links, a script can do too. This page shows working shell examples against the hosted API at `https://app.dectog.com` and lists the files that AI agents read.
+Everything the Flutter SDK does with links, a script or an AI agent can do too. This page covers the MCP server that agents connect to, working shell examples against the hosted API at `https://app.dectog.com`, and the files that AI agents read.
 
 ## What you need
 
@@ -18,6 +18,48 @@ Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only t
 :::note[Self-hosting]
 Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLIC_BASE_URL>/r/{username}/{slug}`. `SKILL.md` and `llms.txt` are served from your `WEB_URL`.
 :::
+
+## MCP server
+
+DecTog runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://app.dectog.com/mcp`. A self-hosted deployment serves it at `https://app.<your domain>/mcp`. Agents such as Claude Code, Claude Desktop, Cursor and VS Code connect to it and call DecTog tools directly, with no request signing.
+
+- **Transport:** Streamable HTTP. Every answer is plain JSON. There is no session and no event stream, so `GET /mcp` answers 405.
+- **Key:** send `Authorization: Bearer <account key>`. An SDK key also works, but only within its scopes and without the account tools marked below.
+- **Limits:** each MCP message counts once against the account's 3000 requests a minute. Each link or attribution tool then makes one API call, which counts again, exactly as the same call from a script would.
+
+Connect Claude Code:
+
+```bash
+claude mcp add --transport http dectog https://app.dectog.com/mcp \
+  --header "Authorization: Bearer $DECTOG_ACCOUNT_KEY"
+```
+
+Other clients take the same two values, the URL and the `Authorization` header, in their MCP settings.
+
+The DecTog plugin for Claude Code bundles the same server with four skills: links and the API, the Flutter SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
+
+```text
+/plugin install dectog --marketplace DecTog/dectog
+```
+
+| Tool | What it does |
+|---|---|
+| `list_links` | One page of links, newest first, with click counts. Takes `limit` (1 to 200) and the `cursor` from the previous page. |
+| `get_link` | One link by slug. |
+| `create_link` | One link. Takes the fields of [`POST /api/v1/links`](/api/links/). |
+| `create_links` | Up to 100 links in one call. Each succeeds or fails on its own; the result lists `created` and `errors`, with the index, slug and error code of each failure. |
+| `update_link` | Changes the given fields of a link. A missing field keeps its value; `null` or `""` clears it. |
+| `delete_link` | Deletes a link together with its clicks, attributed installs, events and opens. |
+| `create_temp_link` | A link that expires after `ttlSeconds`, 60 to 2,592,000, default 900. |
+| `resolve_link` | What a link points to, as the public resolve route answers it. |
+| `get_attribution` | The verdict of one install, by `device_id` or `install_id`. |
+| `overview` | The Overview page numbers for the last N days: clicks, visitors, installs, conversion, revenue, leads and opens with their change, plus campaigns, sources, countries, devices and fraud flags. Account key only. |
+| `attribution_quality` | Match sources and confidence per platform, referrer health, click-to-install latency and SDK versions. Account key only. |
+| `list_apps` | Your apps with their store and platform identifiers, without secrets. Account key only. |
+| `setup_status` | The [setup checklist](/dashboard/apps/) of one app, including the Apple and Google rules for the well-known files. Account key only. |
+| `get_flutter_snippet` | The `pubspec.yaml` line and the `initialize()` call, filled with one of your SDK keys and your base URL. Account key only. |
+
+The link and attribution tools call the matching `/api/v1` route with your key, so validation, scopes and rate limits are the same as for curl. A failed call comes back as a tool error whose text starts with the API's error code, for example `conflict: Slug already exists`, and carries the full API error body.
 
 ## Signing requests
 
@@ -227,4 +269,4 @@ One correction to make before you paste the iOS prompt: it suggests the wildcard
 - Treat 409 as "pick another slug or update the existing link". Do not retry the same slug.
 - Create returns 201 and delete returns 200 with a body. Scripts that expect 204 misreport.
 - Ask before deleting a link or regenerating the key. Both break things already in the wild: shared URLs and shipped app builds.
-- Use `/api/v1` with the key. The dashboard's `/api/admin` routes need a browser session.
+- Use the MCP server when the agent's client supports MCP, otherwise `/api/v1` with the key. The dashboard's `/api/admin` routes need a browser session.

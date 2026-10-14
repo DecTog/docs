@@ -164,6 +164,10 @@ export function dectogHeaders(apiKey, rawBody = "") {
 
 `GET /openapi.json` serves an OpenAPI 3.1 description of every route, generated from the same table the server's tests check against the routes it answers. Routes marked `x-internal` serve the dashboard and may change without notice. Point a client generator or an agent at it: `https://app.dectog.com/openapi.json` on the hosted service.
 
+## MCP
+
+`POST /mcp` is a Model Context Protocol server for AI agents, authenticated with the same Bearer keys and without request signing. It is described in [Automation and agents](/guides/automation-and-agents/#mcp-server), not in the OpenAPI document.
+
 ## SDK identity
 
 SDKs also send `x-dectog-sdk: <name>/<version>`, for example `flutter_dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
