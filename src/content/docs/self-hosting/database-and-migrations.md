@@ -41,6 +41,7 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `webhooks` | Webhook endpoints: URL, optional app, events, encrypted signing secret, failure count and why one turned off |
 | `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |
 | `export_jobs` | CSV exports past `EXPORT_STREAM_MAX_ROWS` rows: the query, progress, the R2 key and when the file goes |
+| `custom_domains` | Each account's custom link domain: the Cloudflare hostname id, the state, the DNS records to add, errors, the checks, the suspension and its end. The active one is also `users.custom_domain`. |
 
 There are no foreign-key constraints. Cascades (deleting a link, deleting an app, unlinking a category) are done in the API layer.
 
@@ -102,6 +103,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0049_webhooks` | `webhooks` and `webhook_deliveries`; copies each app's 0008 webhook into `webhooks`, then **drops** `apps.install_webhook_url` and `apps.install_webhook_secret`. Deploy the worker right after applying it: the previous worker still writes those columns when an app is saved. |
 | `0050_export_jobs` | `export_jobs`: CSV exports too large to stream, written to the optional `EXPORTS` R2 bucket |
 | `0051_click_cta` | `cta`, `cta_at` on `clicks`: the first button a visitor took on a link page |
+| `0052_custom_domains` | `custom_domains`, and `users.custom_domain` (unique when set): the account's active custom link domain |
 
 ### Commands
 

@@ -74,6 +74,7 @@ const DectogConfig({
   required String apiKey,
   String? baseUrl,
   String? linkRootDomain,
+  List<String> linkDomains = const [],
   bool enableDebugLogging = false,
   InstallReferrerProvider? installReferrerProvider,
   Duration installReferrerTimeout = const Duration(seconds: 5),
@@ -89,6 +90,7 @@ const DectogConfig({
 | `apiKey` | `String` | An SDK key (`dtg_pub_…`); also the HMAC key for request signing. |
 | `baseUrl` | `String?` | Self-hosted API base. `null` means `https://app.dectog.com`. |
 | `linkRootDomain` | `String?` | Root domain of tenant links. `null` means `dectog.com` when `baseUrl` is unset, else the host of `baseUrl`. |
+| `linkDomains` | `List<String>` | The account's custom link domains (`go.yourbrand.com`): `https://<domain>/<slug>` is a link of this key's account. The SDK also learns the active domain from the server (`DectogSdkConfig.linkHosts`); listing it here covers a link that opens the app before the first server answer. |
 | `enableDebugLogging` | `bool` | Print SDK logs. |
 | `installReferrerProvider` | `InstallReferrerProvider?` | Custom Play referrer source, Android only. |
 | `installReferrerTimeout` | `Duration` | First-launch wait for the Android referrer. |
@@ -351,7 +353,8 @@ At `initialize` the SDK reads the app's settings from the server (`GET /api/v1/s
 | `iosTapToStore` | `bool` | Whether the app uses iOS tap-to-store |
 | `iosAppScheme`, `androidAppScheme` | `String?` | The custom schemes registered in the dashboard |
 | `iosBundleId`, `androidPackage` | `String?` | The identifiers registered in the dashboard |
-| `linkHosts` | `List<String>` | The hosts the account's links live on |
+| `linkHosts` | `List<String>` | The hosts the account's links live on: the active custom domain first, then the default host |
+| `username` | `String?` | The account the key belongs to; a link on a custom domain is its |
 | `cacheSeconds` | `int` | How long the SDK keeps them |
 
 ### DectogDiagnostics

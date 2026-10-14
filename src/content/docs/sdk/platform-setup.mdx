@@ -43,7 +43,7 @@ Both association files are built for the whole account: every app with the requi
    </plist>
    ```
 
-   Replace `{username}` with your DecTog username (self-hosted: `applinks:{username}.{root}`). Use the explicit host, not a wildcard: for `applinks:*.dectog.com` iOS fetches the association file from the parent domain, and the apex serves none (it answers 400 because no username can be read from the host), so the wildcard form never verifies. Enable the Associated Domains capability on the App ID in your Apple Developer account.
+   Replace `{username}` with your DecTog username (self-hosted: `applinks:{username}.{root}`). Use the explicit host, not a wildcard: for `applinks:*.dectog.com` iOS fetches the association file from the parent domain, and the apex serves none (it answers 400 because no username can be read from the host), so the wildcard form never verifies. Enable the Associated Domains capability on the App ID in your Apple Developer account. With a [custom link domain](/links/custom-domains/), add `applinks:go.yourbrand.com` as a second entry: it serves the same file.
 
 3. Rebuild and reinstall the app. iOS downloads and verifies the association file at install or update time, so an already-installed app only picks it up after a reinstall or an update.
 
@@ -91,6 +91,8 @@ Every path on the domain is claimed (`/*`). The `webcredentials` block lists the
        <data android:scheme="https" android:host="{username}.dectog.com" />
    </intent-filter>
    ```
+
+   With a [custom link domain](/links/custom-domains/), add `<data android:scheme="https" android:host="go.yourbrand.com" />` to the same filter.
 
 3. Rebuild and reinstall. Android verifies the domain at install or update time. Check the result with:
 

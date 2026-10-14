@@ -9,7 +9,7 @@ The Worker has two cron triggers, declared identically at the top level and in `
 
 | Expression | Fires | Runs |
 |---|---|---|
-| `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups, webhook retries and unfinished CSV exports |
+| `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups, webhook retries, unfinished CSV exports and custom domain checks |
 | `17 3 * * *` | Daily at 03:17 UTC | The same, then the temporary-link purge, the deleted-link anonymization, the webhook delivery-log purge, the export-file purge, the exchange rates and, once the rollups are done, the retention sweep |
 
 The code branches on the expression: `7 * * * *` returns after the Apple Search Ads pass and the rollups; any other expression runs everything. The jobs run inside `waitUntil`, so a failure in one does not stop the others, except that the retention sweep waits for the rollup build. There is no job-level logging beyond console warnings.
@@ -51,6 +51,10 @@ What reads the rollups: the Overview's clicks, installs, opens, leads and revenu
 `resumeExportJobs` (`apps/worker/src/exports.ts`) writes up to three large CSV exports that the request which asked for them did not finish: queued ones, and ones whose run held them for 15 minutes without finishing. Each starts the file over, at most three attempts in all. Only with an `EXPORTS` bucket. See [Export raw data](/api/export/#larger-exports).
 
 The daily trigger also runs `purgeExportJobs`: a file is deleted from the bucket seven days after it was written (its job turns `expired`), and the job row a week after that.
+
+## Custom domains (both triggers)
+
+`sweepCustomDomains` (`apps/worker/src/customdomains.ts`) asks Cloudflare (and DNS, for a domain waiting for its CNAME) about the custom domains not checked for ten minutes while pending and for a day once active, and deletes the hostnames of removed or moved domains whose 7-day grace has ended, 50 of each per run. A domain that failed and was never removed gets the same grace a week later. Only when custom domains are configured. See [Custom domains](/self-hosting/custom-domains/).
 
 ## Webhook delivery log (daily)
 

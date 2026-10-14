@@ -63,9 +63,13 @@ Read-only facts about the deployment that serves your links.
 |---|---|
 | **URL mode** | **Wildcard subdomain** on the hosted service: links are `https://{username}.dectog.com/{slug}`. **Path-based (workers.dev / dev)** on deployments without a wildcard domain: links are `{base-url}/r/{username}/{slug}`. |
 | **Root domain** | The domain under which link hosts live: `dectog.com` on the hosted service. |
-| **Example link** | Your link URL for the slug `welcome`, in the mode above. |
+| **Example link** | Your link URL for the slug `welcome`, in the mode above, or on your custom domain once it is active. |
 
 Both forms are explained in [Concepts](/start/concepts/).
+
+## Custom domain
+
+Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. On a deployment without Cloudflare for SaaS the card says custom domains are not set up. The whole flow is in [Custom domains](/links/custom-domains/).
 
 ## Flutter SDK quickstart
 

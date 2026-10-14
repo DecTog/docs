@@ -44,6 +44,7 @@ Rules:
 | `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. With debug logging on, the SDK warns when it is given an account key. |
 | `baseUrl` | `String?` | `null` → `https://app.dectog.com` | API base URL. Set it only when self-hosting. Trailing slashes are stripped. |
 | `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). Set it when self-hosted links live on a different host than the API. |
+| `linkDomains` | `List<String>` | `[]` | Your [custom link domains](/links/custom-domains/), like `go.yourbrand.com`: `https://go.yourbrand.com/{slug}` is a link of your account. The SDK also learns the active domain from the server after its first answer; listing it covers a link that opens the app on its very first start. |
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
 | `installReferrerProvider` | `Future<String?> Function()?` | `null` | Replaces the built-in Android referrer readers with your own Play referrer string. |
 | `installReferrerTimeout` | `Duration` | 5 seconds | How long the first-launch registration waits for the Android install referrer. Android only. |

@@ -55,7 +55,9 @@ The server builds link URLs in one of two modes, set by `LINK_URL_MODE` and `ROO
 | `subdomain` | `https://{username}.{ROOT_DOMAIN}/{slug}` | Hosted service (`ROOT_DOMAIN=dectog.com`) and production self-hosts with a wildcard DNS record |
 | `path` | `{PUBLIC_BASE_URL}/r/{username}/{slug}` | Local development, `workers.dev` deployments. Forced whenever `ROOT_DOMAIN` starts with `localhost`, whatever the mode says. |
 
-Three request forms reach the redirect engine on any deployment: `/{slug}` on a tenant subdomain (exactly one path segment), `/r/{username}/{slug}` on any host, and `/?user={username}/{slug}` on any host except the dashboard host. The SDK recognizes all three when a link opens the app.
+An account with an active [custom domain](/links/custom-domains/) gets `https://{custom domain}/{slug}` in either mode; its subdomain or path URLs keep working.
+
+Three request forms reach the redirect engine on any deployment: `/{slug}` on a tenant subdomain or a custom domain (exactly one path segment), `/r/{username}/{slug}` on any host (on a custom domain only for its own account), and `/?user={username}/{slug}` on any host except the dashboard host and custom domains. The SDK recognizes all three when a link opens the app.
 
 When an app is opened through a custom scheme, the URL is `scheme://{username}/{slug}`, or `scheme://{path}` when the link (or a `dec_deeplink` parameter) sets a deep-link path for that platform. Either way the query ends with `dtg_l={username}/{slug}`, which names the link: the SDK reads the link from that tag, because a path such as `products/42` cannot be told apart from a username and slug by its shape.
 

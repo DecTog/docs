@@ -12,8 +12,9 @@ A link such as `https://acme.dectog.com/welcome` is served by the redirect engin
 | Request | Handled when |
 |---|---|
 | `https://{username}.dectog.com/{slug}` | Subdomain mode. Exactly one path segment; two or more return JSON `404 {"error":{"code":"not_found","message":"Not found"}}`. |
-| `{base}/r/{username}/{slug}` | Any host, any mode. |
-| `{base}/?user={username}/{slug}` | Any host except the dashboard host. |
+| `https://{custom domain}/{slug}` | The account's [custom domain](/links/custom-domains/) while it is ready, active, moved or within the 7 days after its removal. Its root goes to the app's Fallback URL. |
+| `{base}/r/{username}/{slug}` | Any host, any mode; on a custom domain only for the account it belongs to (another account's link is a 404). |
+| `{base}/?user={username}/{slug}` | Any host except the dashboard host and custom domains. |
 | `https://{username}.dectog.com/` | No slug: a known username is sent to the dashboard, an unknown one to `UNKNOWN_HOST_REDIRECT`. |
 
 ## Decision order
