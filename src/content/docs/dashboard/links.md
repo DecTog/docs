@@ -136,6 +136,8 @@ Under the card, **Which social preview should this link use?** offers:
 
 The card and the **App preview** line are built from the app currently selected in the **New link** form's App dropdown, or from your oldest app when nothing is selected there. The preview people actually see when they share the link is resolved by the server from the link, then the link's app, then a generic card; see [Social previews and QR](/links/social-previews-and-qr/).
 
+At the bottom of the drawer, **Check the preview on each platform** asks for the link as the crawlers of Facebook, X, LinkedIn, Slack, Discord, WhatsApp, iMessage and Telegram do and shows, per platform, the title, description and thumbnail it gets with **Looks right**, **{n} issues** or **No preview**, and each issue in a sentence: no image, an image host that refuses that crawler, an image too large for the platform, an image address that is a page. It checks the saved link, so save first. See [Check the preview on each platform](/links/social-previews-and-qr/#check-the-preview-on-each-platform).
+
 ### Routing
 
 Permanent links only.
