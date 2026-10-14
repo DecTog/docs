@@ -55,17 +55,17 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 | Store referrer | `install_referrer` (2048 characters), `referrer_store`, `referrer_status`, the click and install-begin timestamps | Play, Huawei, Samsung, Xiaomi or vivo referrer | forever. The string carries `dtg_click=<id>` and `dtg_l=<username>/<slug>`, plus whatever else the store put in it. |
 | Meta referrer | `meta_referrer` (512 characters), `meta_referrer_ts`, `meta_referrer_is_ct` | Meta's on-device provider, only when the app has a Facebook App ID | `meta_referrer` at retention; the rest forever |
 | Copied link | `clipboard_slug` | the pasteboard; only the slug and click id are extracted, the clipboard text itself is never stored | forever |
-| Apple Search Ads | `asa_token`; `asa_attribution` (campaign, ad group, keyword and ad ids, dates, country) | AdServices, only with `collectAppleSearchAdsToken: true` | the token is nulled as soon as the status settles, or at retention; the record forever |
+| Apple Search Ads | `asa_token`; `asa_attribution` (campaign, ad group, keyword and ad ids, dates, country) | AdServices, only with `DectogCollection.appleSearchAdsToken` | the token is nulled as soon as the status settles, or at retention; the record forever |
 | Verdict and fraud | `matched*`, `match_*`, `referrer_source`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `fraud_flags` | the Worker | forever |
 | Free-form | `metadata` | whatever the app put in the request's `metadata` | forever |
 
 ### Advertising identifiers
 
-`POST /api/v1/app-installs` accepts `ad_id` and `ad_tracking_limited` and stores them in `ad_identifiers`, keyed by install id. No query joins that table to `app_installs` or to `device_id`; it is written once and deleted by the sweep. flutter_dectog 1.0.x never sends these fields: it reads neither the GAID nor the IDFA and has no advertising-id dependency. The table only fills if you write your own client that sends them. See [Device data and privacy](/sdk/device-data-and-privacy/).
+`POST /api/v1/app-installs` accepts `ad_id` and `ad_tracking_limited` and stores them in `ad_identifiers`, keyed by install id. No query joins that table to `app_installs` or to `device_id`; it is written once and deleted by the sweep. flutter_dectog itself reads neither the GAID nor the IDFA; these fields are only sent by apps that add the `flutter_dectog_adid` package, and only when the user allowed tracking (otherwise `ad_tracking_limited` is `true` and no id is sent). See [Device data and privacy](/sdk/device-data-and-privacy/).
 
 ### What the SDK sends per tier
 
-`DectogConfig.collectDeviceData` is `true` by default and `persistDeviceId` is `true` by default. With the device tier on, every install registration and in-app click carries the device id, hardware, screen and network fields above. With it off, those fields are absent: the server then cannot detect reinstalls by device, the fingerprint has no model or screen signal, and `GET /api/v1/attribution` works by `install_id` only. The OS, locale, app and referrer fields are sent regardless. The iOS pasteboard read is on by default (`readClipboardOnInstall` null means iOS on, Android off) and triggers the system paste notice on iOS 16 and later; the Apple Search Ads token is off by default.
+The device tier (`DectogCollection.deviceTier`) is on by default and `persistDeviceId` is `true` by default. With the device tier on, every install registration and in-app click carries the device id, hardware, screen and network fields above. With it off, those fields are absent: the server then cannot detect reinstalls by device, the fingerprint has no model or screen signal, and `GET /api/v1/attribution` works by `install_id` only. The OS, locale, app and referrer fields are sent regardless. The iOS pasteboard read is on by default (`DectogCollection.pasteboard`; iOS on, Android off unless the dashboard or `collect` says otherwise) and triggers the system paste notice on iOS 16 and later; the Apple Search Ads token is off by default.
 
 ## Customers and events
 
@@ -124,8 +124,9 @@ A self-hosted DecTog makes you the controller of this data. Items a policy and t
 1. **Link taps:** IP address (hashed and, until retention, raw), country, region and city, ASN, User-Agent and client hints, language, referrer origin, UTM parameters; purpose: routing, install attribution, fraud detection, analytics.
 2. **App installs and opens:** the vendor-scoped device identifier (IDFV persisted in the Keychain, or `ANDROID_ID`), hardware model and manufacturer, OS and version, screen metrics, connectivity and carrier codes (Android), app version and install dates, IP address; purpose: install attribution, reinstall detection, analytics. Declare the persisted identifier in the App Store privacy answers and the Play Data safety form.
 3. **Store install referrers** (Play, Huawei, Samsung, Xiaomi, vivo) and, if you set a Facebook App ID, Meta's on-device install referrer.
-4. **Pasteboard access on iOS** on first launch (system notice on iOS 16 and later), if you leave `readClipboardOnInstall` at its default.
-5. **Apple Search Ads attribution token**, if you enable `collectAppleSearchAdsToken`.
+4. **Pasteboard access on iOS** on first launch (system notice on iOS 16 and later), if you leave the pasteboard read at its default.
+5. **Apple Search Ads attribution token**, if `collect` names `appleSearchAdsToken`.
+6. **Advertising identifier** (IDFA after ATT, GAID), only with the `flutter_dectog_adid` package.
 6. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
 7. **Retention:** personal columns anonymized after `RETENTION_DAYS` (400 by default), screen profiles after 30 days, Apple tokens as soon as resolved; aggregate rows kept.
 8. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.

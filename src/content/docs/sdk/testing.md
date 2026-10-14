@@ -92,7 +92,7 @@ Things that look like failures and are not:
 - [ ] `applinks:{username}.dectog.com` in every entitlements file your build configurations use; an `autoVerify` intent filter for `{username}.dectog.com` in the manifest; `adb shell pm get-app-links <package>` reports `verified`.
 - [ ] Custom scheme registered on both platforms if you saved one in the app record.
 - [ ] SDK key (`dtg_pub_…`, not the account key) injected at build time, not committed. `baseUrl` and `linkRootDomain` set only when self-hosting.
-- [ ] `collectDeviceData`, `readClipboardOnInstall`, `persistDeviceId` and `collectAppleSearchAdsToken` chosen deliberately, and the privacy policy, Play Data safety form and App Store privacy labels updated for what you send. See [Device data and privacy](/sdk/device-data-and-privacy/).
+- [ ] `collect`, `advertisingIdProvider` and `persistDeviceId` chosen deliberately, and the privacy policy, Play Data safety form and App Store privacy labels updated for what you send. See [Device data and privacy](/sdk/device-data-and-privacy/).
 - [ ] If you ship through the Galaxy Store or GetApps, their referrer libraries added to the app module. See [Installation](/sdk/installation/).
 - [ ] `identify` called after signup and login, `trackConversion` on purchases, so leads and revenue reach the dashboard.
 - [ ] `onAppInstalled` handled as a stream that can emit more than once; routing taken from `routing` or `deepLink`, credit only from `matched`.

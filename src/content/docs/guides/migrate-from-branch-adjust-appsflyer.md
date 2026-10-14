@@ -42,7 +42,7 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 | `$ios_url`, `$android_url` | `dec_redirect_ios` and `dec_redirect_android` per tap; the link's `redirect_url` for both platforms |
 | `$og_title`, `$og_description`, `$og_image_url` | `og_title`, `og_description`, `og_image_url` on the link, with the app's values as defaults |
 | `$web_only`, `$uri_redirect_mode` | No equivalent |
-| NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`readClipboardOnInstall`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `DectogPasteButton` renders `UIPasteControl` for late pastes. |
+| NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`DectogCollection.pasteboard`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `DectogPasteButton` renders `UIPasteControl` for late pastes. |
 | Install referrer readers (Play, Huawei, Samsung, Xiaomi) | Built in, with retries. Play, Huawei and vivo need no extra library. Samsung and Xiaomi activate when the host app adds their libraries. See [Deterministic attribution](/sdk/deterministic-attribution/). |
 | Reinstall event | `isReinstall: true`, `installState: 'reinstall'`. A reinstall goes through the ladder and the fingerprint like a first install; the dashboard leaves it out of the Installs KPI and the per-link counts. |
 | Journeys, Universal Email, Deepviews, Data Feeds, Data Export API | No equivalent |
@@ -63,7 +63,7 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | LinkMe | The pasteboard read plus the iOS tap-to-store page |
 | Install referrer with retries | Up to three connection attempts, 3 seconds apart, for transient Play errors. The first-launch registration waits up to `installReferrerTimeout` (default 5 seconds); a referrer that arrives later is sent as a late claim and `onAppInstalled` emits again. |
 | `retry_in` | The SDK honors `Retry-After`: up to 10 seconds in-process, longer waits defer to the next launch |
-| Apple Search Ads through AdServices | `collectAppleSearchAdsToken: true` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
+| Apple Search Ads through AdServices | `DectogCollection.appleSearchAdsToken` in `collect` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
 | Server callbacks | The install webhook |
 | Reattribution | No equivalent. A late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. |
 | SKAdNetwork, ad-network integrations | None |

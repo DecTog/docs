@@ -50,7 +50,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `onAppInstalled` | `Stream<DectogAppInstallResponse> get onAppInstalled` | Replays the latest verdict to late subscribers. Emits the first-launch verdict and every claim that upgraded it. |
 | `currentAppInstall` | `DectogAppInstallResponse? get currentAppInstall` | The latest emitted verdict, or `null`. |
 | `getAttributionData` | `Future<DectogAppInstallResponse?> getAttributionData()` | The cached verdict, else `GET /api/v1/attribution?device_id=` (device tier on) or `?install_id=`. Organic installs come back with `matched: false`; `null` when the server knows no install for this device, or when neither id is available. |
-| `willShowPasteboardPrompt` | `Future<bool> willShowPasteboardPrompt({bool? readClipboardOnInstall})` | Whether this launch's pasteboard read would show the iOS 16 alert. Callable before `initialize`. Always `false` on Android. |
+| `willShowPasteboardPrompt` | `Future<bool> willShowPasteboardPrompt({Set<DectogCollection>? collect})` | Whether this launch's pasteboard read would show the iOS 16 alert. Callable before `initialize`; `collect` stands in for the config's until then. Always `false` on Android. |
 
 ### Events
 
@@ -77,12 +77,10 @@ const DectogConfig({
   bool enableDebugLogging = false,
   InstallReferrerProvider? installReferrerProvider,
   Duration installReferrerTimeout = const Duration(seconds: 5),
-  bool? oemStoreReferrers,
-  bool collectDeviceData = true,
-  bool? readClipboardOnInstall,
+  Set<DectogCollection>? collect,
+  AdvertisingIdProvider? advertisingIdProvider,
   String? fbAppId,
   bool persistDeviceId = true,
-  bool collectAppleSearchAdsToken = false,
 })
 ```
 
@@ -94,21 +92,40 @@ const DectogConfig({
 | `enableDebugLogging` | `bool` | Print SDK logs. |
 | `installReferrerProvider` | `InstallReferrerProvider?` | Custom Play referrer source, Android only. |
 | `installReferrerTimeout` | `Duration` | First-launch wait for the Android referrer. |
-| `oemStoreReferrers` | `bool?` | Read Huawei, Samsung, Xiaomi and vivo referrers too. `null` takes the app's setting from the dashboard, on unless turned off there. |
-| `collectDeviceData` | `bool` | Send the device, hardware, screen and network tier. |
-| `readClipboardOnInstall` | `bool?` | Pasteboard read at first launch; `null` takes the app's dashboard setting, else iOS on, Android off. |
+| `collect` | `Set<DectogCollection>?` | What this build collects. `null`: the device tier, the pasteboard and OEM referrers as set on the dashboard (else the pasteboard on iOS only, the OEM referrers on), no Apple Search Ads token, the ad id when `advertisingIdProvider` is set. A set is exact: what it leaves out is never collected, whatever the dashboard says. See [Collection](#collection). |
+| `advertisingIdProvider` | `AdvertisingIdProvider?` | Reads the IDFA or GAID; pass `DectogAdId.provider` from `flutter_dectog_adid`. The core package never reads it. |
 | `fbAppId` | `String?` | Enables Meta's on-device referrer on Android; `null` takes the Facebook App ID saved in the dashboard. |
 | `persistDeviceId` | `bool` | Keep the first IDFV in the iOS Keychain. |
-| `collectAppleSearchAdsToken` | `bool` | Read the AdServices token on iOS 14.3 and newer. |
 | `defaultBaseUrl` | `static const String` | `'https://app.dectog.com'` |
 | `defaultLinkRootDomain` | `static const String` | `'dectog.com'` |
 | `effectiveBaseUrl` | `String get` | `baseUrl` with trailing slashes removed, or the default. |
 | `effectiveLinkRootDomain` | `String? get` | `linkRootDomain` with trailing dots removed; `dectog.com` when both are unset; `null` (use the API host) when only `baseUrl` is set. |
+| `collectsDeviceTier` | `bool get` | The device tier is collected: `collect` is `null` or names `deviceTier`. |
+| `collectsAppleSearchAdsToken` | `bool get` | `collect` names `appleSearchAdsToken`. |
+| `collectsAdId` | `bool get` | `advertisingIdProvider` is set and `collect` is `null` or names `adId`. |
+| `pasteboardSetting` | `bool? get` | The pasteboard read as `collect` sets it; `null` defers to the dashboard. |
+| `oemReferrersSetting` | `bool? get` | The OEM referrers as `collect` sets them; `null` defers to the dashboard. |
 | `resolveReadClipboard` | `static bool resolveReadClipboard(bool? value, {required bool isIOS})` | `value ?? isIOS`. |
-| `readClipboardFor` | `bool readClipboardFor({required bool isIOS})` | The read decision for this config on the given platform. |
+| `readClipboardFor` | `bool readClipboardFor({required bool isIOS})` | The read decision for this config alone (no dashboard) on the given platform. |
 | `toString` | | Masks the key to its first 8 characters. |
 
 `typedef InstallReferrerProvider = Future<String?> Function();` returns the raw Play referrer string, or `null` when unavailable.
+
+### Collection
+
+`enum DectogCollection` names what the SDK may collect. Each value and the store disclosures it triggers:
+
+| Value | What it sends | Apple privacy (App Privacy answers) | Google Play Data safety |
+|---|---|---|---|
+| `deviceTier` | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, connectivity, carrier; the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
+| `pasteboard` | A copied DecTog link that names a click, read once at first launch | None (no required-reason API); iOS 16+ shows the paste alert | None; Android 12+ shows the clipboard notice |
+| `oemReferrers` | The Huawei, Samsung, Xiaomi and vivo store referrers (Android) | Not applicable | None of its own: the store's referrer for this install |
+| `appleSearchAdsToken` | The AdServices attribution token (iOS 14.3+); no IDFA, no prompt | Advertising Data (developer advertising) | Not applicable |
+| `adId` | The IDFA after ATT, or the GAID, from `advertisingIdProvider` | Device ID used for tracking; the ATT prompt | Advertising ID; the `AD_ID` permission |
+
+`class DectogAdvertisingId` is an id as the provider reads it: `id` (`String?`, `null` when limited) and `limited` (`bool`, default `false`: the user limited ad tracking). A limited id is never sent; the install carries `ad_tracking_limited: true` instead.
+
+`typedef AdvertisingIdProvider = Future<DectogAdvertisingId?> Function();` reads the id; `null` when the platform has none.
 
 ## Link models
 

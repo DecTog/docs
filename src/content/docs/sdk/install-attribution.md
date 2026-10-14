@@ -122,4 +122,4 @@ The SDK keeps the install id of its verdict. If the server no longer knows it, b
 
 ## Getting the verdict later
 
-`getAttributionData()` returns the cached verdict when this process registered the install, otherwise it re-pulls `GET /api/v1/attribution` by `device_id` (when `collectDeviceData` is on) or by the persisted `install_id`. An organic install comes back as a verdict with `matched: false`; `null` means the server knows no install for this device at all. Re-pulled verdicts also carry `lastOpen`, the latest link that opened the installed app.
+`getAttributionData()` returns the cached verdict when this process registered the install, otherwise it re-pulls `GET /api/v1/attribution` by `device_id` (with the device tier) or by the persisted `install_id`. An organic install comes back as a verdict with `matched: false`; `null` means the server knows no install for this device at all. Re-pulled verdicts also carry `lastOpen`, the latest link that opened the installed app.

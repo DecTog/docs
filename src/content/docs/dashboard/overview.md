@@ -101,7 +101,7 @@ Empty state: "No events yet — call `identify` / `trackConversion` in the SDK."
 
 The top 8 device models among installs in the window that reported a model, as `{model} · {manufacturer}` with an install count. The count includes reinstalls; when some of them are reinstalls the row adds `(+{n} re)`.
 
-Empty state: "No device data yet — enable `collectDeviceData` in the SDK." See [Device data and privacy](/sdk/device-data-and-privacy/).
+Empty state: "No device data yet — enable the device tier in the SDK (`DectogCollection.deviceTier`)." See [Device data and privacy](/sdk/device-data-and-privacy/).
 
 ### Carriers (MCC/MNC)
 

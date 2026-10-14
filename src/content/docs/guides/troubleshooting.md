@@ -47,7 +47,7 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 ### The fingerprint found nothing
 
 - Candidates are web clicks from an iOS or Android user agent with the same hashed IP and the same OS family as the install that no other install has claimed. Clicks the SDK logged from inside the app and desktop clicks are never candidates.
-- The window is 24 hours only when both the click and the install carry a device model and the install is not on cellular. Everything else gets 2 hours, or the low-entropy window of the install's own app (1 to 720 hours), never more than the wide window. With `collectDeviceData: false` the install carries no model or screen data and only ever gets the short window.
+- The window is 24 hours only when both the click and the install carry a device model and the install is not on cellular. Everything else gets 2 hours, or the low-entropy window of the install's own app (1 to 720 hours), never more than the wide window. Without the device tier the install carries no model or screen data and only ever gets the short window.
 - `medium` confidence returns a `routing` candidate but no credit. `low` returns nothing. See [How attribution works](/start/how-attribution-works/).
 - One install per click. A click another install already consumed moves the ladder on; `click_reuse` is flagged only when nothing later matches.
 - App updates (`install_state: update`) never run the fingerprint; the panel's "kept out of matching" line counts them. Reinstalls (`is_reinstall`) run the full ladder and the fingerprint. They are left out of the Installs KPI and the per-link counts, not out of matching, so a reinstall can hold a click that the install you are looking for needed.

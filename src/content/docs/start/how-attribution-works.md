@@ -25,10 +25,10 @@ If the app is already installed and the OS opens it directly, there is no instal
 On the first launch the SDK registers the install once (an idempotent `install_attempt_id` makes retries safe) with every deterministic signal it can read:
 
 - the Google Play install referrer, or the Huawei, Samsung, Xiaomi or vivo one, waiting at most 5 seconds (`installReferrerTimeout`);
-- the pasteboard, on iOS by default (`readClipboardOnInstall`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
+- the pasteboard, on iOS by default (`DectogCollection.pasteboard`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
 - Meta's on-device install referrer on Android, when `DectogConfig.fbAppId` is set;
-- the device tier (model, OS, language, screen, connectivity, carrier) when `collectDeviceData` is on, which the fingerprint needs;
-- the Apple Search Ads token when `collectAppleSearchAdsToken` is on.
+- the device tier (model, OS, language, screen, connectivity, carrier), on by default, which the fingerprint needs;
+- the Apple Search Ads token when `collect` names `appleSearchAdsToken`.
 
 A signal that arrives later, in the same process or on a later launch, is sent as a claim. See [Late claims](#late-claims) below.
 
@@ -118,7 +118,7 @@ With **Strict fraud mode** off (the default) attribution stands and the flags ar
 
 ## Apple Search Ads
 
-Apple Search Ads is a separate signal and never changes `matched`. When `collectAppleSearchAdsToken` is on, the SDK sends Apple's AdServices token with the install (or with a later claim). The server exchanges it with Apple: three attempts 5 seconds apart during the request, then one attempt per cron run, until the token's 24-hour lifetime ends. The verdict's `apple_search_ads` object reports the status:
+Apple Search Ads is a separate signal and never changes `matched`. When `collect` names `appleSearchAdsToken`, the SDK sends Apple's AdServices token with the install (or with a later claim). The server exchanges it with Apple: three attempts 5 seconds apart during the request, then one attempt per cron run, until the token's 24-hour lifetime ends. The verdict's `apple_search_ads` object reports the status:
 
 | Status | Meaning |
 |---|---|

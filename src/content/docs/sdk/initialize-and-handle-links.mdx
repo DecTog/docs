@@ -47,12 +47,10 @@ Rules:
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
 | `installReferrerProvider` | `Future<String?> Function()?` | `null` | Replaces the built-in Android referrer readers with your own Play referrer string. |
 | `installReferrerTimeout` | `Duration` | 5 seconds | How long the first-launch registration waits for the Android install referrer. Android only. |
-| `oemStoreReferrers` | `bool?` | `null` → the app's dashboard setting, on unless turned off | Also read the Huawei AppGallery, Samsung Galaxy Store, Xiaomi GetApps and vivo referrers. Android only. |
-| `collectDeviceData` | `bool` | `true` | Send the device tier: device id, hardware, screen, network and carrier. |
-| `readClipboardOnInstall` | `bool?` | `null` → the app's dashboard setting, else on for iOS, off for Android | Read the pasteboard once at first launch for a copied DecTog link. |
+| `collect` | `Set<DectogCollection>?` | `null` → the device tier on; the pasteboard (iOS) and the OEM referrers as the dashboard sets them; no Apple Search Ads token; the advertising id when a provider is set | What this build collects: `deviceTier`, `pasteboard`, `oemReferrers`, `appleSearchAdsToken`, `adId`. A set is exact. See [Device data and privacy](/sdk/device-data-and-privacy/#choosing-what-to-collect). |
+| `advertisingIdProvider` | `Future<DectogAdvertisingId?> Function()?` | `null` | Reads the IDFA or GAID; pass `DectogAdId.provider` from `flutter_dectog_adid`. |
 | `fbAppId` | `String?` | `null` → the Facebook App ID saved in the dashboard | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
 | `persistDeviceId` | `bool` | `true` | Keep the first iOS IDFV in the Keychain so the device id survives reinstall. |
-| `collectAppleSearchAdsToken` | `bool` | `false` | Read the AdServices attribution token on iOS 14.3 and newer. |
 
 The config also exposes `DectogConfig.defaultBaseUrl` (`https://app.dectog.com`), `DectogConfig.defaultLinkRootDomain` (`dectog.com`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
 
@@ -152,7 +150,7 @@ OAuth and social-login callbacks that open the app through `app_links` are neith
 
 For every recognized link the SDK sends, without blocking your handler:
 
-- `POST /api/v1/clicks` with the slug, `is_mobile_app: true`, platform, language, `client_click_time` (when the URL reached the device), the opened URL's `utm_*` and `dec_*` values, the device id and model when `collectDeviceData` is on, and on Android the launching package (`launch_referrer`). When the URL carries `dtg_click` from an `intent://` bounce, the server converts the existing web click row (if it is less than 24 hours old) instead of inserting a second one.
+- `POST /api/v1/clicks` with the slug, `is_mobile_app: true`, platform, language, `client_click_time` (when the URL reached the device), the opened URL's `utm_*` and `dec_*` values, the device id and model with the device tier, and on Android the launching package (`launch_referrer`). When the URL carries `dtg_click` from an `intent://` bounce, the server converts the existing web click row (if it is less than 24 hours old) instead of inserting a second one.
 - `POST /api/v1/app-opens`, which feeds the per-link Opens count and `lastOpen` on attribution re-pulls. Skipped when the user opted out.
 
 Neither call is retried, and a failure never affects the emitted click.

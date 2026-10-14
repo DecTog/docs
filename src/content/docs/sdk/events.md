@@ -74,7 +74,7 @@ await dectog.logout();  // flush, then forget the customer id
 
 Events queued by a previous launch are sent shortly after `initialize()`. `dispose()` makes a final flush attempt and keeps whatever did not go out for the next launch.
 
-Each queued event carries a `client_timestamp` (device clock, ISO 8601), a `client_event_id` (a UUID stamped when it is queued and stored with it) and, when known, the persisted `customer_id`. A batch resent after a lost response is byte-identical, and the server stores each `client_event_id` once, so a retry never counts a purchase twice. Each batch carries the `install_id` from the first-launch verdict and, with `collectDeviceData` on, the `device_id`.
+Each queued event carries a `client_timestamp` (device clock, ISO 8601), a `client_event_id` (a UUID stamped when it is queued and stored with it) and, when known, the persisted `customer_id`. A batch resent after a lost response is byte-identical, and the server stores each `client_event_id` once, so a retry never counts a purchase twice. Each batch carries the `install_id` from the first-launch verdict and, with the device tier, the `device_id`.
 
 ## Server limits
 

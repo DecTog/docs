@@ -62,7 +62,7 @@ The iOS side of the plugin is a Swift package in `ios/flutter_dectog` (`Package.
 
 What the package links and bundles:
 
-- **AdServices** is linked for the Apple Search Ads attribution token (`linkedFramework` in Swift Package Manager, `weak_frameworks` in CocoaPods). The Swift code guards it with `canImport` and `#available(iOS 14.3, *)` and returns nothing on the simulator. It is only used when you turn on `collectAppleSearchAdsToken`.
+- **AdServices** is linked for the Apple Search Ads attribution token (`linkedFramework` in Swift Package Manager, `weak_frameworks` in CocoaPods). The Swift code guards it with `canImport` and `#available(iOS 14.3, *)` and returns nothing on the simulator. It is only used when `collect` names `appleSearchAdsToken`. The advertising id is a separate package, `flutter_dectog_adid`; see [Device data and privacy](/sdk/device-data-and-privacy/#the-advertising-identifier).
 - **`PrivacyInfo.xcprivacy`**, the Apple privacy manifest, is processed as a package resource (Swift Package Manager) or shipped in the `flutter_dectog_privacy` resource bundle (CocoaPods). See [Device data and privacy](/sdk/device-data-and-privacy/) for its contents.
 
 There are no `Info.plist` or `AppDelegate` changes for the SDK itself. Universal Links and custom schemes are covered in [Platform setup](/sdk/platform-setup/).
