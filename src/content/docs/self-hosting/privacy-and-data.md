@@ -76,6 +76,10 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 
 The dashboard masks the email in the Customers list (`e****@domain`) but shows it in full on the detail page, together with the attributed click's geo and network, and its raw IP when the deployment stores one (`STORE_RAW_IP=1`). See [Customers](/dashboard/customers/).
 
+## Rejected requests
+
+When a `/api/v1` call is refused as malformed, the server stores the account, the route, the error code and message, the SDK build, and the SHA-256 and size of the body, never the body. The rows are deleted after 30 days.
+
 ## Data that leaves the server
 
 - **Install webhook:** each delivery to your endpoint includes `device_id`, `device_model`, `device_manufacturer`, OS, connectivity, carrier codes, `ip_hash`, the matched link and click params, fraud flags and the Apple Search Ads record. The URL and secret are stored in plain text on the app and returned by `GET /api/admin/apps`. See [Install webhook](/api/install-webhook/).

@@ -54,6 +54,7 @@ Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currenc
 |---|---|---|---|
 | `ad_identifiers` | DELETE rows | `created_at < cutoff` | whole row |
 | `device_pings` | DELETE rows | `created_at < cutoff` | whole row |
+| `rejected_requests` | DELETE rows | `created_at` older than 30 days, whatever the retention setting | whole row |
 | `events` | SET NULL | `created_at < cutoff` | `device_id`, `customer_id`, `metadata`, `ip_raw` |
 | `customers` | SET NULL | `updated_at < cutoff` (last identify, not creation) | `name`, `email`, `phone`, `first_install_id` |
 | `app_installs` | SET NULL | `created_at < cutoff` | `device_id`, `device_model`, `device_manufacturer`, `device_kind`, `cpu_type`, `os_build`, `screen_width`, `screen_height`, `screen_density`, `connectivity_type`, `carrier_mcc`, `carrier_mnc`, `ip_raw`, `ip_hash`, `web_user_agent`, `meta_referrer`, `asa_token` |
