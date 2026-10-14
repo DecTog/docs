@@ -40,7 +40,7 @@ A win sets `match_source` to `referrer` (store and Meta) or `clipboard`, `referr
 
 ### 2. The scored fingerprint
 
-Runs when the ladder found nothing, and also (as a shadow, see below) when it did. It is skipped in exactly three cases (`api_installs.ts`, `canFingerprint`): the install has no IP hash, `install_state` is `update` (an existing user updating into an SDK build must never take a click from the pool), or the ladder ended in `click_reuse`.
+Runs when the ladder found nothing, and also (as a shadow, see below) when it did. It is skipped in exactly four cases (`api_installs.ts`, `canFingerprint`): the install has no IP hash, `install_state` is `update` (an existing user updating into an SDK build must never take a click from the pool), the ladder ended in `click_reuse`, or the install's own app has `probabilistic_match = 0` (P2.15; then not even the shadow runs).
 
 Reinstalls are not one of those cases. An install with `install_state: 'reinstall'`, or one the server classifies as a reinstall because the same tenant already has a non-reinstall install with the same `device_id`, runs the full ladder and the fingerprint like a fresh install and can be credited. It is stored with `is_reinstall = 1`, which only keeps it out of the dashboard's Installs KPI, the per-link install counts and the other `is_reinstall = 0` analytics queries. App updates never fingerprint; reinstalls are matched but counted separately.
 

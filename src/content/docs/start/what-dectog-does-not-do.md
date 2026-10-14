@@ -21,7 +21,7 @@ DecTog tries deterministic signals first: the store install referrer on Android,
 - **It can be wrong.** Two phones of the same model on one Wi-Fi network look alike. DecTog credits a probabilistic match only at high confidence and credits nobody on a tie, but a confident match is still a guess, not proof.
 - **It is time-bound.** Candidates are clicks from the last 24 hours when the click carried a device model, and the last 2 hours otherwise.
 - **Apple's rules.** Apple's user-privacy rules for developers prohibit fingerprinting, meaning deriving data from a device to identify it, whatever the user consented to. DecTog's match uses a salted IP hash and coarse device attributes inside one account, never a cross-app identifier, but whether a probabilistic match is acceptable for your app is your call, and the App Store review risk is yours. On iOS the pasteboard read, the paste button and Apple Search Ads are the deterministic paths; prefer them.
-- **There is no switch to turn the probabilistic match off yet.** Strict fraud mode refuses credit to installs that trip a fraud rule, not to probabilistic matches. A per-app switch is on the roadmap.
+- **The probabilistic match can be turned off per app.** On the Apps page, Advanced, **Probabilistic match** off means the app's installs are matched by deterministic signals only (store referrer, copied link, Meta referrer) and the comparison never runs, not even as a shadow. Strict fraud mode is a different switch: it refuses credit to installs that trip a fraud rule.
 
 ## Attribution model
 
