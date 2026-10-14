@@ -127,7 +127,7 @@ The top 10 countries by clicks in the window, shown as a flag plus the two-lette
 
 ## Breakdown
 
-Below the charts, **Breakdown** puts every metric side by side for one dimension: clicks, installs, conversion, opens, leads and revenue, per link, campaign, country, platform, OS, language, referrer, UTM value, app version, match source or page button (the button a visitor took on a link page) (the **By** menu). It covers the range selector's window, cut into days in your browser's time zone, and loads on its own rather than on the 15-second refresh.
+Below the charts, **Breakdown** puts every metric side by side for one dimension: clicks, installs, conversion, opens, leads and revenue, per link, campaign, country, platform, OS, language, referrer, UTM value, app version, match source, page button (the button a visitor took on a link page) or event source (the app, the website through `dectog.js`, or a store) (the **By** menu). It covers the range selector's window, cut into days in your browser's time zone, and loads on its own rather than on the 15-second refresh.
 
 - Click a value to keep only it. A chip appears above the table, "Country is GB"; click another value to add it to the chip.
 - Hover a row and click **−** to leave that value out instead: "Country is not US". A chip keeps values or leaves them out, not both; picking the other way for the same dimension replaces it.

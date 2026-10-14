@@ -29,7 +29,7 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `blog_posts` | Blog posts: Tiptap HTML plus optional block JSON, published flag and dates |
 | `contact_messages` | Submissions from the public contact form |
 | `password_resets` | Single-use reset tokens, stored as SHA-256 hashes with expiry and `used_at` |
-| `api_keys` | SDK keys (`dtg_pub_…`): name, scopes, SHA-256 of the key, prefix, the encrypted viewable key, `last_used_at`, `revoked_at` |
+| `api_keys` | SDK keys (`dtg_pub_…`) and site keys (`dtg_site_…`, with their allowed `origins`): name, kind, scopes, SHA-256 of the key, prefix, the encrypted viewable key, `last_used_at`, `revoked_at` |
 | `link_templates` | Named defaults a link can take (`links.template_id`), as JSON |
 | `referrals` | One row per referred install: the referring and the referred customer, the link, the match source |
 | `rejected_requests` | SDK calls refused with 400 or 422, for the debugging view: route, reason, the body's hash and size, never the body; 30 days |
@@ -104,6 +104,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0050_export_jobs` | `export_jobs`: CSV exports too large to stream, written to the optional `EXPORTS` R2 bucket |
 | `0051_click_cta` | `cta`, `cta_at` on `clicks`: the first button a visitor took on a link page |
 | `0052_custom_domains` | `custom_domains`, and `users.custom_domain` (unique when set): the account's active custom link domain |
+| `0053_web` | `api_keys.origins` (site keys, kind `site`), `links.append_click_id`, `events.web_click_id`, and a partial index on web events: [`dectog.js`](/sdk/web/) |
 
 ### Commands
 

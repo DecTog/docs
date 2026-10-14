@@ -29,6 +29,7 @@ Every example in this section uses the hosted base. A self-hosted deployment use
 | `POST /api/v1/app-installs`, `POST /api/v1/app-installs/:id/claim` | key + signature | [Clicks and installs](/api/clicks-and-installs/) |
 | `POST /api/v1/events`, `GET /api/v1/attribution`, `POST /api/v1/device-ping`, `POST /api/v1/app-opens` | key + signature | [Events and attribution](/api/events-and-attribution/) |
 | `GET /api/v1/clicks`, `GET /api/v1/app-installs`, `GET /api/v1/app-opens`, `GET /api/v1/events` | account key + signature | [Export raw data](/api/export/) |
+| `GET /api/v1/web-config`, `POST /api/v1/web-events` | site key, from an allowed origin | [Web pixel](/sdk/web/) |
 | Webhooks (outbound) | HMAC signature | [Webhooks](/api/webhooks/) |
 | `/api/admin/*`, `/api/auth/*` | session cookie | [Admin API](/api/admin-api/) |
 | `/.well-known/*`, `/robots.txt`, `/sitemap.xml`, `/healthz`, `/readyz` | none | [Well-known files, SEO and routing](/api/well-known-seo-and-routing/) |
@@ -46,6 +47,7 @@ There are two kinds of key, both shown in [Dashboard: Settings](/dashboard/setti
 | Key | Looks like | Use it in | Scopes |
 |---|---|---|---|
 | **SDK key** | `dtg_pub_` and 32 hex characters | The apps you ship. Anyone can extract it from a build. | `sdk` (installs, claims, clicks, events, opens, the attribution pull), `temp_links`, `links:read`; plus `links:write` only for a key created with that option |
+| **Site key** | `dtg_site_` and 32 hex characters | Your web pages, with [`dectog.js`](/sdk/web/). Public. | Only the two web routes, from the origins it lists |
 | **Account key** | `dtg_` and 32 hex characters | Your servers and scripts. Never in an app. | Everything, including creating, changing and deleting links, and the only key that can [export raw rows](/api/export/) |
 
 | Scope | Routes |

@@ -67,6 +67,10 @@ Read-only facts about the deployment that serves your links.
 
 Both forms are explained in [Concepts](/start/concepts/).
 
+## Site keys
+
+Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name and the sites allowed to use it (origins such as `https://shop.example.com`, one per line). Each key shows its sites, when it was last used, the `<script>` snippet with **Copy snippet**, **Sites** to change the list and **Revoke**. A site key is public by design; it works only from its sites and only records leads, purchases and custom events.
+
 ## Custom domain
 
 Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. On a deployment without Cloudflare for SaaS the card says custom domains are not set up. The whole flow is in [Custom domains](/links/custom-domains/).

@@ -153,6 +153,7 @@ A permanent link as the API returns it. All fields are `final`; `DectogLink.from
 | `label`, `campaign`, `adgroup`, `creative` | `String?` | Tracking defaults for every click |
 | `referrerCustomerId` | `String?` | On a referral link, the customer it belongs to |
 | `iosTapToStore`, `mobileInterstitial` | `bool?` | This link's iOS tap-to-store page and mobile interstitial; `null` follows the app's setting |
+| `appendClickId` | `bool?` | Whether the link adds `dtg_click` to its web destinations for `dectog.js`; `null` is off |
 | `routingRules` | `List<DectogRoutingRule>?` | Geo and language routing, first match wins; `null` when the link has none |
 | `templateId` | `String?` | The template whose defaults fill the fields the link leaves empty |
 | `utmSource`, `utmMedium`, `utmCampaign`, `utmTerm`, `utmContent` | `String?` | Added to the link's web destinations, and to clicks whose URL has none |

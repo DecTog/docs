@@ -76,6 +76,7 @@ Two tabs, **Permanent {n}** and **Temporary {n}**, sit above a table. Next to th
 | **Opens** | Times this link opened the already installed app. | Lifetime |
 | **Leads** | Events of type `lead` credited to this link: those from installs it brought, plus those within the re-engagement window after it re-opened the app. | Lifetime |
 | **Revenue** | Net revenue (purchases minus refunds) credited to this link, in your revenue currency; `—` when 0. A second line, `… after re-open`, shows the part credited because the link re-opened the installed app within the app's re-engagement window. | Lifetime |
+| **Web** | Leads, purchases and custom events [`dectog.js`](/sdk/web/) sent from your website for this link, with their net revenue below; `—` when none. Part of Leads and Revenue, not on top of them. | The retention window |
 | **Created** | The creation date, such as `Oct 12, 2026`. | |
 
 All per-link numbers are all-time totals, which is why they do not match the Overview's 7-, 30- or 90-day figures.
@@ -109,7 +110,7 @@ Empty states: "No permanent links yet.", "No temporary links. Pick an expiry whe
 
 ### Template and tracking
 
-Permanent links only. **Template** (when the account has templates) picks the link's template or **None**; an empty field below then shows the template's value as its placeholder, followed by "(template)". Below it, the label, campaign, adgroup and creative from the create form, and the link's **UTM source**, **UTM medium**, **UTM campaign**, **UTM term** and **UTM content** (added to its web destinations; see [Link-level UTM values](/links/url-parameters/#link-level-utm-values)), each up to 255 characters. **Save template and tracking** sends them all; an emptied field clears the stored value. The button is followed by "Saved" or the server's error.
+Permanent links only. **Template** (when the account has templates) picks the link's template or **None**; an empty field below then shows the template's value as its placeholder, followed by "(template)". Below it, the label, campaign, adgroup and creative from the create form, and the link's **UTM source**, **UTM medium**, **UTM campaign**, **UTM term** and **UTM content** (added to its web destinations; see [Link-level UTM values](/links/url-parameters/#link-level-utm-values)), each up to 255 characters, then **Add the click id to website destinations**, which adds `dtg_click` to the link's web URLs (never a store or an app scheme) for [`dectog.js`](/sdk/web/) on that site. **Save template and tracking** sends them all; an emptied field clears the stored value. The button is followed by "Saved" or the server's error.
 
 ### Expiry
 

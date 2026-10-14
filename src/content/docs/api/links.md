@@ -37,6 +37,7 @@ Every permanent-link route returns the full object, including fields you never s
   "creative": null,
   "ios_tap_to_store": null,
   "mobile_interstitial": null,
+  "append_click_id": null,
   "routing_rules": null,
   "template_id": null,
   "utm_source": null,
@@ -71,6 +72,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `fallback_url` | string or null | Where desktop visitors go instead of the QR page, and the last mobile fallback. |
 | `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `dec_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | This link's iOS tap-to-store page and mobile interstitial. `null` follows the app's setting. See [How a tap is routed](/links/how-a-tap-is-routed/#mobile-delivering-it). |
+| `append_click_id` | boolean or null | Whether the link adds `dtg_click` to its web destinations, for [`dectog.js`](/sdk/web/). `null` is off, or the template's value. |
 | `routing_rules` | array or null | Geo and language rules, first match wins. See [Geo and language rules](#geo-and-language-rules). |
 | `template_id` | string or null | The [template](#templates) whose values fill every field this link leaves empty. The fields above are the link's own. |
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | string or null | Added to the link's web destinations and stored on clicks whose URL has none. See [Link-level UTM values](/links/url-parameters/#link-level-utm-values). |
@@ -105,6 +107,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `redirect_url`, `fallback_url` | string | no | http(s) URLs. `""` stores `null`. |
 | `label`, `campaign`, `adgroup`, `creative` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | no | `true` or `false` overrides the app's setting for this link; `null` or absent follows it. Anything else answers `400 Invalid ios_tap_to_store: must be true, false or null (follow the app)`. |
+| `append_click_id` | boolean or null | no | `true` adds `dtg_click=<click id>` to the link's web destinations (never stores, MMP links or schemes); `false` or `null` does not. A template can set it. Anything else answers `400 Invalid append_click_id: must be true, false or null`. |
 | `routing_rules` | array or null | no | Up to 20 rules; `null` or `[]` stores none. See below. |
 | `template_id` | string | no | One of your templates; anything else answers `400 Unknown template_id`. When `app_id` is absent, the template's app applies. |
 | `utm_source` … `utm_content` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
