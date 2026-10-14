@@ -32,7 +32,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 |---|---|---|
 | `createLink` | `Future<DectogLink> createLink({required String slug, String? target, Map<String, dynamic>? metadata, String? appId, String? iosDeepLinkPath, String? androidDeepLinkPath, String? redirectUrl, String? fallbackUrl, String? ogTitle, String? ogDescription, String? ogImageUrl, String? label, String? campaign, String? adgroup, String? creative})` | `POST /api/v1/links`, expects 201 |
 | `updateLink` | `Future<DectogLink> updateLink(String slug, {String? target, Map<String, dynamic>? metadata, String? iosDeepLinkPath, String? androidDeepLinkPath, String? redirectUrl, String? fallbackUrl, String? ogTitle, String? ogDescription, String? ogImageUrl, String? label, String? campaign, String? adgroup, String? creative})` | `PUT /api/v1/links/{slug}`. `null` keeps, `''` clears. |
-| `getLinks` | `Future<List<DectogLink>> getLinks()` | `GET /api/v1/links` |
+| `getLinks` | `Future<DectogLinkPage> getLinks({int? limit, String? cursor})` | `GET /api/v1/links`; one page, newest first. `DectogLinkPage` has `links`, `nextCursor` (pass it back as `cursor`) and `hasMore`. |
 | `getLink` | `Future<DectogLink> getLink(String slug)` | `GET /api/v1/links/{slug}` |
 | `deleteLink` | `Future<void> deleteLink(String slug)` | `DELETE /api/v1/links/{slug}`. Also deletes the link's clicks and the installs, events and app opens attributed to it. |
 | `createTempLink` | `Future<DectogTempLink> createTempLink({String? target, String? slug, int ttlSeconds = 900, String? ogTitle, String? ogDescription, String? ogImageUrl})` | `POST /api/v1/temp-links`, expects 201. TTL clamped to 60 seconds to 30 days. |

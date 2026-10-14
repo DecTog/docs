@@ -50,7 +50,8 @@ A `null` argument keeps the stored value; `''` clears a field (for `target`, cle
 ### Read and delete
 
 ```dart
-final all = await dectog.getLinks();          // newest first
+final page = await dectog.getLinks(limit: 50); // newest first
+final next = page.hasMore ? await dectog.getLinks(cursor: page.nextCursor) : null;
 final one = await dectog.getLink('spring-sale');
 await dectog.deleteLink('spring-sale');
 ```

@@ -125,9 +125,14 @@ The limiter uses fixed one-minute windows, so a 60-second sleep always lands in 
 `click_count` is the lifetime total for the link, the same number the Links page shows.
 
 ```bash
-dectog_call GET /api/v1/links \
-  | jq -r '["slug","clicks","url","target","created"],
-           (.[] | [.slug, .click_count, .url, .target, .created_at]) | @csv' > links.csv
+echo 'slug,clicks,url,target,created' > links.csv
+cursor=""
+while :; do
+  page=$(dectog_call GET "/api/v1/links?limit=200${cursor:+&cursor=$cursor}")
+  jq -r '.data[] | [.slug, .click_count, .url, .target, .created_at] | @csv' <<<"$page" >> links.csv
+  cursor=$(jq -r '.next_cursor // empty' <<<"$page")
+  [ -n "$cursor" ] || break
+done
 ```
 
 There is no list endpoint for temporary links on `/api/v1`; read them one at a time with `GET /api/v1/temp-links/{slug}`. Installs, opens, leads and revenue per link are on the dashboard only. The dashboard's own API uses a cookie session and is not meant for scripts; see [Admin API](/api/admin-api/).

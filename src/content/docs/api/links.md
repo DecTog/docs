@@ -111,7 +111,7 @@ dectog POST /api/v1/links '{
 
 | Route | Response |
 |---|---|
-| `GET /api/v1/links` | `200` with an array of Link objects, newest first. No pagination, no filters. |
+| `GET /api/v1/links?limit=&cursor=` | `200 {"data": [Link, …], "next_cursor": "…" \| null}`, newest first. `limit` is 1 to 200 (default 50); pass `next_cursor` back as `cursor` for the next page until it is `null`. A `limit` out of range, or a `cursor` this API did not return, answers `400`. No filters. |
 | `GET /api/v1/links/:slug` | `200` with the Link, or `404 {"error": {"code": "not_found", "message": "Link not found"}}`. A temporary link's slug also answers 404 here. |
 
 ## Update a link

@@ -118,7 +118,7 @@ dectog() {
 dectog POST /api/v1/links '{"slug":"spring-sale","target":"https://shop.example.com/sale","metadata":{"screen":"sale"}}'
 # {"id":"6f1c2a0e-…","slug":"spring-sale","target":"https://shop.example.com/sale","url":"https://acme.dectog.com/spring-sale",…}
 
-dectog GET /api/v1/links | jq -r '.[] | "\(.slug)\t\(.click_count)\t\(.url)"'
+dectog GET /api/v1/links | jq -r '.data[] | "\(.slug)\t\(.click_count)\t\(.url)"'
 
 dectog DELETE /api/v1/links/spring-sale
 # {"success":true}
@@ -144,6 +144,10 @@ export function dectogHeaders(apiKey, rawBody = "") {
 }
 ```
 
+## OpenAPI
+
+`GET /openapi.json` serves an OpenAPI 3.1 description of every route, generated from the same table the server's tests check against the routes it answers. Routes marked `x-internal` serve the dashboard and may change without notice. Point a client generator or an agent at it: `https://app.dectog.com/openapi.json` on the hosted service.
+
 ## SDK identity
 
 SDKs also send `x-dectog-sdk: <name>/<version>`, for example `flutter_dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
@@ -151,6 +155,8 @@ SDKs also send `x-dectog-sdk: <name>/<version>`, for example `flutter_dectog/1.0
 A self-hosted deployment can set `MIN_SDK_VERSION` (for example `1.1.0`) to retire old builds: an identified SDK older than that answers `400` with code `sdk_too_old` and the `min_version`. Callers that do not identify as an SDK are not checked.
 
 ## Rate limits
+
+Every authenticated `/api/v1` response reports the account window in three headers: `x-ratelimit-limit` (3000), `x-ratelimit-remaining` and `x-ratelimit-reset` (seconds until the window ends). They describe the account counter only; the device and IP counters below can refuse a request first.
 
 Limits are fixed windows aligned to the wall clock: the window is the current minute (`floor(now / 60 s)`), the first request of a new minute resets the counter, and a request that is rejected still counts. Several counters apply to one request.
 
