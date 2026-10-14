@@ -95,6 +95,7 @@ When a `/api/v1` call is refused as malformed, the server stores the account, th
 - **Resend:** the password-reset email (recipient address, reset link) when `RESEND_API_KEY` is set.
 - **Google:** the OAuth code exchange when Sign in with Google is configured, and, when an app receives Play notifications, a download of Google's public signing keys (`https://www.googleapis.com/oauth2/v3/certs`) to verify the push tokens. That request carries no data.
 - **Cloudflare:** everything is processed in Workers and stored in D1. D1 chooses a region when the database is created; `wrangler d1 create --location` pins it.
+- **Visitors' browsers contact only the deployment.** Link pages and the dashboard load their fonts (Outfit, Inter, Fira Code, all SIL OFL) and country flags from the deployment itself; no page asks Google Fonts, a CDN or any other host for anything.
 
 ## Accounts
 
