@@ -76,11 +76,11 @@ Section text: "How your links look when shared on social media or in messaging a
 
 | Field | What to enter | Rules |
 |---|---|---|
-| **Image URL** | Placeholder `https://…/preview.jpg`. Hint: "JPG or PNG. Recommended size 200 × 200 px." | http(s): `og_image_url must be a valid http(s) URL`. |
+| **Image URL** | Placeholder `https://…/preview.jpg`. Hint: "JPG or PNG. Recommended size 1200 × 630 px (shown as a large card)." | http(s): `og_image_url must be a valid http(s) URL`. |
 | **Title** | Placeholder `My App`. Hint: "Recommended 30 to 60 characters. Maximum 150 characters." | The box does not stop you; the server rejects more than 150 characters with `og_title must be at most 150 characters`. |
 | **Description (optional)** | A short text. | The box stops at 150 characters; the server enforces the same limit. |
 
-A **Live preview** card renders the three values, captioned "How the app default looks when a link is shared on social media or messaging apps." The per-link editor recommends 1200 × 630 px images; both sizes are hints, and each platform crops as it likes. See [Social previews and QR](/links/social-previews-and-qr/).
+A **Live preview** card renders the three values, captioned "How the app default looks when a link is shared on social media or messaging apps." The per-link editor gives the same 1200 × 630 px hint; each platform crops as it likes. See [Social previews and QR](/links/social-previews-and-qr/).
 
 **Auto-fill from fallback URL** appears in the section header when the Fallback URL is an http(s) address and at least one of the three preview fields is empty. It reads "Fetching…" while running, fills only the empty fields from the page's `og:` and `twitter:` tags, and reports `✓ Filled from your fallback URL — review, then save.` or `✕` followed by the server's error: `No title, description or image found on that page`, `Enter a valid public http(s) URL` (private and loopback hosts are refused), `Couldn't reach that URL`, or a message naming the HTTP status the page returned. The fetch follows redirects, gives up after 8 seconds or 512 KB, and cuts titles and descriptions to 150 characters. Nothing is saved until you save the form.
 

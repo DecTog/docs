@@ -70,7 +70,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `slug` | string | yes | See the slug rules above. |
 | `target` | string or null | no | An http(s) URL. `null`, `""` or absent stores `null` (inherit the app's fallback URL). |
 | `app_id` | string | no | The id of one of your apps. Default: your oldest app, or `null` when the account has no app yet. |
-| `metadata` | JSON | no | Any JSON value; an object is the intended use. Falsy values (`""`, `0`, `false`, `null`) store `null`. |
+| `metadata` | JSON object | no | Your own key-value data. `null` or `""` stores `null`; any other non-object value (a string, number, boolean or array) answers `400 {"error": {"code": "invalid_request", "message": "metadata must be a JSON object"}}`. |
 | `og_title`, `og_description` | string | no | Trimmed; at most 150 characters each. `""` stores `null`. |
 | `og_image_url` | string | no | An http(s) URL. `""` stores `null`. |
 | `ios_deep_link_path`, `android_deep_link_path` | string | no | A relative route such as `products/42?color=black`. At most 512 characters; no `:`, whitespace, `#`, `;` or control characters. A leading `/` is stripped. `""` stores `null`. |
@@ -84,6 +84,7 @@ Checks run in this order and stop at the first failure:
 | 400 | `{"error": {"code": "invalid_request", "message": "Invalid JSON body"}}` |
 | 400 | `{"error": {"code": "invalid_request", "message": "slug is required"}}` |
 | 400 | `{"error": {"code": "invalid_request", "message": "Invalid slug: only letters, numbers, hyphens and underscores are allowed"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Slug 'healthz' is reserved"}}`: `healthz` and `readyz` (any case) are answered by the service itself on every host, so they are refused for permanent and temporary links |
 | 400 | `{"error": {"code": "invalid_request", "message": "Invalid target: must be a valid http(s) URL"}}` |
 | 409 | `{"error": {"code": "conflict", "message": "Slug already exists", "slug": "spring-sale"}}` |
 | 400 | `{"error": {"code": "invalid_request", "message": "Unknown app_id"}}` (the id is not one of your apps) |
@@ -121,7 +122,7 @@ dectog POST /api/v1/links '{
 |---|---|
 | Key absent | The stored value is kept. This includes the `og_*` fields. |
 | `null` | Clears the field: `target`, `metadata`, `og_*`, the deep-link paths, `redirect_url`, `fallback_url` and the four tracking fields all become `null`. |
-| `""` | Clears every field except `metadata`. `"metadata": ""` is stored as the JSON string `""` and comes back as `""`; send `null` to clear metadata. |
+| `""` | Clears the field, `metadata` included. |
 | `slug`, `app_id` | Ignored. Neither can be changed after creation. |
 
 Validation is the same as on create. Errors come back as `400` with the same strings, plus `{"error": {"code": "invalid_request", "message": "og_title must be at most 150 characters"}}`, `{"error": {"code": "invalid_request", "message": "og_description must be at most 150 characters"}}` and `{"error": {"code": "invalid_request", "message": "og_image_url must be a valid http(s) URL"}}`.

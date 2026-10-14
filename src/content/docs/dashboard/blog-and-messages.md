@@ -19,7 +19,7 @@ Unlike every other screen, these are not scoped to an account: there is one blog
 | **Categories** | Goes to `/dashboard/blog/categories`. |
 | **Search** | Filters by title or category name. |
 | Table | Checkbox · **Title** (with the slug underneath) · **Category** · **Created** · **Last edited** · **Status** (**Published** or **Draft**). Clicking **Category**, **Created** or **Last edited** sorts by that column; the default is Last edited, newest first. Clicking a row opens it in the editor. |
-| Selection | The header checkbox selects the current page. With a selection, the toolbar reads `{n} selected` with **Delete** and **Cancel**. **Delete** removes the selected posts immediately, without a confirmation dialog. |
+| Selection | The header checkbox selects the current page. With a selection, the toolbar reads `{n} selected` with **Delete** and **Cancel**. **Delete** asks "Delete {n} posts? This cannot be undone." first. |
 | Pagination | 10 posts per page, with numbered pages and **Previous** / **Next**. |
 
 Empty states: "No blog posts yet" with a **Create your first post** button, and "No posts match your search".
@@ -37,13 +37,13 @@ A side panel. The top bar has a close button, a **Publish now** switch, a **⋯*
 | **Summary** | Placeholder `Brief description of the post...`. Hint: "This appears on blog listing pages and in search results". | Up to 500 characters. |
 | **Content** | A rich-text editor with Undo, Redo, Bold, Italic, Strikethrough, Inline code, Heading 1 to 3, Bullet list, Numbered list, Quote, Code block, Divider, **Insert image URL** and **Add link**. Image URLs must start with `http://` or `https://`. Links must start with `https://`, `http://`, `mailto:`, `tel:`, `/` or `#`. | Required: `Content is required`. |
 
-Saving creates or updates the post. The first publish stamps the publication date; unpublishing later keeps it. On success the panel closes and the list reloads. The editor checks the title, slug, summary and category before sending; when a check fails or the server rejects the save, the panel stays open and no message is displayed, so compare the fields with the rules above.
+Saving creates or updates the post. The first publish stamps the publication date; unpublishing later keeps it. On success the panel closes and the list reloads. The editor checks the title, slug, summary and category before sending; when a check fails or the server rejects the save, the panel stays open and a toast in the top-right corner names the problem.
 
 **Delete** in the **⋯** menu asks **Delete post**: "Are you sure you want to delete this post? This action cannot be undone."
 
 ## Categories
 
-`/dashboard/blog/categories`, titled **Categories** ("Organize your blog content."). **New category** opens the editor; **Search** filters by name or slug; the table shows a checkbox, **Name** with the slug underneath, and **Created**, 10 per page. Bulk **Delete** on a selection runs immediately, without a confirmation dialog. Empty states: "No categories yet" and "No categories match your search".
+`/dashboard/blog/categories`, titled **Categories** ("Organize your blog content."). **New category** opens the editor; **Search** filters by name or slug; the table shows a checkbox, **Name** with the slug underneath, and **Created**, 10 per page. Bulk **Delete** on a selection asks "Delete {n} categories? This cannot be undone." first. Empty states: "No categories yet" and "No categories match your search".
 
 | Field | Rules |
 |---|---|

@@ -66,6 +66,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0025_shared_device_index` | `events (user_id, device_id, customer_id)` |
 | `0026_attribution_reliability` | Install contract v2: `install_attempt_id` with a unique partial index, attempt and client timestamps, referrer telemetry and server timestamps, `install_state`, `first_install_ts`, `match_confidence`, `match_score`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `asn`, `asa_token`, `asa_attribution`, `claimed_at`, `updated_at`; `clicks.client_click_time`, `launch_referrer`, `origin`; `apps.ios_tap_to_store`, OEM store URLs, `low_entropy_window_hours`; the `(user_id, ip_hash, created_at)` install index |
 | `0027_apple_search_ads` | `asa_status`, `asa_attempts`, `asa_token_at`, `asa_resolved_at` and the pending-token index |
+| `0028_claim_source` | `claim_source` on `app_installs`: which late signal upgraded the install |
 
 ### Commands
 

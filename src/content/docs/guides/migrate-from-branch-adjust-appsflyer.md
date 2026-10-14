@@ -100,7 +100,7 @@ AppsFlyer separates routing (UDL) from attribution data (GCD). DecTog separates 
 - Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that carry a device model and 2 hours for model-less clicks and installs on cellular. The 2-hour window can be set per account (1 to 720 hours) in the oldest app's Advanced settings.
 - App updates (`install_state: update`) never run the fingerprint. Reinstalls do, and carry `is_reinstall: true`. Late claims never run the fingerprint.
 - Strict fraud mode, the low-entropy window and the install webhook are read from the account's oldest app. On a single-app account that is the app you expect.
-- Apple Search Ads is resolved server-side and arrives later: `pending`, then `resolved`, `no_attribution`, `invalid`, `expired` or `failed`. Only `resolved` and `no_attribution` are final.
+- Apple Search Ads is resolved server-side and arrives later: `pending`, then `resolved`, `no_attribution`, `invalid` or `expired`. Only `resolved` and `no_attribution` are final.
 
 ## What DecTog does not do
 

@@ -232,7 +232,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 `GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 28, "applied": 28, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 29, "applied": 29, "missing": [] } }
 ```
 
 It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.

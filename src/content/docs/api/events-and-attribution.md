@@ -111,7 +111,7 @@ Reports that a DecTog link opened the already-installed app (a warm open through
 | Field | Type | Required | Meaning |
 |---|---|---|---|
 | `slug` | string, 128 | yes | One of your permanent or temporary slugs. Missing answers `400 {"error": {"code": "invalid_request", "message": "slug is required"}}`; unknown answers `404 {"error": {"code": "not_found", "message": "Link not found"}}`. |
-| `click_id` | string, 64 | no | The `dtg_click` id from an intent bounce. Stored as sent; it is not checked against the clicks table. |
+| `click_id` | string, 64 | no | The `dtg_click` id from an intent bounce. Stored when it has the click-id shape (8 to 32 of `A-Z a-z 0-9 _ -`), otherwise dropped while the open is still recorded. It is not checked against the clicks table. |
 | `device_id` | string, 128 | no | |
 | `install_id` | string, 64 | no | |
 | `app_version` | string, 64 | no | |

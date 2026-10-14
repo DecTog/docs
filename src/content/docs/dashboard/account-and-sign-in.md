@@ -12,7 +12,7 @@ Sign-in lives at https://app.dectog.com/login. The page is titled **Dashboard Ac
 | Field | Rules |
 |---|---|
 | **Email** | A valid address. Stored trimmed and lower-cased. |
-| **Username** | Suggested from the part of your email before `@` until you edit it. 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`. The hint reads "Your links live on {username}.dectog.com": the username is your link subdomain and cannot be changed later. |
+| **Username** | Suggested from the part of your email before `@` until you edit it. 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`. The hint reads "Your links live on {username}.{root domain}" (`dectog.com` on the hosted service): the username is your link subdomain and cannot be changed later. |
 | **Password** | 8 to 72 characters with at least one lowercase letter, one uppercase letter and one digit. Hint: "At least 8 characters, with upper and lowercase letters and a number". |
 
 **Create Account** submits. Errors, verbatim from the server: `Please enter a valid email address`; the password rule that failed, such as `Password must include an uppercase letter`; `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`; `Username '{name}' is reserved`; `An account with this email or username already exists`; and `Signup is currently closed` when the deployment has closed signups, in which case the Sign up tab is hidden as well.

@@ -144,7 +144,7 @@ The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one b
 
 ## Claims
 
-`POST /api/v1/app-installs/:id/claim` carries any subset of the signal fields above plus `attempt`, `asa_token` and `claim_source` (`late_referrer`, `paste_control` or `clipboard`; validated with a 400, then unused). The install must belong to the caller (404 otherwise). Every call refreshes the stored telemetry (a later, more informative referrer read overwrites; absent fields keep their value), bumps `attempt` to the maximum seen, and sets `clipboard_slug` if it was empty.
+`POST /api/v1/app-installs/:id/claim` carries any subset of the signal fields above plus `attempt`, `asa_token` and `claim_source` (`late_referrer`, `paste_control` or `clipboard`; validated with a 400, and stored as `claim_source` on the row when the claim upgrades it, so a paste control can be told apart from an automatic pasteboard read). The install must belong to the caller (404 otherwise). Every call refreshes the stored telemetry (a later, more informative referrer read overwrites; absent fields keep their value), bumps `attempt` to the maximum seen, and sets `clipboard_slug` if it was empty.
 
 Then, in order:
 
@@ -155,7 +155,7 @@ Then, in order:
 5. `not_found` / `none`: `claim: "rejected"` with `click_not_found` / `no_signal`.
 6. Otherwise the deterministic click wins over whatever the fingerprint had guessed (the old click is released by no longer being referenced) and over organic: `matched = 1`, `match_source`, `referrer_source`, `match_confidence = 'guaranteed'`, `routing_click_id = NULL`, `claimed_at = now`. Fraud rules are re-evaluated and merged, strict mode applies as above, and the webhook fires with `app.install_updated`. Response: `claim: "upgraded"`.
 
-An `asa_token` on a claim restarts the Apple round-trip unless the row is already `resolved` or `no_attribution`; `invalid`, `expired` and `failed` rows accept a new token.
+An `asa_token` on a claim restarts the Apple round-trip unless the row is already `resolved` or `no_attribution`; `invalid` and `expired` rows accept a new token.
 
 ## Apple Search Ads
 

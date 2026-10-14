@@ -39,7 +39,7 @@ Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_
 | `GET /api/admin/me` | session | The signed-in account. | `200 {user: {id, email, username, role, created_at}}` |
 | `POST /api/admin/forgot-password` | public | `{email}`. Creates a one-hour, single-use reset token (older unused tokens are cancelled) and emails `<WEB_URL>/reset-password?token=…` through Resend, or logs the link when `RESEND_API_KEY` is unset. | `200 {ok: true, message: "If that email exists, a reset link is on its way."}` whether or not the account exists; `429` over 5 requests per minute from one IP or 3 per minute for one address. |
 | `POST /api/admin/reset-password` | public | `{token, password}`. Does not sign the user in. | `200 {ok: true}`; `400 Reset token is required`, a password-rule message, `This reset link is invalid or has expired`, `This reset link has already been used` |
-| `GET /api/auth/config` | public | What the login page shows. | `200 {signupOpen, googleEnabled}` |
+| `GET /api/auth/config` | public | What the login page shows. | `200 {signupOpen, googleEnabled, linkRootDomain}`; `linkRootDomain` is `ROOT_DOMAIN`, or `null` when unset |
 | `GET /api/auth/google/start` | public | 302 to Google's consent screen (authorization code with PKCE S256, `state`, scopes `openid email profile`, `prompt=select_account`). Sets `dectog_google_oauth` (10 minutes, path `/api/auth/google`). | `404 Google sign-in is not configured` when `GOOGLE_CLIENT_ID` or `GOOGLE_CLIENT_SECRET` is unset |
 | `GET /api/auth/google/callback` | public | Google's redirect target, `<WEB_URL>/api/auth/google/callback`. Signs in a linked account, links an existing account with the same verified email, or parks a new identity in `dectog_google_pending` (15 minutes). | 302 to `/dashboard`, `/login?google=choose_username`, or `/login?google_error=<reason>` with reason `not_configured`, `cancelled`, `expired`, `failed`, `other_google_account` or `signup_closed` |
 | `GET /api/auth/google/pending` | pending cookie | The parked identity for the username step. | `200 {email, name}`; `404 Google sign-in expired — try again` |
@@ -92,7 +92,7 @@ See [Dashboard: Settings](/dashboard/settings/).
 | `POST /api/admin/apps/:id/test-webhook` | session | Sends the test event described in [Install webhook](/api/install-webhook/), synchronously, 10-second timeout. | `200 {delivered: true, ok, status}` even for a non-2xx reply; `400 Save the webhook URL and secret first`; `502 Webhook delivery failed: <message>`; `404 App not found` |
 | `GET /api/admin/og-preview?url=` | session | Fetches a public page server-side and extracts a social preview. Follows redirects, 8-second timeout, reads at most 512 KB, first tag wins (`og:title`, `twitter:title`, `<title>`; `og:description`, `twitter:description`, `description`; `og:image:secure_url`, `og:image`, `twitter:image`, `twitter:image:src`), title and description cut to 150 characters. | `200 {title, description, image}`; `400 url query parameter is required`, `Enter a valid http(s) URL`, `Enter a valid public http(s) URL` (non-http scheme or a loopback, private or link-local host); `502 Couldn't reach that URL`, `That URL returned HTTP <n>`; `422 That URL isn't an HTML page`, `No title, description or image found on that page` |
 
-App fields and their validation messages (`400`):
+App fields and their validation messages (`400`). Every text field is trimmed before it is validated and stored, on create and on update:
 
 | Field | Rule |
 |---|---|

@@ -99,7 +99,7 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `google_play_instant` | boolean | Must be a JSON boolean; any other type stores `null`. |
 | `meta_referrer`, `meta_referrer_ts` | string 512, epoch ms | Meta's on-device install referrer. The SDK reads it only when `DectogConfig.fbAppId` is set in the app; the dashboard's `fb_app_id` field is stored and nothing else. |
 | `meta_referrer_is_ct` | boolean | Click-through (`true`) or view-through (`false`). Stored only together with `meta_referrer`. |
-| `clipboard_url` | string, up to 2048 | A DecTog link found on the pasteboard. Only URLs of this deployment (a tenant host, the root domain, the public base, or any host with a `/r/` path) and `scheme://<username>/<slug>` forms are read. The slug is stored as `clipboard_slug`; the raw clipboard content is never stored. |
+| `clipboard_url` | string, up to 2048 | A DecTog link found on the pasteboard. Only links of this account on this deployment are read: `https://<username>.<root>/<slug>`, `/r/<username>/<slug>` on the root domain or the public base host, a custom-scheme URL carrying `dtg_l=<username>/<slug>`, or the development form `dectog://<username>/<slug>`. A link of another account, `/r/` on any other host, or an untagged scheme URL is ignored. The slug is stored as `clipboard_slug`; the raw clipboard content is never stored. |
 | `asa_token` | string, 4096 | The Apple Search Ads attribution token from AdServices. |
 
 Epoch values must fall between 1970 and 2100, otherwise they become `null`.
@@ -233,7 +233,7 @@ The body accepts the **Deterministic signals** fields above, plus `attempt` and 
 
 | Field | Type | Meaning |
 |---|---|---|
-| `claim_source` | string | `late_referrer`, `paste_control` or `clipboard`. Any other string answers `400 {"error": {"code": "invalid_request", "message": "claim_source must be one of late_referrer, paste_control, clipboard"}}`. The value is validated and then neither stored nor used. |
+| `claim_source` | string | `late_referrer`, `paste_control` or `clipboard`. Any other string answers `400 {"error": {"code": "invalid_request", "message": "claim_source must be one of late_referrer, paste_control, clipboard"}}`. Stored as `claim_source` on the install when the claim upgrades it. |
 | `attempt` | integer 1 to 1000 | Stored as the larger of the sent and stored values. |
 
 Every call refreshes telemetry first: non-null signal fields overwrite the stored ones, `clipboard_slug` is set when it was empty, and `updated_at` is stamped. The verdict changes at most once. The response is the verdict plus `claim` and, except on `upgraded`, `claim_reason`:

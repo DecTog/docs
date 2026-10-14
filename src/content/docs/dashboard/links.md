@@ -58,7 +58,7 @@ These values are stored on every click of the link, can be overridden per tap wi
 
 #### If the app can't open the link (desktop)
 
-**Branded QR page (default)** or **Custom URL** (placeholder `https://web.example.com/page`). Stored as `fallback_url`; must be http(s). This is the last stop for desktop visitors and for phones that have no destination at all. With no custom URL, the tap falls through to the app's Fallback URL and, if there is none, to the QR page.
+**Branded QR page (default)**, or **App fallback URL (default)** when the selected app has one, or **Custom URL** (placeholder `https://web.example.com/page`). Stored as `fallback_url`; must be http(s). This is the last stop for desktop visitors and for phones that have no destination at all. With no custom URL, the tap falls through to the app's Fallback URL and, if there is none, to the QR page.
 
 The complete decision order for a tap is in [How a tap is routed](/links/how-a-tap-is-routed/). In short, on a phone the chain is: custom redirect, then the tagged store, then the app's Fallback URL (which outranks this link's own Fallback URL), then the link's Fallback URL. Desktop visitors are never redirected to the link's Fallback URL automatically; they get a "Continue to {host} on desktop" button on the QR page.
 
@@ -114,7 +114,7 @@ Under the card, **Which social preview should this link use?** offers:
 
 | Field | What to enter | Rules |
 |---|---|---|
-| **Image URL** | An image address (placeholder `https://…/preview.jpg`). Hint: "JPG or PNG. Recommended size 1200 × 630px." | http(s), or the server replies `og_image_url must be a valid http(s) URL`. |
+| **Image URL** | An image address (placeholder `https://…/preview.jpg`). Hint: "JPG or PNG. Recommended size 1200 × 630 px (shown as a large card)." | http(s), or the server replies `og_image_url must be a valid http(s) URL`. |
 | **Title** | Placeholder `My App`. Hint: "Recommended 30 to 60 characters. Maximum 150 characters." | The box stops at 150 characters; the server rejects longer values with `og_title must be at most 150 characters`. |
 | **Description** (optional) | Hint: "Maximum 150 characters." | Same limit: `og_description must be at most 150 characters`. |
 
@@ -126,11 +126,11 @@ Permanent links only.
 
 | Field | Options |
 |---|---|
-| **iOS deep link path**, **Android deep link path** | Free text, placeholder `products/42?color=black`, with the same server rules as the create form. A path only takes effect when the app has a scheme for that platform. |
+| **iOS deep link path**, **Android deep link path** | Free text, placeholder `products/42?color=black`, with the same server rules as the create form. Each box is disabled, with the placeholder `no scheme set`, while the link's own app has no scheme for that platform, because a path is only used in a scheme URL. The drawer's app preview and fallback default also come from the link's own app. |
 | **If the app isn't installed** | **App stores** (marked **Default**) or **Custom URL** (placeholder `https://promo.example.com/offer`). Sets `redirect_url`. |
-| **If the app can't be installed** | **App store page** (marked **Default**) or **Custom URL** (placeholder `https://web.example.com/page`). Sets `fallback_url`. |
+| **If the app can't open the link (desktop)** | **Branded QR page**, or **App fallback URL** when the link's app has one (marked **Default**), or **Custom URL** (placeholder `https://web.example.com/page`). Sets `fallback_url`. |
 
-The last row sets the same `fallback_url` field that the create form labels "If the app can't open the link (desktop)" with "Branded QR page (default)". Whatever the label, the field is the desktop and no-destination tail: with no custom URL, a desktop visitor gets the app's Fallback URL if there is one, otherwise the branded QR page.
+The last row sets the same `fallback_url` field, with the same labels, as the create form. The field is the desktop and no-destination tail: with no custom URL, a desktop visitor gets the app's Fallback URL if there is one, otherwise the branded QR page.
 
 **Save** sends the preview choice and, for permanent links, every routing field at once; an emptied field clears the stored value. Before sending, the drawer checks "Enter the custom redirect URL" and "Enter the custom fallback URL" when a Custom URL option is selected with an empty box. Success shows "Saved ✓"; failures show the server's message.
 

@@ -26,8 +26,8 @@ The page shows "Loading analytics…" on first load. If the overview request fai
 Each KPI card carries a chip that compares the current window with the previous window of the same length: for **7d**, the 7 days before the current 7 days.
 
 - The chip shows the relative change, rounded to one decimal: `(current − previous) ÷ previous × 100`.
-- When the previous window is 0, the chip shows **100%** if the current value is above 0, otherwise **0%**.
-- Green with ▲ means zero or positive; red with ▼ means negative.
+- When the previous window is 0, there is no percentage to show: the chip is hidden if the current value is above 0, and reads **0%** if it is 0 too.
+- Green with ▲ and a `+` means zero or positive; red with ▼ and a `−` means negative.
 - For **Conversion** the delta is the relative change of the rate, not a difference in percentage points. A rate that moves from 2.0% to 3.0% shows ▲ 50%.
 
 ## KPI cards
@@ -197,7 +197,7 @@ This card appears only once the window contains at least one install whose iOS S
 |---|---|---|---|
 | **Attributed** | `installs Apple credited to a campaign` | `resolved`: Apple returned an attribution. | Green when above 0. |
 | **No attribution** | `Apple found no matching record` | `no_attribution`. | None. |
-| **Pending** | `waiting on Apple · {n} expired or invalid` | `pending`. The `{n}` in the caption adds up `expired` (no answer within 24 hours of the token), `invalid` (Apple rejected the token) and `failed`. | Amber when above 0. |
+| **Pending** | `waiting on Apple · {n} expired or invalid` | `pending`. The `{n}` in the caption adds up `expired` (no answer within 24 hours of the token), and `invalid` (Apple rejected the token, or none arrived). | Amber when above 0. |
 
 Below the tiles, up to 8 rows list the campaigns behind the attributed installs: `campaign {id}` (or `campaign —` when Apple sent no id), a chip reading `view-through` for impression claims and `tap-through` otherwise, and the install count. Rows are grouped by campaign id and claim type, so one campaign can appear twice.
 

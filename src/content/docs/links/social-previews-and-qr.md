@@ -18,7 +18,7 @@ Bots receive a `200` page with Open Graph tags and no redirect, and **no click i
 | Tag | Value |
 |---|---|
 | `og:title` and `<title>` | The link's title, else the temporary link's, else the app's, else `Open in the app` |
-| `og:description` | The link's description, else the temporary link's, else the app's, else `Continue to {path or host} in the app.` built from the link's target or the app's fallback URL, or `Continue in the app.` when neither exists |
+| `og:description` | The link's description, else the temporary link's, else the app's, else `Continue to {host}{path} in the app.` (for example `Continue to example.com/sale in the app.`, or `Continue to example.com in the app.` for a bare domain) built from the link's target or the app's fallback URL, or `Continue in the app.` when neither exists |
 | `og:image` and `twitter:image` | The link's image, else the temporary link's, else the app's. Omitted when none is set. |
 | `og:url` | The canonical link URL, `https://acme.dectog.com/welcome`, with no query string |
 | `twitter:card` | `summary_large_image` when an image exists, else `summary` |
