@@ -105,7 +105,7 @@ When a DecTog link opens the already-installed app, the SDK remembers it (`slug`
 await dectog.setEnabled(false);
 ```
 
-Discards new events, clears the queue and stops the sender, and stops every other report too: clicks, app opens, install registration and the device ping. It is persisted; `setEnabled(true)` resumes. `isEnabled()` reads the flag. See [Device data and privacy](/sdk/device-data-and-privacy/).
+Stops the sender and every other report: clicks, app opens, install registration and the device ping. Events tracked from then on are held in the on-disk queue with the ones already there, and go out after `setEnabled(true)`, unless they are older than 7 days by then. It is persisted; `isEnabled()` reads the flag. To start with collection off until the user agrees, pass `DectogConfig(enabled: false)`. See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
 
 ## Attribution re-pull
 

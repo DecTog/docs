@@ -62,11 +62,11 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `trackEvent` | `Future<void> trackEvent(String eventName, {Map<String, dynamic>? data})` | Queues a `custom` event. |
 | `flush` | `Future<void> flush()` | Sends up to 100 queued events now (`POST /api/v1/events`). |
 | `logout` | `Future<void> logout()` | Flushes, then forgets the customer id. |
-| `setEnabled` | `Future<void> setEnabled(bool enabled)` | Persisted, default `true`. `false` records nothing: no click, app-open, install, claim, pasteboard or device-ping reports; new events are discarded and the queue cleared. `true` restarts the sender and registers the install if it never was. Links are still delivered. |
+| `setEnabled` | `Future<void> setEnabled(bool enabled)` | Persisted; until the app first calls it, `DectogConfig.enabled` decides (default `true`). `false` makes no request of the SDK's own: no click, app-open, install, claim, attribution, settings, resolve or device-ping request, no pasteboard read. Events are held on the device (up to the queue's 7 days), and the click and open of a link that arrives are held in memory. Links are still delivered to `onLinkClick`, as parsed, without `linkResolution`. `true` starts sending: the held events, the install registration if it never was, and the held link reports. A `false` in between drops the held link reports, not the held events. Calls the app makes itself (`createLink`, `getLinks`, `createTempLink`, `resolveLink`, …) still go out. |
 | `diagnostics` | `Future<DectogDiagnostics> diagnostics()` | Compares this build with the dashboard's record of the app (`GET /api/v1/sdk-config`): bundle ID or package, the iOS URL scheme in `CFBundleURLTypes`, and on Android 12+ the App Links verification of each link host. Returns the warnings and logs them with `enableDebugLogging`; never blocks the SDK. |
-| `isEnabled` | `Future<bool> isEnabled()` | The persisted flag. |
+| `isEnabled` | `Future<bool> isEnabled()` | The stored choice, else `DectogConfig.enabled`. |
 
-Background calls the SDK makes on its own: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on every initialize with the device tier on.
+Background calls the SDK makes on its own, none of them while collection is off: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on every initialize with the device tier on, `POST /api/v1/events` for the queue, `GET /api/v1/sdk-config` for the dashboard's settings, and `GET /api/v1/resolve/…` for a link's details.
 
 ## DectogConfig
 
@@ -83,6 +83,7 @@ const DectogConfig({
   AdvertisingIdProvider? advertisingIdProvider,
   String? fbAppId,
   bool persistDeviceId = true,
+  bool enabled = true,
 })
 ```
 
@@ -99,6 +100,7 @@ const DectogConfig({
 | `advertisingIdProvider` | `AdvertisingIdProvider?` | Reads the IDFA or GAID; pass `DectogAdId.provider` from `flutter_dectog_adid`. The core package never reads it. |
 | `fbAppId` | `String?` | Enables Meta's on-device referrer on Android; `null` takes the Facebook App ID saved in the dashboard. |
 | `persistDeviceId` | `bool` | Keep the first IDFV in the iOS Keychain. |
+| `enabled` | `bool` | Whether collection is on until the app first calls `setEnabled` (default `true`). `false` waits for consent; see `setEnabled`. The app's stored choice wins on every later launch. |
 | `defaultBaseUrl` | `static const String` | `'https://app.dectog.com'` |
 | `defaultLinkRootDomain` | `static const String` | `'dectog.com'` |
 | `effectiveBaseUrl` | `String get` | `baseUrl` with trailing slashes removed, or the default. |

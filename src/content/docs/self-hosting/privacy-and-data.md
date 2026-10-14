@@ -159,6 +159,7 @@ A self-hosted DecTog makes you the controller of this data. Items a policy and t
 7. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
 8. **Retention:** clicks, installs, events and app opens deleted after `RETENTION_DAYS` (400 by default), keeping only daily per-link counts; other personal columns anonymized then; screen profiles after 30 days, Apple tokens as soon as resolved.
 9. **Your website, with [`dectog.js`](/sdk/web/):** first-party cookies `dtg_click` (the click a visitor landed with, 30 days), `dtg_consent` (their answer, a year) and `dtg_banner`; the leads, purchases and custom events your pages send, with no IP stored. In the EU and EEA, the UK and Switzerland, and for browsers that send Global Privacy Control, nothing is stored before consent.
-10. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
+10. **Consent in your app:** with `DectogConfig(enabled: false)` the SDK sends nothing and reads no pasteboard until your app calls `setEnabled(true)`; events tracked meanwhile wait on the device (at most 7 days). See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
+11. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
 
 Adjust `RETENTION_DAYS` on the [Configuration reference](/self-hosting/configuration-reference/) if 400 days is longer than your policy allows.

@@ -52,9 +52,12 @@ four characters); a generate/rotate route returns a new `whsec_` secret once.
 hashed IP; reset requests 5 per IP and 3 per address. *Rejected:* a per-account
 lockout, which lets anyone lock a user out by failing on purpose.
 
-**9. `setEnabled` replaces `optOut`.** One persisted switch; while off the SDK
-records nothing (clicks, opens, the install, claims, pasteboard, pings, events),
-and turning it on registers an install that a disabled launch skipped.
+**9. `setEnabled` replaces `optOut`.** One persisted switch, and
+`DectogConfig(enabled: false)` to start off until consent. While off the SDK
+makes no request of its own and reads no pasteboard; it holds events on the
+device and the launch link's report in memory, and turning it on sends them and
+registers an install that a disabled launch skipped. A revoke drops the held
+link reports, not the held events.
 *Rejected:* keeping `optOut`, which never stopped clicks or the install, next to
 a second consent API.
 

@@ -131,7 +131,27 @@ Declare the collection in your privacy policy and in both store forms (Google Pl
 - Advertising ID: only with `flutter_dectog_adid` (see above).
 - Location: none. The SDK sends no location; the server derives country and ASN from the request's network address.
 
-If your consent regime is opt-in, call `setEnabled(false)` before the user is asked (the choice persists), and `setEnabled(true)` once they consent. Leaving `deviceTier` out of `collect` only drops the device tier.
+If your consent regime is opt-in, start with `DectogConfig(enabled: false)` and call `setEnabled(true)` once the user agrees; see [Waiting for consent](#waiting-for-consent). Leaving `deviceTier` out of `collect` only drops the device tier.
+
+## Waiting for consent
+
+```dart
+await dectog.initialize(DectogConfig(apiKey: '…', enabled: false));
+// … the user agrees:
+await dectog.setEnabled(true);
+```
+
+`enabled: false` holds collection until the app calls `setEnabled(true)`. The app's choice is stored, so from then on it wins over the config on every launch: a user who agreed once is not asked again, and one who said no stays off.
+
+While collection is off, the SDK makes no request of its own:
+
+- no click, app-open, install, claim, attribution, settings, resolve or device-ping request, and no pasteboard read;
+- events you track are held in the on-disk queue, up to the queue's 7 days;
+- a link that opens the app still reaches `onLinkClick`, as parsed from the URL: `slug`, `username`, `clickParams` and the query, without `linkResolution`. Its click and open are held in memory for this process.
+
+`setEnabled(true)` then sends the held events, registers the install if it never was, and reports the held links with the time they arrived. The store referrer still attributes the install deterministically; the fingerprint window has usually passed by then. Events held longer than 7 days are dropped, never sent.
+
+Calls your app makes itself still go out while collection is off: `createLink`, `getLinks`, `createTempLink`, `createReferralLink`, `resolveLink` and the other link-management methods. They carry no device data.
 
 ## Turning collection off
 
@@ -141,7 +161,7 @@ final on = await dectog.isEnabled();
 await dectog.setEnabled(true);       // resume
 ```
 
-`setEnabled(false)` is persisted in the SDK state file, so the next cold start begins disabled. While it is off, the SDK records nothing: no click or app-open reports, no install registration, no late claims, no pasteboard reads, no device pings, and new events are discarded (the on-disk queue is cleared when you disable). Incoming links are still parsed and delivered to `onLinkClick`, and resolving a link still calls the public resolve endpoint. `setEnabled(true)` restarts the event sender and, when this install was never registered because the SDK started disabled, registers it then: the store referrer still attributes it deterministically, but the fingerprint window may have passed.
+`setEnabled(false)` stops the same requests as above, from the next call on; a request already on its way completes. Events stay held on the device, and link reports held since the last consent are dropped, so a later `setEnabled(true)` sends the events but never reports a link that arrived before the user said no.
 
 ## Local storage
 
