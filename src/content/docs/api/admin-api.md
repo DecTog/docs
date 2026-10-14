@@ -85,17 +85,30 @@ See [Dashboard: Settings](/dashboard/settings/).
 | `DELETE /api/admin/temp-links/:slug` | session | Soft delete; `?permanent=1` deletes with history, like permanent links. | Always `200 {deleted: true}` |
 | `POST /api/admin/temp-links/:slug/restore` | session | Restores a deleted temporary link. | `200 {ok: true}`; `404 Temporary link not found` |
 
+## Webhooks
+
+The routes behind Apps → Webhooks; see [Webhooks](/api/webhooks/) for the envelope, the events and retries.
+
+| Method and path | Auth | Purpose | Response |
+|---|---|---|---|
+| `GET /api/admin/webhooks` | session | Every webhook of the account. | `200 {data: [Webhook], events, default_events}`; a Webhook is `{id, app_id, url, events, active, consecutive_failures, disabled_at, disabled_reason, created_at, updated_at}`, never its secret |
+| `POST /api/admin/webhooks` | session | `{url, app_id?, events?}`; `app_id` null or absent takes every app's events; `events` defaults to all but `click.recorded`. | `201` Webhook plus `secret` (`whsec_` and 64 hex), the only time it is shown; `400 url must be a valid http(s) URL`, `Unknown event …`, `Unknown app_id` |
+| `PUT /api/admin/webhooks/:id` | session | Any of `url`, `app_id`, `events`, `active` (boolean); `true` resets the failure count. | `200` Webhook; `404 Webhook not found` |
+| `DELETE /api/admin/webhooks/:id` | session | Deletes the webhook and its delivery log. | `200 {deleted: true}`; `404` |
+| `POST /api/admin/webhooks/:id/rotate-secret` | session | A new secret; the old one stops working at once. | `200` Webhook plus `secret` |
+| `POST /api/admin/webhooks/:id/test` | session | Delivers `webhook.test` now; never retried, never counted. | `200` the logged Delivery |
+| `GET /api/admin/webhooks/:id/deliveries?limit=` | session | The latest deliveries, newest first, `limit` 1 to 200 (default 50). | `200 {data: [Delivery]}`; a Delivery is `{id, webhook_id, event_id, event, data, attempt, status, http_status, response_excerpt, error, next_attempt_at, delivered_at, created_at, updated_at}` |
+| `POST /api/admin/webhook-deliveries/:id/resend` | session | One more attempt now, with the same `event_id`. | `200` the Delivery after it |
+
 ## Apps
 
 | Method and path | Auth | Purpose | Response |
 |---|---|---|---|
-| `GET /api/admin/apps` | session | All apps, oldest first. The first one is the account's default app. | `200` bare array with every column except `install_webhook_secret`, which is replaced by `install_webhook_secret_hint` (`…` plus its last four characters, or `null` when unset); `android_sha256_fingerprints` parsed into an array. The secret is never returned once saved. |
+| `GET /api/admin/apps` | session | All apps, oldest first. The first one is the account's default app. | `200` bare array with every column; `android_sha256_fingerprints` parsed into an array. |
 | `POST /api/admin/apps` | session | Create. `name` is the only required field. | `201 {id, name}`; `400 App name is required` or a field message |
-| `PUT /api/admin/apps/:id` | session | Partial update: absent keeps, a blank `name` keeps the old name, `""` or `null` clears other fields. `install_webhook_secret` is write-only: a non-empty string replaces it, `null` clears it, `""` or absent keeps it. | `200 {ok: true}`; `404 App not found` |
+| `PUT /api/admin/apps/:id` | session | Partial update: absent keeps, a blank `name` keeps the old name, `""` or `null` clears other fields. | `200 {ok: true}`; `404 App not found` |
 | `GET /api/admin/apps/:id/setup` | session | The setup checklist for one app, computed, never stored. | `200 {app_id, done, total, steps: [{key, label, status: done\|todo\|skipped, detail}], rules: {aasa, assetlinks}}`; each `rules` entry is null for a platform not set up, else `[{id, ok, message}]`; `404 App not found` |
-| `POST /api/admin/apps/:id/webhook-secret` | session | Generates a new install webhook secret, `whsec_` plus 64 hex characters, and replaces the stored one at once. | `200 {secret, hint}`: the only response that ever carries the secret; `404 App not found` |
 | `DELETE /api/admin/apps/:id` | session | Deletes the app; links bound to it get `app_id: null` and follow the default app from then on. Installs and clicks are untouched. | `200 {deleted: true}`; `404 App not found` |
-| `POST /api/admin/apps/:id/test-webhook` | session | Sends the test event described in [Install webhook](/api/install-webhook/), synchronously, 10-second timeout. | `200 {delivered: true, ok, status}` even for a non-2xx reply; `400 Save the webhook URL and secret first`; `502 Webhook delivery failed: <message>`; `404 App not found` |
 | `GET /api/admin/og-preview?url=` | session | Fetches a public page server-side and extracts a social preview. Follows redirects, 8-second timeout, reads at most 512 KB, first tag wins (`og:title`, `twitter:title`, `<title>`; `og:description`, `twitter:description`, `description`; `og:image:secure_url`, `og:image`, `twitter:image`, `twitter:image:src`), title and description cut to 150 characters. | `200 {title, description, image}`; `400 url query parameter is required`, `Enter a valid http(s) URL`, `Enter a valid public http(s) URL` (non-http scheme or a loopback, private or link-local host); `502 Couldn't reach that URL`, `That URL returned HTTP <n>`; `422 That URL isn't an HTML page`, `No title, description or image found on that page` |
 
 App fields and their validation messages (`400`). Every text field is trimmed before it is validated and stored, on create and on update:
@@ -108,14 +121,13 @@ App fields and their validation messages (`400`). Every text field is trimmed be
 | `huawei_store_url`, `samsung_store_url`, `xiaomi_store_url` | Host on the store's domains (Huawei `appgallery.huawei.com`, `appgallery.cloud.huawei.com`, `url.cloud.huawei.com`; Samsung `galaxystore.samsung.com`, `apps.samsung.com`, `galaxy.store`; Xiaomi `global.app.mi.com`, `app.mi.com`, subdomains included): `<store>_store_url must be a valid http(s) URL`, `<store>_store_url must be a <hosts> URL` |
 | `vivo_store_url` | Any http(s) URL |
 | `android_sha256_fingerprints` | Array; each upper-cased and matching `AA:BB:…` (32 pairs); blanks dropped: `SHA-256 fingerprints must be 32 hex byte pairs separated by colons (AA:BB:…)` |
-| `fallback_url`, `install_webhook_url` | http(s): `fallback_url must be a valid http(s) URL`, `install_webhook_url must be a valid http(s) URL` |
+| `fallback_url` | http(s): `fallback_url must be a valid http(s) URL` |
 | `ios_app_scheme`, `android_app_scheme` | A trailing `://` is stripped; letters, digits, `+`, `-`, `.`; `http`, `https`, `ws`, `wss`, `javascript`, `file`, `data`, `blob`, `about` and `intent` are refused: `ios_app_scheme must be a URL scheme (letters, digits, +, -, .) without :// — e.g. myapp`, `ios_app_scheme must be a custom app scheme — the browser handles http/https/javascript itself, so it can never open the app` (same for Android) |
 | `mobile_interstitial`, `strict_fraud_mode`, `ios_tap_to_store` | Truthy stores 1, else 0 |
 | `mmp_handoff` | `true` or `false` (anything else is a 400): add `clickid` (and `pid`) to AppsFlyer, Singular and Adjust tracking-link destinations |
 | `mmp_pid` | Optional media source for the handoff: 1 to 100 letters, digits, `.`, `-`, `_` |
 | `low_entropy_window_hours` | Whole number 1 to 720, or `null` / `""` for the deployment default: `low_entropy_window_hours must be a whole number of hours between 1 and 720` |
 | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
-| `install_webhook_secret` | Free text, trimmed; write-only (see `PUT`). Prefer `POST /api/admin/apps/:id/webhook-secret`, which generates a strong one. |
 | `fb_app_id` | Free text, trimmed. The worker only stores it; the SDK reads Meta's install referrer when `DectogConfig.fbAppId` is set in the app, not based on this field. |
 
 ## Analytics

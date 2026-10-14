@@ -86,7 +86,7 @@ When a `/api/v1` call is refused as malformed, the server stores the account, th
 
 ## Data that leaves the server
 
-- **Install webhook:** each delivery to your endpoint includes `device_id`, `device_model`, `device_manufacturer`, OS, connectivity, carrier codes, `ip_hash`, the matched link and click params, fraud flags and the Apple Search Ads record. The URL and secret are stored in plain text on the app and returned by `GET /api/admin/apps`. See [Install webhook](/api/install-webhook/).
+- **Webhooks:** the `app.installed` and `app.install_updated` deliveries include `device_id`, `device_model`, `device_manufacturer`, OS, connectivity, carrier codes, `ip_hash`, the matched link and click params, fraud flags and the Apple Search Ads record; `event.*` deliveries include the customer id and the event's metadata; `click.recorded` the click's `ip_hash`, country and language. Every delivery is kept in `webhook_deliveries` with that data and the start of your endpoint's response for 30 days, then deleted by the daily job; neither the retention sweep nor a permanent link delete removes it sooner. Webhook secrets are stored encrypted under `JWT_SECRET` and never returned after they are shown once. See [Webhooks](/api/webhooks/).
 - **Apple:** the AdServices token is posted to `api-adservices.apple.com`.
 - **European Central Bank:** once a day the Worker downloads `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` (the euro reference rates) to convert revenue. The request carries no data about you or your users.
 - **Resend:** the password-reset email (recipient address, reset link) when `RESEND_API_KEY` is set.

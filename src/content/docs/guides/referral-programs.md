@@ -33,11 +33,15 @@ An install records at most one referral. A user who identifies with the referrer
 
 ## 3. Reward from the webhook
 
-The install webhook of the referral link's app receives:
+Webhooks subscribed to `referral.converted` that take the referral link's app (or every app) receive:
 
 ```json
 {
+  "event_id": "evt_1f0c…",
   "event": "referral.converted",
+  "created_at": "2026-10-14T13:20:11.000Z",
+  "attempt": 1,
+  "data": {
   "username": "acme",
   "referral": {
     "id": "8b1d…",
@@ -50,10 +54,11 @@ The install webhook of the referral link's app receives:
     "link": { "slug": "r-3fa94c1b2e", "url": "https://acme.dectog.com/r-3fa94c1b2e" }
   },
   "processed_at": "2026-10-14T13:20:11.000Z"
+  }
 }
 ```
 
-It is signed like every delivery (see [Install webhook](/api/install-webhook/)) and sent once. Grant the reward there, keyed on `referral.id`. If `match_confidence` matters to your policy, for example rewarding only `guaranteed` matches, decide it there too.
+It is signed like every delivery and retried until delivered, with the same `event_id` each time (see [Webhooks](/api/webhooks/)). Grant the reward there, keyed on `referral.id`. If `match_confidence` matters to your policy, for example rewarding only `guaranteed` matches, decide it there too.
 
 ## In the dashboard
 

@@ -155,7 +155,7 @@ When the ladder and the fingerprint found nothing to credit or route, a reinstal
 
 ### 5. After the insert
 
-The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the install webhook (`app.installed`) of the app the verdict concerns. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
+The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the `app.installed` webhook event for the app the verdict concerns. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
 
 ## The stored explanation
 

@@ -136,7 +136,7 @@ Epoch values must fall between 1970 and 2100, otherwise they become `null`.
 6. **Fraud rules.** The flags below are evaluated and stored. When the app the verdict concerns (the credited or routed link's app, else the install's own app, else the oldest) has strict fraud mode on and the list is not empty, `matched` and `match_source` are zeroed; `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` stay as evidence and the click stays consumed.
 7. **Insert.** The row is written together with any synthesized click and the ad identifier. If two retries with the same `install_attempt_id` race, the unique index lets one in and the other receives the winner's verdict with `"replayed": true`.
 8. **Apple Search Ads.** A token starts its round-trip with Apple after the response is sent.
-9. **Webhook.** If the app the verdict concerns has a webhook URL and secret, `app.installed` is dispatched after the response. See [Install webhook](/api/install-webhook/).
+9. **Webhook.** `app.installed` goes to the webhooks that take the app the verdict concerns, after the response. See [Webhooks](/api/webhooks/).
 
 ### Strict fraud mode on the wire
 

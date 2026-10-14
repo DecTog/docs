@@ -1,6 +1,6 @@
 ---
 title: Migrate from Branch, Adjust or AppsFlyer
-description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to DecTog links, dec_* parameters, the SDK verdict and the install webhook, with a plain list of what DecTog does not do.
+description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to DecTog links, dec_* parameters, the SDK verdict and the webhooks, with a plain list of what DecTog does not do.
 sidebar:
   order: 2
 ---
@@ -28,7 +28,7 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 | Identity (Branch `setIdentity`, AppsFlyer `setCustomerUserId`) | `dectog.identify(customerId: ..., name: ..., email: ..., phone: ...)`; `dectog.logout()` forgets it |
 | Events (Branch `BranchEvent`, Adjust event tokens, AppsFlyer `logEvent` with `af_revenue`) | `dectog.trackConversion(revenue: ..., currency: ...)` and `dectog.trackEvent(name)`. The first `identify` of a new customer on a fresh install records the signup lead. See [Events](/sdk/events/). |
 | Attribution read-back (AppsFlyer `onConversionDataSuccess`, Adjust attribution callback) | `onAppInstalled`, `currentAppInstall`, and `getAttributionData()`, which re-pulls `GET /api/v1/attribution` after a restart |
-| Server postback (Branch webhooks, Adjust callbacks, AppsFlyer Push API) | The install webhook: `app.installed`, and `app.install_updated` when a late claim upgrades the verdict or Apple Search Ads resolves with attribution. HMAC-SHA256 signed, no retries. See [Install webhook](/api/install-webhook/). |
+| Server postback (Branch webhooks, Adjust callbacks, AppsFlyer Push API) | [Webhooks](/api/webhooks/): `app.installed`, `app.install_updated`, `event.conversion`, `event.lead`, `app.opened`, `referral.converted`, link changes and, opt-in, `click.recorded`. HMAC-SHA256 signed, logged, retried for about a day. |
 | Request signing (AppsFlyer `af_sig`) | Every SDK call carries `x-dectog-timestamp` and `x-dectog-signature`. Unsigned requests get 401. |
 
 ## Branch
@@ -64,7 +64,7 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | Install referrer with retries | Up to three connection attempts, 3 seconds apart, for transient Play errors. The first-launch registration waits up to `installReferrerTimeout` (default 5 seconds); a referrer that arrives later is sent as a late claim and `onAppInstalled` emits again. |
 | `retry_in` | The SDK honors `Retry-After`: up to 10 seconds in-process, longer waits defer to the next launch |
 | Apple Search Ads through AdServices | `DectogCollection.appleSearchAdsToken` in `collect` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
-| Server callbacks | The install webhook |
+| Server callbacks | Webhooks |
 | Reattribution | No equivalent. A late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. |
 | SKAdNetwork, ad-network integrations | None |
 
@@ -85,7 +85,7 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | `setCustomerUserId` | `identify(customerId: ...)` |
 | `logEvent` with `af_revenue` and `af_currency` | `trackConversion(revenue: ..., currency: ...)` |
 | `af_sig` | The request signature on every SDK call |
-| Push API | The install webhook. Only installs are delivered; events are not. |
+| Push API | Webhooks: installs, conversions, leads, opens and referrals |
 | Pull API, Master API | `GET /api/v1/links` (lifetime `click_count`) and the dashboard |
 | Protect360 | Eight rules: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. Strict fraud mode makes flagged installs count as organic. |
 | Apple Search Ads | `appleSearchAds` on the verdict |
@@ -111,7 +111,7 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 - One install per click. A click another install already consumed moves the ladder on to the next signal; `click_reuse` is flagged only when nothing later matches.
 - Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that carry a device model and 2 hours for model-less clicks and installs on cellular. The 2-hour window can be set per app (1 to 720 hours) in the app's Advanced settings.
 - App updates (`install_state: update`) never run the fingerprint. Reinstalls do, and carry `is_reinstall: true`. Late claims never run the fingerprint.
-- Strict fraud mode, the low-entropy window and the install webhook are read from the app the install concerns, and an install is only matched against its own app's links.
+- Strict fraud mode, the low-entropy window and an install's webhook app are read from the app the install concerns, and an install is only matched against its own app's links.
 - A pasted link or a Meta referrer earns credit for 7 days (per app); an older one routes the user without credit. Store referrers keep 30 days.
 - Apple Search Ads is resolved server-side and arrives later: `pending`, then `resolved`, `no_attribution`, `invalid` or `expired`. Only `resolved` and `no_attribution` are final.
 

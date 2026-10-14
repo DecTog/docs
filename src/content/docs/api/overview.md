@@ -28,7 +28,7 @@ Every example in this section uses the hosted base. A self-hosted deployment use
 | `POST /api/v1/clicks` | key + signature | [Clicks and installs](/api/clicks-and-installs/) |
 | `POST /api/v1/app-installs`, `POST /api/v1/app-installs/:id/claim` | key + signature | [Clicks and installs](/api/clicks-and-installs/) |
 | `POST /api/v1/events`, `GET /api/v1/attribution`, `POST /api/v1/device-ping`, `POST /api/v1/app-opens` | key + signature | [Events and attribution](/api/events-and-attribution/) |
-| Install webhook (outbound) | HMAC signature | [Install webhook](/api/install-webhook/) |
+| Webhooks (outbound) | HMAC signature | [Webhooks](/api/webhooks/) |
 | `/api/admin/*`, `/api/auth/*` | session cookie | [Admin API](/api/admin-api/) |
 | `/.well-known/*`, `/robots.txt`, `/sitemap.xml`, `/healthz`, `/readyz` | none | [Well-known files, SEO and routing](/api/well-known-seo-and-routing/) |
 

@@ -11,6 +11,10 @@ const description =
 export default defineConfig({
 	site: 'https://docs.dectog.com',
 	trailingSlash: 'always',
+	// Pages that moved; published copies of SKILL.md and the plugin still link the old URLs.
+	redirects: {
+		'/api/install-webhook/': '/api/webhooks/',
+	},
 	integrations: [
 		starlight({
 			title: 'DecTog Docs',

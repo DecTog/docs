@@ -49,7 +49,7 @@ dectog.onAppInstalled.listen((install) {
 
 ### Fraud flags and strict mode
 
-`fraudFlags` lists the rules the install tripped: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. `stale_clipboard` and `stale_meta` mark a pasted link or Meta referrer older than the app's window: the verdict routes (`routing`) but is not credited. By default the attribution stands and the flags are informational. With the app's strict fraud mode on, a flagged install comes back with `matched: false` and `matchSource: null`, while `referrerSource` and `matchConfidence` keep their values as evidence; `slug`, `link` and the other attribution fields are absent from the verdict (the server keeps the matched slug on its record and the install webhook still carries it). Strict mode is read from the app the install concerns (see [Apps](/dashboard/apps/)).
+`fraudFlags` lists the rules the install tripped: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. `stale_clipboard` and `stale_meta` mark a pasted link or Meta referrer older than the app's window: the verdict routes (`routing`) but is not credited. By default the attribution stands and the flags are informational. With the app's strict fraud mode on, a flagged install comes back with `matched: false` and `matchSource: null`, while `referrerSource` and `matchConfidence` keep their values as evidence; `slug`, `link` and the other attribution fields are absent from the verdict (the server keeps the matched slug on its record). Strict mode is read from the app the install concerns (see [Apps](/dashboard/apps/)).
 
 ### Other fields
 

@@ -74,7 +74,6 @@ Settings that apply per registered app live on the `apps` row and are edited und
 | OEM store URLs | `huawei_store_url`, `samsung_store_url`, `xiaomi_store_url`, `vivo_store_url` | Host-checked for Huawei (`appgallery.huawei.com`, `appgallery.cloud.huawei.com`, `url.cloud.huawei.com`), Samsung (`galaxystore.samsung.com`, `apps.samsung.com`, `galaxy.store`) and Xiaomi (`global.app.mi.com`, `app.mi.com`), subdomains included; vivo accepts any http(s) URL. See [App stores and OEM routing](/links/app-stores-and-oem-routing/). |
 | Facebook App ID | `fb_app_id` | Free text; when set, the Android SDK reads Meta's on-device install referrer |
 | Social preview | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
-| Install webhook | `install_webhook_url`, `install_webhook_secret` | http(s) URL and free text; both must be saved for deliveries and for "Send test". The secret is stored in plain text in D1 and is write-only through the API: the apps list returns only `install_webhook_secret_hint`. See [Install webhook](/api/install-webhook/). |
 | Mobile interstitial | `mobile_interstitial` | 0/1. Serves the beacon page on mobile taps so the click row gets a screen profile. |
 | iOS tap-to-store | `ios_tap_to_store` | 0/1. One-tap page that copies the link to the pasteboard before opening the App Store. |
 | Strict fraud mode | `strict_fraud_mode` | 0/1. Flagged installs count as organic. |
@@ -82,7 +81,7 @@ Settings that apply per registered app live on the `apps` row and are edited und
 | Pasted-link and Meta window | `deterministic_window_hours` | Whole number 1 to 720, or empty for `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` |
 | Re-engagement window | `reengagement_window_hours` | Whole number 1 to 720, or empty for `REENGAGEMENT_WINDOW_HOURS` |
 
-`strict_fraud_mode`, `low_entropy_window_hours`, `deterministic_window_hours` and the install webhook are read from the app an install concerns (`apps/worker/src/appscope.ts`): the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The redirect engine uses the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
+`strict_fraud_mode`, `low_entropy_window_hours`, `deterministic_window_hours` and an install's webhook app are read from the app an install concerns (`apps/worker/src/appscope.ts`): the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The redirect engine uses the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
 
 ## Fixed constants
 

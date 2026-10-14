@@ -114,7 +114,7 @@ Every install is checked against explainable rules. The hits ride on the verdict
 | `stale_meta` | The same for Meta's install referrer |
 | `click_reuse` | A deterministic signal named a click another device's install already consumed |
 
-With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the install webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
+With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the `app.installed` webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
 
 ## Apple Search Ads
 
@@ -134,5 +134,5 @@ The field is always present on the verdict and is `null` until a token was ever 
 ## Where you see the verdict
 
 - In the app: `onAppInstalled` on first launch and on upgrades; `getAttributionData()` later, re-pulled from the server when the cache is empty.
-- On your server: the install webhook.
+- On your server: the `app.installed` webhook.
 - In the dashboard: the Installs and Conversion cards, the **Attribution quality** card, the **Match confidence & referrer health** panel (confidence per platform, Android referrer coverage, fingerprint accuracy, click-to-install latency) and each customer's attribution block.

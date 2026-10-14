@@ -115,18 +115,19 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 
 `Retry-After` is the number of seconds until the current one-minute window ends, at least 1. Windows are aligned to the clock, not sliding. When the limiter's database is unavailable, SDK and API requests go through. The SDK honors `Retry-After` up to 10 seconds in-process and defers longer waits to the next launch; event batches rejected with 429 stay queued. Scripts should sleep for `Retry-After` seconds. See [API overview](/api/overview/).
 
-## Install webhook: "Send test"
+## Webhooks not arriving
 
-The button appears only while editing an existing app and is disabled while the URL box is empty. It posts `event: "app.installed"` with `test: true`, `matched: false`, `type: "organic"` and `device_model: "DecTog test probe"` to the saved URL, signed like a real delivery (`x-dectog-signature: sha256=<hex>` over the raw body, `x-dectog-timestamp` separate and unsigned), with a 10-second timeout.
+Open the app on the Apps page, then **Deliveries** on the webhook:
 
-| Message | Meaning |
+| What the log shows | Meaning |
 |---|---|
-| `Test event delivered — endpoint replied 200` | Your endpoint answered 2xx |
-| `Event delivered, but the endpoint replied 500` | Your endpoint answered, but not with 2xx |
-| `Save the webhook URL and secret first` | The server needs both the URL and the secret saved. The button checks only the URL box, so an unsaved or empty secret ends here. |
-| `Webhook delivery failed: <reason>` | Network failure or timeout |
+| Nothing for an event you expected | The webhook is not subscribed to it, or takes another app's events (an install belongs to the credited link's app, else the install's own app, else the oldest app). A webhook added in the last 30 seconds may not have reached every server yet. |
+| **Retry {time}** with `HTTP 500`, `HTTP 401` … | Your endpoint answered but not 2xx; the response start is in the last column. A `401` from your own check usually means the body was parsed and re-serialized before verifying, or the secret was rotated. |
+| **Retry** with a network error or `The operation was aborted` | The endpoint could not be reached, or took more than 10 seconds |
+| **Failed** | Six attempts over about a day failed; **Resend** tries again now |
+| Status chip **Off: 20 failed deliveries in a row** | The webhook was turned off; fix the endpoint, then **Turn on** |
 
-Real deliveries are fire-and-forget with no retries, and they go to the webhook of the app the install concerns (the credited link's app, else the install's own app). See [Install webhook](/api/install-webhook/).
+**Send test** delivers a `webhook.test` event, logged like the others. See [Webhooks](/api/webhooks/).
 
 ## Social preview: "Auto-fill from fallback URL"
 

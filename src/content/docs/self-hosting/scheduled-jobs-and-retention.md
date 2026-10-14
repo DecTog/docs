@@ -9,8 +9,8 @@ The Worker has two cron triggers, declared identically at the top level and in `
 
 | Expression | Fires | Runs |
 |---|---|---|
-| `7 * * * *` | Every hour at :07 | Apple Search Ads retry and the daily rollups |
-| `17 3 * * *` | Daily at 03:17 UTC | Apple Search Ads retry and the daily rollups, then the temporary-link purge, the deleted-link anonymization, the exchange rates and, once the rollups are done, the retention sweep |
+| `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups and webhook retries |
+| `17 3 * * *` | Daily at 03:17 UTC | The same, then the temporary-link purge, the deleted-link anonymization, the webhook delivery-log purge, the exchange rates and, once the rollups are done, the retention sweep |
 
 The code branches on the expression: `7 * * * *` returns after the Apple Search Ads pass and the rollups; any other expression runs everything. The jobs run inside `waitUntil`, so a failure in one does not stop the others, except that the retention sweep waits for the rollup build. There is no job-level logging beyond console warnings.
 
@@ -23,7 +23,7 @@ The code branches on the expression: `7 * * * *` returns after the Apple Search 
 1. Selects up to 100 installs with `asa_status = 'pending'` and a non-null `asa_token`, oldest `asa_token_at` first (index `idx_installs_asa_pending`).
 2. For each one, if the token arrived more than 24 hours ago (`ASA_TOKEN_TTL_MS`), the row is settled as `expired` without calling Apple. Apple answers 404 forever for such tokens.
 3. Otherwise it makes exactly one `POST https://api-adservices.apple.com/api/v1/` with the token as a `text/plain` body and increments `asa_attempts`:
-   - `200` with `attribution: true`: status `resolved`, Apple's record stored in `asa_attribution` (snake_case: `campaign_id`, `ad_group_id`, `keyword_id`, `ad_id`, `conversion_type`, `claim_type`, `click_date`, `impression_date`, `country_or_region`, `supply_placement`), and the install webhook of the install's app fires with `event: "app.install_updated"` if that app has a URL and secret.
+   - `200` with `attribution: true`: status `resolved`, Apple's record stored in `asa_attribution` (snake_case: `campaign_id`, `ad_group_id`, `keyword_id`, `ad_id`, `conversion_type`, `claim_type`, `click_date`, `impression_date`, `country_or_region`, `supply_placement`), and `app.install_updated` goes to the webhooks that take the install's app.
    - `200` with `attribution: false`: status `no_attribution`.
    - `400`: status `invalid`.
    - `404` (minted too recently): stays `pending`.
@@ -41,6 +41,16 @@ Each account has a `rollup_state` row: `through_day`, the last built day, and `f
 A change to a raw row of a built day moves `through_day` back to the day before it, and the next run rebuilds from there: a late claim that credits an older install, a store notification that changes an amount or reverses a refund, an exchange rate that arrives late, a new re-engagement window on an app (every unfrozen day), a deleted app, a new account currency, and a permanent link delete, which also removes the link's rollup rows.
 
 What reads the rollups: the Overview's clicks, installs, opens, leads and revenue, its clicks per day and per device, for windows over 7 days (which are whole UTC days, today included), and the lifetime installs, opens, leads and revenue of every link on the Links screen.
+
+## Webhook retries (both triggers)
+
+`retryDueDeliveries` (`apps/worker/src/webhooks.ts`) sends again every pending delivery whose `next_attempt_at` has passed and whose webhook is on, oldest first, up to 300 per run, ten at a time with a 10-second timeout each. A failure schedules the next attempt 5 minutes, 30 minutes, 2 hours, 6 hours and 24 hours after the previous one (six attempts in all), then marks the delivery failed. Because the job runs hourly, the 5- and 30-minute retries happen at the next :07. A larger backlog waits for the next run. See [Webhooks](/api/webhooks/#delivery-and-retries).
+
+## Webhook delivery log (daily)
+
+```sql
+DELETE FROM webhook_deliveries WHERE created_at < <now minus 30 days>
+```
 
 ## Temporary-link purge (daily)
 

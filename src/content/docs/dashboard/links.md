@@ -50,7 +50,7 @@ Hint: "Saved on every click of this link and returned to your app after install.
 | **Adgroup** | `instagram_stories` | Same. |
 | **Creative** | `video_15s` | Same. |
 
-These values are stored on every click of the link, can be overridden per tap with `dec_label`, `dec_campaign`, `dec_adgroup` and `dec_creative`, and come back to the app in the install verdict and in the install webhook. They do not feed the Overview's campaign and source charts, which read `utm_campaign` and `utm_source`; see [Overview](/dashboard/overview/).
+These values are stored on every click of the link, can be overridden per tap with `dec_label`, `dec_campaign`, `dec_adgroup` and `dec_creative`, and come back to the app in the install verdict and in the `app.installed` webhook. They do not feed the Overview's campaign and source charts, which read `utm_campaign` and `utm_source`; see [Overview](/dashboard/overview/).
 
 #### If the app isn't installed (mobile)
 

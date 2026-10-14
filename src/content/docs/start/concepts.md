@@ -17,7 +17,7 @@ Everything an account stores is scoped to it. There is no cross-account view; th
 
 ## Apps and the default app
 
-An app is a registered iOS and/or Android application: its identifiers, store URLs, custom schemes, social preview, install webhook and attribution options. An account can register any number of apps on the **Apps** page.
+An app is a registered iOS and/or Android application: its identifiers, store URLs, custom schemes, social preview, webhooks and attribution options. An account can register any number of apps on the **Apps** page.
 
 The **default app** is the oldest app of the account, the first one you registered. It matters in these places:
 
@@ -25,7 +25,7 @@ The **default app** is the oldest app of the account, the first one you register
 |---|---|
 | A permanent link created without an app, or whose app was deleted | The link routes through the default app's store URLs, schemes and fallback URL. |
 | Every temporary link | Temporary links have no app of their own and always use the default app. |
-| Strict fraud mode, the low-entropy attribution window and the install webhook | Only as the last resort. These three are read from the app the install concerns: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. |
+| Strict fraud mode, the low-entropy attribution window and the webhooks of an app | Only as the last resort. These are read from the app the install concerns: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. |
 | Deleting an app | Its links are re-pointed to the default app. Clicks and installs are untouched. |
 
 The well-known files are account-wide: `apple-app-site-association` lists every app with a bundle ID and Team ID, `assetlinks.json` every app with a package.
@@ -101,9 +101,9 @@ After the install the SDK can report:
 
 See [Events](/sdk/events/) and [Events and attribution](/api/events-and-attribution/).
 
-## Install webhook
+## Webhooks
 
-An app can name a webhook URL and secret. The server POSTs `app.installed` for every first-launch verdict and `app.install_updated` when a claim upgrades it or Apple Search Ads resolves with attribution. The body is signed with `x-dectog-signature: sha256=<HMAC-SHA256 of the raw body>` and carries `x-dectog-timestamp`. Delivery is fire-and-forget with no retries, and only the default app's webhook is used. See [Install webhook](/api/install-webhook/).
+An account can have any number of webhooks, each taking one app's events or every app's. The server POSTs the events a webhook is subscribed to: `app.installed` for every first-launch verdict and `app.install_updated` when a claim upgrades it, conversions and leads, app opens, referrals, link changes and, opt-in, every tap. The body is the envelope `{event_id, event, created_at, attempt, data}`, signed with `x-dectog-signature: sha256=<HMAC-SHA256 of the raw body>`. Every delivery is logged, and a failed one is retried for about a day. See [Webhooks](/api/webhooks/).
 
 ## Where things live
 

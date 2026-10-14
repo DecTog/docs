@@ -45,7 +45,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0005_device_data` | Device-tier columns on `clicks` and `app_installs`, `is_reinstall`, the device index, `ad_identifiers` |
 | `0006_social_preview` | `og_*` on `apps` and `links` |
 | `0007_temp_link_social` | `og_*` on `temp_links` |
-| `0008_install_webhook` | `install_webhook_url`, `install_webhook_secret` on `apps` |
+| `0008_install_webhook` | `install_webhook_url`, `install_webhook_secret` on `apps` (moved into `webhooks` and dropped by 0049) |
 | `0009_app_scheme` | `ios_app_scheme`, `android_app_scheme` |
 | `0010_click_referrer` | `clicks.referrer` (origin only, analytics) |
 | `0011_link_routing` | Deep-link paths, `redirect_url`, `fallback_url` on `links` |
@@ -68,6 +68,26 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0027_apple_search_ads` | `asa_status`, `asa_attempts`, `asa_token_at`, `asa_resolved_at` and the pending-token index |
 | `0028_claim_source` | `claim_source` on `app_installs`: which late signal upgraded the install |
 | `0029_sdk_identity` | `sdk_name` and `sdk_version` on `app_installs`, `events` and `clicks` |
+| `0030_api_keys` | `api_keys`: SDK keys with scopes, environment, last use, expiry and revocation |
+| `0031_fp_collapse` | `app_installs.collapsed_from`: identical fingerprint candidates counted as one |
+| `0032_deterministic_window` | `apps.deterministic_window_hours`: how long a pasted link or Meta referrer earns credit |
+| `0033_event_idempotency` | `events.client_event_id` with a unique partial index |
+| `0034_revenue` | Store transaction columns on `events` (`transaction_id`, `original_transaction_id`, `product_id`, `store`, `purchase_type`, `quantity`, `transaction_type`, `revenue_base`), `users.base_currency`, `fx_rates` |
+| `0035_probabilistic_match` | `apps.probabilistic_match` |
+| `0036_rejected_requests` | `rejected_requests`: refused v1 calls, kept 30 days |
+| `0037_install_recovery` | `app_installs.recovered_from` |
+| `0038_reengagement` | `open_slug`, `open_click_id`, `open_at`, `session_id` on `events`; `apps.reengagement_window_hours` |
+| `0039_match_details` | `app_installs.match_details`: the stored match explanation |
+| `0040_referrals` | `links.referrer_customer_id` (unique per customer), `referrals` |
+| `0041_sdk_config` | `apps.oem_store_referrers`, `apps.read_clipboard_on_install` |
+| `0042_store_notifications` | `events.source`, `app_store_endpoints`, `store_notifications` |
+| `0043_link_lifecycle` | Pause, expiry, expired URL, archive and soft delete columns on `links` and `temp_links` |
+| `0044_link_daily` | `link_daily` (daily rollups) and `rollup_state` |
+| `0045_link_page_overrides` | `ios_tap_to_store`, `mobile_interstitial` on `links` (null follows the app) |
+| `0046_routing_rules` | `links.routing_rules`: geo and language rules |
+| `0047_link_templates` | `link_templates`; `template_id`, the five `utm_*` and `external_id` (unique per account) on `links` |
+| `0048_mmp_handoff` | `apps.mmp_handoff`, `apps.mmp_pid` |
+| `0049_webhooks` | `webhooks` and `webhook_deliveries`; copies each app's 0008 webhook into `webhooks`, then **drops** `apps.install_webhook_url` and `apps.install_webhook_secret`. Deploy the worker right after applying it: the previous worker still writes those columns when an app is saved. |
 
 ### Commands
 
