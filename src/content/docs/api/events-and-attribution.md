@@ -45,6 +45,7 @@ String values are trimmed and truncated to the stated length; empty strings beco
 - Each event stands on its own. An invalid event is listed in `rejected` with its index in the batch and the error; the other events are stored.
 - An event whose `client_event_id` the account already stored, or that repeats an id earlier in the same batch, counts in `duplicates` and is not stored again. This is what makes a resend after a lost response safe: a purchase is never counted twice.
 - The response is `200 {"accepted": n, "duplicates": n, "rejected": [{"index": i, "error": "…"}]}`.
+- When the batch names an `install_id` the account does not have (after a database restore, a retention purge, or a build pointed at a fresh database), the events are still stored and the answer adds `"code": "install_not_found", "action": "reregister"`. The SDK then registers the install again.
 - When every event of the batch is invalid the answer is `400` with the same list: `{"error": {"code": "invalid_request", "message": "Every event in the batch is invalid", "rejected": [...]}}`.
 - More than 100 events answer `413 {"error": {"code": "payload_too_large", "message": "events batch exceeds 100 items"}}`.
 
@@ -104,7 +105,8 @@ Returns the stored verdict for a device or an install, so an app can recover it 
 | Status | Body |
 |---|---|
 | 400 | `{"error": {"code": "invalid_request", "message": "device_id or install_id query parameter is required"}}` |
-| 404 | `{"error": {"code": "not_found", "message": "No install found for this device"}}`: no install exists for that device or install id. |
+| 404 | `{"error": {"code": "not_found", "message": "No install found for this device"}}`: no install exists for that device. |
+| 404 | `{"error": {"code": "install_not_found", "message": "This install is not known to the server; register it again", "action": "reregister"}}`: the `install_id` names no install of yours. |
 | 200 | The verdict. An organic install answers 200 with `"matched": false`; 404 only means "no install at all". |
 
 `last_open` is always present: `{"username", "slug", "click_id", "opened_at"}` for the latest app open reported for this device (the query's `device_id`, or the install's own) or for this install id, else `null`.
