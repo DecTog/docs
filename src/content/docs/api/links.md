@@ -35,6 +35,8 @@ Every permanent-link route returns the full object, including fields you never s
   "campaign": "spring",
   "adgroup": null,
   "creative": null,
+  "ios_tap_to_store": null,
+  "mobile_interstitial": null,
   "referrer_customer_id": null,
   "expires_at": null,
   "expired_url": null,
@@ -60,6 +62,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `redirect_url` | string or null | Mobile visitors without the app go here instead of the store. A store URL here is still tagged with the click id. |
 | `fallback_url` | string or null | Where desktop visitors go instead of the QR page, and the last mobile fallback. |
 | `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `dec_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
+| `ios_tap_to_store`, `mobile_interstitial` | boolean or null | This link's iOS tap-to-store page and mobile interstitial. `null` follows the app's setting. See [How a tap is routed](/links/how-a-tap-is-routed/#mobile-delivering-it). |
 | `referrer_customer_id` | string or null | Set on a customer's referral link. See [Referral programs](/guides/referral-programs/). |
 | `expires_at`, `expired_url` | string or null | When the link expires, and where taps go after that instead of a `410` page. |
 | `disabled_at`, `disabled_reason` | string or null | Paused since, and your note on why. A paused link answers `410` and records nothing. |
@@ -88,6 +91,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `ios_deep_link_path`, `android_deep_link_path` | string | no | A relative route such as `products/42?color=black`. At most 512 characters; no `:`, whitespace, `#`, `;` or control characters. A leading `/` is stripped. `""` stores `null`. |
 | `redirect_url`, `fallback_url` | string | no | http(s) URLs. `""` stores `null`. |
 | `label`, `campaign`, `adgroup`, `creative` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
+| `ios_tap_to_store`, `mobile_interstitial` | boolean or null | no | `true` or `false` overrides the app's setting for this link; `null` or absent follows it. Anything else answers `400 Invalid ios_tap_to_store: must be true, false or null (follow the app)`. |
 | `expires_at` | string | no | An ISO 8601 time such as `2026-12-31T23:59:00Z`, stored in UTC. A time in the past creates an already-expired link. |
 | `expired_url` | string | no | An http(s) URL taps go to once the link has expired. |
 | `disabled`, `disabled_reason` | boolean, string | no | `true` creates the link paused. The reason is at most 255 characters. |

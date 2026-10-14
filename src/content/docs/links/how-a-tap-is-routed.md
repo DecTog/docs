@@ -21,12 +21,15 @@ A link such as `https://acme.dectog.com/welcome` is served by the redirect engin
 | # | Check | Result |
 |---|---|---|
 | 1 | The username does not exist | `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or the 404 page when that variable is unset. Applies in path mode too. |
-| 2 | The slug is a temporary link whose `expires_at` has passed | `410` page, for bots as well |
-| 3 | No permanent or temporary link has this slug | `404` page |
-| 4 | The request is a `HEAD`, the user agent is a bot, or Cloudflare's bot score is below 30 | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
-| 5 | Otherwise | A click row is built. The app is the link's app, or the account's default (oldest) app. |
-| 6 | The user agent is iOS or Android | The mobile chain below |
-| 7 | Anything else, or a mobile visitor with no destination at all | The shared tail below |
+| 2 | No permanent or temporary link has this slug, or the link is deleted | `404` page |
+| 3 | The link is paused | `410` "Link paused" page, for bots as well, **no click recorded** |
+| 4 | The link has expired: a temporary link's `expires_at`, or a permanent link's when it has one, has passed | `302` to the link's expired URL when it has one, else the `410` "Link expired" page; for bots as well, **no click recorded** |
+| 5 | The request is a `HEAD`, the user agent is a bot, or Cloudflare's bot score is below 30 | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
+| 6 | Otherwise | A click row is built. The app is the link's app, or the account's default (oldest) app. |
+| 7 | The user agent is iOS or Android | The mobile chain below |
+| 8 | Anything else, or a mobile visitor with no destination at all | The shared tail below |
+
+An archived link routes like any other. See [Links: pause, expire, archive and delete](/api/links/#pause-expire-archive-and-delete).
 
 "iOS" means the user agent contains `iPhone`, `iPad` or `iPod`; "Android" means it contains `Android`, tablets included. Everything else is desktop, including iPadOS Safari in its default desktop mode, which reports itself as macOS.
 
@@ -55,8 +58,8 @@ With a destination in hand, the response depends on the app's settings and the b
 
 | # | Condition | Response | Click recorded |
 |---|---|---|---|
-| a | iOS, **iOS tap-to-store** is on, and the destination is the App Store (a tagged `apple.com` custom redirect, or no custom redirect and an App Store URL) | `200` tap-to-store page | Before the response |
-| b | **Mobile beacon interstitial** is on and a destination exists | `200` interstitial page. Hint-less Chromium first gets a one-shot `302` to the same URL with `?_ch=1` and `Critical-CH`, which inserts nothing. | Before the response |
+| a | iOS, **iOS tap-to-store** is on for the link (its own setting, else the app's), and the destination is the App Store (a tagged `apple.com` custom redirect, or no custom redirect and an App Store URL) | `200` tap-to-store page | Before the response |
+| b | **Mobile beacon interstitial** is on for the link (its own setting, else the app's) and a destination exists | `200` interstitial page. Hint-less Chromium first gets a one-shot `302` to the same URL with `?_ch=1` and `Critical-CH`, which inserts nothing. | Before the response |
 | c | Hint-less Chromium (see below) | `302` with `Critical-CH` | **Not yet.** Chrome retries the navigation with the model hint and the retry records it. |
 | d | Android intent bounce applies | `302` to an `intent://` URL | Before the response |
 | e | Any other destination | `302` | After the response, in the background |
@@ -74,11 +77,11 @@ intent://{path or username/slug}?dtg_click=<id>#Intent;scheme={scheme};package={
 
 ### The interstitial page
 
-Turned on per app with **Mobile beacon interstitial**. The page is titled "Opening the app…", carries `noindex`, and on load POSTs the screen width and height, pixel ratio, touch points and connection type to `/_/collect`, which updates the click row once. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
+Turned on per app with **Mobile beacon interstitial**, and on or off for a single link under **Mobile landing pages** in the link drawer (`mobile_interstitial: true | false`; `null` follows the app). The page is titled "Opening the app…", carries `noindex`, and on load POSTs the screen width and height, pixel ratio, touch points and connection type to `/_/collect`, which updates the click row once. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
 
 ### The iOS tap-to-store page
 
-Turned on per app with **iOS tap-to-store**. iOS has no install referrer and Safari only writes the pasteboard from a user gesture, so this page replaces the automatic redirect with one button. It is titled "Get {app name}" and shows **Get {app name}** plus, when the app has an iOS scheme, a secondary **Open in app** button. Inside the Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X in-app browsers, and only when a scheme exists, the heading becomes "Continue in the app" and **Open in app** comes first. The Get tap shows a "Link saved" notice, writes `https://acme.dectog.com/welcome?dtg_click=<id>` to the pasteboard and opens the tagged store URL; a 600 ms safety timer opens the store even if the write never settles. **Open in app** only navigates to the scheme URL. There are no timers before the tap, and the same beacon as the interstitial fires on load. Without JavaScript the page shows an **Open the App Store** link.
+Turned on per app with **iOS tap-to-store**, and on or off for a single link under **Mobile landing pages** in the link drawer (`ios_tap_to_store: true | false`; `null` follows the app), so a paid campaign link can show it while a support link opens the store directly. iOS has no install referrer and Safari only writes the pasteboard from a user gesture, so this page replaces the automatic redirect with one button. It is titled "Get {app name}" and shows **Get {app name}** plus, when the app has an iOS scheme, a secondary **Open in app** button. Inside the Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X in-app browsers, and only when a scheme exists, the heading becomes "Continue in the app" and **Open in app** comes first. The Get tap shows a "Link saved" notice, writes `https://acme.dectog.com/welcome?dtg_click=<id>` to the pasteboard and opens the tagged store URL; a 600 ms safety timer opens the store even if the write never settles. **Open in app** only navigates to the scheme URL. There are no timers before the tap, and the same beacon as the interstitial fires on load. Without JavaScript the page shows an **Open the App Store** link.
 
 ### Client hints and hint-less Chromium
 
@@ -102,8 +105,9 @@ Desktop never redirects to the link's target automatically. The target only appe
 
 | Status | Page | When |
 |---|---|---|
-| 404 | "Link not found" / "This DecTog link does not exist." | Unknown slug, or unknown username when `UNKNOWN_HOST_REDIRECT` is unset |
-| 410 | "Link expired" / "This temporary link has expired and is no longer available." | Expired temporary link, until the daily purge removes it (after that: 404) |
+| 404 | "Link not found" / "This DecTog link does not exist." | Unknown slug, a deleted link, or unknown username when `UNKNOWN_HOST_REDIRECT` is unset |
+| 410 | "Link paused" / "This link is paused and not available right now." | A paused link |
+| 410 | "Link expired" / "This link has expired and is no longer available." | An expired link without an expired URL; for a temporary link until the daily purge removes it (after that: 404) |
 
 Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at `https://dectog.com/` and the footer "Check the link for typos, or ask whoever shared it for a new one." Two or more path segments on a tenant host return JSON `404 {"error":{"code":"not_found","message":"Not found"}}` instead.
 

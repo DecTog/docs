@@ -132,6 +132,7 @@ Permanent links only.
 |---|---|
 | **iOS deep link path**, **Android deep link path** | Free text, placeholder `products/42?color=black`, with the same server rules as the create form. Each box is disabled, with the placeholder `no scheme set`, while the link's own app has no scheme for that platform, because a path is only used in a scheme URL. The drawer's app preview and fallback default also come from the link's own app. |
 | **If the app isn't installed** | **App stores** (marked **Default**) or **Custom URL** (placeholder `https://promo.example.com/offer`). Sets `redirect_url`. |
+| **Mobile landing pages** | **iOS tap-to-store page** and **Interstitial page**, each **App setting (on)** or **App setting (off)** (the default, following the link's app), **On for this link** or **Off for this link**. See [How a tap is routed](/links/how-a-tap-is-routed/#mobile-delivering-it). |
 | **If the app can't open the link (desktop)** | **Branded QR page**, or **App fallback URL** when the link's app has one (marked **Default**), or **Custom URL** (placeholder `https://web.example.com/page`). Sets `fallback_url`. |
 
 The last row sets the same `fallback_url` field, with the same labels, as the create form. The field is the desktop and no-destination tail: with no custom URL, a desktop visitor gets the app's Fallback URL if there is one, otherwise the branded QR page.
