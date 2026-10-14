@@ -116,3 +116,7 @@ Shown only when there are any. Subtitle: "Times a DecTog link re-opened the inst
 :::note[Self-hosting]
 The screen behaves the same on a self-hosted deployment. The daily retention job blanks a customer's name, email and phone after the configured retention period; see [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
 :::
+
+### Personal data
+
+At the bottom of the page: **Download everything stored (JSON)** saves what DecTog holds about the customer (the record, its events, its referrals and its devices), and **Erase this customer** deletes it after a confirmation, together with each device only this customer used. A device another customer also used keeps that customer's data. The page then shows what went, for example "Customer erased: 1 customer record, 1 device, 1 install, 5 events". Both are recorded in the [audit log](/dashboard/settings/#audit-log) without the customer id. What each covers is in [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person).

@@ -114,20 +114,37 @@ When a `/api/v1` call is refused as malformed, the server stores the account, th
 | "Delete expired" temporary links | Only the `temp_links` rows; clicks and installs stay. |
 | Delete an app | Its links fall back to the oldest remaining app; installs and clicks are untouched; its store notification URLs stop working. |
 | Regenerate the API key | The old key stops working immediately. |
+| Erase a device or a customer | See [A request from one person](#a-request-from-one-person). |
+| Shorten the retention window (Settings → **Data retention**) | From the next daily run, the account's raw rows older than its window are anonymized or deleted, as `RETENTION_DAYS` does for the deployment. |
 
-There is no way through the dashboard or the API to delete an account, a customer, a single install, click or event, or to rename a username. A data-subject request therefore needs direct database access, always scoped to the tenant:
+There is no way through the dashboard or the API to delete an account or to rename a username.
+
+## A request from one person
+
+When someone asks what you hold about them, or asks you to delete it, find their device or customer id (the Customers screen, or the install detail on Overview and Links) and use **Download everything stored (JSON)** or **Erase this device** / **Erase this customer** there. From a server, with the account key and the `dectog` helper from [Signing with curl](/api/overview/#signing-with-curl):
 
 ```bash
-# everything recorded for one device id of one tenant (replace both placeholders)
-npx wrangler d1 execute dectog --remote --env production --command \
-  "DELETE FROM events WHERE user_id = '<user_id>' AND device_id = '<device_id>';
-   DELETE FROM app_opens WHERE user_id = '<user_id>' AND device_id = '<device_id>';
-   DELETE FROM device_pings WHERE user_id = '<user_id>' AND device_id = '<device_id>';
-   DELETE FROM ad_identifiers WHERE install_id IN (SELECT id FROM app_installs WHERE user_id = '<user_id>' AND device_id = '<device_id>');
-   DELETE FROM app_installs WHERE user_id = '<user_id>' AND device_id = '<device_id>';"
+dectog GET    /api/v1/devices/<device_id>/export > device.json
+dectog DELETE /api/v1/devices/<device_id>
 ```
 
-Deleting an install row frees its click for a future fingerprint match (the `NOT EXISTS` check in the candidate query), which is the intended consequence of removing the record.
+`/api/v1/customers/<customer_id>/export` and `DELETE /api/v1/customers/<customer_id>` do the same for a customer (URL-encode an id with `/`, spaces or other reserved characters). An SDK key gets `403 account_key_required`.
+
+**The export** is a JSON file: the device's installs (device, OS, app version, screen, network, language, raw IP when `STORE_RAW_IP=1`, the attribution verdict and fraud flags), its taps (link, time, country, region, city, browser, user agent, referrer, UTM), events, app opens, app starts, advertising ids and the referral that brought it. A customer's export holds the customer record, its events, the referrals it made and received (without the other customers' ids), and its devices: each device only they used, exported in full, and each device another customer also used, by id only. Salted IP hashes, matching internals and the Apple Search Ads token are left out.
+
+**Erasing a device** deletes, in one batch, its installs, events (by device id or install id), app opens, app starts, advertising ids, the referrals that name it, and the webhook deliveries that mention the device, one of its installs or one of its taps. Its taps keep their link, time, country, platform and UTM, so link counts stay, and lose the device id and model, IP, user agent, language, region, city, network, referrer, screen profile, session and link parameters. Customers that pointed at its installs keep their record, with the install link cleared.
+
+**Erasing a customer** deletes the customer record, its events and the referrals it made or received, and the webhook deliveries that name it, then erases each device only that customer used, as above. A device another customer also used is kept, with that customer's data; only the erased customer's events on it go.
+
+What stays, and for how long:
+
+- **Counts.** The daily rollups hold totals per link and day, never a device or a person, and keep them.
+- **The audit log** records the request: who erased or exported, when, the number of rows per table, and the first 12 hex characters of `sha256("<account>:<device|customer>:<id>")`, never the id itself.
+- **A tombstone** with that hash, for 8 days: an SDK keeps unsent events up to 7 days, so an event of the erased device or customer with a client timestamp before the erasure is acknowledged and dropped. Events made after the erasure are stored as new data.
+- **CSV exports** made earlier keep their copy until the file expires, at most 7 days.
+- **D1 Time Travel** can restore the database to any minute of the last 30 days (7 on the Workers Free plan), so erased rows stay restorable there until then. Nothing in DecTog restores them.
+
+Deleting an install row frees its click for a future fingerprint match (the `NOT EXISTS` check in the candidate query), but the erased taps have no IP hash or device model left to match on.
 
 ## For your privacy policy
 

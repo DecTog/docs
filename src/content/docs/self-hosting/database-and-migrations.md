@@ -9,11 +9,11 @@ DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. 
 
 ## Tables
 
-The schema at migration 0057 has 32 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by `user_id` (the tenant) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
+The schema at migration 0058 has 33 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by `user_id` (the tenant) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
 
 | Table | One line |
 |---|---|
-| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix`, the encrypted viewable key `api_key_enc`, `role` (`owner` or `user`), `google_sub` |
+| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix`, the encrypted viewable key `api_key_enc`, `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`) |
 | `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, webhook URL and secret, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |
@@ -42,6 +42,7 @@ The schema at migration 0057 has 32 tables (`apps/worker/src/db/tables.ts`). Eve
 | `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |
 | `export_jobs` | CSV exports past `EXPORT_STREAM_MAX_ROWS` rows: the query, progress, the R2 key and when the file goes |
 | `device_models`, `device_model_refresh` | Marketing names (brand, name) for the Android models installs reported, keyed by the lowercased model, and when Google's list was last read |
+| `erasures` | One row per erased device or customer for 8 days: the SHA-256 of the account, the kind and the id, never the id itself, with when it was erased; events queued earlier are dropped on arrival |
 | `audit_events` | The audit log: per account, entries numbered by `seq` (the key, with `user_id`), the action, who acted, the target, the changed fields with secrets redacted, hashed IP, user agent, request id. Only ever inserted; kept as long as the account |
 | `custom_domains` | Each account's custom link domain: the Cloudflare hostname id, the state, the DNS records to add, errors, the checks, the suspension and its end. The active one is also `users.custom_domain`. |
 
@@ -111,6 +112,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0055_click_routing_rule` | `clicks.routing_rule`: the routing rule (geo, language, schedule or A/B variant) a tap matched |
 | `0056_events_install_index` | An index on `events(user_id, install_id)`, for the `ltv` metric |
 | `0057_audit_events` | `audit_events`, the audit log (P4.2), keyed by `(user_id, seq)` without a rowid |
+| `0058_erasure` | `users.retention_days` (the account's own window) and `users.erasures_until`; `erasures`, the tombstones of erased devices and customers (P4.1) |
 
 ### Commands
 

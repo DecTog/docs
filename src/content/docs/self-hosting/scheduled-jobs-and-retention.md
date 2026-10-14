@@ -80,7 +80,7 @@ Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currenc
 
 ## Anonymization sweep (daily)
 
-The cutoff is `now minus RETENTION_DAYS` (default 400; `0`, blank or non-numeric also means 400).
+The cutoff is `now minus RETENTION_DAYS` (default 400; `0`, blank or non-numeric also means 400). An account with a shorter window of its own (Settings → **Data retention**, 1 to 400 days; `PUT /api/admin/settings/retention`) is then swept again with its own cutoff, in the same order; a longer one has no effect.
 
 First, for every account whose rollups are built through the cutoff's day, the clicks, installs, events and app opens older than the cutoff are deleted, and `frozen_through` becomes the cutoff's day: those days' totals now live only in `link_daily` and are never rebuilt (a later change of account currency converts them with each day's exchange rates instead). This is what keeps storage at about the retention window's worth of rows; see [What it costs to run](/self-hosting/cost/).
 
@@ -100,6 +100,8 @@ Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commit
 | `clicks` | SET NULL | `clicked_at < cutoff` | `device_id`, `device_model`, `ip_raw`, `ip_hash`, `ua_raw`, `accept_language`, `region`, `city`, `asn`, `as_org`, `launch_referrer` |
 | `clicks` (screen profile) | SET NULL | `clicked_at` older than `min(RETENTION_DAYS, 30)` days, only rows that still carry a value | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points` |
 | `rate_limits` | DELETE rows | `window_start` older than the current 60 s window minus 2 | whole row |
+| `erasures` | DELETE rows | `expires_at` passed: 8 days after a device or customer was erased | whole row |
+| `webhook_deliveries` | DELETE rows | an account whose own window is under 30 days: older than its cutoff (otherwise the 30-day job below) | whole row |
 
 The screen profile is dropped early because it is only ever read inside the fingerprint window, which never exceeds 30 days (720 hours). `enriched_at` is kept on purpose: it is the "first beacon wins" gate, and a null would let a late beacon rewrite the row.
 
@@ -117,12 +119,12 @@ The screen profile is dropped early because it is only ever read inside the fing
 
 ### Tables the sweep never touches
 
-`users`, `apps`, `links`, `temp_links` (apart from the expiry purge), `blog_categories`, `blog_posts`, `contact_messages` and `password_resets`. Contact-form messages and used or expired reset tokens (hashes only) therefore accumulate until someone deletes them: owners can delete messages in the dashboard; `password_resets` rows can only be removed with `wrangler d1 execute`.
+`users`, `apps`, `links`, `temp_links` (apart from the expiry purge), `audit_events` (kept as long as the account), `blog_categories`, `blog_posts`, `contact_messages` and `password_resets`. Contact-form messages and used or expired reset tokens (hashes only) therefore accumulate until someone deletes them: owners can delete messages in the dashboard; `password_resets` rows can only be removed with `wrangler d1 execute`.
 
 ### Limits
 
-- One `RETENTION_DAYS` for the whole deployment; there is no per-tenant value.
-- Past the cutoff, raw rows are deleted once their day is in the rollups, and only anonymized until then. Within the retention window, deleting a link permanently is the only cascade a tenant can trigger (see [Privacy and data](/self-hosting/privacy-and-data/)); a plain delete keeps the rows.
+- An account can shorten its window, never lengthen it past `RETENTION_DAYS`.
+- Past the cutoff, raw rows are deleted once their day is in the rollups, and only anonymized until then. Within the retention window, a tenant can delete a link permanently, or erase one device or customer (see [Privacy and data](/self-hosting/privacy-and-data/#a-request-from-one-person)); a plain delete keeps the rows.
 - The sweep runs once a day at 03:17 UTC. Data older than the cutoff can exist for up to 24 hours before it is anonymized, and a Worker that is undeployed or erroring skips its runs silently.
 
 ### Checking that it ran

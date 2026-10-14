@@ -67,8 +67,22 @@ The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` 
 | `GET /api/admin/keys` | session | SDK keys, active first, newest first. | `200 {keys: [{id, name, kind, prefix, key, scopes, environment, last_used_at, created_at, revoked_at}]}`; `key` is the full key (`null` once revoked or when it cannot be decrypted) |
 | `POST /api/admin/keys` | session | `{name?, links_write?}`. Creates an SDK key; `links_write: true` adds the `links:write` scope. | `201 {id, name, key, prefix, scopes}`; `409` at 20 active keys |
 | `POST /api/admin/keys/:id/revoke` | session | Revokes an SDK key of the account at once. | `200 {ok: true}`; `404 Key not found` (unknown, foreign or already revoked) |
+| `PUT /api/admin/settings/retention` | session | `{retention_days}`: the account's own retention window, a whole number from 1 to 400, or `null` for the deployment's `RETENTION_DAYS`. The shorter of the two applies, from the next daily run. | `200 {retention_days, effective_retention_days, deployment_retention_days}`; `400` otherwise. `GET /api/admin/settings` returns the same three fields. |
 
 See [Dashboard: Settings](/dashboard/settings/).
+
+## Personal data
+
+A request from one person, for a device or a customer; see [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person) for what each covers. The same four routes exist under `/api/v1/devices/…` and `/api/v1/customers/…` for the account key (an SDK key gets `403 account_key_required`).
+
+| Method and path | Auth | Purpose | Response |
+|---|---|---|---|
+| `GET /api/admin/devices/:deviceId/export` | session | Everything stored about one device. | `200`, a JSON file: `{subject, account, exported_at, retention_days, installs, clicks, events, app_opens, device_pings, advertising_ids, referred_by}` |
+| `DELETE /api/admin/devices/:deviceId` | session | Erases the device. | `200 {erased: true, device_id, deleted: {events, app_opens, device_pings, ad_identifiers, referrals, customers_unlinked, webhook_deliveries, clicks_blanked, installs}}` (rows per table; `clicks_blanked` were kept without their personal columns) |
+| `GET /api/admin/customers/:customerId/export` | session | Everything stored about one customer. | `200`, a JSON file: `{subject, account, exported_at, retention_days, customer, events, referred_by, referrals_made, devices: [{device_id, shared, …the device export when not shared}]}` |
+| `DELETE /api/admin/customers/:customerId` | session | Erases the customer, and each device only they used. | `200 {erased: true, customer_id, deleted: {customer, events, referrals, webhook_deliveries, devices, shared_devices_kept, …the device counts}}` |
+
+Erasing something that was never stored answers `200` with zero counts: the request is still recorded, and the tombstone still drops queued events.
 
 ## Audit log
 
@@ -90,9 +104,9 @@ An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_
 | Apps | `app.created`, `app.updated`, `app.deleted`, `app.store_notifications_enabled`, `app.store_notifications_rotated`, `app.store_notifications_updated`, `app.store_notifications_disabled` |
 | Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by DecTog) |
 | Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by DecTog) |
-| Keys and settings | `sdk_key.created`, `sdk_key.revoked`, `site_key.created`, `site_key.updated`, `site_key.revoked`, `account_key.regenerated`, `settings.base_currency_changed` |
+| Keys and settings | `sdk_key.created`, `sdk_key.revoked`, `site_key.created`, `site_key.updated`, `site_key.revoked`, `account_key.regenerated`, `settings.base_currency_changed`, `settings.retention_changed` |
 | Sign-in | `account.created`, `account.bootstrapped`, `auth.login`, `auth.google_login`, `auth.google_linked`, `auth.login_failed`, `auth.logout`, `auth.password_reset_requested`, `auth.password_reset` |
-| Data | `data.exported` (the file name and row count) |
+| Data | `data.exported` (the file name and row count), `data.subject_exported`, `data.device_erased`, `data.customer_erased` (the target a `sha256:` prefix, never the id; the changes the rows per table) |
 | Blog (owner) | `blog.post_created`, `blog.post_updated`, `blog.post_deleted`, `blog.category_created`, `blog.category_updated`, `blog.category_deleted`, `blog.message_deleted` |
 
 The SDK's data plane writes none: installs, clicks, events, opens, pings, web events, store notifications, and the temporary and referral links apps create.
