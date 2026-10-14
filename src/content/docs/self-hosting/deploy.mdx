@@ -134,6 +134,7 @@ Run these in order from `apps/worker`:
 | Command | Expected |
 |---|---|
 | `curl -s https://app.example.com/healthz` | `{"ok":true,"service":"dectog","version":"v1","host":"app.example.com"}` |
+| `curl -s https://app.example.com/readyz` | `200 {"ok":true,"database":true,"migrations":{…,"missing":[]}}`. A `503` names the migrations still to apply: run `npx wrangler d1 migrations apply DB --remote --env production`. |
 | `curl -s https://app.example.com/api/v1/links` | `401 {"error":{"code":"missing_api_key","message":"Missing API key",…}}` |
 | `curl -sI https://app.example.com/` | `200`, `text/html` (the dashboard's static export) |
 | `curl -sI https://example.com/` | `302` to `WEB_URL` |

@@ -82,7 +82,7 @@ npx wrangler d1 execute dectog --remote --env production --command "SELECT COUNT
 
 ### The append-only rule
 
-Once a migration has been applied to a shared or remote database, its file is never edited, renamed or deleted. A change to the schema is a new file with the next number. Rolling back a Worker does not roll back a migration, and nothing in the repository reverts one; see [Deploy](/self-hosting/deploy/).
+Once a migration has been applied to a shared or remote database, its file is never edited, renamed or deleted. A change to the schema is a new file with the next number, and its file name goes into `apps/worker/src/migrations.ts`, the list [`/readyz`](/api/overview/#health-check) compares with `d1_migrations`; `test/readyz.test.ts` fails until the list and the folder agree. Rolling back a Worker does not roll back a migration, and nothing in the repository reverts one; see [Deploy](/self-hosting/deploy/).
 
 ## The typed data layer
 

@@ -99,7 +99,7 @@ Drafts, unknown slugs and HEAD requests get the article page unchanged. Once the
 
 ## Host and path routing
 
-Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/robots.txt` and `/sitemap.xml`. Everything else depends on the host. The port is ignored when matching hosts.
+Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/readyz`, `/robots.txt` and `/sitemap.xml`. Everything else depends on the host. The port is ignored when matching hosts.
 
 | Host | Path | Result |
 |---|---|---|
@@ -108,7 +108,7 @@ Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/
 | any except `APP_HOST` | `/?user=<username>/<slug>` | The redirect engine (query-mode link URL). |
 | any | `/.well-known/…` | The association files above. |
 | any | `/_/collect` | The interstitial beacon (POST). |
-| any | `/healthz`, `/robots.txt`, `/sitemap.xml` | See this page. |
+| any | `/healthz`, `/readyz`, `/robots.txt`, `/sitemap.xml` | See this page. |
 | `app.dectog.com` | any other path | The dashboard's static export. `/blog/<slug>` serves the export's article page, which reads the slug client-side; for a published post the worker adds the post's head tags first (see [Blog post pages](#blog-post-pages)). `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | `dectog.com` | `/` | `302` to `WEB_URL`. |
 | `dectog.com` | `/SKILL.md`, `/llms.txt` | Served from the dashboard's static assets, so `curl https://dectog.com/SKILL.md` works without a redirect. Without an assets binding (local development) these redirect like any other path. |
@@ -121,7 +121,7 @@ In the hosted deployment `WEB_URL` and `PUBLIC_BASE_URL` are both `https://app.d
 
 ### HEAD requests
 
-There is no separate HEAD logic. A HEAD request runs the same handler as GET and the response is returned without a body, with the same status and headers. That includes the redirect engine: a HEAD to a link URL is processed like a tap. Point uptime checks at `/healthz`, not at link URLs.
+A HEAD request runs the same handler as GET and the response is returned without a body, with the same status and headers. The redirect engine is the exception: a HEAD to a link URL is treated like a bot and answers the social preview page's headers without recording a click. Point uptime checks at `/healthz` or `/readyz`, not at link URLs.
 
 ## Health check
 
@@ -132,3 +132,11 @@ There is no separate HEAD logic. A HEAD request runs the same handler as GET and
 ```
 
 `host` echoes the request's Host header (`null` when absent). The route needs no authentication and is not rate limited.
+
+`GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
+
+```json
+{ "ok": true, "database": true, "migrations": { "expected": 28, "applied": 28, "missing": [] } }
+```
+
+It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.

@@ -30,7 +30,7 @@ Every example in this section uses the hosted base. A self-hosted deployment use
 | `POST /api/v1/events`, `GET /api/v1/attribution`, `POST /api/v1/device-ping`, `POST /api/v1/app-opens` | key + signature | [Events and attribution](/api/events-and-attribution/) |
 | Install webhook (outbound) | HMAC signature | [Install webhook](/api/install-webhook/) |
 | `/api/admin/*`, `/api/auth/*` | session cookie | [Admin API](/api/admin-api/) |
-| `/.well-known/*`, `/robots.txt`, `/sitemap.xml`, `/healthz` | none | [Well-known files, SEO and routing](/api/well-known-seo-and-routing/) |
+| `/.well-known/*`, `/robots.txt`, `/sitemap.xml`, `/healthz`, `/readyz` | none | [Well-known files, SEO and routing](/api/well-known-seo-and-routing/) |
 
 ## Authentication
 
@@ -227,4 +227,12 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 { "ok": true, "service": "dectog", "version": "v1", "host": "app.dectog.com" }
 ```
 
-`host` echoes the request's Host header. Use it for uptime checks instead of a link URL, because a request to a link URL is processed like a tap.
+`host` echoes the request's Host header. Use it for uptime checks instead of a link URL. A tap check on a real link should send `x-dectog-no-track: 1` so it is not counted.
+
+`GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
+
+```json
+{ "ok": true, "database": true, "migrations": { "expected": 28, "applied": 28, "missing": [] } }
+```
+
+It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.
