@@ -78,8 +78,9 @@ On the first launch the SDK, with `readClipboardOnInstall` at its default (`null
 
 1. Asks `UIPasteboard.general.hasURLs` whether a URL is there. This is a metadata check and shows no alert.
 2. Only when a URL is present, reads it (`pasteboard.url`, else `pasteboard.string`, at most 2048 characters). On iOS 16 and newer this read is what shows Apple's "Allow paste from …?" alert. iOS 15 shows the passive "pasted from" banner instead.
-3. Checks on the device whether the text parses as a DecTog link for this deployment (the same forms the link handler recognizes). Anything else is discarded on the device and never sent.
-4. Sends a DecTog URL as `clipboard_url` with the registration and clears the pasteboard, so a later launch or another app cannot replay it.
+3. Checks on the device whether the text parses as a DecTog link for this deployment (the same forms the link handler recognizes) **and** names a click or a link (`dtg_click=` or `dtg_l=`), which is what the tap-to-store page copies. Anything else, including a plain share link the user copied to paste into a chat, is left on the pasteboard and never sent.
+4. Sends the URL as `clipboard_url` with the registration and notes the pasteboard's change counter (`UIPasteboard.changeCount`).
+5. Clears the pasteboard only when the server credited the link (`matchSource: 'clipboard'`, or a late claim answered `upgraded`) **and** the change counter is unchanged, so nothing the user copied in the meantime is wiped. A link the server did not credit stays where it was.
 
 The read has a 6-second budget because the user has to answer the alert. When the answer arrives after the registration left, the URL is sent as a late claim (`claim_source: clipboard`).
 
