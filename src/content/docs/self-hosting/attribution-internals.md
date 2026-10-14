@@ -70,6 +70,8 @@ So the pool is the 50 newest web clicks (recorded by the redirect engine or synt
 | CPU family | `cpu_family` from `cpu_type` | `ua_arch` from `Sec-CH-UA-Arch` | +5 | −40 |
 | Network | `asn` | `asn` | +10 | 0 |
 
+**Repeat taps.** Before ranking, candidates with the same signature collapse into the newest of them: same IP hash and device family (the query already requires both), same device model, OS major, language, screen short side and CPU family. As far as the evidence goes such candidates are one phone tapping twice (a double tap, a pull-to-refresh, the same message tapped again), and without collapsing they would tie with each other and nobody would be credited. Only taps that carry a device model or a screen profile collapse: two taps that agree on nothing more than OS major and language are as likely two people on one network, so they keep competing and can still tie. The install stores `candidate_count` as the number of distinct candidates and `collapsed_from` as the number of click rows merged into the one the verdict used (null when nothing merged). The trade-off: two phones of the same model, OS, language and screen behind one address now look like one phone, and the newer tap is credited instead of nobody. The click rows themselves are kept; only the matching treats them as one.
+
 Candidates are sorted by score, highest first; the SQL order (newest first) and a stable sort mean recency only breaks ties.
 
 **Confidence.** `confidenceOf`, verbatim:
@@ -158,7 +160,8 @@ Each row is a golden scenario the worker's test suite runs end to end on every c
 | A retried registration replays the stored verdict | tap on android (Pixel 9); install i1 (store referrer, attempt id; other network); install i2 (store referrer, attempt id; other network) | i1: `matched: true`<br>i2: `matched: true`, `replayed: true` |
 | A referrer delivered on a later launch upgrades an organic install | tap on android (Pixel 9); install i1 (no signal; other network); later claim on i1 (late_referrer) | i1: `matched: false`<br>claim i1: `claim: upgraded`, `matched: true`, `match_source: referrer` |
 | An app update never runs the fingerprint | tap on android (Pixel 9); install i1 (app update; same network) | i1: `matched: false`, routing none |
-| Two taps from one phone tie and credit nobody *(known defect, P2.1)* | tap on android (Pixel 9); tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: false`, `match_confidence: low` |
+| Two taps from one phone collapse into one candidate; the newest is credited | tap on android (Pixel 9); tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high`, credited to the second tap; `collapsed_from: 2` |
+| Taps from two different phones on one network still tie | tap on android (Pixel 9); tap on android (Pixel 8); install i1 (no signal, no model; same network) | i1: `matched: false`, `match_confidence: low` |
 
 ## Claims
 

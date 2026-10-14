@@ -65,7 +65,7 @@ The dashboard's **Match confidence & referrer health** panel explains each level
 | Low | ambiguous or contradicted — nothing | `false` | absent |
 | No candidate | no click from this network in the window | `false` | absent |
 
-In fingerprint terms: *unique* means the best candidate leads the runner-up by at least 10 points or is the only one; *corroborated* means a device-model match, a screen-profile agreement together with an OS-major agreement, or any score of 15 or more; *medium* is a unique best candidate scoring 0 to 14, for example an OS-major agreement cancelled by a language mismatch; *low* is a tie or a negative score. A device-model mismatch excludes a candidate outright.
+In fingerprint terms: *unique* means the best candidate leads the runner-up by at least 10 points or is the only one; *corroborated* means a device-model match, a screen-profile agreement together with an OS-major agreement, or any score of 15 or more; *medium* is a unique best candidate scoring 0 to 14, for example an OS-major agreement cancelled by a language mismatch; *low* is a tie between candidates that differ, or a negative score. Repeat taps from one phone (identical signals) count as one candidate, so they never tie with each other. A device-model mismatch excludes a candidate outright.
 
 Use `matched` for credit and `routing` for navigation. Routing a new user to the content they tapped is cheap to get wrong; crediting a campaign is not.
 
