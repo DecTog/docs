@@ -56,6 +56,10 @@ The daily trigger also runs `purgeExportJobs`: a file is deleted from the bucket
 
 `sweepCustomDomains` (`apps/worker/src/customdomains.ts`) asks Cloudflare (and DNS, for a domain waiting for its CNAME) about the custom domains not checked for ten minutes while pending and for a day once active, and deletes the hostnames of removed or moved domains whose 7-day grace has ended, 50 of each per run. A domain that failed and was never removed gets the same grace a week later. Only when custom domains are configured. See [Custom domains](/self-hosting/custom-domains/).
 
+## Device names (daily)
+
+`refreshDeviceModels` (`apps/worker/src/devicemodels.ts`) downloads Google Play's supported-devices list (`storage.googleapis.com/play_public/supported_devices.csv`, about 5 MB) and stores the marketing names of the device models your installs reported in the last 400 days, never the whole list, in `device_models`. It runs when the last refresh is a week old, or a day old while installs report models the table lacks. A download that fails, is not the list or has fewer than 10,000 rows changes nothing. The Overview's Top devices joins the names at read time.
+
 ## Webhook delivery log (daily)
 
 ```sql

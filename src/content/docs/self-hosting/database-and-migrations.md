@@ -41,6 +41,7 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `webhooks` | Webhook endpoints: URL, optional app, events, encrypted signing secret, failure count and why one turned off |
 | `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |
 | `export_jobs` | CSV exports past `EXPORT_STREAM_MAX_ROWS` rows: the query, progress, the R2 key and when the file goes |
+| `device_models`, `device_model_refresh` | Marketing names (brand, name) for the Android models installs reported, keyed by the lowercased model, and when Google's list was last read |
 | `custom_domains` | Each account's custom link domain: the Cloudflare hostname id, the state, the DNS records to add, errors, the checks, the suspension and its end. The active one is also `users.custom_domain`. |
 
 There are no foreign-key constraints. Cascades (deleting a link, deleting an app, unlinking a category) are done in the API layer.
@@ -105,6 +106,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0051_click_cta` | `cta`, `cta_at` on `clicks`: the first button a visitor took on a link page |
 | `0052_custom_domains` | `custom_domains`, and `users.custom_domain` (unique when set): the account's active custom link domain |
 | `0053_web` | `api_keys.origins` (site keys, kind `site`), `links.append_click_id`, `events.web_click_id`, and a partial index on web events: [`dectog.js`](/sdk/web/) |
+| `0054_device_models` | `device_models` and `device_model_refresh`: marketing names for the device models installs report |
 
 ### Commands
 
