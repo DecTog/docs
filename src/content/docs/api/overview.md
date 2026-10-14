@@ -30,8 +30,9 @@ Every example in this section uses the hosted base. A self-hosted deployment use
 | `POST /api/v1/events`, `GET /api/v1/attribution`, `POST /api/v1/device-ping`, `POST /api/v1/app-opens` | key + signature | [Events and attribution](/api/events-and-attribution/) |
 | `GET /api/v1/clicks`, `GET /api/v1/app-installs`, `GET /api/v1/app-opens`, `GET /api/v1/events` | account key + signature | [Export raw data](/api/export/) |
 | `GET /api/v1/web-config`, `POST /api/v1/web-events` | site key, from an allowed origin | [Web pixel](/sdk/web/) |
+| `GET /api/v1/devices/:id/export`, `DELETE /api/v1/devices/:id`, the same for `/api/v1/customers/:id` | account key + signature | [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person) |
 | Webhooks (outbound) | HMAC signature | [Webhooks](/api/webhooks/) |
-| `/api/admin/*`, `/api/auth/*` | session cookie | [Admin API](/api/admin-api/) |
+| `/api/admin/*`, `/api/auth/*` | session cookie, and a team role | [Admin API](/api/admin-api/) |
 | `/.well-known/*`, `/robots.txt`, `/sitemap.xml`, `/healthz`, `/readyz` | none | [Well-known files, SEO and routing](/api/well-known-seo-and-routing/) |
 
 ## Authentication

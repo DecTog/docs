@@ -73,7 +73,7 @@ See [Dashboard: Settings](/dashboard/settings/).
 
 ## Teams
 
-Every session route needs a team role in the account it acts on; the [route table](/api/overview/#routes-at-a-glance) and `API_CONTRACT.md` name it. The role is checked before the handler runs: a role that falls short answers `403 {code: "insufficient_role", role, required_role}`, and a route with no entry in the contract table answers `403` whatever the role. By default a viewer may read and a member may change; reads of keys, raw exports, customers, the audit log and webhook deliveries need a member, and keys, the team, the custom domain, the account's settings, the test environment and erasures need an owner. `GET /api/admin/settings` returns `api_key: null` to anyone but an owner.
+Every session route needs a team role in the account it acts on, and the role is checked before the handler runs: a role that falls short answers `403 {code: "insufficient_role", role, required_role}`, and a route with no entry in the contract table answers `403` whatever the role. By default a viewer may read and a member may change; reads of keys, raw exports, customers, the audit log and webhook deliveries need a member, and keys, the team, the custom domain, the account's settings, the test environment and erasures need an owner. `GET /api/admin/settings` returns `api_key: null` to anyone but an owner.
 
 | Method and path | Role | Purpose | Response |
 |---|---|---|---|
