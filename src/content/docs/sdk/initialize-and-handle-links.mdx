@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 ## Initialize
 
-`FlutterDectog()` returns a singleton. Call `initialize` once, early in your app, with your API key:
+`FlutterDectog()` returns a singleton. Call `initialize` once, early in your app, with an SDK key:
 
 ```dart
 import 'package:flutter_dectog/flutter_dectog.dart';
@@ -17,7 +17,7 @@ import 'package:flutter_dectog/flutter_dectog.dart';
 final dectog = FlutterDectog();
 
 await dectog.initialize(DectogConfig(
-  apiKey: 'dtg_your_api_key',
+  apiKey: 'dtg_pub_your_sdk_key',
 ));
 ```
 
@@ -41,7 +41,7 @@ Rules:
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `apiKey` | `String` | required | Your DecTog API key. Every authenticated call is signed with it. |
+| `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. With debug logging on, the SDK warns when it is given an account key. |
 | `baseUrl` | `String?` | `null` → `https://app.dectog.com` | API base URL. Set it only when self-hosting. Trailing slashes are stripped. |
 | `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). Set it when self-hosted links live on a different host than the API. |
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
@@ -64,7 +64,7 @@ Set `baseUrl` to your API and, when the links live on a different host, `linkRoo
 
 ```dart
 await dectog.initialize(DectogConfig(
-  apiKey: 'dtg_your_api_key',
+  apiKey: 'dtg_pub_your_sdk_key',
   baseUrl: 'https://app.example.com',
   linkRootDomain: 'example.com', // links at https://{username}.example.com/{slug}
 ));

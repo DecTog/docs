@@ -15,7 +15,7 @@ On your own deployment the API base is `PUBLIC_BASE_URL` and links use your `ROO
 
 | Firebase Dynamic Links | DecTog | Notes |
 |---|---|---|
-| Firebase project | Account: one username, one API key | The username is the link subdomain. See [Concepts](/start/concepts/). |
+| Firebase project | Account: one username, an account key for servers and SDK keys for apps | The username is the link subdomain. See [Concepts](/start/concepts/). |
 | Dynamic link domain (`*.page.link` or your own) | `https://{username}.dectog.com` | One subdomain per account. The hosted service does not serve links on other domains. |
 | Short dynamic link | Link: `slug` plus stored routing | You choose the slug (`[A-Za-z0-9_-]`, up to 128 characters). Slugs are unique across permanent and temporary links. |
 | `suffix.option: UNGUESSABLE` | Temporary link with an automatic slug `t_<10 hex>` | Temporary links expire after `ttlSeconds` (60 seconds to 30 days). See [Temporary links](/links/temporary-links/). |
@@ -68,7 +68,7 @@ Two routing differences to plan for:
 | API key in the query string | `Authorization: Bearer dtg_…` plus the request signature |
 | `GET …/v1/{shortLink}/linkStats` | `GET /api/v1/links` returns `click_count` per link; installs and opens are on the dashboard |
 
-Every `/api/v1` call except `resolve` is signed with an HMAC of the API key. The [Automation and agents](/guides/automation-and-agents/) guide has a verified shell helper; the [API overview](/api/overview/) has the scheme. Field names and validation are on [Links API](/api/links/).
+Every `/api/v1` call except `resolve` is signed with an HMAC of the key it sends. The [Automation and agents](/guides/automation-and-agents/) guide has a verified shell helper; the [API overview](/api/overview/) has the scheme. Field names and validation are on [Links API](/api/links/).
 
 ## The Flutter plugin
 
@@ -155,10 +155,10 @@ Per-link numbers on the Links page are lifetime totals. See [Links](/dashboard/l
 
 ## Migration checklist
 
-1. Sign up at `https://app.dectog.com/login?tab=signup`. The username becomes your link subdomain; the API key is shown on the "Account created" screen and again in Settings. See [Quickstart](/start/quickstart/).
+1. Sign up at `https://app.dectog.com/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen and again in Settings. See [Quickstart](/start/quickstart/).
 2. Register the app on the Apps page: package and SHA-256 fingerprints (include the Play App Signing key), bundle ID and Team ID, both store URLs, your custom scheme. Use the Verify buttons.
 3. Add `applinks:{username}.dectog.com` to Associated Domains and an `autoVerify` intent filter for `{username}.dectog.com`. Reinstall the app. See [Platform setup](/sdk/platform-setup/).
-4. Replace `firebase_dynamic_links` with `flutter_dectog` using the table above. Inject the API key at build time with `--dart-define`.
+4. Replace `firebase_dynamic_links` with `flutter_dectog` using the table above. Inject the SDK key (`dtg_pub_…`) at build time with `--dart-define`.
 5. Recreate your links. Reuse the old suffixes as slugs where you can, with a script against `POST /api/v1/links`. Put the former `link` destination in `target` and the in-app route in the deep-link paths.
 6. Replace the old `page.link` URLs wherever they are published. FDL domains cannot be pointed at DecTog.
 7. Test on a physical device: tap a link, install from the store, open the app, and check Overview and `onAppInstalled`. See [Testing](/sdk/testing/).

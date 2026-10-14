@@ -33,7 +33,7 @@ Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_
 | Method and path | Auth | Purpose | Notable responses |
 |---|---|---|---|
 | `POST /api/admin/bootstrap` | `x-bootstrap-token` header when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` is set | First account on an empty database. See below. | `201 {ok, email, username, api_key, demo}`; `403 Bootstrap not permitted`; `409 Already bootstrapped` |
-| `POST /api/admin/signup` | public | `{email, password, username}`. Creates a `user` account, sets a 30-day cookie, returns the API key. | `201 {user, api_key}`; `403 Signup is currently closed` (`OPEN_SIGNUPS=0`); `400 Please enter a valid email address`, a password-rule message, `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `Username '<name>' is reserved`; `409 An account with this email or username already exists` |
+| `POST /api/admin/signup` | public | `{email, password, username}`. Creates a `user` account and its first SDK key, sets a 30-day cookie, returns both keys. | `201 {user, api_key, sdk_key}` (`api_key` is the account key); `403 Signup is currently closed` (`OPEN_SIGNUPS=0`); `400 Please enter a valid email address`, a password-rule message, `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `Username '<name>' is reserved`; `409 An account with this email or username already exists` |
 | `POST /api/admin/login` | public | `{email, password, remember?}`. Email is trimmed and lower-cased. | `200 {user: {id, email, username, role, created_at}}` plus the cookie; `400 Email and password are required`; `401 Invalid email or password`; `429` over 10 attempts per minute from one IP. No per-account lockout. |
 | `POST /api/admin/logout` | public | Deletes the cookie. | `200 {ok: true}` |
 | `GET /api/admin/me` | session | The signed-in account. | `200 {user: {id, email, username, role, created_at}}` |
@@ -49,7 +49,7 @@ Password rule for signup and reset: 8 to 72 characters with at least one lowerca
 
 ### Bootstrap
 
-`POST /api/admin/bootstrap` has two body forms. Both answer `409 {"error": {"code": "conflict", "message": "Already bootstrapped"}}` once any user exists, and `201 {"ok": true, "email", "username", "api_key", "demo"}` on success. The API key appears only in this response.
+`POST /api/admin/bootstrap` has two body forms. Both answer `409 {"error": {"code": "conflict", "message": "Already bootstrapped"}}` once any user exists, and `201 {"ok": true, "email", "username", "api_key", "sdk_key", "demo"}` on success: `api_key` is the account key, `sdk_key` the first SDK key (`null` for the demo seed). Both can be viewed again in Settings, except the demo account key.
 
 | Body | Result |
 |---|---|
@@ -63,7 +63,10 @@ The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` 
 | Method and path | Auth | Purpose | Response |
 |---|---|---|---|
 | `GET /api/admin/settings` | session | Account and link configuration. | `200 {email, username, key_prefix, api_key, link_mode, root_domain, public_base_url, example_link}`. `api_key` is the full key decrypted from its stored copy, or `null` for keys created before that copy existed (including the demo seed's key) or when `JWT_SECRET` changed since. Authentication keeps working in every one of those cases. |
-| `POST /api/admin/settings/regenerate-key` | session | Replaces the hash, prefix and stored copy in one update. The old key stops working immediately. | `200 {api_key, key_prefix}` |
+| `POST /api/admin/settings/regenerate-key` | session | Replaces the account key's hash, prefix and stored copy in one update. The old key stops working immediately; SDK keys are untouched. | `200 {api_key, key_prefix}` |
+| `GET /api/admin/keys` | session | SDK keys, active first, newest first. | `200 {keys: [{id, name, kind, prefix, key, scopes, environment, last_used_at, created_at, revoked_at}]}`; `key` is the full key (`null` once revoked or when it cannot be decrypted) |
+| `POST /api/admin/keys` | session | `{name?, links_write?}`. Creates an SDK key; `links_write: true` adds the `links:write` scope. | `201 {id, name, key, prefix, scopes}`; `409` at 20 active keys |
+| `POST /api/admin/keys/:id/revoke` | session | Revokes an SDK key of the account at once. | `200 {ok: true}`; `404 Key not found` (unknown, foreign or already revoked) |
 
 See [Dashboard: Settings](/dashboard/settings/).
 

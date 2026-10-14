@@ -1,11 +1,11 @@
 ---
 title: Settings
-description: Your account details, the API key the SDK uses, how to view, copy and regenerate it, and the link configuration of the deployment.
+description: Your account details, the account key for servers and the SDK keys for apps, how to view, copy, create, revoke and regenerate them, and the link configuration of the deployment.
 sidebar:
   order: 5
 ---
 
-The Settings screen, at https://app.dectog.com/dashboard/settings, has four cards: **Account**, **API key**, **Link configuration** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
+The Settings screen, at https://app.dectog.com/dashboard/settings, has five cards: **Account**, **Account key**, **SDK keys**, **Link configuration** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
@@ -16,17 +16,29 @@ The Settings screen, at https://app.dectog.com/dashboard/settings, has four card
 
 Nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
 
-## API key
+## Account key
 
-The key the Flutter SDK, and any script that calls the REST API, authenticates with. It is `dtg_` followed by 32 lowercase hex characters, 36 characters in total. The card shows it masked as its first 8 characters followed by dots, for example `dtg_3f9a••••••••••••••••••••`.
+The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `dtg_` followed by 32 lowercase hex characters, 36 characters in total. The card shows it masked as its first 8 characters followed by dots, for example `dtg_3f9a••••••••••••••••••••`.
 
 | Action | What happens |
 |---|---|
 | **Show** / **Hide** | Reveals or masks the full key. |
-| **Copy** | Copies the full key and shows "API key copied to clipboard." |
-| **Regenerate** (red) | Asks "Regenerate the API key? The Flutter SDK configuration must be updated afterwards." and then replaces the key in one step. The new key is shown unmasked with "New API key generated. Update your app with it — the old key no longer works." Requests that use the old key fail with `401 Unauthorized` from that moment on. There is no grace period and no password prompt. |
+| **Copy** | Copies the full key and shows "Account key copied to clipboard." |
+| **Regenerate** (red) | Asks "Regenerate the account key? Servers and scripts that use it must be updated; SDK keys are not affected." and then replaces the key in one step. The new key is shown unmasked with "New account key generated. Update your servers and scripts: the old key no longer works." Requests that use the old key fail with `401` (`invalid_api_key`) from that moment on. There is no grace period and no password prompt. |
 
-Hint under the key: "Use this key in the Flutter SDK. Regenerating replaces it — apps still using the old key stop working."
+Hint under the key: "Full access, including creating and deleting links. Use it on your servers and in scripts; never ship it in an app. Regenerating replaces it at once."
+
+## SDK keys
+
+The keys your apps ship with, `dtg_pub_` followed by 32 hex characters. Anyone can extract a key from an app build, so an SDK key can only register installs, report clicks, events and opens, pull the attribution verdict, read links and create temporary links. Creating, changing or deleting links needs a key created with **Allow creating and changing links (links:write)**. See [Authentication](/api/overview/#authentication) for the scopes route by route.
+
+A new account starts with one SDK key, "App key". The card lists every key with its name, the full key, its scope chips, when it was created and last used (stamped at most once an hour), and **Copy** and **Revoke** buttons. Revoked keys stay listed, greyed out, with the date.
+
+| Action | What happens |
+|---|---|
+| **Create SDK key** | Creates a key with the name in the box (default "App key") and, when ticked, the links:write scope. An account can hold 20 active SDK keys. |
+| **Copy** | Copies the full key. |
+| **Revoke** | Asks for confirmation, then refuses the key at once: calls answer `401` with code `revoked_api_key`. Release a build with a new key before you revoke the old one. |
 
 ### How the key is stored, and when it cannot be shown
 
@@ -60,12 +72,12 @@ A code block you can paste into your app:
 
 ```dart
 await dectog.initialize(DectogConfig(
-  apiKey: 'dtg_…',
+  apiKey: 'dtg_pub_…',
   baseUrl: 'https://app.dectog.com',
 ));
 ```
 
-The snippet follows the **Show** / **Hide** state of the card above: it prints the full API key only while the key is shown, and otherwise the prefix followed by `…`. The `baseUrl` is the deployment's public base URL; on the hosted service it matches the SDK's default, `https://app.dectog.com`, and can be left out. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". The `baseUrl` is the deployment's public base URL; on the hosted service it matches the SDK's default, `https://app.dectog.com`, and can be left out. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 
 :::note[Self-hosting]
 **URL mode**, **Root domain** and the snippet's `baseUrl` come from the worker's `LINK_URL_MODE`, `ROOT_DOMAIN` and `PUBLIC_BASE_URL` variables; a root domain that starts with `localhost` forces path mode. See [Configuration reference](/self-hosting/configuration-reference/).

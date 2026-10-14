@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-The SDK wraps the link endpoints of the REST API with the same API key you initialized it with. Everything here is authenticated and signed automatically; see [Links](/api/links/) for the wire format and the full validation rules.
+The SDK wraps the link endpoints of the REST API with the key you initialized it with. Reading links and temporary links works with any SDK key; creating, changing and deleting permanent links needs an SDK key created with **Allow creating and changing links (links:write)** in Settings, otherwise those calls fail with `DectogError.code == 'insufficient_scope'`. Everything here is authenticated and signed automatically; see [Links](/api/links/) for the wire format and the full validation rules.
 
 ## Permanent links
 

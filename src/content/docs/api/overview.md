@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use from scripts and backends to manage links or read attribution. One API key serves every app and every link of an account. This page covers what every route has in common; the routes themselves are on the following pages.
+The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use from scripts and backends to manage links or read attribution. An account has two kinds of key: the account key for servers and scripts, and SDK keys for the apps you ship. This page covers what every route has in common; the routes themselves are on the following pages.
 
 ## Base URLs
 
@@ -34,16 +34,30 @@ Every example in this section uses the hosted base. A self-hosted deployment use
 
 ## Authentication
 
-Every `/api/v1` route except `resolve` requires the account's API key as a Bearer token:
+Every `/api/v1` route except `resolve` requires a key as a Bearer token:
 
 ```http
-Authorization: Bearer dtg_0123456789abcdef0123456789abcdef
+Authorization: Bearer dtg_pub_0123456789abcdef0123456789abcdef
 ```
 
-- The key is `dtg_` followed by 32 lowercase hex characters (36 characters in total). You receive it once when the account is created (signup, Google sign-in or bootstrap) and can view, copy and regenerate it in [Dashboard: Settings](/dashboard/settings/).
-- The server stores only the key's SHA-256 for authentication and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `401` with code `invalid_api_key`, before anything else is checked.
-- Regenerating the key invalidates the old one immediately. Coordinate a rotation with an app release, because shipped builds embed the key.
-- Keep the key out of source control and only ever send it to your DecTog base URL.
+There are two kinds of key, both shown in [Dashboard: Settings](/dashboard/settings/):
+
+| Key | Looks like | Use it in | Scopes |
+|---|---|---|---|
+| **SDK key** | `dtg_pub_` and 32 hex characters | The apps you ship. Anyone can extract it from a build. | `sdk` (installs, claims, clicks, events, opens, the attribution pull), `temp_links`, `links:read`; plus `links:write` only for a key created with that option |
+| **Account key** | `dtg_` and 32 hex characters | Your servers and scripts. Never in an app. | Everything, including creating, changing and deleting links |
+
+| Scope | Routes |
+|---|---|
+| `sdk` | `POST /api/v1/app-installs` and its claim, `POST /api/v1/clicks`, `POST /api/v1/events`, `GET /api/v1/attribution`, `POST /api/v1/device-ping`, `POST /api/v1/app-opens` |
+| `temp_links` | every `/api/v1/temp-links` route |
+| `links:read` | `GET /api/v1/links` and `GET /api/v1/links/:slug` |
+| `links:write` | `POST`, `PUT` and `DELETE` on `/api/v1/links` |
+
+- A new account gets its account key and one SDK key, "App key". Create more SDK keys (one per app or per build channel) and revoke them in Settings; an account holds up to 20 active SDK keys.
+- The server stores only each key's SHA-256 and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `invalid_api_key`, a revoked SDK key `revoked_api_key`, before anything else is checked. A key without the route's scope answers `403` with code `insufficient_scope` and the `required_scope`.
+- Revoking an SDK key stops every build that ships it at once; release a build with a new key first. Regenerating the account key affects only servers and scripts.
+- Keep both keys out of source control where you can, and only ever send them to your DecTog base URL.
 
 ## Request signing
 
@@ -68,6 +82,8 @@ signature = HMAC-SHA256( key = the API key, message = "<timestamp>.<sha256hex(ra
 |---|---|---|---|
 | 401 | `missing_api_key` | `Missing API key` | No Bearer key, or not in the `Bearer <key>` form. |
 | 401 | `invalid_api_key` | `Invalid API key` | The key is not one the server knows. |
+| 401 | `revoked_api_key` | `This API key was revoked` | An SDK key revoked in Settings. |
+| 403 | `insufficient_scope` | `This key does not have the <scope> scope` | An SDK key used on a route outside its scopes; the error carries `required_scope`. |
 | 401 | `signature_required` | `SDK request signature required (upgrade flutter_dectog)` | Either signature header is missing. |
 | 401 | `stale_timestamp` | `SDK request timestamp is stale or invalid` | The timestamp is not an integer or is more than 1,800 s from server time. |
 | 401 | `invalid_signature` | `Invalid SDK request signature` | The HMAC does not match (wrong key, wrong message, re-encoded body, uppercase hex). |

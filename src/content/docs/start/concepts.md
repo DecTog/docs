@@ -11,7 +11,7 @@ DecTog is small. Everything in the dashboard, the API and the SDK maps onto the 
 
 An account is one tenant, one username and one link subdomain. The username is the first label of every link URL (`https://acme.dectog.com/welcome` belongs to the account `acme`) and the value the SDK and the verdict call `username`. It cannot be renamed, and an account cannot be deleted from the dashboard.
 
-Each account has exactly one API key, `dtg_` followed by 32 hex characters. The SDK authenticates with it as a Bearer token and signs every request with it. Regenerating the key under **Settings** invalidates the old one immediately.
+Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. Both kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
 
 Everything an account stores is scoped to it. There is no cross-account view; the only extra privilege is the owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
 
@@ -109,11 +109,11 @@ An app can name a webhook URL and secret. The server POSTs `app.installed` for e
 
 | Object | Dashboard | API | SDK |
 |---|---|---|---|
-| Account, API key, link configuration | Settings | `/api/admin/settings` (cookie session) | `DectogConfig(apiKey:)` |
+| Account, keys, link configuration | Settings | `/api/admin/settings`, `/api/admin/keys` (cookie session) | `DectogConfig(apiKey:)` takes an SDK key |
 | Apps | Apps | `/api/admin/apps` | |
 | Links, temporary links | Links | `/api/v1/links`, `/api/v1/temp-links`, `/api/v1/resolve/{username}/{slug}` | `createLink`, `createTempLink`, `resolveLink` |
 | Clicks | Overview, per-link numbers | `/api/v1/clicks` | Automatic |
 | Installs, verdicts, claims | Overview, Customers | `/api/v1/app-installs`, `/api/v1/attribution` | `onAppInstalled`, `getAttributionData()` |
 | Events, customers, opens | Overview, Links, Customers | `/api/v1/events`, `/api/v1/app-opens` | `identify`, `trackConversion`, `trackEvent` |
 
-The `/api/v1` routes take the API key and the request signature; the `/api/admin` routes take the dashboard's session cookie. See [REST API overview](/api/overview/).
+The `/api/v1` routes take a key (account or SDK) and the request signature; the `/api/admin` routes take the dashboard's session cookie. See [REST API overview](/api/overview/).

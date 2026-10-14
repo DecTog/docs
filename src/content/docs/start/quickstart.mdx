@@ -23,7 +23,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    The username is your link subdomain. Every link you create is `https://acme.dectog.com/{slug}`, and the hint under the field reads "Your links live on acme.dectog.com". There is no way to rename an account later.
 
-   Click **Create Account**. The next screen says "Account created" and shows **Your API key**: `dtg_` followed by 32 hex characters, 36 characters in total. You can view and copy it again under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
+   Click **Create Account**. The next screen says "Account created" and shows two keys: **SDK key, for your app** (`dtg_pub_` and 32 hex characters), which goes into the SDK, and **Account key, for servers and scripts** (`dtg_` and 32 hex characters), which never goes into an app. You can view and copy both again under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
 
    <Aside type="note" title="Self-hosting">
    On your own deployment the first account comes from `POST /api/admin/bootstrap`, not from the signup form. See [Local quick start](/self-hosting/local-quick-start/).
@@ -89,7 +89,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
    flutter pub add flutter_dectog
    ```
 
-   Initialize it once at startup with your API key, then listen to links and to the install verdict:
+   Initialize it once at startup with your SDK key, then listen to links and to the install verdict:
 
    ```dart title="lib/main.dart"
    import 'package:flutter_dectog/flutter_dectog.dart';
@@ -98,7 +98,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    Future<void> initDectog() async {
      await dectog.initialize(DectogConfig(
-       apiKey: 'dtg_your_api_key', // Dashboard > Settings > API key
+       apiKey: 'dtg_pub_your_sdk_key', // Dashboard > Settings > SDK keys
      ));
 
      // A link opened the running app (Universal Link, App Link or your scheme).
@@ -134,7 +134,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    ```dart
    DectogConfig(
-     apiKey: 'dtg_your_api_key',
+     apiKey: 'dtg_pub_your_sdk_key',
      baseUrl: 'https://app.example.com',
      linkRootDomain: 'example.com',
    )
@@ -156,7 +156,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    Click **Create link**. The list now shows `/welcome`; the copy icon next to it copies `https://acme.dectog.com/welcome`. **Advanced options** on the same form hold the per-platform deep-link paths, the Tracking defaults and the custom mobile and desktop destinations, all described in [How a tap is routed](/links/how-a-tap-is-routed/).
 
-   You can also create links from code: `dectog.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your API key and the request signature described in [REST API overview](/api/overview/).
+   You can also create links from code: `dectog.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your account key and the request signature described in [REST API overview](/api/overview/).
 
 6. ## Test an install
 

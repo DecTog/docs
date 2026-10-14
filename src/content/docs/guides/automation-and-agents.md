@@ -1,6 +1,6 @@
 ---
 title: Automation and agents
-description: Script the DecTog API with your API key (signed requests, bulk links, exports, temporary links in CI, QR codes) and point AI agents at SKILL.md and llms.txt.
+description: Script the DecTog API with your account key (signed requests, bulk links, exports, temporary links in CI, QR codes) and point AI agents at SKILL.md and llms.txt.
 sidebar:
   order: 3
 ---
@@ -9,7 +9,7 @@ Everything the Flutter SDK does with links, a script can do too. This page shows
 
 ## What you need
 
-- Your API key from Settings. It starts with `dtg_` and is followed by 32 hex characters. One key serves every app and every link of the account. Regenerating it invalidates the old key immediately. See [Settings](/dashboard/settings/).
+- Your account key from Settings. It starts with `dtg_` and is followed by 32 hex characters, and has every scope. Scripts use it; apps use SDK keys (`dtg_pub_…`), which cannot change links. Regenerating it invalidates the old key immediately. See [Settings](/dashboard/settings/).
 - Every `/api/v1` call except `GET /api/v1/resolve/{username}/{slug}` needs `Authorization: Bearer <key>` and a request signature.
 - `curl` 7.76 or newer (for `--fail-with-body`), `openssl` and `jq`.
 
@@ -24,7 +24,7 @@ Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLI
 The signature scheme is the one the SDK uses:
 
 - `x-dectog-timestamp`: whole Unix seconds, within 1800 seconds of the server clock.
-- `x-dectog-signature`: `v1=<hex>` where `hex = HMAC-SHA256(key = your API key, message = "<timestamp>.<sha256hex(raw body)>")`.
+- `x-dectog-signature`: `v1=<hex>` where `hex = HMAC-SHA256(key = your key, message = "<timestamp>.<sha256hex(raw body)>")`.
 - `GET` and `HEAD` sign the empty string. For other methods the body you send must be byte-for-byte the string you hashed.
 
 This helper does it in bash. It was checked against the server's verification code.

@@ -84,7 +84,7 @@ const DectogConfig({
 
 | Member | Type | Meaning |
 |---|---|---|
-| `apiKey` | `String` | The API key; also the HMAC key for request signing. |
+| `apiKey` | `String` | An SDK key (`dtg_pub_…`); also the HMAC key for request signing. |
 | `baseUrl` | `String?` | Self-hosted API base. `null` means `https://app.dectog.com`. |
 | `linkRootDomain` | `String?` | Root domain of tenant links. `null` means `dectog.com` when `baseUrl` is unset, else the host of `baseUrl`. |
 | `enableDebugLogging` | `bool` | Print SDK logs. |

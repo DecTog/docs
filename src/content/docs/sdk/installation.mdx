@@ -17,7 +17,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | Dart | 3.7 or newer (`sdk: ">=3.7.0 <4.0.0"`) |
 | iOS | 15.0 or newer |
 | Android | 7.0 (API 24) or newer |
-| Account | A DecTog API key (`dtg_` followed by 32 hex characters). It is shown once when the account is created and can be viewed again in the dashboard's Settings page. |
+| Account | A DecTog SDK key (`dtg_pub_` followed by 32 hex characters) from the dashboard's Settings page, under **SDK keys**. A new account has one. Never ship the account key (`dtg_…`): it can delete links. |
 
 The SDK targets iOS and Android. On other platforms it compiles and the link API works, but the install registration sends no referrer, no pasteboard URL and no device tier.
 
