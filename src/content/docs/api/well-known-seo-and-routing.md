@@ -26,7 +26,7 @@ An unknown username, or a known one with no qualifying app, answers `404 {"error
 
 ### Response
 
-Both files are served with `content-type: application/json; charset=utf-8` and two extra headers: `x-hostname`, the request's Host header, and `x-subdomain`, the resolved username (or the first host label when none was resolved).
+Both files are served with `content-type: application/json; charset=utf-8` and three extra headers: `x-hostname`, the request's Host header, `x-subdomain`, the resolved username (or the first host label when none was resolved), and `access-control-allow-origin: *`, so the dashboard's setup checklist can read them from your live host.
 
 ```json title="https://acme.dectog.com/.well-known/apple-app-site-association"
 {

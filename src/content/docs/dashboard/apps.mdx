@@ -33,6 +33,26 @@ The oldest app is the account's default app. It serves links created with **Defa
 
 The editor is titled `Edit <name>`, **Register your first app** or **Register an app**, with the subtitle "Only the name is required — fill in each platform as you set it up." On wide screens a side menu jumps to the six sections below. The editor is always open while the account has no app.
 
+### Are we live yet?
+
+Editing a saved app opens with a checklist the server computes on every visit; nothing in it is stored.
+
+| Step | Done when |
+|---|---|
+| App identifiers saved | An iOS bundle ID and Team ID, or an Android package and at least one SHA-256 fingerprint |
+| Universal Links file passes Apple's rules | The `apple-app-site-association` file served for your account lists this app's `<Team ID>.<bundle ID>`, covers every path, is JSON under 128 KB with no byte-order mark, and is served over https with `application/json` |
+| App Links file passes Google's rules | `assetlinks.json` grants `handle_all_urls` to this app's package with every saved fingerprint, each a real SHA-256 (32 colon-separated hex bytes), over https with `application/json` |
+| The SDK has reported | An install of this app (matched by bundle ID or package) came from an identified SDK build; the version is shown |
+| A link was tapped | Any link of the account recorded a web tap |
+| First install registered | An install of this app reached the server |
+| First install attributed to a link | One of them was credited to a link; the slug is shown |
+| First event received | The account received an `identify`, lead, conversion or custom event |
+| Install webhook configured (optional) | A URL and a secret are saved; not counted in the total |
+
+A platform you have not set up is greyed out and not counted. Each step that is not done says what to do next. On a local deployment (`http://localhost`) both file steps stay open, because Universal Links and App Links only work over https.
+
+On the hosted service, or any deployment on a real domain, **Check `<username>.<root>`** fetches both files from your live link host in your browser, without following redirects. It reports a redirect, a 404, the wrong content type, or a host that does not answer at all, which usually means the DNS records for the apex and `*` are missing or not proxied.
+
 ### General
 
 Section text: "The app's name and the web page links fall back to when the app can't serve them (desktop continue button, last mobile fallback)."
