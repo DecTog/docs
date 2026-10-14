@@ -111,6 +111,8 @@ App fields and their validation messages (`400`). Every text field is trimmed be
 | `fallback_url`, `install_webhook_url` | http(s): `fallback_url must be a valid http(s) URL`, `install_webhook_url must be a valid http(s) URL` |
 | `ios_app_scheme`, `android_app_scheme` | A trailing `://` is stripped; letters, digits, `+`, `-`, `.`; `http`, `https`, `ws`, `wss`, `javascript`, `file`, `data`, `blob`, `about` and `intent` are refused: `ios_app_scheme must be a URL scheme (letters, digits, +, -, .) without :// — e.g. myapp`, `ios_app_scheme must be a custom app scheme — the browser handles http/https/javascript itself, so it can never open the app` (same for Android) |
 | `mobile_interstitial`, `strict_fraud_mode`, `ios_tap_to_store` | Truthy stores 1, else 0 |
+| `mmp_handoff` | `true` or `false` (anything else is a 400): add `clickid` (and `pid`) to AppsFlyer, Singular and Adjust tracking-link destinations |
+| `mmp_pid` | Optional media source for the handoff: 1 to 100 letters, digits, `.`, `-`, `_` |
 | `low_entropy_window_hours` | Whole number 1 to 720, or `null` / `""` for the deployment default: `low_entropy_window_hours must be a whole number of hours between 1 and 720` |
 | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
 | `install_webhook_secret` | Free text, trimmed; write-only (see `PUT`). Prefer `POST /api/admin/apps/:id/webhook-secret`, which generates a strong one. |

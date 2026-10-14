@@ -93,6 +93,18 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 
 AppsFlyer separates routing (UDL) from attribution data (GCD). DecTog separates them inside one object: `routing` says where to send a new user, `matched` and `clickParams` say who gets credit.
 
+## Running both for a while
+
+A migration is safer when both tools see the same traffic for a few weeks. Keep the MMP's SDK in the app next to flutter_dectog, point a DecTog link's **If the app isn't installed > Custom URL** (`redirect_url`) at the MMP's tracking link, and turn on **MMP click handoff** for the app on the Apps page. A tap then goes through DecTog, which records the click, and on to the MMP's link with DecTog's click id added:
+
+| Destination host | Added |
+|---|---|
+| `*.onelink.me`, `app.appsflyer.com` (AppsFlyer) | `clickid=<DecTog click id>`, and `pid=<your media source>` when the app sets one |
+| `*.sng.link` (Singular) | the same |
+| `app.adjust.com`, `adj.st` (Adjust) | the same |
+
+A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme links and other hosts are never changed. The click id is the 16-character `dtg_click` value that names the click in DecTog, so an install the MMP attributes can be looked up on the DecTog side by it. Whether the MMP keeps the `clickid` parameter in its raw data depends on the link and partner settings in its own dashboard; check one test install there before relying on it. The store redirect then belongs to the MMP's link, so DecTog's own install match for those taps falls back to the store referrer the MMP passes on, or to the fingerprint.
+
 ## How attribution differs
 
 - Deterministic signals win in this order: store install referrer, pasteboard, Meta referrer. Then the fingerprint. Then organic. See [How attribution works](/start/how-attribution-works/).
@@ -105,4 +117,4 @@ AppsFlyer separates routing (UDL) from attribution data (GCD). DecTog separates 
 
 ## What DecTog does not do
 
-DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, no advertising identifiers, no re-attribution windows, no cohort or LTV reports yet, and an SDK for Flutter only. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).
+DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, no cohort or LTV reports yet, and an SDK for Flutter only. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).
