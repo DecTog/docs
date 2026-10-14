@@ -37,17 +37,35 @@ An archived link routes like any other. See [Links: pause, expire, archive and d
 
 The click gets a 16-character id (the `dtg_click` value), `source: web`, the link kind, device type, OS (the Android major version comes from the client hint when present), browser, device model (from the `Sec-CH-UA-Model` hint or a WebView `Build/` token), CPU architecture, the user agent (512 characters), `Accept-Language` (128 characters), country, region, city and ASN from Cloudflare, the salted IP hash plus the raw IP, the referring page's origin (null when the referrer is DecTog itself), the `utm_*` values and the `dec_*` tracking values. The interstitial and tap-to-store pages add the screen size, pixel ratio, touch points and connection type later. Permanent links also increment their lifetime click counter; temporary links have none.
 
+## Which value applies
+
+Each routing field can come from several places. For one tap the first one that sets it wins:
+
+| # | Source | Fields it can set |
+|---|---|---|
+| 1 | The tapped URL's `dec_*` parameters | the custom redirect (`dec_redirect`, `dec_redirect_<os>`), the desktop fallback (`dec_fallback`), the in-app route (`dec_deeplink`), the tracking values. See [URL parameters](/links/url-parameters/). |
+| 2 | The link's first matching geo or language rule | `target`, `redirect_url`, `fallback_url`, the iOS and Android deep-link paths. See [Geo and language routing](#geo-and-language-routing). |
+| 3 | The link | every routing field, the tracking defaults, the tap-to-store page and the interstitial |
+| 4 | The link's app (or the account's default app) | the store URLs, the Fallback URL, the schemes, the tap-to-store page and the interstitial |
+| 5 | The deployment | the branded QR page, `UNKNOWN_HOST_REDIRECT` |
+
+### Geo and language routing
+
+A permanent link can carry up to 20 rules (`routing_rules`; the **Geo and language routing** block in the link drawer). A rule names countries (ISO 3166 two-letter codes, from Cloudflare's view of the visitor), languages (the primary tag of the browser's first `Accept-Language` entry, such as `de` for `de-AT`), or both, and the link fields it replaces. Rules are tried in order; the first whose every condition matches stands in for the link's own values of the fields it sets, for that tap only. A tap that matches no rule is routed exactly as without rules: a rule never blocks a visitor. Bots and link unfurlers see the link's own preview and target.
+
+A rule's iOS or Android deep-link path for the tap's platform is also stored on the click, so an install that click brings receives it as `deep_link` (unless the URL had a `dec_deeplink`).
+
 ## Mobile: choosing the destination
 
 The server resolves one destination for a visitor without the app. The first non-null entry wins:
 
 | # | Candidate | Notes |
 |---|---|---|
-| 1 | A custom redirect whose host is a store, re-tagged | Custom redirect means, in order: `dec_redirect_ios` / `dec_redirect_android`, then `dec_redirect`, then the link's **If the app isn't installed (mobile) > Custom URL** (`redirect_url`). Store hosts are `apple.com` and its subdomains on iOS; `play.google.com` and the Huawei, Samsung and Xiaomi store hosts on Android. The attribution tag is added. |
+| 1 | A custom redirect whose host is a store, re-tagged | Custom redirect means, in order: `dec_redirect_ios` / `dec_redirect_android`, then `dec_redirect`, then a matching rule's `redirect_url`, then the link's **If the app isn't installed (mobile) > Custom URL** (`redirect_url`). Store hosts are `apple.com` and its subdomains on iOS; `play.google.com` and the Huawei, Samsung and Xiaomi store hosts on Android. The attribution tag is added. |
 | 2 | A custom redirect, verbatim | Any other custom redirect URL. Not an install path, so no tag. |
 | 3 | The tagged store URL | iOS: the app's App Store URL with `ct=dtg_click=<id>`. Android: the visitor's OEM store when configured, else the Play Store URL, with `referrer=dtg_click=<id>&dtg_l={username}/{slug}`. See [App stores and OEM routing](/links/app-stores-and-oem-routing/). |
 | 4 | The **app's** Fallback URL | This outranks the link's own target on mobile. |
-| 5 | The link's target (its **Fallback URL**) | |
+| 5 | The link's target (its **Fallback URL**), or a matching rule's `target` | |
 | 6 | Nothing | The visitor falls through to the shared tail: `dec_fallback`, then the link's desktop fallback, then the QR page. |
 
 A permanent link's deep-link paths and a `dec_deeplink` parameter do not change the destination; they only change the in-app route used by the intent bounce and the "Open in app" buttons.
@@ -95,7 +113,7 @@ Desktop visitors, and mobile visitors with no destination, take this chain. The 
 |---|---|
 | 1 | `dec_redirect_macos`, `dec_redirect_windows` or `dec_redirect_linux` for the visitor's OS, else `dec_redirect` |
 | 2 | `dec_fallback` |
-| 3 | The link's **If the app can't open the link (desktop) > Custom URL** (`fallback_url`) |
+| 3 | A matching rule's `fallback_url`, else the link's **If the app can't open the link (desktop) > Custom URL** (`fallback_url`) |
 | 4 | The app's Fallback URL |
 | 5 | The branded QR page |
 

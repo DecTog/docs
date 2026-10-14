@@ -97,7 +97,7 @@ Empty states: "No permanent links yet.", "No temporary links. Pick an expiry whe
 
 ## Editing a link
 
-**Edit** opens a side drawer titled **Edit link** `/slug`. Permanent links get four blocks; temporary links get the expiry and the social preview.
+**Edit** opens a side drawer titled **Edit link** `/slug`. Permanent links get five blocks; temporary links get the expiry and the social preview.
 
 ### Tracking
 
@@ -106,6 +106,10 @@ Permanent links only. The four fields from the create form, each up to 255 chara
 ### Expiry
 
 **Expires at** (permanent links; a date and time in your browser's time zone, empty for never) and **After expiry, send visitors to** (a URL; empty serves a "Link expired" page with status 410). A temporary link shows its fixed expiry instead of the date box. While the link is paused, a third box, **Why it is paused (only you see this)**, edits the pause note. **Save expiry** sends the block. An expired link records no clicks: taps go straight to the URL, or get the 410 page.
+
+### Geo and language routing
+
+Permanent links only. **Add rule** adds a block with **Countries** (two-letter codes such as `DE, AT, CH`), **Languages** (such as `de`), and the destinations it replaces for a matching tap: **Desktop destination**, **Mobile without the app**, **iOS deep link path**, **Android deep link path** and **Fallback URL**. Empty fields keep the link's own. The first matching rule wins; **Move up** reorders and **Remove** deletes a rule. **Save rules** sends them all; the server's error, such as `routing_rules[0] needs countries or languages`, shows next to the button. Taps that match no rule are routed as usual. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
 
 ### Preview
 

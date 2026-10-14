@@ -37,6 +37,7 @@ Every permanent-link route returns the full object, including fields you never s
   "creative": null,
   "ios_tap_to_store": null,
   "mobile_interstitial": null,
+  "routing_rules": null,
   "referrer_customer_id": null,
   "expires_at": null,
   "expired_url": null,
@@ -63,6 +64,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `fallback_url` | string or null | Where desktop visitors go instead of the QR page, and the last mobile fallback. |
 | `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `dec_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | This link's iOS tap-to-store page and mobile interstitial. `null` follows the app's setting. See [How a tap is routed](/links/how-a-tap-is-routed/#mobile-delivering-it). |
+| `routing_rules` | array or null | Geo and language rules, first match wins. See [Geo and language rules](#geo-and-language-rules). |
 | `referrer_customer_id` | string or null | Set on a customer's referral link. See [Referral programs](/guides/referral-programs/). |
 | `expires_at`, `expired_url` | string or null | When the link expires, and where taps go after that instead of a `410` page. |
 | `disabled_at`, `disabled_reason` | string or null | Paused since, and your note on why. A paused link answers `410` and records nothing. |
@@ -92,6 +94,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `redirect_url`, `fallback_url` | string | no | http(s) URLs. `""` stores `null`. |
 | `label`, `campaign`, `adgroup`, `creative` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | no | `true` or `false` overrides the app's setting for this link; `null` or absent follows it. Anything else answers `400 Invalid ios_tap_to_store: must be true, false or null (follow the app)`. |
+| `routing_rules` | array or null | no | Up to 20 rules; `null` or `[]` stores none. See below. |
 | `expires_at` | string | no | An ISO 8601 time such as `2026-12-31T23:59:00Z`, stored in UTC. A time in the past creates an already-expired link. |
 | `expired_url` | string | no | An http(s) URL taps go to once the link has expired. |
 | `disabled`, `disabled_reason` | boolean, string | no | `true` creates the link paused. The reason is at most 255 characters. |
@@ -150,6 +153,26 @@ Validation is the same as on create. Errors come back as `400` with the same str
 
 ```bash title="Clear the target so the link inherits the app fallback"
 dectog PUT /api/v1/links/spring-sale '{"target": null, "label": "launch-week"}'
+```
+
+## Geo and language rules
+
+A rule replaces some of the link's fields for taps from given countries or browser languages. Rules are tried in order and the first match wins; a tap no rule matches is routed as usual, and the URL's `dec_*` parameters still win over a rule. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
+
+| Rule field | Type | Rules |
+|---|---|---|
+| `countries` | array of strings | ISO 3166 two-letter codes, any case, stored upper case |
+| `languages` | array of strings | Language tags; only the primary tag is kept, lower case (`de-AT` becomes `de`) |
+| `target`, `redirect_url`, `fallback_url` | string | http(s) URLs that replace the link's own for a matching tap |
+| `ios_deep_link_path`, `android_deep_link_path` | string | In-app routes, with the same rules as the link's |
+
+A rule needs `countries` or `languages` (a tap must match every list a rule has) and at least one of the other fields. Unknown fields, more than 20 rules, or a bad value answer `400`, for example `{"error": {"code": "invalid_request", "message": "routing_rules[0] needs countries or languages"}}`.
+
+```bash title="German-speaking visitors get the German sale page and in-app route"
+dectog PUT /api/v1/links/spring-sale '{"routing_rules": [
+  {"countries": ["DE", "AT", "CH"], "fallback_url": "https://shop.example.de/sale", "ios_deep_link_path": "de/sale", "android_deep_link_path": "de/sale"},
+  {"languages": ["fr"], "fallback_url": "https://shop.example.fr/soldes"}
+]}'
 ```
 
 ## Pause, expire, archive and delete
