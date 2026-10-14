@@ -44,7 +44,7 @@ Opening a row loads `?id={customer_id}`. The page starts with an **← All custo
 
 ### Stats
 
-Four tiles: **Events**, **Leads** (events of type `lead`), **Conversions** (events of type `conversion`) and **Revenue**, the sum of `revenue` over the customer's events in every currency, shown with a `$` sign.
+Four tiles: **Events**, **Leads** (events of type `lead`), **Conversions** (events of type `conversion`) and **Net revenue**: purchases minus refunds in your revenue currency. The profile also shows the date of the customer's **First purchase**.
 
 ### Profile
 

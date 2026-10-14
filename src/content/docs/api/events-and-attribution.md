@@ -23,11 +23,18 @@ Each event:
 |---|---|---|---|
 | `type` | string | yes | `identify`, `lead`, `conversion` or `custom`. |
 | `event_name` | string, 200 | no | Free text, for example `purchase` or `signup`. |
-| `revenue` | number | `conversion` only | Must be finite and not negative. Stored as sent. |
-| `currency` | string, 8 | no | Upper-cased on storage (`usd` becomes `USD`). The server never converts currencies. |
+| `revenue` | number | `conversion` only (not for a cancel) | Must be finite and not negative. Stored as sent, and also converted into the account's revenue currency (`revenue_base`). |
+| `currency` | string, 8 | no | Upper-cased on storage (`usd` becomes `USD`). Totals convert it with the ECB reference rate of the event's day; no currency means the account's currency. |
 | `customer_id` | string, 200 | `identify` only | Your user id. |
 | `metadata` | JSON | no | Stored as sent. |
 | `client_timestamp` | string, 64 | no | Device clock. |
+| `transaction_id` | string, 128 | no | Conversions: the store transaction. Stored once per `store` and `transaction_type`; a repeat is a duplicate. |
+| `original_transaction_id` | string, 128 | no | Conversions: the subscription's first purchase. A renewal, refund or cancel inherits that purchase's `install_id` and link. |
+| `product_id` | string, 200 | no | Conversions. |
+| `store` | `app_store` or `play` | no | Conversions. |
+| `purchase_type` | `one_time` or `subscription` | no | Conversions. |
+| `quantity` | integer 1 to 10000 | no | Conversions. |
+| `transaction_type` | `purchase`, `refund` or `cancel` | no | Conversions, default `purchase`. A refund subtracts its `revenue`; a cancel counts nothing and needs no `revenue`. |
 | `client_event_id` | string, 8 to 64 of `A-Z a-z 0-9 - _` | no | Your id for the event, unique per account. A resend with an id the account already stored is a duplicate and changes nothing. The SDK sends a UUID it stamps when the event is queued. |
 | `name`, `email`, `phone` | string 200, 254, 32 | no | Read on `identify` only. |
 
@@ -59,12 +66,16 @@ The per-event errors in `rejected`:
 | `conversion events require revenue` |
 | `metadata is not JSON-serializable` |
 | `client_event_id must be 8 to 64 letters, digits, '-' or '_'` |
+| `transaction_type must be one of purchase, refund, cancel` |
+| `store must be one of app_store, play` |
+| `purchase_type must be one of one_time, subscription` |
+| `quantity must be a whole number from 1 to 10000` |
 
 ### What each type does
 
 - **`identify`** upserts the customer row keyed by (`account`, `customer_id`). `name`, `email` and `phone` are stored **in plain text**. On a repeat `identify`, a non-null value in the new call overwrites the stored one and an omitted field keeps its stored value; `first_install_id` is set once, from the first `identify` that carried an `install_id`, and never replaced. The `identify` is also stored as an event row of type `identify`. See [Dashboard: Customers](/dashboard/customers/).
 - **Automatic signup lead.** The first `identify` of a customer the account has not seen before, sent from a fresh install (the batch's `install_id`, else the device's latest install, created within the last 30 days and not a reinstall), also stores a `lead` event with `event_name: "signup"` and `metadata: {"auto": true, "source": "identify"}`. A `lead` with `event_name: "signup"` that you post for a customer who already has one is counted in `duplicates` and not stored.
-- **`lead`**, **`conversion`**, **`custom`** are stored as sent. `conversion` requires `revenue`.
+- **`lead`**, **`conversion`**, **`custom`** are stored as sent. `conversion` requires `revenue` unless it is a `cancel`. A conversion whose `store` + `transaction_id` + `transaction_type` the account already has is a duplicate. Net revenue, the figure every dashboard total shows, adds purchases and subtracts refunds, in the account's revenue currency. See [Revenue](/sdk/revenue/).
 
 Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row only when the deployment sets `STORE_RAW_IP=1`.
 

@@ -36,11 +36,13 @@ await dectog.trackConversion(
   revenue: 9.99,
   currency: 'USD',
   productId: 'pro-monthly',
-  transactionId: order.id,
+  transactionId: purchase.transactionId,
+  store: DectogStore.appStore,
+  purchaseType: DectogPurchaseType.subscription,
 );
 ```
 
-`revenue` is required and must be at least 0. `eventName` defaults to `purchase`. `currency` is upper-cased by the server and capped at 8 characters. `productId` and `transactionId` go into the event's metadata as `product_id` and `transaction_id`, merged with any `metadata` map you pass. Revenue reaches the per-link analytics; the dashboard sums every currency under one `$` figure.
+`revenue` is required and must be at least 0. `eventName` defaults to `purchase`. `currency` is upper-cased by the server and capped at 8 characters. The transaction fields travel as top-level event fields, and `metadata` is stored as you pass it. Revenue reaches the per-link analytics in your account's currency. Renewals, refunds and cancels are on [Revenue](/sdk/revenue/).
 
 ## Custom events
 

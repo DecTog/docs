@@ -80,6 +80,7 @@ The dashboard masks the email in the Customers list (`e****@domain`) but shows i
 
 - **Install webhook:** each delivery to your endpoint includes `device_id`, `device_model`, `device_manufacturer`, OS, connectivity, carrier codes, `ip_hash`, the matched link and click params, fraud flags and the Apple Search Ads record. The URL and secret are stored in plain text on the app and returned by `GET /api/admin/apps`. See [Install webhook](/api/install-webhook/).
 - **Apple:** the AdServices token is posted to `api-adservices.apple.com`.
+- **European Central Bank:** once a day the Worker downloads `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` (the euro reference rates) to convert revenue. The request carries no data about you or your users.
 - **Resend:** the password-reset email (recipient address, reset link) when `RESEND_API_KEY` is set.
 - **Google:** the OAuth code exchange when Sign in with Google is configured.
 - **Cloudflare:** everything is processed in Workers and stored in D1. D1 chooses a region when the database is created; `wrangler d1 create --location` pins it.

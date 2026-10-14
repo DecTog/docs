@@ -40,6 +40,10 @@ DELETE FROM temp_links WHERE expires_at < <now minus 24 hours>
 
 A temporary link therefore keeps answering for up to a day after it expires: the redirect shows the 410 page and `GET /api/v1/resolve/:user/:slug` still returns `200` with `is_expired: true`. After the purge the slug is free again and both answer 404. The link's clicks and the installs attributed to them are kept; only the `temp_links` row goes. The dashboard's "Delete expired" button and `DELETE /api/admin/temp-links/expired` remove expired links immediately with the same effect. See [Temporary links](/links/temporary-links/).
 
+## Exchange rates (daily)
+
+Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currency`, `rate`, plus `EUR` = 1), then fills `events.revenue_base` for up to 2,000 amounts that have none: the amount in the account's revenue currency, converted with the rate of the event's day (the last rate published on or before it, else the first after it). A failed download is logged and retried the next day; amounts keep waiting with `revenue_base` null and count as 0 in totals.
+
 ## Anonymization sweep (daily)
 
 `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. The cutoff is `now minus RETENTION_DAYS` (default 400; `0`, blank or non-numeric also means 400). Rows are kept for aggregate analytics; the personal columns are set to `NULL`.

@@ -40,7 +40,7 @@ All seven cards always render. Counts use the server's own timestamps, so an ins
 | **Unique visitors** | | The number of distinct hashed IP addresses among those clicks. It counts IP addresses, not devices or people: two phones on one Wi-Fi network are one visitor, and one phone that moves from Wi-Fi to cellular is two. |
 | **Installs** | `{n} attributed · {n} reinstalls excluded` | Installs reported in the window, excluding reinstalls. "Attributed" is the subset the server matched to a click. Reinstalls go through the same matching as any other install but are left out of this count; the second number says how many were left out. |
 | **Conversion** | `installs ÷ clicks` | Non-reinstall installs, organic ones included, divided by clicks, as a percentage with one decimal. Because organic installs count, the rate can exceed 100%, for example when the app gets installs that never came through a link. |
-| **Revenue** | `tracked conversions` | The sum of the `revenue` field of every event in the window, of every type and in every currency. The total is shown with a `$` sign whatever currencies the events carried; nothing is converted. |
+| **Revenue** | `tracked conversions` | Net revenue of the window: purchases minus refunds, each converted into your revenue currency (Settings) with the ECB rate of its day. Amounts whose rate is not known yet count as 0 until the daily conversion run. |
 | **Leads** | `signup events` | Events whose type is `lead`. |
 | **Opens** | `link re-opened the installed app` | App opens in the window: times a link opened an already installed app, as reported by the SDK. |
 
@@ -93,7 +93,7 @@ Inside the card, an amber box appears when at least one non-reinstall install ca
 
 Subtitle: "Leads, conversions and custom events from your app — track them with the DecTog SDK."
 
-The 12 most recent events of any type (`identify`, `lead`, `conversion`, `custom`), newest first. **This card ignores the time range.** Each row shows a type chip (green for `conversion`, orange for `lead`, gray otherwise), the event name (or the type when there is no name), `/{slug}` when the event is attributed to a link, and on the right either `${revenue}` when the event carries revenue or the event's date.
+The 12 most recent events of any type (`identify`, `lead`, `conversion`, `custom`), newest first. **This card ignores the time range.** Each row shows a type chip (green for `conversion`, orange for `lead`, gray otherwise), the event name (or the type when there is no name), `/{slug}` when the event is attributed to a link, and on the right either the amount in the event's own currency (a refund with a minus sign) when the event carries revenue, or the event's date.
 
 Empty state: "No events yet — call `identify` / `trackConversion` in the SDK." See [Events](/sdk/events/).
 
@@ -213,7 +213,7 @@ These differences are by design. Knowing them saves you from chasing phantom dis
 
 - **Installs vs the quality panel.** Reinstalls are matched like any other install; only app updates and replayed signals skip the fingerprint. They are excluded from the Installs KPI, the campaign, source and attribution-quality charts and the per-link install counts, but the Match confidence panel, Top devices, Carriers, Connectivity and Apple Search Ads include them.
 - **Conversion above 100%.** Organic installs count in the numerator.
-- **Revenue.** One `$` total across every currency. The Links and Customers screens do the same.
+- **Revenue.** Net of refunds and converted into one currency, here and on the Links and Customers screens. A purchase in a currency whose rate has not arrived yet counts as 0 until the next daily run.
 - **Campaign and source charts.** They read `utm_campaign` and `utm_source` from the tapped URL, never the link's Tracking fields.
 - **Recent events.** Always the latest 12, whatever the range.
 - **Per-link numbers.** The [Links](/dashboard/links/) screen shows lifetime totals, so its columns do not match a 7-, 30- or 90-day Overview.

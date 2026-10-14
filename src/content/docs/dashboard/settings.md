@@ -13,8 +13,9 @@ The Settings screen, at https://app.dectog.com/dashboard/settings, has five card
 |---|---|
 | **Email** | The email you sign in with. |
 | **Username / subdomain** | Your username, which is also the host of your links: `https://{username}.dectog.com/{slug}`. |
+| **Revenue currency** | The currency every revenue total is in, EUR by default; one of the about 30 currencies the European Central Bank publishes reference rates for. Changing it converts every stored amount again. See [Revenue](/sdk/revenue/). |
 
-Nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
+Apart from the revenue currency nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
 
 ## Account key
 

@@ -56,7 +56,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | Member | Signature | Notes |
 |---|---|---|
 | `identify` | `Future<void> identify({required String customerId, String? name, String? email, String? phone})` | Queues an `identify` event unless identical to the previous one; persists the customer id. |
-| `trackConversion` | `Future<void> trackConversion({required double revenue, String? currency, String? eventName, String? productId, String? transactionId, Map<String, dynamic>? metadata})` | Queues a `conversion` event; `eventName` defaults to `purchase`. |
+| `trackConversion` | `Future<void> trackConversion({required double revenue, String? currency, String? eventName, String? productId, String? transactionId, String? originalTransactionId, DectogStore? store, DectogPurchaseType? purchaseType, int? quantity, DectogTransactionType transactionType = DectogTransactionType.purchase, Map<String, dynamic>? metadata})` | Queues a `conversion` event; `eventName` defaults to `purchase` (or `refund` / `cancel`). With `transactionId` and `store` a purchase reported twice counts once; a renewal names its first purchase as `originalTransactionId` and is credited to the same link; a refund is subtracted, a cancel counts nothing. See [Revenue](#revenue-types). |
 | `trackEvent` | `Future<void> trackEvent(String eventName, {Map<String, dynamic>? data})` | Queues a `custom` event. |
 | `flush` | `Future<void> flush()` | Sends up to 100 queued events now (`POST /api/v1/events`). |
 | `logout` | `Future<void> logout()` | Flushes, then forgets the customer id. |
@@ -283,6 +283,16 @@ The verdict on `onAppInstalled`, `currentAppInstall`, `getAttributionData()` and
 ### DectogAppInstallRequest and AppInfo
 
 `DectogAppInstallRequest` is the wire model of the install registration (every field the SDK can send, all optional, `toJson` emits only non-null values). `AppInfo` carries the `package_info_plus` values the SDK reads (`appName`, `packageName`, `version`, `buildNumber`, `buildSignature`, `installerStore`, `installTime`, `updateTime`, with `installTimeMs` and `updateTimeMs` getters). Both are exported so the payload is inspectable, but the SDK builds them itself; you never construct them.
+
+## Revenue types
+
+Arguments of `trackConversion`, sent as their `wire` value.
+
+| Enum | Values (wire) | Meaning |
+|---|---|---|
+| `DectogStore` | `appStore` (`app_store`), `play` (`play`) | The store of the transaction. A transaction id is unique per store. |
+| `DectogPurchaseType` | `oneTime` (`one_time`), `subscription` (`subscription`) | What was bought |
+| `DectogTransactionType` | `purchase`, `refund`, `cancel` | A `refund` subtracts its `revenue` from net revenue; a `cancel` (auto-renew turned off) counts nothing |
 
 ## Errors
 
