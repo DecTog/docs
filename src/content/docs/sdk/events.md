@@ -1,6 +1,6 @@
 ---
 title: Events
-description: Identify users, record signup leads, conversions and custom events, and understand the durable queue, the batch and field limits, and the opt-out switch.
+description: Identify users, record signup leads, conversions and custom events, and understand the durable queue, the batch and field limits, and the collection switch.
 sidebar:
   order: 7
 ---
@@ -93,13 +93,13 @@ The SDK only produces `identify`, `conversion` and `custom` events (`lead` is ac
 
 The server denormalizes `matched_slug` when it stores an event: from the batch's `install_id` when that install was credited, else from the device's latest credited install. Events from organic installs carry no slug and appear only in account-wide totals. The Customers page shows each customer's events (latest 200) next to the link that brought them in; see [Customers](/dashboard/customers/).
 
-## Opt-out
+## Turning collection off
 
 ```dart
-await dectog.optOut(true);
+await dectog.setEnabled(false);
 ```
 
-Discards new events, clears the queue, stops the sender, and also stops the device ping and app-open reports. It is persisted; `optOut(false)` resumes. `isOptedOut()` reads the flag. See [Device data and privacy](/sdk/device-data-and-privacy/).
+Discards new events, clears the queue and stops the sender, and stops every other report too: clicks, app opens, install registration and the device ping. It is persisted; `setEnabled(true)` resumes. `isEnabled()` reads the flag. See [Device data and privacy](/sdk/device-data-and-privacy/).
 
 ## Attribution re-pull
 

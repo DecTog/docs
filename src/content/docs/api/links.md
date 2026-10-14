@@ -49,7 +49,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `created_at`, `updated_at` | string or null | ISO 8601 UTC. `updated_at` stays `null` until the first `PUT`. |
 | `metadata` | JSON or null | Your own data. Delivered to the app on attributed installs as `custom_params` and inside `link.metadata`. |
 | `og_title`, `og_description`, `og_image_url` | string or null | Social preview overrides for bots and unfurlers. Fall back to the app's values. See [Social previews and QR](/links/social-previews-and-qr/). |
-| `ios_deep_link_path`, `android_deep_link_path` | string or null | Route appended after `scheme://<username>/<slug>/` when the app opens from a tap. Stored without a leading slash. |
+| `ios_deep_link_path`, `android_deep_link_path` | string or null | The app route a custom-scheme open uses on that platform: `scheme://<path>?dtg_l=<username>/<slug>` instead of `scheme://<username>/<slug>?dtg_l=…`. Stored without a leading slash. |
 | `redirect_url` | string or null | Mobile visitors without the app go here instead of the store. A store URL here is still tagged with the click id. |
 | `fallback_url` | string or null | Where desktop visitors go instead of the QR page, and the last mobile fallback. |
 | `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `dec_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |

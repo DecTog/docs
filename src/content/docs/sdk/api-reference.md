@@ -58,8 +58,8 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `trackEvent` | `Future<void> trackEvent(String eventName, {Map<String, dynamic>? data})` | Queues a `custom` event. |
 | `flush` | `Future<void> flush()` | Sends up to 100 queued events now (`POST /api/v1/events`). |
 | `logout` | `Future<void> logout()` | Flushes, then forgets the customer id. |
-| `optOut` | `Future<void> optOut(bool optOut)` | Persisted. `true` discards new events, clears the queue and stops the sender, the device ping and app-open reports. |
-| `isOptedOut` | `Future<bool> isOptedOut()` | The persisted flag. |
+| `setEnabled` | `Future<void> setEnabled(bool enabled)` | Persisted, default `true`. `false` records nothing: no click, app-open, install, claim, pasteboard or device-ping reports; new events are discarded and the queue cleared. `true` restarts the sender and registers the install if it never was. Links are still delivered. |
+| `isEnabled` | `Future<bool> isEnabled()` | The persisted flag. |
 
 Background calls the SDK makes on its own: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on every initialize with the device tier on.
 

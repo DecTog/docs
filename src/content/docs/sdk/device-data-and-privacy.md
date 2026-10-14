@@ -1,6 +1,6 @@
 ---
 title: Device data and privacy
-description: What the SDK sends in each data tier, how collectDeviceData and persistDeviceId gate it, what the bundled iOS privacy manifest declares, what to declare in the stores, and how opt-out and local storage work.
+description: What the SDK sends in each data tier, how collectDeviceData and persistDeviceId gate it, what the bundled iOS privacy manifest declares, what to declare in the stores, and how the collection switch and local storage work.
 sidebar:
   order: 6
 ---
@@ -62,7 +62,7 @@ The iOS plugin also keeps two install dates in the Keychain (`first_install_time
 
 The core SDK does not read or send the Google Advertising ID or the IDFA. It depends on no Play services artifact and declares no `AD_ID` permission on Android; on iOS it links neither `AdSupport` nor `AppTrackingTransparency`, and the privacy manifest sets `NSPrivacyTracking` to `false`.
 
-The server's install body does accept `ad_id` and `ad_tracking_limited` and stores them in a separate table that is never joined to the device id. The plugin's native sides reserve this path for a companion package (`flutter_dectog_adid`). That package is not part of this release, the core SDK exposes no API for it, and nothing in the core SDK sends `ad_id`.
+The server's install body does accept `ad_id` and `ad_tracking_limited` and stores them in a separate table that is never joined to the device id. An opt-in ad-identifier package that would fill them is planned, not shipped; the core SDK exposes no API for it and nothing in it sends `ad_id`.
 
 The Apple Search Ads token (`collectAppleSearchAdsToken`, off by default) is not an identifier and shows no prompt.
 
@@ -74,10 +74,10 @@ The Apple Search Ads token (`collectAppleSearchAdsToken`, off by default) is not
 |---|---|
 | `NSPrivacyTracking` | `false` |
 | `NSPrivacyTrackingDomains` | empty |
-| Collected data types | Device ID (linked to the user), Other usage data (not linked), User ID, Purchase history, Email address, Phone number (linked). Every type is for the Analytics purpose and not used for tracking. |
+| Collected data types | Device ID (linked to the user), Other usage data (not linked), User ID, Purchase history, Name, Email address, Phone number (linked). Every type is for the Analytics purpose and not used for tracking. |
 | Accessed API types | `NSPrivacyAccessedAPICategoryFileTimestamp`, reason `C617.1`: the install and update dates are read from the creation timestamps of the app's own executable, Library and Documents directories. No user defaults, disk space or boot time APIs. |
 
-The User ID, purchase, email and phone entries cover the event tier. If your app never calls `identify` with contact fields, those types are declared but never sent.
+The User ID, purchase, name, email and phone entries cover the event tier. The name, email and phone your app passes to `identify` are sent and stored **as given, not hashed**; declare them in your App Privacy answers when you pass them. If your app never calls `identify` with contact fields, those types are declared but never sent.
 
 ## Store declarations
 
@@ -88,17 +88,17 @@ Declare the collection in your privacy policy and in both store forms (Google Pl
 - User IDs, purchase history, contact info: only if you pass them through `identify` and `trackConversion`.
 - Location: none. The SDK sends no location; the server derives country and ASN from the request's network address.
 
-If your consent regime is opt-in, pass `collectDeviceData: false` until the user consents.
+If your consent regime is opt-in, call `setEnabled(false)` before the user is asked (the choice persists), and `setEnabled(true)` once they consent. `collectDeviceData: false` only drops the device tier.
 
-## Opt-out
+## Turning collection off
 
 ```dart
-await dectog.optOut(true);           // persisted across launches
-final off = await dectog.isOptedOut();
-await dectog.optOut(false);          // resume
+await dectog.setEnabled(false);      // persisted across launches
+final on = await dectog.isEnabled();
+await dectog.setEnabled(true);       // resume
 ```
 
-`optOut(true)` is persisted in the SDK state file. While it is on, new events are discarded, the on-disk queue is cleared, the event sender stops, the device ping is not sent and app opens are not reported. It does not cancel an install registration or the in-app click report for an opened link. `optOut(false)` restarts the event sender.
+`setEnabled(false)` is persisted in the SDK state file, so the next cold start begins disabled. While it is off, the SDK records nothing: no click or app-open reports, no install registration, no late claims, no pasteboard reads, no device pings, and new events are discarded (the on-disk queue is cleared when you disable). Incoming links are still parsed and delivered to `onLinkClick`, and resolving a link still calls the public resolve endpoint. `setEnabled(true)` restarts the event sender and, when this install was never registered because the SDK started disabled, registers it then: the store referrer still attributes it deterministically, but the fingerprint window may have passed.
 
 ## Local storage
 
@@ -113,7 +113,7 @@ Everything the SDK persists lives in one private, backup-excluded directory:
 | File | Contents |
 |---|---|
 | `.dectog_install.json` | The install sentinel: attempt id, status, attempts, timestamps, server install id, referrer and Apple Search Ads delivery flags |
-| `.dectog_sdk_state.json` | Customer id, the last identify fingerprint, the opt-out flag, the install id |
+| `.dectog_sdk_state.json` | Customer id, the last identify fingerprint, the `enabled` flag, the install id |
 | `.dectog_event_queue.jsonl` | Queued events, one JSON object per line |
 
 Uninstalling the app removes all three. A restored backup never contains them, so a restored app registers as a fresh install.

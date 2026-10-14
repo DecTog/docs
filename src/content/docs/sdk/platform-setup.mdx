@@ -153,12 +153,12 @@ A custom scheme is optional. Save it in the app record (`myapp`, without `://`) 
 
 How DecTog uses it:
 
-- A link without a deep-link path opens `myapp://{username}/{slug}`. A link with a deep-link path opens `myapp://{path}`, so the path's first segment becomes the URI authority. Universal Links and App Links always deliver the `https://{username}.dectog.com/{slug}` form instead.
+- A link without a deep-link path opens `myapp://{username}/{slug}?dtg_l={username}/{slug}`. A link with a deep-link path opens `myapp://{path}?dtg_l={username}/{slug}`, so the path's first segment becomes the URI authority. The `dtg_l` tag (after `dtg_click` when present) is how the SDK knows which link it was. Universal Links and App Links always deliver the `https://{username}.dectog.com/{slug}` form instead.
 - On iOS a scheme only opens from a direct user tap, such as the "Open in app" buttons on DecTog's pages. A server redirect to a scheme never launches an iOS app; Universal Links are the only automatic mechanism.
 - On Android the scheme, together with the package, enables the `intent://` bounce described above.
 
-<Aside type="caution" title="Scheme URLs and the SDK's parser">
-The SDK recognizes the scheme form `{scheme}://{username}/{slug}` as a DecTog link. A link that has a deep-link path arrives as `{scheme}://{path}`, which the parser reads as `{path's first segment}/{second segment}`. For those URLs, route from `DectogLinkClick.originalUrl` in your own code and ignore the `username` and `slug` the click reports. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+<Aside type="note" title="Scheme URLs and the SDK's parser">
+The SDK reads the link from `dtg_l`, never from the URL's shape, so `myapp://products/42?…&dtg_l=acme/launch` reports `acme` / `launch` and your app routes on the path from `DectogLinkClick.originalUrl`. A scheme URL without `dtg_l`, such as your app's own `myapp://products/42` from elsewhere, is not a DecTog link: it is emitted with an error and nothing is logged. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 </Aside>
 
 ## Verify from the dashboard

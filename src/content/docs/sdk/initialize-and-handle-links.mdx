@@ -25,7 +25,7 @@ That is the whole setup for the hosted service: the SDK talks to `https://app.de
 
 What `initialize` does, in order:
 
-1. Loads the persisted SDK state (customer id, opt-out flag, install id).
+1. Loads the persisted SDK state (customer id, the `enabled` flag, install id).
 2. Starts the event queue and sends the device ping, unless the user opted out.
 3. Subscribes to incoming links and processes the link that launched the app, while **at the same time** registering the install if this is the first launch. The call resolves when both are done.
 4. Schedules the launch-time late claims (a referrer that was not definitive, an Apple Search Ads token that was not ready) in the background.
@@ -81,9 +81,10 @@ An incoming URL is a DecTog link when it matches one of these forms. `baseHost` 
 | `https://{username}.{root}/{slug}` | `https://acme.dectog.com/launch` | Hosted and self-hosted subdomain links. The username must contain no dot, and the host must differ from `baseHost`. |
 | `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
 | any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |
-| `{scheme}://{username}/{slug}` | `myapp://acme/launch` | Custom-scheme opens and the Android `intent://` bounce. Any non-http(s) scheme qualifies. |
+| any non-http(s) scheme whose query carries `dtg_l={username}/{slug}` | `myapp://products/42?dtg_click=…&dtg_l=acme/launch` | Custom-scheme opens and the Android `intent://` bounce. The host and path are the app's own route; the link comes from `dtg_l`. |
+| `dectog://{username}/{slug}` | `dectog://acme/launch` | Development only: the `dectog` scheme without a tag. |
 
-Only the first path segment is read as the slug; the rest of the path, the query and the fragment are kept on `originalUrl`. URLs that match none of these forms are still emitted (see below) but carry an error.
+For https forms only the first path segment is read as the slug; the rest of the path, the query and the fragment are kept on `originalUrl`. URLs that match none of these forms are still emitted (see below) but carry an error.
 
 ## Handle links
 

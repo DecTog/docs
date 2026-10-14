@@ -22,7 +22,7 @@ The draft below describes a pure-TypeScript library. A port that wants parity wi
 - **Verdict fields.** `match_confidence`, `routing` (the medium-confidence candidate), `deep_link`, `click_params` (the tapped URL's `dec_*` values), `install_state`, `is_reinstall`, `replayed`, `claim`, `claim_reason`, `apple_search_ads`, `last_open`.
 - **The device tier**, on by default and switchable for consent flows: vendor-scoped device ID (IDFV persisted in the Keychain, `ANDROID_ID`), model, manufacturer, CPU, OS build, screen metrics, connectivity, carrier MCC/MNC. See [Device data and privacy](/sdk/device-data-and-privacy/).
 - **Opens and pings.** `POST /api/v1/app-opens` when a link opens the installed app, `POST /api/v1/device-ping` on initialization, `GET /api/v1/attribution` by `device_id` or by `install_id`.
-- **Link handling details.** Four URL forms (`https://{username}.{root}/{slug}`, `{base}/r/{username}/{slug}`, `?user={username}/{slug}`, `{scheme}://{username}/{slug}`), the cold-start link consumed once per process, launches from the Android recents screen ignored, OAuth and social-login callback URLs never logged or emitted, and `dec_*` click parameters parsed from the tapped URL.
+- **Link handling details.** Four URL forms (`https://{username}.{root}/{slug}`, `{base}/r/{username}/{slug}`, `?user={username}/{slug}`, and any custom scheme carrying `dtg_l={username}/{slug}`), the cold-start link consumed once per process, launches from the Android recents screen ignored, OAuth and social-login callback URLs never logged or emitted, and `dec_*` click parameters parsed from the tapped URL.
 - **Events.** The queue semantics in section 9b, plus the server limits: at most 100 events per batch (413 above that) and one invalid event rejects the whole batch.
 
 The Flutter sources are the reference for each item: `lib/src/dectog_impl.dart`, `lib/src/services/`, `android/src/main/kotlin/app/dectog/flutter_dectog/InstallReferrers.kt` and `ios/flutter_dectog/Sources/`. See [Contributing](/contributing/) for the layout.
@@ -249,7 +249,7 @@ export const parseDectogUrl = (url: string) => {
 ```
 
 :::note
-The Flutter SDK accepts four forms: `https://{username}.{linkRootDomain}/{slug}`, `{baseHost}/r/{username}/{slug}` (path mode), `?user={username}/{slug}` on any host, and `{scheme}://{username}/{slug}` for custom schemes. It also drops the cold-start URL after the first delivery, ignores launches from the Android recents screen, and never logs or emits OAuth callback URLs (schemes like `fb<id>`, `com.googleusercontent.apps.<id>-…`, anything carrying `access_token` or `id_token`).
+The Flutter SDK accepts four forms: `https://{username}.{linkRootDomain}/{slug}`, `{baseHost}/r/{username}/{slug}` (path mode), `?user={username}/{slug}` on any host, and any custom-scheme URL whose query carries `dtg_l={username}/{slug}` (the host and path are then the app's own route). The untagged `dectog://{username}/{slug}` is accepted as a development convenience; no other untagged scheme URL is a DecTog link. It also drops the cold-start URL after the first delivery, ignores launches from the Android recents screen, and never logs or emits OAuth callback URLs (schemes like `fb<id>`, `com.googleusercontent.apps.<id>-…`, anything carrying `access_token` or `id_token`).
 :::
 
 ### 7. Link resolution and click logging
