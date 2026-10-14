@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-DecTog can POST every install verdict to your own backend. Set the webhook URL and secret on an app in [Dashboard: Apps](/dashboard/apps/) (admin fields `install_webhook_url`, an http(s) URL, and `install_webhook_secret`, free text). Both must be saved for anything to be sent.
+DecTog can POST every install verdict to your own backend. Set the webhook URL and secret on an app in [Dashboard: Apps](/dashboard/apps/) (admin fields `install_webhook_url`, an http(s) URL, and `install_webhook_secret`). **Generate secret** on that screen, or `POST /api/admin/apps/:id/webhook-secret`, creates a `whsec_` secret and shows it once; you can also paste your own. The secret is write-only: the dashboard and the API never return it again. Both must be saved for anything to be sent.
 
 :::caution[One webhook per account]
 Deliveries read the URL and secret from the account's **oldest** app, whichever app the matched link belongs to. On an account with several apps, only the oldest app's webhook settings have any effect.

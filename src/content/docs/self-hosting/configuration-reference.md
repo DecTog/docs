@@ -69,7 +69,7 @@ Settings that apply per registered app live on the `apps` row and are edited und
 | OEM store URLs | `huawei_store_url`, `samsung_store_url`, `xiaomi_store_url`, `vivo_store_url` | Host-checked for Huawei (`appgallery.huawei.com`, `appgallery.cloud.huawei.com`, `url.cloud.huawei.com`), Samsung (`galaxystore.samsung.com`, `apps.samsung.com`, `galaxy.store`) and Xiaomi (`global.app.mi.com`, `app.mi.com`), subdomains included; vivo accepts any http(s) URL. See [App stores and OEM routing](/links/app-stores-and-oem-routing/). |
 | Facebook App ID | `fb_app_id` | Free text; when set, the Android SDK reads Meta's on-device install referrer |
 | Social preview | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
-| Install webhook | `install_webhook_url`, `install_webhook_secret` | http(s) URL and free text; both must be saved for deliveries and for "Send test". Stored and returned in plain text. See [Install webhook](/api/install-webhook/). |
+| Install webhook | `install_webhook_url`, `install_webhook_secret` | http(s) URL and free text; both must be saved for deliveries and for "Send test". The secret is stored in plain text in D1 and is write-only through the API: the apps list returns only `install_webhook_secret_hint`. See [Install webhook](/api/install-webhook/). |
 | Mobile interstitial | `mobile_interstitial` | 0/1. Serves the beacon page on mobile taps so the click row gets a screen profile. |
 | iOS tap-to-store | `ios_tap_to_store` | 0/1. One-tap page that copies the link to the pasteboard before opening the App Store. |
 | Strict fraud mode | `strict_fraud_mode` | 0/1. Flagged installs count as organic. |

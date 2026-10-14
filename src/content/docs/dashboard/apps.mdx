@@ -91,11 +91,11 @@ Section text: "A signed POST (HMAC-SHA256, `X-Dectog-Signature`) to your server 
 | Field | What to enter | Rules |
 |---|---|---|
 | **Webhook URL** | Placeholder `https://myapp.com/api/dectog/install-webhook`. | http(s): `install_webhook_url must be a valid http(s) URL`. |
-| **Webhook secret** | Placeholder `shared HMAC secret`. The key your server uses to check the signature. | Free text, trimmed. The secret is stored and displayed in plain text; anyone who can open this screen can read it. |
+| **Webhook secret** | The key your server uses to check the signature. **Generate secret** (or **Rotate secret** once one is set) creates a strong one and shows it once, with a Copy button; you can also paste your own. | Free text, trimmed. Write-only: once saved it is never shown again, only its last four characters in the placeholder. Leave the box empty to keep the saved secret. Rotating asks for confirmation, because the old secret stops working at once. |
 
 Both values must be saved for deliveries to happen. The server posts `app.installed` on every first launch and `app.install_updated` when a later claim or an Apple Search Ads result upgrades the verdict. Each request is signed as `sha256=` plus the hex HMAC-SHA256 of the raw body and carries an `x-dectog-timestamp` header that is not part of the signed data. There are no retries. The payload and verification code are in [Install webhook](/api/install-webhook/).
 
-**Send test** sits in the section header while you edit an existing app and is disabled while the URL box is empty. Its tooltip: "Sends a signed test event to the saved webhook URL — save changes first if you edited the fields". The server needs both the URL and the secret saved. The test posts an `app.installed` event with `test: true`, `matched: false`, `type: "organic"`, the device model `DecTog test probe` and null for everything else, waits up to 10 seconds, and reports one of:
+**Send test** sits in the section header while you edit an existing app and is disabled until both a URL and a secret are saved. Its tooltip: "Sends a signed test event to the saved webhook URL. Needs a saved URL and secret; save changes first if you edited the fields". The test posts an `app.installed` event with `test: true`, `matched: false`, `type: "organic"`, the device model `DecTog test probe` and null for everything else, waits up to 10 seconds, and reports one of:
 
 - `✓ Test event delivered — endpoint replied <status>` for a 2xx response;
 - `✕ Event delivered, but the endpoint replied <status>` for any other status;

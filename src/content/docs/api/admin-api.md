@@ -34,10 +34,10 @@ Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_
 |---|---|---|---|
 | `POST /api/admin/bootstrap` | `x-bootstrap-token` header when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` is set | First account on an empty database. See below. | `201 {ok, email, username, api_key, demo}`; `403 Bootstrap not permitted`; `409 Already bootstrapped` |
 | `POST /api/admin/signup` | public | `{email, password, username}`. Creates a `user` account, sets a 30-day cookie, returns the API key. | `201 {user, api_key}`; `403 Signup is currently closed` (`OPEN_SIGNUPS=0`); `400 Please enter a valid email address`, a password-rule message, `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `Username '<name>' is reserved`; `409 An account with this email or username already exists` |
-| `POST /api/admin/login` | public | `{email, password, remember?}`. Email is trimmed and lower-cased. | `200 {user: {id, email, username, role, created_at}}` plus the cookie; `400 Email and password are required`; `401 Invalid email or password`. No lockout, no rate limit. |
+| `POST /api/admin/login` | public | `{email, password, remember?}`. Email is trimmed and lower-cased. | `200 {user: {id, email, username, role, created_at}}` plus the cookie; `400 Email and password are required`; `401 Invalid email or password`; `429` over 10 attempts per minute from one IP. No per-account lockout. |
 | `POST /api/admin/logout` | public | Deletes the cookie. | `200 {ok: true}` |
 | `GET /api/admin/me` | session | The signed-in account. | `200 {user: {id, email, username, role, created_at}}` |
-| `POST /api/admin/forgot-password` | public | `{email}`. Creates a one-hour, single-use reset token (older unused tokens are cancelled) and emails `<WEB_URL>/reset-password?token=…` through Resend, or logs the link when `RESEND_API_KEY` is unset. | Always `200 {ok: true, message: "If that email exists, a reset link is on its way."}` |
+| `POST /api/admin/forgot-password` | public | `{email}`. Creates a one-hour, single-use reset token (older unused tokens are cancelled) and emails `<WEB_URL>/reset-password?token=…` through Resend, or logs the link when `RESEND_API_KEY` is unset. | `200 {ok: true, message: "If that email exists, a reset link is on its way."}` whether or not the account exists; `429` over 5 requests per minute from one IP or 3 per minute for one address. |
 | `POST /api/admin/reset-password` | public | `{token, password}`. Does not sign the user in. | `200 {ok: true}`; `400 Reset token is required`, a password-rule message, `This reset link is invalid or has expired`, `This reset link has already been used` |
 | `GET /api/auth/config` | public | What the login page shows. | `200 {signupOpen, googleEnabled}` |
 | `GET /api/auth/google/start` | public | 302 to Google's consent screen (authorization code with PKCE S256, `state`, scopes `openid email profile`, `prompt=select_account`). Sets `dectog_google_oauth` (10 minutes, path `/api/auth/google`). | `404 Google sign-in is not configured` when `GOOGLE_CLIENT_ID` or `GOOGLE_CLIENT_SECRET` is unset |
@@ -84,9 +84,10 @@ See [Dashboard: Settings](/dashboard/settings/).
 
 | Method and path | Auth | Purpose | Response |
 |---|---|---|---|
-| `GET /api/admin/apps` | session | All apps, oldest first. The first one is the account's default app. | `200` bare array with every column, `android_sha256_fingerprints` parsed into an array. **`install_webhook_secret` is returned in plain text.** |
+| `GET /api/admin/apps` | session | All apps, oldest first. The first one is the account's default app. | `200` bare array with every column except `install_webhook_secret`, which is replaced by `install_webhook_secret_hint` (`…` plus its last four characters, or `null` when unset); `android_sha256_fingerprints` parsed into an array. The secret is never returned once saved. |
 | `POST /api/admin/apps` | session | Create. `name` is the only required field. | `201 {id, name}`; `400 App name is required` or a field message |
-| `PUT /api/admin/apps/:id` | session | Partial update: absent keeps, a blank `name` keeps the old name, `""` or `null` clears other fields. | `200 {ok: true}`; `404 App not found` |
+| `PUT /api/admin/apps/:id` | session | Partial update: absent keeps, a blank `name` keeps the old name, `""` or `null` clears other fields. `install_webhook_secret` is write-only: a non-empty string replaces it, `null` clears it, `""` or absent keeps it. | `200 {ok: true}`; `404 App not found` |
+| `POST /api/admin/apps/:id/webhook-secret` | session | Generates a new install webhook secret, `whsec_` plus 64 hex characters, and replaces the stored one at once. | `200 {secret, hint}`: the only response that ever carries the secret; `404 App not found` |
 | `DELETE /api/admin/apps/:id` | session | Deletes the app; links bound to it get `app_id: null` and follow the default app from then on. Installs and clicks are untouched. | `200 {deleted: true}`; `404 App not found` |
 | `POST /api/admin/apps/:id/test-webhook` | session | Sends the test event described in [Install webhook](/api/install-webhook/), synchronously, 10-second timeout. | `200 {delivered: true, ok, status}` even for a non-2xx reply; `400 Save the webhook URL and secret first`; `502 Webhook delivery failed: <message>`; `404 App not found` |
 | `GET /api/admin/og-preview?url=` | session | Fetches a public page server-side and extracts a social preview. Follows redirects, 8-second timeout, reads at most 512 KB, first tag wins (`og:title`, `twitter:title`, `<title>`; `og:description`, `twitter:description`, `description`; `og:image:secure_url`, `og:image`, `twitter:image`, `twitter:image:src`), title and description cut to 150 characters. | `200 {title, description, image}`; `400 url query parameter is required`, `Enter a valid http(s) URL`, `Enter a valid public http(s) URL` (non-http scheme or a loopback, private or link-local host); `502 Couldn't reach that URL`, `That URL returned HTTP <n>`; `422 That URL isn't an HTML page`, `No title, description or image found on that page` |
@@ -106,7 +107,7 @@ App fields and their validation messages (`400`):
 | `mobile_interstitial`, `strict_fraud_mode`, `ios_tap_to_store` | Truthy stores 1, else 0 |
 | `low_entropy_window_hours` | Whole number 1 to 720, or `null` / `""` for the deployment default: `low_entropy_window_hours must be a whole number of hours between 1 and 720` |
 | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
-| `install_webhook_secret` | Free text, trimmed |
+| `install_webhook_secret` | Free text, trimmed; write-only (see `PUT`). Prefer `POST /api/admin/apps/:id/webhook-secret`, which generates a strong one. |
 | `fb_app_id` | Free text, trimmed. The worker only stores it; the SDK reads Meta's install referrer when `DectogConfig.fbAppId` is set in the app, not based on this field. |
 
 ## Analytics
@@ -146,4 +147,6 @@ Owner-only CMS routes under `/api/admin/blog` and the public site routes under `
 | Route | Limit |
 |---|---|
 | `POST /api/contact` | 5 per hour per hashed IP, counted before validation, so invalid submissions use up the allowance. The 429 carries no `Retry-After`. |
-| Every other `/api/admin` and `/api/auth` route | **None.** Login, signup, forgot-password, reset-password and bootstrap are not rate limited and login has no lockout. Put your own protection in front of them when you expose a self-hosted dashboard publicly. |
+| `POST /api/admin/login` | 10 per minute per hashed IP, counted before the password check. `429` with `Retry-After`. There is no per-account lockout, so nobody can lock a user out by failing on purpose. |
+| `POST /api/admin/forgot-password` | 5 per minute per hashed IP and 3 per minute per email address. `429` with `Retry-After`. |
+| Every other `/api/admin` and `/api/auth` route | **None.** Signup, reset-password and bootstrap are not rate limited. Put your own protection in front of them when you expose a self-hosted dashboard publicly. |

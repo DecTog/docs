@@ -27,7 +27,7 @@ A footer line reads "Your account gets its own link subdomain and API key." Ever
 |---|---|
 | **Email**, **Password** | Checked locally first: `Please enter a valid email address`, `Password is required`. |
 | **Remember me for 30 days** | Checked: the browser keeps the session cookie for 30 days. Unchecked: the cookie is deleted when the browser closes. |
-| **Sign In** | Errors: `Invalid email or password` for a wrong pair, `An unexpected error occurred` for anything else. There is no lockout and no rate limit on attempts. |
+| **Sign In** | Errors: `Invalid email or password` for a wrong pair, `An unexpected error occurred` for anything else. More than 10 attempts in a minute from one network show `Too many sign-in attempts. Wait a minute and try again.` until the minute ends. There is no per-account lockout. |
 | **Forgot password?** | Opens the reset form described below. |
 | **Sign in with Google** | Shown when the deployment has Google sign-in configured. |
 
@@ -53,7 +53,7 @@ An account created through Google has no usable password: the server stores a ra
 
 ## Forgot and reset password
 
-**Forgot password?** shows **Reset Password** ("Enter your email to receive a reset link") with an **Email** box and **Send Reset Link**. The reply is always "If that email exists, a reset link is on its way.", whether or not an account exists.
+**Forgot password?** shows **Reset Password** ("Enter your email to receive a reset link") with an **Email** box and **Send Reset Link**. The reply is "If that email exists, a reset link is on its way.", whether or not an account exists. More than 5 requests a minute from one network, or 3 a minute for one address, show `Too many reset requests. Wait a minute and try again.`
 
 The email, with the subject "Reset your DecTog password", carries a link to `https://app.dectog.com/reset-password?token=…`. The token:
 

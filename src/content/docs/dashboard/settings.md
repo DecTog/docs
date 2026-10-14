@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-The Settings screen, at https://app.dectog.com/dashboard/settings, has four cards: **Account**, **API key**, **Link configuration** and **Flutter SDK quickstart**. Messages (a copied key, a regenerated key, or an error) appear in a banner under the title.
+The Settings screen, at https://app.dectog.com/dashboard/settings, has four cards: **Account**, **API key**, **Link configuration** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
@@ -65,7 +65,7 @@ await dectog.initialize(DectogConfig(
 ));
 ```
 
-The snippet prints the full API key whenever the key is viewable, regardless of the **Show** / **Hide** state of the card above, so keep this screen off shared displays. When the key is not viewable, it prints the prefix followed by `…`. The `baseUrl` is the deployment's public base URL; on the hosted service it matches the SDK's default, `https://app.dectog.com`, and can be left out. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+The snippet follows the **Show** / **Hide** state of the card above: it prints the full API key only while the key is shown, and otherwise the prefix followed by `…`. The `baseUrl` is the deployment's public base URL; on the hosted service it matches the SDK's default, `https://app.dectog.com`, and can be left out. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 
 :::note[Self-hosting]
 **URL mode**, **Root domain** and the snippet's `baseUrl` come from the worker's `LINK_URL_MODE`, `ROOT_DOMAIN` and `PUBLIC_BASE_URL` variables; a root domain that starts with `localhost` forces path mode. See [Configuration reference](/self-hosting/configuration-reference/).
