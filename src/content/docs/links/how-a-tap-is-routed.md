@@ -45,9 +45,12 @@ Each routing field can come from several places. For one tap the first one that 
 |---|---|---|
 | 1 | The tapped URL's `dec_*` parameters | the custom redirect (`dec_redirect`, `dec_redirect_<os>`), the desktop fallback (`dec_fallback`), the in-app route (`dec_deeplink`), the tracking values. See [URL parameters](/links/url-parameters/). |
 | 2 | The link's first matching geo or language rule | `target`, `redirect_url`, `fallback_url`, the iOS and Android deep-link paths. See [Geo and language routing](#geo-and-language-routing). |
-| 3 | The link | every routing field, the tracking defaults, the tap-to-store page and the interstitial |
-| 4 | The link's app (or the account's default app) | the store URLs, the Fallback URL, the schemes, the tap-to-store page and the interstitial |
-| 5 | The deployment | the branded QR page, `UNKNOWN_HOST_REDIRECT` |
+| 3 | The link | every routing field, the tracking defaults and UTM values, the tap-to-store page and the interstitial |
+| 4 | The link's template, for each field the link leaves empty | the target, redirect and fallback URLs, the deep-link paths, the social preview, the tracking defaults and UTM values, the tap-to-store page and the interstitial. See [Templates](/api/links/#templates). |
+| 5 | The link's app (or the account's default app) | the store URLs, the Fallback URL, the schemes, the tap-to-store page and the interstitial |
+| 6 | The deployment | the branded QR page, `UNKNOWN_HOST_REDIRECT` |
+
+The tapped URL's own `utm_*` beat the link's on the click row; the link's UTM values are added to every web destination that lacks them. See [URL parameters](/links/url-parameters/#link-level-utm-values).
 
 ### Geo and language routing
 

@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-The Links screen, at https://app.dectog.com/dashboard/links, is where you create the links people tap. Its header reads "Deep links that open your app, track installs and expire when you want." A **New link** button opens the create panel; the panel is always open while the account has no links.
+The Links screen, at https://app.dectog.com/dashboard/links, is where you create the links people tap. Its header reads "Deep links that open your app, track installs and expire when you want." Next to it, **Templates** manages [link templates](#templates), **Import CSV** creates many links from a file ([Importing links](#importing-links)), and **New link** opens the create panel; the panel is always open while the account has no links.
 
 On load the screen fetches your links, your apps (an account with exactly one app gets it preselected) and your username, which the deep-link previews use.
 
@@ -20,7 +20,7 @@ The **New link** panel has four fields. Submit with **Create link**, or **Create
 | **App** | **Default app** or one of your apps. Tooltip: "App used for platform routing". Hidden for temporary links and when you have no apps. | **Default app** means your oldest app. The app decides store URLs, schemes, interstitial pages and the social preview for this link. |
 | **Expires** | **Never** (default), **5 min**, **1 hour**, **1 day** or **7 days**. | Anything other than **Never** creates a temporary link. The dashboard offers only these four durations; the API accepts 60 seconds to 30 days. |
 
-A permanent link is sent to `POST /api/admin/links`; a temporary one to `POST /api/admin/temp-links` with the chosen `ttlSeconds`. Temporary links always route through the default app and have no click counter, no deep-link paths, no tracking fields and no routing overrides. See [Temporary links](/links/temporary-links/).
+When the account has [templates](#templates), a **Template** box next to **App** picks one for a permanent link. A permanent link is sent to `POST /api/admin/links`; a temporary one to `POST /api/admin/temp-links` with the chosen `ttlSeconds`. Temporary links always route through the default app and have no click counter, no deep-link paths, no tracking fields and no routing overrides. See [Temporary links](/links/temporary-links/).
 
 ### Advanced options
 
@@ -95,13 +95,21 @@ Temporary links show no click, install or revenue numbers.
 
 Empty states: "No permanent links yet.", "No temporary links. Pick an expiry when creating a link to make one." and "No links match your search."
 
+## Templates
+
+**Templates** opens a panel listing your templates with the fields each sets and how many links use it. **New template** and **Edit** show **Name**, **App for new links**, and the fields a template can fill: **Desktop destination**, **Mobile without the app**, the iOS and Android deep link paths, **Campaign**, **Label**, **Adgroup**, **Creative** and the UTM source, medium and campaign. A link that uses a template takes its value for every field the link leaves empty, at tap time: editing a template changes all its links. **Delete** asks first and names how many links use it; they keep their own fields and stop inheriting. The create form and the link drawer pick a template under **Template**. Fields only the API sets (the target, the social preview, the page settings) are kept when you edit a template here. See [Templates](/api/links/#templates).
+
+## Importing links
+
+**Import CSV** opens a panel with two column presets: **DecTog columns** (headers named like the API fields, such as `slug`, `target`, `campaign`, `utm_source`, `external_id`) and **Firebase Dynamic Links export** (see [Importing an FDL export](/guides/migrate-from-firebase-dynamic-links/#importing-an-fdl-export)). After you pick a file, the panel shows how many links it found, the first ten with notes (a row without a slug, `afl` and `ifl` that differ), and **Import {n} links**. Links are created 100 per request; the result reads "{n} created, {m} failed." with a table of the failed rows by line number and error. Nothing is created until you press the button.
+
 ## Editing a link
 
 **Edit** opens a side drawer titled **Edit link** `/slug`. Permanent links get five blocks; temporary links get the expiry and the social preview.
 
-### Tracking
+### Template and tracking
 
-Permanent links only. The four fields from the create form, each up to 255 characters, with their own **Save tracking** button. Saving sends all four values; an emptied field clears the stored value. The button is followed by "Saved" or the server's error.
+Permanent links only. **Template** (when the account has templates) picks the link's template or **None**; an empty field below then shows the template's value as its placeholder, followed by "(template)". Below it, the label, campaign, adgroup and creative from the create form, and the link's **UTM source**, **UTM medium**, **UTM campaign**, **UTM term** and **UTM content** (added to its web destinations; see [Link-level UTM values](/links/url-parameters/#link-level-utm-values)), each up to 255 characters. **Save template and tracking** sends them all; an emptied field clears the stored value. The button is followed by "Saved" or the server's error.
 
 ### Expiry
 

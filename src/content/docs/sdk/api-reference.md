@@ -150,12 +150,28 @@ A permanent link as the API returns it. All fields are `final`; `DectogLink.from
 | `fallbackUrl` | `String?` | Desktop destination |
 | `label`, `campaign`, `adgroup`, `creative` | `String?` | Tracking defaults for every click |
 | `referrerCustomerId` | `String?` | On a referral link, the customer it belongs to |
+| `iosTapToStore`, `mobileInterstitial` | `bool?` | This link's iOS tap-to-store page and mobile interstitial; `null` follows the app's setting |
+| `routingRules` | `List<DectogRoutingRule>?` | Geo and language routing, first match wins; `null` when the link has none |
+| `templateId` | `String?` | The template whose defaults fill the fields the link leaves empty |
+| `utmSource`, `utmMedium`, `utmCampaign`, `utmTerm`, `utmContent` | `String?` | Added to the link's web destinations, and to clicks whose URL has none |
+| `externalId` | `String?` | Your own id for the link, unique in the account |
 | `expiresAt`, `expiredUrl` | `DateTime?`, `String?` | When the link expires; past it taps go to `expiredUrl`, or get a 410 page |
 | `disabledAt`, `disabledReason` | `DateTime?`, `String?` | Paused since (taps get a 410 page, nothing is recorded), and the owner's note |
 | `archivedAt` | `DateTime?` | Filed away in the dashboard; the link keeps working |
 | `deletedAt` | `DateTime?` | Deleted; its history stays |
 
 Pausing, expiring and archiving are set from the dashboard, the REST API or the MCP server.
+
+### DectogRoutingRule
+
+One geo or language routing rule of a link (`DectogLink.routingRules`). A tap from one of `countries` and/or with one of `languages` takes the fields the rule sets instead of the link's; the first matching rule wins, and a tap that matches no rule is routed as usual. Set from the dashboard, the REST API or the MCP server. `DectogRoutingRule.fromJson` parses the API shape.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `countries` | `List<String>?` | ISO 3166 alpha-2 codes, upper case |
+| `languages` | `List<String>?` | Primary language tags, lower case, e.g. `de` |
+| `target`, `redirectUrl`, `fallbackUrl` | `String?` | The link's destinations this rule replaces |
+| `iosDeepLinkPath`, `androidDeepLinkPath` | `String?` | The in-app routes this rule replaces |
 
 ### DectogLinkPage
 

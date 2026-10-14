@@ -38,6 +38,13 @@ Every permanent-link route returns the full object, including fields you never s
   "ios_tap_to_store": null,
   "mobile_interstitial": null,
   "routing_rules": null,
+  "template_id": null,
+  "utm_source": null,
+  "utm_medium": null,
+  "utm_campaign": null,
+  "utm_term": null,
+  "utm_content": null,
+  "external_id": null,
   "referrer_customer_id": null,
   "expires_at": null,
   "expired_url": null,
@@ -65,6 +72,9 @@ Every permanent-link route returns the full object, including fields you never s
 | `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `dec_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | This link's iOS tap-to-store page and mobile interstitial. `null` follows the app's setting. See [How a tap is routed](/links/how-a-tap-is-routed/#mobile-delivering-it). |
 | `routing_rules` | array or null | Geo and language rules, first match wins. See [Geo and language rules](#geo-and-language-rules). |
+| `template_id` | string or null | The [template](#templates) whose values fill every field this link leaves empty. The fields above are the link's own. |
+| `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | string or null | Added to the link's web destinations and stored on clicks whose URL has none. See [Link-level UTM values](/links/url-parameters/#link-level-utm-values). |
+| `external_id` | string or null | Your own id for the link (a product or CMS row id), unique in the account. See [Upsert and external ids](#upsert-and-external-ids). |
 | `referrer_customer_id` | string or null | Set on a customer's referral link. See [Referral programs](/guides/referral-programs/). |
 | `expires_at`, `expired_url` | string or null | When the link expires, and where taps go after that instead of a `410` page. |
 | `disabled_at`, `disabled_reason` | string or null | Paused since, and your note on why. A paused link answers `410` and records nothing. |
@@ -74,6 +84,7 @@ Every permanent-link route returns the full object, including fields you never s
 ## Slug rules
 
 - Allowed characters: `A-Z`, `a-z`, `0-9`, `_` and `-`. Length 1 to 128.
+- Reserved: `healthz`, `readyz`, `bulk` and `upsert` (any case), and any slug starting with `ext_`, which names a link by its external id.
 - The slug is used exactly as sent. Leading or trailing whitespace makes it invalid. Slugs are case-sensitive: `Sale` and `sale` are two different links.
 - One namespace per account for permanent **and** temporary links. Creating either kind with a slug the other kind holds returns `409 {"error": {"code": "conflict", "message": "Slug already exists", "slug": "<slug>"}}`.
 - A slug becomes free again when the link is deleted permanently, or when an expired temporary link is purged. A deleted link keeps its slug, because its history is filed under it: creating that slug answers `409 {"error": {"code": "conflict", "message": "Slug belongs to a deleted link: restore it, or delete it permanently to reuse the slug", "slug": "<slug>", "deleted": true}}`.
@@ -95,6 +106,9 @@ Every permanent-link route returns the full object, including fields you never s
 | `label`, `campaign`, `adgroup`, `creative` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | no | `true` or `false` overrides the app's setting for this link; `null` or absent follows it. Anything else answers `400 Invalid ios_tap_to_store: must be true, false or null (follow the app)`. |
 | `routing_rules` | array or null | no | Up to 20 rules; `null` or `[]` stores none. See below. |
+| `template_id` | string | no | One of your templates; anything else answers `400 Unknown template_id`. When `app_id` is absent, the template's app applies. |
+| `utm_source` … `utm_content` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
+| `external_id` | string | no | 1 to 255 characters, no control characters. Taken by another link: `409 {"error": {"code": "conflict", "message": "external_id belongs to another link", …}}`. |
 | `expires_at` | string | no | An ISO 8601 time such as `2026-12-31T23:59:00Z`, stored in UTC. A time in the past creates an already-expired link. |
 | `expired_url` | string | no | An http(s) URL taps go to once the link has expired. |
 | `disabled`, `disabled_reason` | boolean, string | no | `true` creates the link paused. The reason is at most 255 characters. |
@@ -130,6 +144,61 @@ dectog POST /api/v1/links '{
 ```
 
 `dectog` is the signing helper from [API overview](/api/overview/).
+
+## Create many links
+
+`POST /api/v1/links/bulk` with `{"links": [ … ]}` creates up to 100 links, each with the create fields above. Every link succeeds or fails on its own, and the call answers `200`:
+
+```json title="POST /api/v1/links/bulk"
+{
+  "created": [ { "slug": "spring-1", "url": "https://acme.dectog.com/spring-1", … } ],
+  "errors": [ { "index": 1, "slug": "spring-1", "code": "conflict", "error": "Duplicate slug or external_id in this batch" } ]
+}
+```
+
+`created` holds full Link objects; `errors` names each failed item by its position in `links`, with the same `code` and message a single create would give. A slug or external id that appears twice in the batch fails from its second appearance. An empty array, more than 100 links, or a body without `links` answers `400`. The dashboard's **Import CSV** and the MCP `create_links` tool use this route.
+
+## Upsert and external ids
+
+A link created with `external_id` can be named by it anywhere a v1 link route takes a slug: `GET`, `PUT` and `DELETE /api/v1/links/ext_<id>` and `POST /api/v1/links/ext_<id>/restore`, so a system that knows its own ids never has to store slugs.
+
+`PUT /api/v1/links/upsert` makes a sync idempotent. It finds the link by `external_id` when the body has one, else by `slug`:
+
+| Found | Result |
+|---|---|
+| A live link | Updated with the `PUT` rules (absent keeps, `null` or `""` clears); `200` with the Link. A `slug` in the body that differs from the found link's answers `400`: a link's slug never changes. |
+| A deleted link | `409` with `"deleted": true`: restore it first |
+| Nothing | Created with the create rules (`slug` is then required); `201` with the Link |
+
+```bash title="Sync one product's link"
+dectog PUT /api/v1/links/upsert '{"external_id": "product-42", "slug": "p42", "target": "https://shop.example.com/p/42", "campaign": "catalog"}'
+```
+
+## Templates
+
+A template holds defaults for link fields. A link with `template_id` takes the template's value for every field it leaves empty, at tap time, so editing a template changes all its links at once. The link's own values always win; see [the precedence](/links/how-a-tap-is-routed/#which-value-applies).
+
+| Route | Response |
+|---|---|
+| `GET /api/v1/link-templates` | `200 {"data": [Template, …], "next_cursor": null}`, by name |
+| `POST /api/v1/link-templates` | `{name, app_id?, defaults}` → `201` Template; a name already in use answers `409` |
+| `GET /api/v1/link-templates/:id` | `200` Template or `404 Template not found` |
+| `PUT /api/v1/link-templates/:id` | any of `name`, `app_id`, `defaults` (which replaces the whole set) → `200` Template |
+| `DELETE /api/v1/link-templates/:id` | `200 {"success": true}`; its links keep their own fields and stop inheriting |
+
+```json title="Template"
+{
+  "id": "1b2c…",
+  "name": "Spring campaign",
+  "app_id": null,
+  "defaults": { "fallback_url": "https://shop.example.com/spring", "campaign": "spring", "utm_source": "newsletter" },
+  "link_count": 12,
+  "created_at": "2026-10-14T09:00:00.000Z",
+  "updated_at": null
+}
+```
+
+`defaults` may hold `target`, `redirect_url`, `fallback_url`, `ios_deep_link_path`, `android_deep_link_path`, `og_title`, `og_description`, `og_image_url`, `label`, `campaign`, `adgroup`, `creative`, the five `utm_*` fields, `ios_tap_to_store` and `mobile_interstitial`, each validated like the link field; any other key answers `400`. `name` is 1 to 100 characters; `app_id`, when set, is the app new links get when they name none. Templates use the links scopes: reading needs `links:read`, changing `links:write`. Responses to `GET /api/v1/links/:slug` show the link's own fields, not the inherited ones; `resolve`, the redirect and the install verdict use the inherited values.
 
 ## List and read links
 

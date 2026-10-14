@@ -77,7 +77,16 @@ The Overview's **Installs by campaign** and **Installs by source** charts group 
 
 ## `utm_*` parameters
 
-`utm_source`, `utm_medium`, `utm_campaign`, `utm_term` and `utm_content` are stored on the click verbatim. They are kept past the data-retention window and drive two Overview charts: installs grouped by the matched click's `utm_campaign` (`(direct)` when the click had none, `Organic` when the install matched nothing) and by its `utm_source`. The SDK sends the same five keys when it reports a click from an opened URL.
+`utm_source`, `utm_medium`, `utm_campaign`, `utm_term` and `utm_content` are stored on the click verbatim. A key the tapped URL does not carry is taken from the link's own UTM values, or its template's, when it has them (see below). They are kept as long as the click (the retention window) and drive two Overview charts: installs grouped by the matched click's `utm_campaign` (`(direct)` when the click had none, `Organic` when the install matched nothing) and by its `utm_source`. The SDK sends the same five keys when it reports a click from an opened URL.
+
+### Link-level UTM values
+
+A link can carry its own `utm_source`, `utm_medium`, `utm_campaign`, `utm_term` and `utm_content` (API fields of the same names; **Tracking** in the link drawer), directly or from its [template](/api/links/#templates). They do two things:
+
+- A click whose URL has no value for a key stores the link's.
+- Every web destination of a tap gets the link's values added as query parameters, each only when the destination URL has none of its own: the desktop fallback, the custom redirect, the app's Fallback URL, the link's target, and a `dec_redirect` or `dec_fallback` URL. Store URLs never get them, and neither do scheme and `intent://` URLs.
+
+So `https://shop.example.com/sale` behind a link with `utm_source=newsletter` opens as `https://shop.example.com/sale?utm_source=newsletter`, and the shop's web analytics name the same campaign as DecTog.
 
 ## Reserved parameters
 
@@ -88,4 +97,4 @@ The Overview's **Installs by campaign** and **Installs by source** charts group 
 
 ## Validation and what reaches the destination
 
-Each invalid parameter is dropped on its own; the rest still apply, and routing continues as if the dropped one were absent. Parameters are never forwarded: the visitor is sent to the destination URL exactly as configured, and the only additions DecTog makes are the store tags (`ct` on the App Store, `referrer` on Google Play and the OEM stores) and `dtg_click` on scheme and intent URLs. Social-preview bots and the QR code ignore parameters entirely; see [Social previews and the QR page](/links/social-previews-and-qr/).
+Each invalid parameter is dropped on its own; the rest still apply, and routing continues as if the dropped one were absent. Parameters are never forwarded: the visitor is sent to the destination URL as configured, and the only additions DecTog makes are the store tags (`ct` on the App Store, `referrer` on Google Play and the OEM stores), `dtg_click` on scheme and intent URLs, and the link's own UTM values on web destinations. Social-preview bots and the QR code ignore parameters entirely; see [Social previews and the QR page](/links/social-previews-and-qr/).
