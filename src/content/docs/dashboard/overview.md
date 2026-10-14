@@ -87,7 +87,7 @@ Non-reinstall installs in the window, grouped by how they were matched, as bars 
 
 Empty state: "No installs in this window."
 
-Inside the card, an amber box appears when at least one non-reinstall install carries fraud flags: `{n} install(s) flagged for fraud signals`, followed by up to six chips reading `{reason} · {count}`. The reasons are the rule names `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer` and `click_reuse`. The headline count excludes reinstalls; the per-reason counts include them.
+Inside the card, an amber box appears when at least one non-reinstall install carries fraud flags: `{n} install(s) flagged for fraud signals`, followed by up to six chips reading `{reason} · {count}`. The reasons are the rule names `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta` and `click_reuse`. The headline count excludes reinstalls; the per-reason counts include them.
 
 ### Recent events
 

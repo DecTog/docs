@@ -47,14 +47,14 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 ### The fingerprint found nothing
 
 - Candidates are web clicks from an iOS or Android user agent with the same hashed IP and the same OS family as the install that no other install has claimed. Clicks the SDK logged from inside the app and desktop clicks are never candidates.
-- The window is 24 hours only when both the click and the install carry a device model and the install is not on cellular. Everything else gets 2 hours, or the low-entropy window of the account's oldest app (1 to 720 hours), never more than the wide window. With `collectDeviceData: false` the install carries no model or screen data and only ever gets the short window.
+- The window is 24 hours only when both the click and the install carry a device model and the install is not on cellular. Everything else gets 2 hours, or the low-entropy window of the install's own app (1 to 720 hours), never more than the wide window. With `collectDeviceData: false` the install carries no model or screen data and only ever gets the short window.
 - `medium` confidence returns a `routing` candidate but no credit. `low` returns nothing. See [How attribution works](/start/how-attribution-works/).
 - One install per click. A click another install already consumed moves the ladder on; `click_reuse` is flagged only when nothing later matches.
 - App updates (`install_state: update`) never run the fingerprint; the panel's "kept out of matching" line counts them. Reinstalls (`is_reinstall`) run the full ladder and the fingerprint. They are left out of the Installs KPI and the per-link counts, not out of matching, so a reinstall can hold a click that the install you are looking for needed.
 
 ### Strict fraud mode made it organic
 
-With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`) is stored with `matched: false` and `match_source: null`. It keeps `match_confidence`, `referrer_source` and `matched_slug` on the record; the verdict and the webhook send the first two but never the slug. The click stays consumed. Strict mode is read from the account's oldest app. The fraud box on the Overview and the chips on a customer's detail page show the rules that fired.
+With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`) is stored with `matched: false` and `match_source: null`. It keeps `match_confidence`, `referrer_source` and `matched_slug` on the record; the verdict and the webhook send the first two but never the slug. The click stays consumed. Strict mode is read from the app the install concerns: the credited link's app, else the app whose package the SDK reports. The fraud box on the Overview and the chips on a customer's detail page show the rules that fired.
 
 ### iOS specifics
 
@@ -122,7 +122,7 @@ The button appears only while editing an existing app and is disabled while the 
 | `Save the webhook URL and secret first` | The server needs both the URL and the secret saved. The button checks only the URL box, so an unsaved or empty secret ends here. |
 | `Webhook delivery failed: <reason>` | Network failure or timeout |
 
-Real deliveries are fire-and-forget with no retries, and they go to the webhook of the account's oldest app. See [Install webhook](/api/install-webhook/).
+Real deliveries are fire-and-forget with no retries, and they go to the webhook of the app the install concerns (the credited link's app, else the install's own app). See [Install webhook](/api/install-webhook/).
 
 ## Social preview: "Auto-fill from fallback URL"
 

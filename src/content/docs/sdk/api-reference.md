@@ -234,7 +234,7 @@ The verdict on `onAppInstalled`, `currentAppInstall`, `getAttributionData()` and
 | `isReinstall` | `bool` | `false` | Server or client reinstall detection |
 | `installState` | `String?` | | `'install'`, `'reinstall'` or `'update'` |
 | `claim` | `String?` | | `'upgraded'`, `'unchanged'` or `'rejected'` on claim responses |
-| `claimReason` | `String?` | | `'click_reuse'`, `'click_not_found'`, `'no_signal'` or `'already_deterministic'` |
+| `claimReason` | `String?` | | `'click_reuse'`, `'click_not_found'`, `'no_signal'`, `'already_deterministic'` or `'stale_click'` |
 | `appleSearchAds` | `DectogAppleSearchAds?` | | `null` until a token was ever sent |
 | `lastOpen` | `DectogAppOpen?` | | Only on attribution re-pulls |
 

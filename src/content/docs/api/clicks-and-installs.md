@@ -132,14 +132,14 @@ Epoch values must fall between 1970 and 2100, otherwise they become `null`.
    - When no signal matched and at least one was a reuse, the install gets the `click_reuse` flag and the fingerprint does not run. `click_reuse` is therefore only ever the final outcome, never a reason to skip a later signal.
 4. **Fingerprint.** Runs unless `install_state` is `update` or step 3 ended in reuse. Candidates: your `source: "web"` store-redirect clicks from the same hashed IP and the same device family (`os`), not yet credited to any install, from the last 24 hours, newest 50. A click keeps the 24 hour window only when both it and the install carry a device model and the install is not on `cellular`; every other click must be inside the low-entropy window (2 hours by default, overridable per app up to 720 hours and never longer than the wide window). Scoring per click: model match +40 (a mismatch excludes the click), OS major +15 or −30, language +10 or −15, screen short side within 3 % +15 or −40, CPU family +5 or −40, same ASN +10; missing signals score 0. Confidence from the ranked list: `low` when the top two are within 10 points or the top score is negative; `high` when the top is unique and has a model match, a screen agreement plus OS major, or a score of at least 15; `medium` for a unique top scoring 0 to 14. Only `high` credits the click (`match_source: "fingerprint"`); `medium` fills `routing` without credit; `low` does nothing. When step 3 already matched, the fingerprint still runs as a shadow and records whether it agrees.
 5. **Link check.** A matched click whose link no longer exists makes the install organic.
-6. **Fraud rules.** The flags below are evaluated and stored. When the account's **oldest app** has strict fraud mode on and the list is not empty, `matched` and `match_source` are zeroed; `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` stay as evidence and the click stays consumed.
+6. **Fraud rules.** The flags below are evaluated and stored. When the app the verdict concerns (the credited or routed link's app, else the install's own app, else the oldest) has strict fraud mode on and the list is not empty, `matched` and `match_source` are zeroed; `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` stay as evidence and the click stays consumed.
 7. **Insert.** The row is written together with any synthesized click and the ad identifier. If two retries with the same `install_attempt_id` race, the unique index lets one in and the other receives the winner's verdict with `"replayed": true`.
 8. **Apple Search Ads.** A token starts its round-trip with Apple after the response is sent.
-9. **Webhook.** If the oldest app has a webhook URL and secret, `app.installed` is dispatched after the response. See [Install webhook](/api/install-webhook/).
+9. **Webhook.** If the app the verdict concerns has a webhook URL and secret, `app.installed` is dispatched after the response. See [Install webhook](/api/install-webhook/).
 
 ### Strict fraud mode on the wire
 
-With strict mode on, a flagged install's response has `"matched": false`, `"type": "organic"`, `"match_source": null` and no `username`, `slug`, `link`, `custom_params`, `click_params`, `deep_link` or `clicked_at`, while `referrer_source` and `match_confidence` (for example `"guaranteed"`) still show what was found. The slug is kept on the row as evidence but is never sent: the webhook payload has `slug`, `link`, `clicked_at`, `click_params` and `deep_link` set to `null` whenever `matched` is false. Strict mode, like the low-entropy window and the webhook, is read from the account's oldest app, so it is account-wide in practice. See [Dashboard: Apps](/dashboard/apps/).
+With strict mode on, a flagged install's response has `"matched": false`, `"type": "organic"`, `"match_source": null` and no `username`, `slug`, `link`, `custom_params`, `click_params`, `deep_link` or `clicked_at`, while `referrer_source` and `match_confidence` (for example `"guaranteed"`) still show what was found. The slug is kept on the row as evidence but is never sent: the webhook payload has `slug`, `link`, `clicked_at`, `click_params` and `deep_link` set to `null` whenever `matched` is false. Strict mode, like the low-entropy window, the deterministic window and the webhook, is a per-app setting; see [Dashboard: Apps](/dashboard/apps/) for which app applies. See [Dashboard: Apps](/dashboard/apps/).
 
 ### The verdict
 
@@ -213,6 +213,8 @@ With strict mode on, a flagged install's response has `"matched": false`, `"type
 | `install_velocity_ip` | Installs from the same hashed IP in the last 24 hours reach 5 (wifi or unknown connectivity) or 25 (`cellular`). On a first launch the count is taken before the row is inserted, so the flag appears on the 6th or 26th install; on a claim the row already exists, so on the 5th or 25th. |
 | `click_storm_ip` | The matched click's hashed IP produced more than 100 clicks in the hour before that click. |
 | `stale_referrer` | A referrer or clipboard match whose click is more than 30 days old. |
+| `stale_clipboard` | A pasted link whose click is older than the app's deterministic window (default 7 days): routed, not credited. |
+| `stale_meta` | The same for Meta's install referrer. |
 | `click_reuse` | A deterministic signal named a click already credited to another device's install, and nothing later matched. |
 
 Without strict mode the flags are annotations only; attribution stands.
@@ -246,6 +248,7 @@ Every call refreshes telemetry first: non-null signal fields overwrite the store
 | `rejected` | `click_reuse` | The click is held by another device's install. `click_reuse` is added to `fraud_flags`. | The stored verdict. |
 | `rejected` | `click_not_found` | The click id is unknown and no `dtg_l` of yours could synthesize it. | The stored verdict. |
 | `rejected` | `no_signal` | No signal in the body carries `dtg_click`. | The stored verdict. |
+| `rejected` | `stale_click` | The pasted link's or Meta referrer's click is older than the app's deterministic window (default 7 days). `stale_clipboard` or `stale_meta` is added to `fraud_flags`. | The stored verdict. |
 
 Claims never run the fingerprint: a claim with no deterministic signal is `rejected / no_signal` even when a fingerprint candidate exists.
 

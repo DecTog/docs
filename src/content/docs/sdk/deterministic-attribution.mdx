@@ -61,6 +61,8 @@ Only Google Play documents how it hands the `referrer` parameter of a store URL 
 
 `DectogConfig.fbAppId` is what enables this read. The Facebook App ID field on the dashboard's Apps page is only stored with the app record; it does not switch anything on in the SDK. With `fbAppId` set to your Facebook App ID (digits only), the plugin queries the install-referrer content providers of the Facebook, Instagram and Facebook Lite apps for that app id and sends what they recorded as `meta_referrer`, with Meta's timestamp and its click-through flag (`meta_referrer_is_ct`). When the recorded referrer carries `dtg_click`, the server credits that click with `matchSource: 'referrer'` and `referrerSource: 'meta'`. The read has a 1.5-second budget and runs only on Android; iOS has no equivalent.
 
+Meta's referrer earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page. An older one opens the link's content (`routing`) but the install counts as organic with the flag `stale_meta`.
+
 ## Pasteboard on Android
 
 `readClipboardOnInstall` defaults to off on Android, where the Play referrer is already deterministic and Android 12 and newer shows a "pasted from your clipboard" notice on every read. Passing `true` forces the read: a description-only check first (the clip must be textual and not flagged sensitive), then the first clip item is accepted when it is a single token of at most 2048 characters with a valid scheme (`http(s)` needs a host, a custom scheme needs `://`). Everything else is the same as on iOS.
@@ -151,6 +153,11 @@ Apple Search Ads attribution is provenance only. It never changes `matched`, whi
 
 </TabItem>
 </Tabs>
+
+## How long a pasted link counts
+
+A pasted link, whether read on the first launch or through `DectogPasteButton`, earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page (1 to 720 hours). A link copied weeks ago, or re-shared as text, still opens its content in the app through `routing`, but the install counts as organic with the flag `stale_clipboard`; with strict fraud mode on it does neither. A late paste of such a link answers `claim: rejected`, `claimReason: stale_click`. Store referrers are not limited this way.
+
 
 <Aside type="note" title="Which signal wins">
 The server walks the signals in a fixed order: store referrer, then clipboard URL, then Meta's referrer. The first one that names a click no other device's install has consumed wins. A click that another device already consumed makes the server move on to the next signal, and `click_reuse` is flagged only when nothing later matches. Only when no deterministic signal applies does the fingerprint run. See [How attribution works](/start/how-attribution-works/).

@@ -32,6 +32,7 @@ A one-off override for a single run uses `wrangler dev --var NAME:value` (this i
 | `RETENTION_DAYS` | unset (400) | `400` | Age after which the daily job anonymizes personal data. `0`, blank or non-numeric means 400. Negative values are not rejected and would anonymize every row at the next run. See [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). |
 | `ATTRIBUTION_WINDOW_HOURS` | unset (24) | `24` | The wide fingerprint window for model-bearing candidates, clamped to 1 to 720. Deterministic referrer matching is not windowed. |
 | `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS` | unset (2) | unset (2) | The short window for model-less candidates and cellular installs, minimum 1. The effective value is `min(app override or this, ATTRIBUTION_WINDOW_HOURS)`. See [Attribution internals](/self-hosting/attribution-internals/). |
+| `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` | unset (168) | unset (168) | How long a pasted link or a Meta referrer earns credit, in hours, capped at 720. Older ones route without credit (`stale_clipboard`, `stale_meta`). Per-app override: `deterministic_window_hours`. See [Attribution internals](/self-hosting/attribution-internals/). |
 | `ASA_RETRY_DELAY_MS` | unset (5000) | unset (5000) | Pause between the three inline Apple Search Ads attempts; any non-negative number. |
 | `BRAND_NAME` | unset | unset | The product name on link pages ("This … link does not exist", "Go to …") and in the password-reset email. Unset: DecTog. |
 | `MIN_SDK_VERSION` | unset | unset | An SDK version such as `1.1.0`. Identified SDK builds older than it get `400` with code `sdk_too_old`. Unset: every version is accepted. See [SDK identity](/api/overview/#sdk-identity). |
@@ -77,8 +78,9 @@ Settings that apply per registered app live on the `apps` row and are edited und
 | iOS tap-to-store | `ios_tap_to_store` | 0/1. One-tap page that copies the link to the pasteboard before opening the App Store. |
 | Strict fraud mode | `strict_fraud_mode` | 0/1. Flagged installs count as organic. |
 | Low-entropy window | `low_entropy_window_hours` | Whole number 1 to 720, or empty for `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS` |
+| Pasted-link and Meta window | `deterministic_window_hours` | Whole number 1 to 720, or empty for `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` |
 
-`strict_fraud_mode`, `low_entropy_window_hours` and the install webhook are read from the app an install concerns (`apps/worker/src/appscope.ts`): the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The redirect engine uses the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
+`strict_fraud_mode`, `low_entropy_window_hours`, `deterministic_window_hours` and the install webhook are read from the app an install concerns (`apps/worker/src/appscope.ts`): the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The redirect engine uses the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
 
 ## Fixed constants
 

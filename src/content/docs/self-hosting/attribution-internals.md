@@ -34,7 +34,9 @@ For each signal that names a click id:
 
 When every signal is exhausted, the ladder's outcome is `reuse` if any signal pointed at a consumed click, else `not_found` if any pointed at an unknown click, else `none`. Only `reuse` leaves a mark: the fraud flag `click_reuse`, and no fingerprint for this install.
 
-A win sets `match_source` to `referrer` (store and Meta) or `clipboard`, `referrer_source` to the store name or `meta` (null for the clipboard) and `match_confidence` to `guaranteed`. The ladder has no time window; a very old click still matches, and `stale_referrer` flags it when it is older than 30 days.
+A win sets `match_source` to `referrer` (store and Meta) or `clipboard`, `referrer_source` to the store name or `meta` (null for the clipboard) and `match_confidence` to `guaranteed`. A store referrer has no time window: a very old click still matches, and `stale_referrer` flags it when it is older than 30 days.
+
+**Deterministic window (P2.3).** A pasted link and Meta's referrer are bounded by `deterministicWindowHours`: the app's `deterministic_window_hours`, else `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` (default 168, 7 days), never more than 30 days. The app is the clicked link's app, else the install's own. The age is measured from Meta's `meta_referrer_ts` when present, else the click row's `clicked_at`; a click synthesized from the tag carries the install time and is never stale. An older win is demoted (`staleSignalFlag`): it earns the flag `stale_clipboard` or `stale_meta`, consumes nothing, and the fingerprint decides as if no signal had matched. When the fingerprint neither credits nor routes, the stale click becomes `routing_click_id` with `match_confidence = 'medium'`, so the app still opens the link's content. With strict fraud mode the stale click does not route either. A claim carrying a stale signal is `rejected` with `claim_reason: "stale_click"`.
 
 ### 2. The scored fingerprint
 
@@ -133,6 +135,8 @@ When a deterministic signal decided, the fingerprint still runs and writes what 
 | `install_velocity_ip` | At least 5 installs (25 when the install reports `cellular`) from the same hashed IP in the last 24 hours. The count runs before the row is inserted, so on first launch it fires on the 6th (or 26th) install; on a claim the row already exists, so on the 5th (or 25th). Skipped when the install has no IP hash. |
 | `click_storm_ip` | The matched click's hashed IP produced more than 100 clicks in the hour up to that click |
 | `stale_referrer` | `match_source` is `referrer` or `clipboard` and the click is older than 30 days |
+| `stale_clipboard` | A pasted link's click is older than the deterministic window (7 days by default, per app). The install is routed to the link but not credited. |
+| `stale_meta` | The same for Meta's install referrer, timed by Meta's own click timestamp |
 | `click_reuse` | A deterministic signal named a click that another device's install already holds |
 
 With `strict_fraud_mode = 1` on the app the verdict concerns (the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app), any flag makes the stored row `matched = 0` and `match_source = NULL` while `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` are kept as evidence. Consequences:
@@ -179,7 +183,8 @@ Then, in order:
 3. `replay` (another row of the same device holds the click): the holder's verdict with `replayed: true`, `claim: "unchanged"`; the SDK adopts that install id.
 4. `reuse`: `click_reuse` is merged into the flags, `claim: "rejected"`, `claim_reason: "click_reuse"`.
 5. `not_found` / `none`: `claim: "rejected"` with `click_not_found` / `no_signal`.
-6. Otherwise the deterministic click wins over whatever the fingerprint had guessed (the old click is released by no longer being referenced) and over organic: `matched = 1`, `match_source`, `referrer_source`, `match_confidence = 'guaranteed'`, `routing_click_id = NULL`, `claimed_at = now`. Fraud rules are re-evaluated and merged, strict mode applies as above, and the webhook fires with `app.install_updated`. Response: `claim: "upgraded"`.
+6. A pasted link or Meta referrer older than the deterministic window: its flag (`stale_clipboard` / `stale_meta`) is merged, `claim: "rejected"`, `claim_reason: "stale_click"`.
+7. Otherwise the deterministic click wins over whatever the fingerprint had guessed (the old click is released by no longer being referenced) and over organic: `matched = 1`, `match_source`, `referrer_source`, `match_confidence = 'guaranteed'`, `routing_click_id = NULL`, `claimed_at = now`. Fraud rules are re-evaluated and merged, strict mode applies as above, and the webhook fires with `app.install_updated`. Response: `claim: "upgraded"`.
 
 An `asa_token` on a claim restarts the Apple round-trip unless the row is already `resolved` or `no_attribution`; `invalid` and `expired` rows accept a new token.
 
