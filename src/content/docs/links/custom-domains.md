@@ -31,11 +31,11 @@ The two TXT records let the certificate issue while `go.yourbrand.com` still poi
 | **Waiting for DNS** | Cloudflare has not seen the TXT records (or the CNAME) yet. Its message is shown under the records. | Add the records; DNS changes can take a while to spread. |
 | **Issuing certificate** | Ownership is proven; the certificate is being issued. | Wait a few minutes. |
 | **Ready: point the CNAME** | The hostname and its certificate are live. | Add (or change) the CNAME. |
-| **Active** | The CNAME points at DecTog: the server saw it in DNS, or a request arrived through it. Every new link URL uses the domain. | Add it to your apps (below). |
+| **Active** | The CNAME points at DecTog: the server saw it in DNS, or a request arrived while DNS sends the domain to Cloudflare. Every new link URL uses the domain. | Add it to your apps (below). |
 | **No longer points here** | It was active, and Cloudflare reports the CNAME moved away. Links are built on your DecTog subdomain again. | Restore the CNAME; otherwise the domain is removed 7 days later. |
 | **Failed** | Cloudflare refused the hostname or gave up validating it. | Remove it and add it again, or check the records. |
 
-A DNS host that hides the CNAME behind its own proxy (a proxied record on a domain that is itself on Cloudflare) never shows it to a DNS lookup; such a domain turns active with the first tap that reaches it.
+A DNS host that hides the CNAME behind its own proxy (a proxied record on a domain that is itself on Cloudflare) never shows it to a DNS lookup; such a domain turns active with the first tap that reaches it, once its addresses are Cloudflare's. A request alone never activates a domain: before you move DNS, anyone can ask Cloudflare for the certificate-ready host, so DecTog also checks that public DNS really sends it there.
 
 ## What changes once it is active
 
