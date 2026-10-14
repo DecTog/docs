@@ -124,6 +124,21 @@ Both values must be saved for deliveries to happen. The server posts `app.instal
 
 Real deliveries go to the webhook of the app the install concerns; see the note at the top of this page.
 
+### Store notifications
+
+Shown for a saved app. **Turn on store notifications** creates the app's two URLs:
+
+| Item | Meaning |
+|---|---|
+| **App Store Server Notifications URL** | Paste it in App Store Connect → the app → App Information → App Store Server Notifications, Version 2. Needs the app's iOS bundle ID. |
+| **Google Play Pub/Sub push endpoint** | The endpoint of a Pub/Sub push subscription on the topic named in Play Console → Monetization setup, with authentication on. Needs the app's Android package. |
+| **Pub/Sub service account** | The service account of that subscription. **Save account** stores it; pushes signed for any other account are refused. |
+| **New URLs** | Replaces both URLs after a confirmation; the old ones stop working at once. |
+| **Turn off** | Deletes both URLs after a confirmation. |
+| **Refresh** | Reloads the list below. |
+
+Below the buttons, the last 20 notifications: time received, store, notification type (with subtype and a non-production environment), transaction id, and the result (`recorded`, `updated`, `duplicate`, `ignored`, `unmatched`, `test`, `rejected`). What each notification records is on [Revenue](/sdk/revenue/#store-notifications).
+
 ### Advanced
 
 Section text: "Attribution behaviour. Everything here is off by default."

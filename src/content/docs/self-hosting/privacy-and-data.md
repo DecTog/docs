@@ -80,13 +80,17 @@ The dashboard masks the email in the Customers list (`e****@domain`) but shows i
 
 When a `/api/v1` call is refused as malformed, the server stores the account, the route, the error code and message, the SDK build, and the SHA-256 and size of the body, never the body. The rows are deleted after 30 days.
 
+## Store notifications
+
+`store_notifications` logs every App Store and Google Play notification an app's URL receives: store, notification id, type, subtype, environment, transaction id, outcome and time. No customer data. Rows are deleted after 90 days; the revenue rows they wrote stay like any other event. `app_store_endpoints` keeps each app's URL token and the Pub/Sub service account email until the app or its endpoint is deleted.
+
 ## Data that leaves the server
 
 - **Install webhook:** each delivery to your endpoint includes `device_id`, `device_model`, `device_manufacturer`, OS, connectivity, carrier codes, `ip_hash`, the matched link and click params, fraud flags and the Apple Search Ads record. The URL and secret are stored in plain text on the app and returned by `GET /api/admin/apps`. See [Install webhook](/api/install-webhook/).
 - **Apple:** the AdServices token is posted to `api-adservices.apple.com`.
 - **European Central Bank:** once a day the Worker downloads `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` (the euro reference rates) to convert revenue. The request carries no data about you or your users.
 - **Resend:** the password-reset email (recipient address, reset link) when `RESEND_API_KEY` is set.
-- **Google:** the OAuth code exchange when Sign in with Google is configured.
+- **Google:** the OAuth code exchange when Sign in with Google is configured, and, when an app receives Play notifications, a download of Google's public signing keys (`https://www.googleapis.com/oauth2/v3/certs`) to verify the push tokens. That request carries no data.
 - **Cloudflare:** everything is processed in Workers and stored in D1. D1 chooses a region when the database is created; `wrangler d1 create --location` pins it.
 
 ## Accounts
@@ -100,7 +104,7 @@ When a `/api/v1` call is refused as malformed, the server stores the account, th
 | Delete a link (dashboard, `DELETE /api/admin/links/:slug`, `DELETE /api/v1/links/:slug`) | In one batch: events whose `matched_slug` is the link or whose install was attributed through its clicks; the link's app opens; `customers.first_install_id` cleared where it pointed at those installs; the attributed installs; every click on the link; the link row. The data disappears from Overview and per-link analytics. |
 | Delete a temporary link | The same cascade. |
 | "Delete expired" temporary links | Only the `temp_links` rows; clicks and installs stay. |
-| Delete an app | Its links fall back to the oldest remaining app; installs and clicks are untouched. |
+| Delete an app | Its links fall back to the oldest remaining app; installs and clicks are untouched; its store notification URLs stop working. |
 | Regenerate the API key | The old key stops working immediately. |
 
 There is no way through the dashboard or the API to delete an account, a customer, a single install, click or event, or to rename a username. A data-subject request therefore needs direct database access, always scoped to the tenant:
@@ -127,8 +131,8 @@ A self-hosted DecTog makes you the controller of this data. Items a policy and t
 4. **Pasteboard access on iOS** on first launch (system notice on iOS 16 and later), if you leave the pasteboard read at its default.
 5. **Apple Search Ads attribution token**, if `collect` names `appleSearchAdsToken`.
 6. **Advertising identifier** (IDFA after ATT, GAID), only with the `flutter_dectog_adid` package.
-6. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
-7. **Retention:** personal columns anonymized after `RETENTION_DAYS` (400 by default), screen profiles after 30 days, Apple tokens as soon as resolved; aggregate rows kept.
-8. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
+7. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
+8. **Retention:** personal columns anonymized after `RETENTION_DAYS` (400 by default), screen profiles after 30 days, Apple tokens as soon as resolved; aggregate rows kept.
+9. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
 
 Adjust `RETENTION_DAYS` on the [Configuration reference](/self-hosting/configuration-reference/) if 400 days is longer than your policy allows.

@@ -39,6 +39,7 @@ Each event:
 | `open_click_id` | string, 8 to 32 of `A-Z a-z 0-9 - _` | no | That open's click id. |
 | `open_at` | ISO 8601 date | with `open_slug` | When that link opened the app. A time after the request is stored as the request time. |
 | `session_id` | string, 64 | no | The app process the event came from (the SDK sends a new id per process). |
+| `app_store_jws` | string, 16384 | no | Conversions: a StoreKit 2 transaction (`jwsRepresentation`). Verified against Apple Root CA - G3; its `transactionId`, `originalTransactionId`, `productId`, price and currency replace the event's, `store` becomes `app_store`, and the row is stored with `source: "store"`. Its bundle ID must be one of the account's apps. With it, `revenue` is optional. |
 | `client_event_id` | string, 8 to 64 of `A-Z a-z 0-9 - _` | no | Your id for the event, unique per account. A resend with an id the account already stored is a duplicate and changes nothing. The SDK sends a UUID it stamps when the event is queued. |
 | `name`, `email`, `phone` | string 200, 254, 32 | no | Read on `identify` only. |
 
@@ -77,6 +78,11 @@ The per-event errors in `rejected`:
 | `quantity must be a whole number from 1 to 10000` |
 | `open_at must be an ISO 8601 date` |
 | `open_click_id is not a click id` |
+| `app_store_jws must be a JWS of at most 16384 characters` |
+| `app_store_jws: <reason>` (the signature, chain or dates do not verify) |
+| `app_store_jws names no transaction` |
+| `app_store_jws names an app this account does not have (set its iOS bundle ID)` |
+| `app_store_jws carries no price; send revenue too` |
 
 ### What each type does
 
@@ -98,6 +104,31 @@ dectog POST /api/v1/events '{
 ```
 
 Response: `{"accepted": 2, "duplicates": 0, "rejected": []}`. Sending the same body again answers `{"accepted": 0, "duplicates": 2, "rejected": []}`.
+
+## POST /api/v1/store/apple/:token
+
+App Store Server Notifications v2 for one app. `:token` comes from the dashboard (**Apps → Store notifications**); there is no API key. The body is Apple's `{"signedPayload": "<JWS>"}`. The notification and the `signedTransactionInfo` inside it must verify against Apple Root CA - G3 and name the app's iOS bundle ID. What each notification type records is on [Revenue](/sdk/revenue/#store-notifications).
+
+| Status | Body |
+|---|---|
+| 200 | `{"ok": true, "outcome": "recorded"}`; `outcome` is `recorded`, `updated`, `duplicate`, `ignored`, `unmatched` or `test` |
+| 400 | `signedPayload is required`, or the payload has no `notificationUUID` |
+| 401 | `{"error": {"code": "invalid_signature", "message": "signedPayload: <reason>"}}` |
+| 404 | `Unknown store notification URL` |
+| 422 | `{"error": {"code": "bundle_mismatch", …}}` |
+
+## POST /api/v1/store/play/:token
+
+Google Play real-time developer notifications, pushed by a Pub/Sub push subscription with authentication on. The `Authorization: Bearer` token must be a Google-signed OIDC token whose audience is this URL and whose email is the service account saved for the app. The body is Pub/Sub's `{"message": {"data": "<base64 JSON>", "messageId": "…"}, "subscription": "…"}`; the decoded notification must name the app's Android package.
+
+| Status | Body |
+|---|---|
+| 200 | `{"ok": true, "outcome": "…"}` as above |
+| 400 | `The body is not a Pub/Sub push message` |
+| 401 | `{"error": {"code": "invalid_token", …}}` |
+| 403 | No service account saved for the app |
+| 404 | `Unknown store notification URL` |
+| 422 | `{"error": {"code": "package_mismatch", …}}` |
 
 ## GET /api/v1/attribution
 
