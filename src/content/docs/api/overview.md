@@ -144,6 +144,12 @@ export function dectogHeaders(apiKey, rawBody = "") {
 }
 ```
 
+## SDK identity
+
+SDKs also send `x-dectog-sdk: <name>/<version>`, for example `flutter_dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
+
+A self-hosted deployment can set `MIN_SDK_VERSION` (for example `1.1.0`) to retire old builds: an identified SDK older than that answers `400` with code `sdk_too_old` and the `min_version`. Callers that do not identify as an SDK are not checked.
+
 ## Rate limits
 
 Limits are fixed windows aligned to the wall clock: the window is the current minute (`floor(now / 60 s)`), the first request of a new minute resets the counter, and a request that is rejected still counts. Several counters apply to one request.
@@ -170,7 +176,7 @@ If the rate-limit counter cannot be written (a database failure), the account, d
 
 | Prefix | `access-control-allow-origin` | Other headers |
 |---|---|---|
-| `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-dectog-timestamp, x-dectog-signature, x-request-id`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS`; `access-control-expose-headers: x-request-id` |
+| `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-dectog-timestamp, x-dectog-signature, x-dectog-sdk, x-request-id`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS`; `access-control-expose-headers: x-request-id` |
 | `/api/admin/*` | `WEB_URL` (`https://app.dectog.com`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type, x-request-id`; same methods; `access-control-expose-headers: x-request-id` |
 
 `OPTIONS` on any `/api/*` path answers `204`. The v1 API never uses cookies, so browser clients only need the headers above.
@@ -198,6 +204,7 @@ Every error, on every route, is one JSON shape:
 | Status | `code` | Meaning |
 |---|---|---|
 | 400 | `invalid_request` | Validation failed, or the body is not valid JSON (`Invalid JSON body`). The message names the field. |
+| 400 | `sdk_too_old` | The calling SDK build is older than the deployment's `MIN_SDK_VERSION`; the error carries `min_version`. |
 | 401 | `missing_api_key`, `invalid_api_key`, `signature_required`, `stale_timestamp`, `invalid_signature` | Authentication or signature failed; see above. |
 | 401 | `not_authenticated`, `invalid_session` | Admin API only: no session cookie, or a bad or expired one. |
 | 403 | `forbidden` | Admin API only: the route needs the owner role, or bootstrap is not permitted. |
@@ -232,7 +239,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 `GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 29, "applied": 29, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 30, "applied": 30, "missing": [] } }
 ```
 
 It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.

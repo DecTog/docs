@@ -184,6 +184,10 @@ Empty state: "No referrer telemetry yet."
 
 `{n} existing users who updated to an SDK build — recorded as app updates, never matched against the click pool.` This is the number of reports in the window whose install state was `update`: the app was already on the device before the SDK shipped, so there is no install to attribute.
 
+### SDK versions in the wild
+
+A table of the SDK builds that reported in the window: the build (`flutter_dectog 1.0.0`), the **New installs** registered by it, the **Events** it sent, and when it was **Last seen**. New installs show what your current release ships; events show which older builds are still running. Up to 20 builds, most recently seen first. Empty: "No SDK build reported in this window."
+
 ### Empty and failed states
 
 - "No installs in this window." when the window has no installs at all.
