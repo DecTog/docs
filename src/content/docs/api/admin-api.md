@@ -160,7 +160,7 @@ One query answers "how many, by what, where": any of the metrics over a window, 
 
 | Parameter | Default | Values |
 |---|---|---|
-| `event` | all five | One or more of `clicks`, `installs`, `opens`, `leads`, `revenue`, comma separated. `installs` are first installs; `revenue` is net of refunds, in the account's currency. |
+| `event` | the first five | One or more of `clicks`, `installs`, `opens`, `leads`, `revenue` and `ltv`, comma separated. `installs` are first installs; `revenue` is net of refunds, in the account's currency, by event time. `ltv` (only when named) is the cohort view: the window's first installs, each with its net revenue to date, divided by their number, so a source's LTV keeps growing after the window; by time it is by install day. |
 | `group_by` | `timeseries` | `timeseries`; one dimension; two (`campaign,country`, or `timeseries,device` for a series per platform); or `none` for one row of totals |
 | `interval` | `30d` | `24h` (hourly: the current hour and the 23 before it), `7d`, `30d`, `90d`, `365d` (whole days, today included) |
 | `start`, `end` | none | Local days `YYYY-MM-DD`, both included, in place of `interval`; at most 366 days |
