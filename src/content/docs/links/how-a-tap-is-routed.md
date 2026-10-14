@@ -59,6 +59,13 @@ A permanent link can carry up to 20 rules (`routing_rules`; the **Geo and langua
 
 A rule's iOS or Android deep-link path for the tap's platform is also stored on the click, so an install that click brings receives it as `deep_link` (unless the URL had a `dec_deeplink`).
 
+A rule can also hold for a time or for a share of visitors:
+
+- **Scheduled routing:** `starts_at` and `ends_at` (ISO times) bound the rule, for a sale page that takes over on Black Friday and steps back on Monday.
+- **A/B splits:** `percent` gives the rule a share of visitors, 1 to 100. Shares stack in rule order and add up to at most 100: rules of 50 and 50 split everyone; 50 and 25 leave a quarter on the link itself. A visitor's share comes from their hashed IP, so they get the same variant on every tap from the same network.
+
+The rule that routed a tap is recorded on the click as `routing_rule` (its `name`, else `rule 2` and so on). The Overview's Breakdown by **Routing rule**, or the analytics query's `routing_rule` dimension, compares the variants by clicks, installs, conversion, leads and revenue.
+
 ## Mobile: choosing the destination
 
 The server resolves one destination for a visitor without the app. The first non-null entry wins:

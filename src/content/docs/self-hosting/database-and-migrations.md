@@ -107,6 +107,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0052_custom_domains` | `custom_domains`, and `users.custom_domain` (unique when set): the account's active custom link domain |
 | `0053_web` | `api_keys.origins` (site keys, kind `site`), `links.append_click_id`, `events.web_click_id`, and a partial index on web events: [`dectog.js`](/sdk/web/) |
 | `0054_device_models` | `device_models` and `device_model_refresh`: marketing names for the device models installs report |
+| `0055_click_routing_rule` | `clicks.routing_rule`: the routing rule (geo, language, schedule or A/B variant) a tap matched |
 
 ### Commands
 

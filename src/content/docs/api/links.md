@@ -233,17 +233,26 @@ A rule replaces some of the link's fields for taps from given countries or brows
 
 | Rule field | Type | Rules |
 |---|---|---|
+| `name` | string | Up to 64 letters, digits, spaces and `. _ : -`; recorded on each click the rule routes (`routing_rule`), else `rule N` |
 | `countries` | array of strings | ISO 3166 two-letter codes, any case, stored upper case |
 | `languages` | array of strings | Language tags; only the primary tag is kept, lower case (`de-AT` becomes `de`) |
+| `percent` | integer | An A/B share of visitors, 1 to 100. Shares stack in rule order; together at most 100. A visitor's share follows their hashed IP. |
+| `starts_at`, `ends_at` | string | ISO 8601 times bounding the rule (scheduled routing); `ends_at` after `starts_at` |
 | `target`, `redirect_url`, `fallback_url` | string | http(s) URLs that replace the link's own for a matching tap |
 | `ios_deep_link_path`, `android_deep_link_path` | string | In-app routes, with the same rules as the link's |
 
-A rule needs `countries` or `languages` (a tap must match every list a rule has) and at least one of the other fields. Unknown fields, more than 20 rules, or a bad value answer `400`, for example `{"error": {"code": "invalid_request", "message": "routing_rules[0] needs countries or languages"}}`.
+A rule needs a condition (`countries`, `languages`, `percent`, `starts_at` or `ends_at`; a tap must meet every one a rule has) and at least one of the destination fields. Unknown fields, more than 20 rules, shares over 100, or a bad value answer `400`, for example `{"error": {"code": "invalid_request", "message": "routing_rules[0] needs a condition: countries, languages, percent, starts_at or ends_at"}}`.
 
 ```bash title="German-speaking visitors get the German sale page and in-app route"
 dectog PUT /api/v1/links/spring-sale '{"routing_rules": [
   {"countries": ["DE", "AT", "CH"], "fallback_url": "https://shop.example.de/sale", "ios_deep_link_path": "de/sale", "android_deep_link_path": "de/sale"},
   {"languages": ["fr"], "fallback_url": "https://shop.example.fr/soldes"}
+]}'
+```
+
+```bash title="Half the visitors see the new landing page; compare by routing_rule"
+dectog PUT /api/v1/links/spring-sale '{"routing_rules": [
+  {"name": "new-landing", "percent": 50, "fallback_url": "https://shop.example.com/new", "redirect_url": "https://shop.example.com/new-m"}
 ]}'
 ```
 

@@ -168,12 +168,15 @@ Pausing, expiring and archiving are set from the dashboard, the REST API or the 
 
 ### DectogRoutingRule
 
-One geo or language routing rule of a link (`DectogLink.routingRules`). A tap from one of `countries` and/or with one of `languages` takes the fields the rule sets instead of the link's; the first matching rule wins, and a tap that matches no rule is routed as usual. Set from the dashboard, the REST API or the MCP server. `DectogRoutingRule.fromJson` parses the API shape.
+One routing rule of a link (`DectogLink.routingRules`). A tap that meets the rule's conditions (one of `countries`, one of `languages`, between `startsAt` and `endsAt`, inside its `percent` share of visitors) takes the fields the rule sets instead of the link's; the first matching rule wins, and a tap that matches no rule is routed as usual. Set from the dashboard, the REST API or the MCP server. `DectogRoutingRule.fromJson` parses the API shape.
 
 | Field | Type | Meaning |
 |---|---|---|
+| `name` | `String?` | Recorded on each click the rule routes (else "rule N"), to compare variants |
 | `countries` | `List<String>?` | ISO 3166 alpha-2 codes, upper case |
 | `languages` | `List<String>?` | Primary language tags, lower case, e.g. `de` |
+| `percent` | `int?` | An A/B share of visitors, 1 to 100; shares stack in rule order |
+| `startsAt`, `endsAt` | `DateTime?` | Scheduled routing: the rule holds from `startsAt` until `endsAt` |
 | `target`, `redirectUrl`, `fallbackUrl` | `String?` | The link's destinations this rule replaces |
 | `iosDeepLinkPath`, `androidDeepLinkPath` | `String?` | The in-app routes this rule replaces |
 

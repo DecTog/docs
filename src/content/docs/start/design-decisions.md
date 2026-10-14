@@ -90,7 +90,7 @@ From the competitor teardown in the server repository (`docs/improvement-plan-20
 | R5 | An `ee/` paywall or plan gating in the engine | The whole product is AGPL; limits are deployment config, never data model |
 | R6 | A multi-service analytics stack (queues, ClickHouse, Tinybird) | Rollup tables in D1 give the read speed with one service |
 | R7 | Reporting an install on every launch, or "organic" on a network failure | A sentinel, an `install_attempt_id` and retry on the next launch |
-| R8 | Targeting rules that 404 on non-match | Geo and language route a visitor; they never gate a link |
+| R8 | Targeting rules that 404 on non-match | Geo, language, schedule and A/B rules route a visitor; they never gate a link |
 | R9 | Opening `myapp://` automatically on page load | iOS shows "Cannot open page" to everyone without the app; schemes open from a tap only |
 | R10 | Push messaging, affiliate programs, domain sales, LLM link scanning | Outside the product's scope; each adds credentials and moving parts |
 | R11 | Row-per-impression storage and recomputed attribution views | D1's size cap and read billing; verdicts are computed at write time |
