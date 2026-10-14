@@ -22,7 +22,7 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `ad_identifiers` | Advertising id per install, isolated so it is never joined to the device tier |
 | `customers` | The tenant's own user identities from `identify` events: `customer_id`, name, email, phone, `first_install_id` |
 | `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP only with `STORE_RAW_IP=1` |
-| `device_pings` | One row per SDK init ping (device, app version, OS), collected for DAU and retention read-outs that are not built yet; nothing reads the table today |
+| `device_pings` | One row per SDK init ping (device, app version, OS): with app opens and events, the activity behind the Overview's Retention card |
 | `app_opens` | Warm opens: a link opened an already-installed app (slug, click id, device, hashed IP) |
 | `rate_limits` | Fixed-window counters keyed by account id, `dev:<account>:<device>`, `ip:<account>:<hash>` or `webcollect:<hash>` |
 | `blog_categories` | Marketing-site blog categories (platform-wide, owner-managed) |

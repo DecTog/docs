@@ -197,6 +197,20 @@ A table of the SDK builds that reported in the window: the build (`flutter_decto
 - "No installs in this window." when the window has no installs at all.
 - "The attribution-quality read-out is unavailable right now." when the endpoint fails. The rest of the Overview still renders.
 
+## Retention
+
+Below the match-confidence panel, **Retention** answers "did the users stay?" for the installs of the last 90 days, whatever the range selector says. Two boxes filter it: **All links** or one link (installs credited to it), and **All platforms**, **iOS** or **Android**. The card loads on its own and does not take part in the 15-second refresh.
+
+The cohort is the first installs that carry a device id; reinstalls and app updates are left out, and a device counts once, on its first install day. A device is active on a day when the app started (the SDK's device ping), a link opened it, or it sent an event that day. Days are calendar days in UTC: day 1 is the UTC day after the install's, so an install at 23:30 that opens again at 00:30 is retained on day 1, and one that opens again at 23:50 the same day is not.
+
+| Part | What it shows |
+|---|---|
+| **Day 1**, **Day 7**, **Day 30** | The share of installs at least that many days old that were active on that exact day after their install, with "{retained} of {installs} installs"; "no installs old enough yet" until one is |
+| The weekly table | One row per install week (Monday to Sunday, UTC), newest first, with its installs, then for each of the next eight weeks the share active in that week, shaded darker from 10%, 30% and 60%. A week that has not started is `·`. Hover a cell for the counts. |
+| The note under the table | How many installs carried no device id (the app turned collection off) and are not counted |
+
+The figures read the raw rows, so they reach back as far as the retention window keeps them. See [Admin API](/api/admin-api/#analytics).
+
 ## Apple Search Ads
 
 This card appears only once the window contains at least one install whose iOS SDK sent an AdServices token, whatever the outcome of the lookup. Its text: "iOS installs whose AdServices token Apple matched to one of your campaigns. Campaign names are not part of Apple's payload — the ids match your Apple Ads reports."
