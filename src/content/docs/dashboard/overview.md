@@ -125,6 +125,20 @@ Empty state: "No clicks in this window."
 
 The top 10 countries by clicks in the window, shown as a flag plus the two-letter code from Cloudflare's geolocation of the click. An unknown country shows as `??` without a flag. The card has no empty-state text.
 
+## Breakdown
+
+Below the charts, **Breakdown** puts every metric side by side for one dimension: clicks, installs, conversion, opens, leads and revenue, per link, campaign, country, platform, OS, language, referrer, UTM value, app version or match source (the **By** menu). It covers the range selector's window, cut into days in your browser's time zone, and loads on its own rather than on the 15-second refresh.
+
+- Click a value to keep only it. A chip appears above the table, "Country is GB"; click another value to add it to the chip.
+- Hover a row and click **−** to leave that value out instead: "Country is not US". A chip keeps values or leaves them out, not both; picking the other way for the same dimension replaces it.
+- Click **is** or **is not** on a chip to turn it around, **×** to remove it, **Clear** to remove them all. Chips stay when you change **By**, so you can keep Germany and break it down by campaign.
+- `(organic)` is what no link brought, such as installs no tap won; `(none)` is a link that carried no value for the dimension, such as a tap without a `utm_source`. A metric the dimension does not apply to shows `—`: taps have no app version, and only installs have a match source.
+- An install counts under its winning tap's values, an event under the link it is credited to (the re-opening link inside its window, else the install's), the same rules as the [link stats](/dashboard/links/).
+
+The table shows the 50 largest values by clicks. **Export CSV** downloads it with up to 1,000; **Raw rows…** downloads the clicks, installs, app opens or events of the window that pass the chips. A file over 50,000 rows is written in the background when the deployment has an exports bucket: the card says so and turns into a download link, good for 7 days. See [Export raw data](/api/export/).
+
+The numbers read the raw rows, so they reach back as far as the retention window keeps them. They can differ from the KPI cards at the window's edges: for 30 and 90 days the cards cut days in UTC and Breakdown in your time zone, and for 7 days the cards count the last 168 hours and Breakdown seven calendar days, today included. In a browser set to UTC the 30- and 90-day totals agree. The same query is in the [Admin API](/api/admin-api/#the-analytics-query) and in the MCP `analytics` tool.
+
 ## Match confidence & referrer health
 
 This panel reads a separate endpoint and answers a different question from the cards above: not how many installs, but how reliably they were matched. Its intro text: "How reliably installs were matched in the last {N} days: the confidence the server assigned, how often the store handed back the install referrer, and whether the fingerprint agreed with the referrer when both existed."

@@ -2,7 +2,7 @@
 title: Admin API
 description: The cookie-session routes the dashboard uses, listed for self-hosters who automate against their own deployment. Not a stable contract.
 sidebar:
-  order: 6
+  order: 7
 ---
 
 :::caution[Not a stable contract]
@@ -140,6 +140,34 @@ App fields and their validation messages (`400`). Every text field is trimmed be
 | `GET /api/admin/customers/:customerId` | session | Everything known about one customer. | `200 {customer, stats, devices, install, click, link, events (200), opens (50), shared_device_customers (50)}`; `404 Customer not found`. `install` and `click` omit `ip_hash` but keep `ip_raw`. |
 | `GET /api/admin/retention?days=&slug=&campaign=&platform=` | session | The Retention card: day 1, 7 and 30 retention and weekly cohorts, calendar days in UTC. `days` default 90, 7 to 365; `slug` limits to installs credited to that link, `campaign` to installs whose click carried that `utm_campaign` or link campaign, `platform` to `ios` or `android` (anything else is a 400). | `200 {window: {days, start}, bucket: "calendar_day_utc", filters, installs, untracked, d1, d7, d30, weekly}`; each `dN` is `{eligible, retained, rate}` (`rate` a percentage with one decimal, null when nothing is eligible); `weekly` is `[{week, installs, retained: [n…], rates: [%…]}]`, newest first, nine weeks, null for weeks not started |
 | `GET /api/admin/attribution-quality?days=` | session | The match-confidence and referrer-health panel. `days` default 7, 1 to 365. Reinstalls and updates are included. | `200 {days, by_platform, referrer_status, match_sources, shadow: {n, agree, disagree}, latency: {p50_ms, p90_ms, n}, updates_skipped}` |
+| `GET /api/admin/analytics?event=&group_by=&interval=&tz=&<dimension>=` | session | The Breakdown card and the MCP `analytics` tool: see below. | `200 {window: {interval, tz, start, end, granularity, partial}, event, group_by, filters, truncated, data}`; `400` for any parameter it does not take |
+| `GET /api/admin/export.csv?data=&…` | session | The analytics answer (`data=analytics`, the default) or the raw rows of `clicks`, `installs`, `opens` or `events` as CSV, with the same window and filters. | `200 text/csv`; past 50,000 rows `202` with an export job, or `422 export_too_large` without an `EXPORTS` bucket. See [Export raw data](/api/export/#csv). |
+| `GET /api/admin/exports/:id` | session | A large export's job. | `200 {id, data, status, total_rows, row_count, bytes, error, created_at, finished_at, expires_at, status_url, download_url}`; `404` for another account's |
+| `GET /api/admin/exports/:id/download?exp=&sig=` | signed link | The finished file. | `200 text/csv`; `403 invalid_download_link`; `404` once it is gone |
+
+### The analytics query
+
+One query answers "how many, by what, where": any of the metrics over a window, by time or by one or two dimensions, with filters.
+
+| Parameter | Default | Values |
+|---|---|---|
+| `event` | all five | One or more of `clicks`, `installs`, `opens`, `leads`, `revenue`, comma separated. `installs` are first installs; `revenue` is net of refunds, in the account's currency. |
+| `group_by` | `timeseries` | `timeseries`; one dimension; two (`campaign,country`, or `timeseries,device` for a series per platform); or `none` for one row of totals |
+| `interval` | `30d` | `24h` (hourly: the current hour and the 23 before it), `7d`, `30d`, `90d`, `365d` (whole days, today included) |
+| `start`, `end` | none | Local days `YYYY-MM-DD`, both included, in place of `interval`; at most 366 days |
+| `tz` | `UTC` | An IANA time zone; days and hours are cut in it, changes of summer time included |
+| `limit` | 100 | Rows (or, by time and a dimension, values of the dimension), 1 to 1000; past it `truncated` is true |
+| a dimension | none | A filter: `country=US,DE` keeps those values, `country=-US` leaves them out. One dimension cannot do both. |
+
+The dimensions are `link`, `campaign`, `adgroup`, `creative` (the link's tracking fields or the URL's `dec_*` values), `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `country`, `region`, `city`, `browser`, `referrer`, `device` (`ios`, `android`, `desktop`, `other`), `os`, `os_version`, `lang`, `app_version` and `match_source`.
+
+An install takes the dimensions of the tap that won it; an event those of the link it counts for (the link that last opened the app within its re-engagement window, else the install's), and an open those of its tap. What no link brought is `(organic)`; a link that carried no value for a dimension is `(none)`. Both are values like any other, so `country=-US` keeps the rows without a country and `utm_source=(none)` finds the taps without one.
+
+Each row has the group values, then the metrics; `conversion` (installs per click, in percent, one decimal) joins them when both are asked for. A metric whose rows lack the dimension, such as clicks by `match_source` or `app_version`, is `null` rather than 0. By time, every day or hour of the window is there, zero when nothing happened. `window.partial` is true when the window starts before the raw rows the retention window keeps.
+
+```bash title="Installs and revenue by campaign and country, last 30 days, Berlin time, without the US"
+curl -sS -b jar.txt 'https://app.dectog.com/api/admin/analytics?event=installs,revenue&group_by=campaign,country&interval=30d&tz=Europe/Berlin&country=-US'
+```
 
 ## Blog, messages and contact
 

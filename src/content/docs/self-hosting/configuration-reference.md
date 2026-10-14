@@ -14,7 +14,7 @@ The Worker reads its configuration from the `Env` type in `apps/worker/src/types
 | `.dev.vars` (never committed) | Local secrets | Read by `wrangler dev`; copy `.dev.vars.example` |
 | `wrangler secret put <NAME> --env production` | Production secrets | Stored by Cloudflare, listed with `wrangler secret list --env production`, removed with `wrangler secret delete` |
 
-A one-off override for a single run uses `wrangler dev --var NAME:value` (this is how `npm run dev:android` swaps `PUBLIC_BASE_URL`). The test suite injects its own values through `apps/worker/vitest.config.ts` (`JWT_SECRET=test-jwt-secret`, `IP_SALT=test-ip-salt`, `APP_HOST=app.test.local`, `UNKNOWN_HOST_REDIRECT=https://fallback.example.com/`, `ASA_RETRY_DELAY_MS=20`).
+A one-off override for a single run uses `wrangler dev --var NAME:value` (this is how `npm run dev:android` swaps `PUBLIC_BASE_URL`). The test suite injects its own values through `apps/worker/vitest.config.ts` (`JWT_SECRET=test-jwt-secret`, `IP_SALT=test-ip-salt`, `APP_HOST=app.test.local`, `UNKNOWN_HOST_REDIRECT=https://fallback.example.com/`, `ASA_RETRY_DELAY_MS=20`, `EXPORT_STREAM_MAX_ROWS=50`, and a local `EXPORTS` bucket).
 
 ## Variables
 
@@ -39,6 +39,7 @@ A one-off override for a single run uses `wrangler dev --var NAME:value` (this i
 | `MIN_SDK_VERSION` | unset | unset | An SDK version such as `1.1.0`. Identified SDK builds older than it get `400` with code `sdk_too_old`. Unset: every version is accepted. See [SDK identity](/api/overview/#sdk-identity). |
 | `STORE_RAW_IP` | unset | unset | `"1"` also stores the raw client IP next to its hash on clicks, installs and events, for the Customers page's IP rows. Unset: raw IPs are never stored; matching uses only the salted hash either way. See [Privacy and data](/self-hosting/privacy-and-data/). |
 | `OPEN_SIGNUPS` | unset (open) | unset (open) | `"0"` closes public signup: `POST /api/admin/signup` answers `403 Signup is currently closed`, the login page hides the signup tab (via `GET /api/auth/config`), and Google sign-in refuses to create new accounts (`signup_closed`). Existing accounts, linking an existing account to Google, and bootstrap are unaffected. |
+| `EXPORT_STREAM_MAX_ROWS` | unset (50000) | unset (50000) | Rows a CSV export from the dashboard streams at once. Past it the export becomes a job that writes to the `EXPORTS` bucket, or is refused without one. See [Export raw data](/api/export/#larger-exports). |
 | `EMAIL_FROM` | unset | unset | Sender of the password-reset email; the code default is `DecTog <hello@mail.dectog.com>` (the comment in `types.ts` naming `noreply@dectog.com` is stale). Set it to a sender verified in your Resend account. The `Reply-To` is hard-coded to `hello@dectog.com`. |
 
 Bindings:
@@ -47,6 +48,7 @@ Bindings:
 |---|---|---|---|
 | `DB` (D1) | database `dectog`, id `local-dev`, local state under `.wrangler/state` | database `dectog`, your id | The only data store. `migrations_dir` is `migrations` in both. |
 | `ASSETS` (static assets) | none | `../web/out`, `run_worker_first: true`, `html_handling: auto-trailing-slash` | The dashboard and marketing export built by `npm run build:static` in `apps/web`. |
+| `EXPORTS` (R2, optional) | none | none until you add it | Holds CSV exports larger than `EXPORT_STREAM_MAX_ROWS`, each deleted after 7 days. Create a bucket (`wrangler r2 bucket create dectog-exports`) and add `"r2_buckets": [{ "binding": "EXPORTS", "bucket_name": "dectog-exports" }]` to `env.production` in `wrangler.jsonc`. Without it a larger export answers `422 export_too_large`. |
 | `ASA_FETCHER`, `WEBHOOK_FETCHER`, `OG_FETCHER`, `GOOGLE_FETCHER` | test only | never | Service bindings the test suite uses to stand in for Apple, your webhook, fetched social-preview pages and Google's token endpoint. In production the Worker uses global `fetch`. |
 
 ## Secrets

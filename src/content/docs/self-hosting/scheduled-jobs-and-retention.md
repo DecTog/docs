@@ -9,8 +9,8 @@ The Worker has two cron triggers, declared identically at the top level and in `
 
 | Expression | Fires | Runs |
 |---|---|---|
-| `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups and webhook retries |
-| `17 3 * * *` | Daily at 03:17 UTC | The same, then the temporary-link purge, the deleted-link anonymization, the webhook delivery-log purge, the exchange rates and, once the rollups are done, the retention sweep |
+| `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups, webhook retries and unfinished CSV exports |
+| `17 3 * * *` | Daily at 03:17 UTC | The same, then the temporary-link purge, the deleted-link anonymization, the webhook delivery-log purge, the export-file purge, the exchange rates and, once the rollups are done, the retention sweep |
 
 The code branches on the expression: `7 * * * *` returns after the Apple Search Ads pass and the rollups; any other expression runs everything. The jobs run inside `waitUntil`, so a failure in one does not stop the others, except that the retention sweep waits for the rollup build. There is no job-level logging beyond console warnings.
 
@@ -45,6 +45,12 @@ What reads the rollups: the Overview's clicks, installs, opens, leads and revenu
 ## Webhook retries (both triggers)
 
 `retryDueDeliveries` (`apps/worker/src/webhooks.ts`) sends again every pending delivery whose `next_attempt_at` has passed and whose webhook is on, oldest first, up to 300 per run, ten at a time with a 10-second timeout each. A failure schedules the next attempt 5 minutes, 30 minutes, 2 hours, 6 hours and 24 hours after the previous one (six attempts in all), then marks the delivery failed. Because the job runs hourly, the 5- and 30-minute retries happen at the next :07. A larger backlog waits for the next run. See [Webhooks](/api/webhooks/#delivery-and-retries).
+
+## CSV exports (both triggers)
+
+`resumeExportJobs` (`apps/worker/src/exports.ts`) writes up to three large CSV exports that the request which asked for them did not finish: queued ones, and ones whose run held them for 15 minutes without finishing. Each starts the file over, at most three attempts in all. Only with an `EXPORTS` bucket. See [Export raw data](/api/export/#larger-exports).
+
+The daily trigger also runs `purgeExportJobs`: a file is deleted from the bucket seven days after it was written (its job turns `expired`), and the job row a week after that.
 
 ## Webhook delivery log (daily)
 

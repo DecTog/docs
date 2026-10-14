@@ -2,7 +2,7 @@
 title: Well-known files, SEO and routing
 description: How the worker serves the Apple and Android association files, robots.txt, the sitemap and blog post previews, and which host and path reaches which handler.
 sidebar:
-  order: 7
+  order: 8
 ---
 
 The DecTog worker answers every host in the zone: the apex (`dectog.com`), the dashboard host (`app.dectog.com`, `APP_HOST`) and every account host (`<username>.dectog.com`). This page lists what each host and path does. Self-hosted deployments substitute their own `ROOT_DOMAIN`, `APP_HOST`, `WEB_URL` and `PUBLIC_BASE_URL`; see [Configuration reference](/self-hosting/configuration-reference/).

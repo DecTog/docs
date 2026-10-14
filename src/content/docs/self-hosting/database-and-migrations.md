@@ -29,6 +29,18 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `blog_posts` | Blog posts: Tiptap HTML plus optional block JSON, published flag and dates |
 | `contact_messages` | Submissions from the public contact form |
 | `password_resets` | Single-use reset tokens, stored as SHA-256 hashes with expiry and `used_at` |
+| `api_keys` | SDK keys (`dtg_pub_…`): name, scopes, SHA-256 of the key, prefix, the encrypted viewable key, `last_used_at`, `revoked_at` |
+| `link_templates` | Named defaults a link can take (`links.template_id`), as JSON |
+| `referrals` | One row per referred install: the referring and the referred customer, the link, the match source |
+| `rejected_requests` | SDK calls refused with 400 or 422, for the debugging view: route, reason, the body's hash and size, never the body; 30 days |
+| `app_store_endpoints` | Per app, the secret token in its Apple and Google store-notification URLs, and the Pub/Sub service account Google signs with |
+| `store_notifications` | The store notifications received, with their outcome; 90 days |
+| `fx_rates` | The ECB's daily euro reference rates, for revenue in the account's currency |
+| `link_daily` | The daily rollups: per account, link, UTC day and platform, the clicks, installs, opens, leads and net revenue |
+| `rollup_state` | Per account, the last day the rollups hold (`through_day`) and the last day whose raw rows are gone (`frozen_through`) |
+| `webhooks` | Webhook endpoints: URL, optional app, events, encrypted signing secret, failure count and why one turned off |
+| `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |
+| `export_jobs` | CSV exports past `EXPORT_STREAM_MAX_ROWS` rows: the query, progress, the R2 key and when the file goes |
 
 There are no foreign-key constraints. Cascades (deleting a link, deleting an app, unlinking a category) are done in the API layer.
 
@@ -88,6 +100,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0047_link_templates` | `link_templates`; `template_id`, the five `utm_*` and `external_id` (unique per account) on `links` |
 | `0048_mmp_handoff` | `apps.mmp_handoff`, `apps.mmp_pid` |
 | `0049_webhooks` | `webhooks` and `webhook_deliveries`; copies each app's 0008 webhook into `webhooks`, then **drops** `apps.install_webhook_url` and `apps.install_webhook_secret`. Deploy the worker right after applying it: the previous worker still writes those columns when an app is saved. |
+| `0050_export_jobs` | `export_jobs`: CSV exports too large to stream, written to the optional `EXPORTS` R2 bucket |
 
 ### Commands
 

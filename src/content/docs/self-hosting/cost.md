@@ -40,7 +40,7 @@ At 100,000 taps a month the Workers Free plan's daily limits (100,000 requests a
 
 ## The ceiling: storage and the retention window
 
-A D1 database holds at most 10 GB. The daily job deletes clicks, installs, events and app opens older than `RETENTION_DAYS` (default 400) once the daily rollups hold their day, so storage levels off at about the retention window's worth of raw rows. The rollups keep the totals beyond it: the Overview's clicks, installs, opens, leads and revenue, and every link's lifetime numbers. Breakdowns by country, referrer, campaign, device model and the like read raw rows, so they cover the retention window only.
+A D1 database holds at most 10 GB. The daily job deletes clicks, installs, events and app opens older than `RETENTION_DAYS` (default 400) once the daily rollups hold their day, so storage levels off at about the retention window's worth of raw rows. The rollups keep the totals beyond it: the Overview's clicks, installs, opens, leads and revenue, and every link's lifetime numbers. Breakdowns by country, referrer, campaign, device model and the like read raw rows, so they cover the retention window only. So does the Overview's Breakdown card and its analytics query, and each answer reads the window's raw rows of every table it counts: for a 90-day window at 100 taps a day, about 9,000 click rows plus the installs, opens and events, each with its click.
 
 | Taps a month | Raw rows for 400 days | Longest `RETENTION_DAYS` that fits 10 GB |
 |---|---|---|

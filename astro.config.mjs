@@ -83,7 +83,7 @@ export default defineConfig({
 					],
 					customSets: [
 						{ label: 'Flutter SDK', paths: ['sdk/**'], description: 'Installing and using the Flutter SDK.' },
-						{ label: 'REST API', paths: ['api/**'], description: 'The SDK-facing REST API and the install webhook.' },
+						{ label: 'REST API', paths: ['api/**'], description: 'The REST API: links, attribution, events, raw export and webhooks.' },
 						{ label: 'Self-hosting', paths: ['self-hosting/**'], description: 'Running your own DecTog server.' },
 					],
 				}),
