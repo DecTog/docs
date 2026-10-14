@@ -28,48 +28,58 @@ Each event:
 | `customer_id` | string, 200 | `identify` only | Your user id. |
 | `metadata` | JSON | no | Stored as sent. |
 | `client_timestamp` | string, 64 | no | Device clock. |
+| `client_event_id` | string, 8 to 64 of `A-Z a-z 0-9 - _` | no | Your id for the event, unique per account. A resend with an id the account already stored is a duplicate and changes nothing. The SDK sends a UUID it stamps when the event is queued. |
 | `name`, `email`, `phone` | string 200, 254, 32 | no | Read on `identify` only. |
 
 String values are trimmed and truncated to the stated length; empty strings become `null`.
 
 ### Batch rules
 
-- The whole batch is validated before anything is written. One invalid event rejects all of them with a 400 and nothing is stored.
+- Each event stands on its own. An invalid event is listed in `rejected` with its index in the batch and the error; the other events are stored.
+- An event whose `client_event_id` the account already stored, or that repeats an id earlier in the same batch, counts in `duplicates` and is not stored again. This is what makes a resend after a lost response safe: a purchase is never counted twice.
+- The response is `200 {"accepted": n, "duplicates": n, "rejected": [{"index": i, "error": "…"}]}`.
+- When every event of the batch is invalid the answer is `400` with the same list: `{"error": {"code": "invalid_request", "message": "Every event in the batch is invalid", "rejected": [...]}}`.
 - More than 100 events answer `413 {"error": {"code": "payload_too_large", "message": "events batch exceeds 100 items"}}`.
-- The response is `200 {"accepted": n}`.
 
 | Status | Body |
 |---|---|
 | 400 | `{"error": {"code": "invalid_request", "message": "Invalid JSON body"}}` |
 | 400 | `{"error": {"code": "invalid_request", "message": "events must be a non-empty array"}}` |
+| 400 | `{"error": {"code": "invalid_request", "message": "Every event in the batch is invalid", "rejected": [...]}}` |
 | 413 | `{"error": {"code": "payload_too_large", "message": "events batch exceeds 100 items"}}` |
-| 400 | `{"error": {"code": "invalid_request", "message": "each event must be an object"}}` |
-| 400 | `{"error": {"code": "invalid_request", "message": "event.type must be one of identify, lead, conversion, custom"}}` |
-| 400 | `{"error": {"code": "invalid_request", "message": "identify events require customer_id"}}` |
-| 400 | `{"error": {"code": "invalid_request", "message": "revenue must be a non-negative number"}}` |
-| 400 | `{"error": {"code": "invalid_request", "message": "conversion events require revenue"}}` |
-| 400 | `{"error": {"code": "invalid_request", "message": "metadata is not JSON-serializable"}}` |
+
+The per-event errors in `rejected`:
+
+| Error |
+|---|
+| `each event must be an object` |
+| `event.type must be one of identify, lead, conversion, custom` |
+| `identify events require customer_id` |
+| `revenue must be a non-negative number` |
+| `conversion events require revenue` |
+| `metadata is not JSON-serializable` |
+| `client_event_id must be 8 to 64 letters, digits, '-' or '_'` |
 
 ### What each type does
 
 - **`identify`** upserts the customer row keyed by (`account`, `customer_id`). `name`, `email` and `phone` are stored **in plain text**. On a repeat `identify`, a non-null value in the new call overwrites the stored one and an omitted field keeps its stored value; `first_install_id` is set once, from the first `identify` that carried an `install_id`, and never replaced. The `identify` is also stored as an event row of type `identify`. See [Dashboard: Customers](/dashboard/customers/).
-- **Automatic signup lead.** The first `identify` of a customer the account has not seen before, sent from a fresh install (the batch's `install_id`, else the device's latest install, created within the last 30 days and not a reinstall), also stores a `lead` event with `event_name: "signup"` and `metadata: {"auto": true, "source": "identify"}`. A `lead` with `event_name: "signup"` that you post for a customer who already has one is counted in `accepted` but not stored.
+- **Automatic signup lead.** The first `identify` of a customer the account has not seen before, sent from a fresh install (the batch's `install_id`, else the device's latest install, created within the last 30 days and not a reinstall), also stores a `lead` event with `event_name: "signup"` and `metadata: {"auto": true, "source": "identify"}`. A `lead` with `event_name: "signup"` that you post for a customer who already has one is counted in `duplicates` and not stored.
 - **`lead`**, **`conversion`**, **`custom`** are stored as sent. `conversion` requires `revenue`.
 
-Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row as well.
+Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row only when the deployment sets `STORE_RAW_IP=1`.
 
 ```bash title="Identify a user and record a purchase"
 dectog POST /api/v1/events '{
   "device_id": "4b1d8c3e9f2a",
   "install_id": "3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f",
   "events": [
-    { "type": "identify", "customer_id": "u_1042", "name": "Ada", "email": "ada@example.com" },
-    { "type": "conversion", "event_name": "purchase", "revenue": 12.5, "currency": "usd", "customer_id": "u_1042" }
+    { "type": "identify", "customer_id": "u_1042", "name": "Ada", "email": "ada@example.com", "client_event_id": "u_1042-identify-1" },
+    { "type": "conversion", "event_name": "purchase", "revenue": 12.5, "currency": "usd", "customer_id": "u_1042", "client_event_id": "order-88231" }
   ]
 }'
 ```
 
-Response: `{"accepted": 2}`.
+Response: `{"accepted": 2, "duplicates": 0, "rejected": []}`. Sending the same body again answers `{"accepted": 0, "duplicates": 2, "rejected": []}`.
 
 ## GET /api/v1/attribution
 
