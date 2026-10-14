@@ -53,6 +53,19 @@ The quickest way to exercise every SDK path is the local worker plus the bundled
 
 With `enableDebugLogging: true` the SDK prints what it does: `Processing DecTog link: username=demo, slug=welcome`, `Mobile click logged successfully`, `First app launch detected - tracking app install`, `Install referrer: …`, and either `App install matched to deferred click: …` or `App install tracked as organic`.
 
+## A test environment for debug builds
+
+Create a test environment in the dashboard (Settings → [Test environment](/dashboard/settings/#test-environment)): a second account, `t-<username>`, with the same apps. Give debug builds its SDK key, and its link host in their associated domains (`applinks:t-acme.dectog.com` and the Android intent filter), so nothing you test reaches your live numbers:
+
+```dart
+await dectog.initialize(DectogConfig(
+  apiKey: kReleaseMode ? liveSdkKey : testSdkKey,
+  environment: kReleaseMode ? DectogEnvironment.live : DectogEnvironment.test,
+));
+```
+
+`environment` is a check, not a switch: the key decides the account. `diagnostics()` warns when the key belongs to the other environment, and, without `environment`, when a release build carries a test key. In the dashboard, the **Live** / **Test** switch at the top of the sidebar shows either account.
+
 ## Testing link handling
 
 Three delivery paths need to work, and each exercises different code:

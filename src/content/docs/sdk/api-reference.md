@@ -84,6 +84,7 @@ const DectogConfig({
   String? fbAppId,
   bool persistDeviceId = true,
   bool enabled = true,
+  DectogEnvironment? environment,
 })
 ```
 
@@ -101,6 +102,7 @@ const DectogConfig({
 | `fbAppId` | `String?` | Enables Meta's on-device referrer on Android; `null` takes the Facebook App ID saved in the dashboard. |
 | `persistDeviceId` | `bool` | Keep the first IDFV in the iOS Keychain. |
 | `enabled` | `bool` | Whether collection is on until the app first calls `setEnabled` (default `true`). `false` waits for consent; see `setEnabled`. The app's stored choice wins on every later launch. |
+| `environment` | `DectogEnvironment?` | The environment this build's key should belong to, for example `test` in debug builds with the test environment's key. `diagnostics()` warns when it belongs to the other one. `null`: no check, except that a release build with a test key warns. See [Environments](#environments). |
 | `defaultBaseUrl` | `static const String` | `'https://app.dectog.com'` |
 | `defaultLinkRootDomain` | `static const String` | `'dectog.com'` |
 | `effectiveBaseUrl` | `String get` | `baseUrl` with trailing slashes removed, or the default. |
@@ -115,6 +117,10 @@ const DectogConfig({
 | `toString` | | Masks the key to its first 8 characters. |
 
 `typedef InstallReferrerProvider = Future<String?> Function();` returns the raw Play referrer string, or `null` when unavailable.
+
+### Environments
+
+`enum DectogEnvironment { live, test }`: which of an account's two environments a key belongs to. A test environment is a second account, `t-<username>`, with the same apps and link templates (dashboard Settings → Test environment). Put its SDK key in debug builds: their installs, events and links stay out of the live numbers, and its links live on `t-<username>.<root>`, so add that host to the debug build's associated domains. The SDK learns a key's environment from the server (`DectogSdkConfig.environment`).
 
 ### Collection
 
@@ -363,6 +369,7 @@ At `initialize` the SDK reads the app's settings from the server (`GET /api/v1/s
 | `iosBundleId`, `androidPackage` | `String?` | The identifiers registered in the dashboard |
 | `linkHosts` | `List<String>` | The hosts the account's links live on: the active custom domain first, then the default host |
 | `username` | `String?` | The account the key belongs to; a link on a custom domain is its |
+| `environment` | `DectogEnvironment` | `test` when the key belongs to a test environment |
 | `cacheSeconds` | `int` | How long the SDK keeps them |
 
 ### DectogDiagnostics

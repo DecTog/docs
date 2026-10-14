@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-The Settings screen, at https://app.dectog.com/dashboard/settings, has eight cards: **Account**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Audit log** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
+The Settings screen, at https://app.dectog.com/dashboard/settings, has nine cards: **Account**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
@@ -75,6 +75,12 @@ Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name
 ## Custom domain
 
 Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. On a deployment without Cloudflare for SaaS the card says custom domains are not set up. The whole flow is in [Custom domains](/links/custom-domains/).
+
+## Test environment
+
+A second account, `t-<username>`, for debug builds. **Create test environment** makes it with copies of your apps and link templates and shows its first SDK key; the key is also listed under **SDK keys** in the test environment. Put that key in debug builds: their installs, events, customers and links stay out of your live numbers, and test links carry `t-<username>` where yours carry your username (`https://t-acme.dectog.com/<slug>` on the hosted service), so add that host to the debug build's associated domains.
+
+Once it exists, a **Live** / **Test** switch sits at the top of the sidebar. In the test environment every page shows the test account, an amber banner says so, and **Back to live** returns. Keys you create there are test keys; the custom domain stays with the live account. Changes made there are recorded in the test environment's own audit log, under your email. The test environment is never signed in to on its own: it has no password.
 
 ## Audit log
 

@@ -13,7 +13,7 @@ The schema at migration 0058 has 33 tables (`apps/worker/src/db/tables.ts`). Eve
 
 | Table | One line |
 |---|---|
-| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix`, the encrypted viewable key `api_key_enc`, `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`) |
+| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix`, the encrypted viewable key `api_key_enc`, `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`), `test_of` (on a test environment: its live account) |
 | `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, webhook URL and secret, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |
@@ -113,6 +113,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0056_events_install_index` | An index on `events(user_id, install_id)`, for the `ltv` metric |
 | `0057_audit_events` | `audit_events`, the audit log (P4.2), keyed by `(user_id, seq)` without a rowid |
 | `0058_erasure` | `users.retention_days` (the account's own window) and `users.erasures_until`; `erasures`, the tombstones of erased devices and customers (P4.1) |
+| `0059_test_environment` | `users.test_of`: on an account's test environment, the live account it belongs to (P4.4) |
 
 ### Commands
 

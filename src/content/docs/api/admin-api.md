@@ -34,9 +34,9 @@ Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_
 |---|---|---|---|
 | `POST /api/admin/bootstrap` | `x-bootstrap-token` header when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` is set | First account on an empty database. See below. | `201 {ok, email, username, api_key, demo}`; `403 Bootstrap not permitted`; `409 Already bootstrapped` |
 | `POST /api/admin/signup` | public | `{email, password, username}`. Creates a `user` account and its first SDK key, sets a 30-day cookie, returns both keys. | `201 {user, api_key, sdk_key}` (`api_key` is the account key); `403 Signup is currently closed` (`OPEN_SIGNUPS=0`); `400 Please enter a valid email address`, a password-rule message, `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `Username '<name>' is reserved`; `409 An account with this email or username already exists` |
-| `POST /api/admin/login` | public | `{email, password, remember?}`. Email is trimmed and lower-cased. | `200 {user: {id, email, username, role, created_at}}` plus the cookie; `400 Email and password are required`; `401 Invalid email or password`; `429` over 10 attempts per minute from one IP. No per-account lockout. |
+| `POST /api/admin/login` | public | `{email, password, remember?}`. Email is trimmed and lower-cased. A test environment can never sign in. | `200 {user: {id, email, username, role, created_at}}` plus the cookie; `400 Email and password are required`; `401 Invalid email or password`; `429` over 10 attempts per minute from one IP. No per-account lockout. |
 | `POST /api/admin/logout` | public | Deletes the cookie. | `200 {ok: true}` |
-| `GET /api/admin/me` | session | The signed-in account. | `200 {user: {id, email, username, role, created_at}}` |
+| `GET /api/admin/me` | session | The person signed in, and the account the dashboard shows: the live account, or its test environment after the switch below. | `200 {user, account, environment, test_environment}`: `user` and `account` are `{id, email, username, role, custom_domain, created_at, environment}`; `environment` is `live` or `test`; `test_environment` is `{username}` or `null` |
 | `POST /api/admin/forgot-password` | public | `{email}`. Creates a one-hour, single-use reset token (older unused tokens are cancelled) and emails `<WEB_URL>/reset-password?token=…` through Resend, or logs the link when `RESEND_API_KEY` is unset. | `200 {ok: true, message: "If that email exists, a reset link is on its way."}` whether or not the account exists; `429` over 5 requests per minute from one IP or 3 per minute for one address. |
 | `POST /api/admin/reset-password` | public | `{token, password}`. Does not sign the user in. | `200 {ok: true}`; `400 Reset token is required`, a password-rule message, `This reset link is invalid or has expired`, `This reset link has already been used` |
 | `GET /api/auth/config` | public | What the login page shows. | `200 {signupOpen, googleEnabled, linkRootDomain}`; `linkRootDomain` is `ROOT_DOMAIN`, or `null` when unset |
@@ -71,6 +71,17 @@ The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` 
 
 See [Dashboard: Settings](/dashboard/settings/).
 
+## Test environment
+
+An account's test environment is a second account, `t-<username>`, with the same apps and link templates; see [Settings: Test environment](/dashboard/settings/#test-environment).
+
+| Method and path | Auth | Purpose | Response |
+|---|---|---|---|
+| `POST /api/admin/test-environment` | session (live) | Creates the test environment: the apps and link templates are copied, and it gets an account key and an SDK key whose `environment` is `test`. It has no password and an unroutable email, so it is reached only from its live account. | `201 {username, apps, templates, sdk_key, sdk_key_prefix}`; `409 test_environment_exists` the second time, `is_test_environment` from the test environment itself |
+| `PUT /api/admin/environment` | session | `{environment: "live" \| "test"}`: which account the dashboard shows from now on, by the `dectog_env` cookie (30 days). Every other session route then acts on that account; the audit log records the person. | `200 {environment, username?}`; `404 no_test_environment` |
+
+In the test environment, `POST /api/admin/custom-domain` answers `409 is_test_environment`: its links stay on `t-<username>.<root>`. Keys created there (SDK and site keys) are test keys. `GET /api/v1/sdk-config` answers `environment: "test"` for them.
+
 ## Personal data
 
 A request from one person, for a device or a customer; see [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person) for what each covers. The same four routes exist under `/api/v1/devices/…` and `/api/v1/customers/…` for the account key (an SDK key gets `403 account_key_required`).
@@ -104,6 +115,7 @@ An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_
 | Apps | `app.created`, `app.updated`, `app.deleted`, `app.store_notifications_enabled`, `app.store_notifications_rotated`, `app.store_notifications_updated`, `app.store_notifications_disabled` |
 | Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by DecTog) |
 | Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by DecTog) |
+| Test environment | `test_environment.created` (in the live account's log; changes made in the test environment go to its own log) |
 | Keys and settings | `sdk_key.created`, `sdk_key.revoked`, `site_key.created`, `site_key.updated`, `site_key.revoked`, `account_key.regenerated`, `settings.base_currency_changed`, `settings.retention_changed` |
 | Sign-in | `account.created`, `account.bootstrapped`, `auth.login`, `auth.google_login`, `auth.google_linked`, `auth.login_failed`, `auth.logout`, `auth.password_reset_requested`, `auth.password_reset` |
 | Data | `data.exported` (the file name and row count), `data.subject_exported`, `data.device_erased`, `data.customer_erased` (the target a `sha256:` prefix, never the id; the changes the rows per table) |
