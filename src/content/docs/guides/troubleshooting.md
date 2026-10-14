@@ -167,4 +167,4 @@ A Google sign-in whose verified email matches an existing account links that acc
 
 Both HTML pages carry `noindex`, a "Go to DecTog" button and the footer `Check the link for typos, or ask whoever shared it for a new one.`
 
-Expired temporary links keep answering `GET /api/v1/resolve/{username}/{slug}` with 200 and `is_expired: true` until the daily purge removes links expired for more than 24 hours. After that the slug is free and the link is a 404. Deleting a link from the dashboard removes its clicks, installs, events and opens from the Overview. See [Temporary links](/links/temporary-links/).
+An expired link answers `GET /api/v1/resolve/{username}/{slug}` with `410 link_expired`, and a paused one with `410 link_paused`; neither records clicks. The daily purge removes temporary links expired for more than 24 hours that have no expired URL; after that the slug is free and the link is a 404. Deleting a link from the dashboard hides it and keeps its numbers in the Overview; only **Delete permanently** removes its clicks, installs, events and opens. See [Temporary links](/links/temporary-links/).

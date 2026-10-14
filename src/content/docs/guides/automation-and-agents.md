@@ -49,7 +49,8 @@ The DecTog plugin for Claude Code bundles the same server with four skills: link
 | `create_link` | One link. Takes the fields of [`POST /api/v1/links`](/api/links/). |
 | `create_links` | Up to 100 links in one call. Each succeeds or fails on its own; the result lists `created` and `errors`, with the index, slug and error code of each failure. |
 | `update_link` | Changes the given fields of a link. A missing field keeps its value; `null` or `""` clears it. |
-| `delete_link` | Deletes a link together with its clicks, attributed installs, events and opens. |
+| `delete_link` | Deletes a link: it answers 404 and its history stays. With `permanent: true` its clicks, attributed installs, events and opens go too. |
+| `restore_link` | Brings back a link deleted without `permanent`. |
 | `create_temp_link` | A link that expires after `ttlSeconds`, 60 to 2,592,000, default 900. |
 | `resolve_link` | What a link points to, as the public resolve route answers it. |
 | `get_attribution` | The verdict of one install, by `device_id` or `install_id`. |
@@ -123,8 +124,14 @@ dectog_call GET /api/v1/links | jq length
 dectog_call PUT /api/v1/links/spring-sale \
   '{"ios_deep_link_path":"sale/2","android_deep_link_path":"sale/2","campaign":"spring"}'
 
-# Delete. 200 {"success":true}; the link's clicks, attributed installs, events and opens go with it.
+# Pause it (taps get a 410, nothing recorded), resume it, or expire it at a time.
+dectog_call PUT /api/v1/links/spring-sale '{"disabled":true,"disabled_reason":"sale over"}'
+dectog_call PUT /api/v1/links/spring-sale '{"expires_at":"2026-12-31T23:59:00Z","expired_url":"https://shop.example.com/over"}'
+
+# Delete. 200 {"success":true}; the link answers 404 but its history stays (restorable).
 dectog_call DELETE /api/v1/links/spring-sale
+# Delete for good: the link's clicks, attributed installs, events and opens go with it.
+dectog_call DELETE "/api/v1/links/spring-sale?permanent=true"
 ```
 
 What to expect:
@@ -194,7 +201,7 @@ Temporary links expire on their own and are purged a day after expiry, so a pipe
     echo "Build ${GITHUB_SHA::7}: $url" >> "$GITHUB_STEP_SUMMARY"
 ```
 
-Temporary links use the default app's routing and fallback, have no click counter and no deep-link paths. After expiry the link serves a 410 page while `resolve` still answers 200 with `is_expired: true`, until the daily purge. See [Temporary links](/links/temporary-links/).
+Temporary links use the default app's routing and fallback, have no click counter and no deep-link paths. After expiry the link serves a 410 page and `resolve` answers 410 `link_expired`, until the daily purge. See [Temporary links](/links/temporary-links/).
 
 ## QR codes
 

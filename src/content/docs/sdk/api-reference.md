@@ -37,11 +37,11 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `updateLink` | `Future<DectogLink> updateLink(String slug, {String? target, Map<String, dynamic>? metadata, String? iosDeepLinkPath, String? androidDeepLinkPath, String? redirectUrl, String? fallbackUrl, String? ogTitle, String? ogDescription, String? ogImageUrl, String? label, String? campaign, String? adgroup, String? creative})` | `PUT /api/v1/links/{slug}`. `null` keeps, `''` clears. |
 | `getLinks` | `Future<DectogLinkPage> getLinks({int? limit, String? cursor})` | `GET /api/v1/links`; one page, newest first. `DectogLinkPage` has `links`, `nextCursor` (pass it back as `cursor`) and `hasMore`. |
 | `getLink` | `Future<DectogLink> getLink(String slug)` | `GET /api/v1/links/{slug}` |
-| `deleteLink` | `Future<void> deleteLink(String slug)` | `DELETE /api/v1/links/{slug}`. Also deletes the link's clicks and the installs, events and app opens attributed to it. |
+| `deleteLink` | `Future<void> deleteLink(String slug, {bool permanently = false})` | `DELETE /api/v1/links/{slug}`. The link stops working and leaves the lists; its clicks and the installs, events and app opens attributed to it stay, and the dashboard can restore it. `permanently: true` also deletes that history. |
 | `createTempLink` | `Future<DectogTempLink> createTempLink({String? target, String? slug, int ttlSeconds = 900, String? ogTitle, String? ogDescription, String? ogImageUrl})` | `POST /api/v1/temp-links`, expects 201. TTL clamped to 60 seconds to 30 days. |
 | `updateTempLink` | `Future<DectogTempLink> updateTempLink(String slug, {String? target, String? ogTitle, String? ogDescription, String? ogImageUrl})` | `PUT /api/v1/temp-links/{slug}` |
 | `getTempLink` | `Future<DectogTempLink> getTempLink(String slug)` | `GET /api/v1/temp-links/{slug}` |
-| `deleteTempLink` | `Future<void> deleteTempLink(String slug)` | `DELETE /api/v1/temp-links/{slug}` |
+| `deleteTempLink` | `Future<void> deleteTempLink(String slug, {bool permanently = false})` | `DELETE /api/v1/temp-links/{slug}`, like `deleteLink` |
 
 ### Install attribution
 
@@ -150,6 +150,12 @@ A permanent link as the API returns it. All fields are `final`; `DectogLink.from
 | `fallbackUrl` | `String?` | Desktop destination |
 | `label`, `campaign`, `adgroup`, `creative` | `String?` | Tracking defaults for every click |
 | `referrerCustomerId` | `String?` | On a referral link, the customer it belongs to |
+| `expiresAt`, `expiredUrl` | `DateTime?`, `String?` | When the link expires; past it taps go to `expiredUrl`, or get a 410 page |
+| `disabledAt`, `disabledReason` | `DateTime?`, `String?` | Paused since (taps get a 410 page, nothing is recorded), and the owner's note |
+| `archivedAt` | `DateTime?` | Filed away in the dashboard; the link keeps working |
+| `deletedAt` | `DateTime?` | Deleted; its history stays |
+
+Pausing, expiring and archiving are set from the dashboard, the REST API or the MCP server.
 
 ### DectogLinkPage
 
@@ -170,6 +176,7 @@ One page of `getLinks`, newest first. `DectogLinkPage.fromJson` parses the API's
 | `expiresAt`, `createdAt` | `DateTime` | |
 | `ttlSeconds` | `int?` | |
 | `ogTitle`, `ogDescription`, `ogImageUrl` | `String?` | |
+| `expiredUrl`, `disabledAt`, `disabledReason`, `archivedAt`, `deletedAt` | `String?` / `DateTime?` | Lifecycle, as on `DectogLink` |
 | `isExpired` | `bool get` | `DateTime.now()` is after `expiresAt` |
 | `timeUntilExpiration` | `Duration get` | Zero once expired |
 
@@ -177,17 +184,16 @@ One page of `getLinks`, newest first. `DectogLinkPage.fromJson` parses the API's
 
 ### DectogLinkResolution
 
-The public resolve result, for permanent and temporary links.
+The public resolve result, for permanent and temporary links. Only a live link resolves: `resolveLink` throws `DectogError` with code `link_paused` or `link_expired` (410) for a paused or expired one, and `not_found` for a deleted one.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `id`, `slug`, `url` | `String` | |
 | `target` | `String?` | |
 | `type` | `String` | `'permanent'` or `'temporary'` |
-| `isExpired` | `bool` | Always `false` for permanent links |
 | `createdAt` | `DateTime` | |
 | `clickCount` | `int?` | Permanent links only |
-| `expiresAt` | `DateTime?` | Temporary links only |
+| `expiresAt` | `DateTime?` | Temporary links, and permanent links given an expiry |
 | `ttlSeconds` | `int?` | Temporary links only |
 | `metadata` | `Map<String, dynamic>?` | Permanent links only |
 | `iosDeepLinkPath`, `androidDeepLinkPath` | `String?` | Permanent links only |

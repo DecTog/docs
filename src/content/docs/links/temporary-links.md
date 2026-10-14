@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-A temporary link is a slug with an expiry. It routes like a permanent link until `expires_at` passes, then answers `410`, and is deleted a day later. Use them for one-off shares, invites, QR codes on printed material with a deadline, or links minted by a script for a campaign.
+A temporary link is a slug with an expiry. It routes like a permanent link until `expires_at` passes, then sends taps to its expired URL or answers `410`, and without an expired URL is deleted a day later. Use them for one-off shares, invites, QR codes on printed material with a deadline, or links minted by a script for a campaign.
 
 ## Differences from permanent links
 
@@ -56,23 +56,24 @@ Installs attribute to temporary links like to permanent ones. The verdict then c
 
 ## Editing
 
-The edit drawer on the **Temporary** tab and `PUT /api/v1/temp-links/{slug}` (SDK: `updateTempLink`) can change the target and the social preview. The TTL and the expiry cannot be changed; create a new link instead.
+The edit drawer on the **Temporary** tab and `PUT /api/v1/temp-links/{slug}` (SDK: `updateTempLink`) can change the target and the social preview; the drawer and the API also set the expired URL, and pause, archive or delete the link like a permanent one ([Dashboard: Links](/dashboard/links/#pausing-archiving-and-deleting)). The TTL and the expiry cannot be changed; create a new link instead.
 
 ## Expiry lifecycle
 
 | Phase | Tap on the link | `GET /api/v1/resolve/{username}/{slug}` | Dashboard |
 |---|---|---|---|
-| Before `expires_at` | Routed normally | `200` with `type: "temporary"`, `is_expired: false`, `expires_at`, `ttl_seconds` | Green chip with the time left, for example "3h 5m left" |
-| After `expires_at`, before the purge | `410` page "Link expired" / "This temporary link has expired and is no longer available.", for bots too | `200` with `is_expired: true` | Red **Expired** chip; the **Delete expired** button appears |
+| Before `expires_at` | Routed normally | `200` with `type: "temporary"`, `expires_at`, `ttl_seconds` | Green chip with the time left, for example "3h 5m left" |
+| After `expires_at`, before the purge | A `302` to the link's expired URL when it has one, else a `410` page "Link expired" / "This link has expired and is no longer available.", for bots too. No click is recorded. | `410 {"error":{"code":"link_expired","expired_url":…}}` | Red **Expired** chip; the **Delete expired** button appears |
 | After the purge | `404` page "Link not found" | `404 {"error":{"code":"not_found","message":"Link not found"}}` | Gone from the list |
 
-The purge runs in the daily cron at 03:17 UTC and deletes temporary links whose `expires_at` is more than 24 hours in the past. A link expires at a precise second but can therefore stay visible as an expired link for up to two days. Once purged, its slug is free to reuse.
+The purge runs in the daily cron at 03:17 UTC and deletes temporary links whose `expires_at` is more than 24 hours in the past and that have no expired URL; a link with one keeps redirecting there until you delete it. A link expires at a precise second but can therefore stay visible as an expired link for up to two days. Once purged, its slug is free to reuse.
 
 ## Deleting and what is kept
 
 | Action | Removes the link | Removes its data |
 |---|---|---|
-| Trash icon on a row, `DELETE /api/v1/temp-links/{slug}`, `deleteTempLink` | Yes | Yes: its clicks, and the installs, events and app opens attributed to it, which then disappear from the Overview |
+| Trash icon on a row, `DELETE /api/v1/temp-links/{slug}`, `deleteTempLink` | Hides it (404 on tap), restorable from the **Deleted** view or with `POST /api/v1/temp-links/{slug}/restore` | No |
+| **Delete permanently** on the **Deleted** view, `?permanent=true`, `deleteTempLink(slug, permanently: true)` | Yes | Yes: its clicks, and the installs, events and app opens attributed to it, which then disappear from the Overview |
 | **Delete expired** (confirm "Delete ALL expired temporary links? This cannot be undone.") | Every link whose `expires_at` has passed | No: clicks and attributed installs stay in the analytics |
 | Daily purge | Links expired more than 24 hours ago | No |
 

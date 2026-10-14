@@ -56,7 +56,7 @@ final one = await dectog.getLink('spring-sale');
 await dectog.deleteLink('spring-sale');
 ```
 
-`deleteLink` removes the link together with its clicks and the installs, events and app opens attributed to it, so the dashboard totals drop with it. An unknown slug answers 404 (`Link not found`) for `getLink`, `updateLink` and `deleteLink`.
+`deleteLink` stops the link and hides it: it answers 404 and leaves the lists, while its clicks and the installs, events and app opens attributed to it stay, and the dashboard can restore it. `deleteLink(slug, permanently: true)` also deletes that history, so the dashboard totals drop with it; that cannot be undone. An unknown or deleted slug answers 404 (`Link not found`) for `getLink`, `updateLink` and `deleteLink`. Pausing, expiring and archiving are done from the dashboard, the REST API or the MCP server; `DectogLink` reports them in `disabledAt`, `expiresAt`, `expiredUrl` and `archivedAt`.
 
 ## Temporary links
 
@@ -77,7 +77,7 @@ await dectog.deleteTempLink(temp.slug);
 - `ttlSeconds` is clamped to 60 seconds to 30 days; `0` becomes 900. The SDK always sends an integer.
 - `slug` is optional. Without one the server generates `t_` followed by 10 hex characters. A given slug follows the permanent-link rules and shares the same namespace.
 - Temporary links take `target`, `ogTitle`, `ogDescription` and `ogImageUrl` only. They use the default app's routing and fallback, have no deep-link paths and no click counter.
-- After `expiresAt` a tap shows the 410 "Link expired" page, while `resolveLink` still answers with `isExpired: true`. A daily job deletes links expired for more than 24 hours; their clicks are kept and the slug becomes free again, after which the link answers 404.
+- After `expiresAt` a tap shows the 410 "Link expired" page (or goes to the link's expired URL), and `resolveLink` throws `DectogError` with code `link_expired`. A daily job deletes links expired for more than 24 hours that have no expired URL; their clicks are kept and the slug becomes free again, after which the link answers 404.
 
 `DectogTempLink` has `isExpired` and `timeUntilExpiration` getters computed on the device clock. See [Temporary links](/links/temporary-links/) for the dashboard side.
 

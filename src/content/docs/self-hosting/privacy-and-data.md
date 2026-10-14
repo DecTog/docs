@@ -101,8 +101,9 @@ When a `/api/v1` call is refused as malformed, the server stores the account, th
 
 | Action | Effect |
 |---|---|
-| Delete a link (dashboard, `DELETE /api/admin/links/:slug`, `DELETE /api/v1/links/:slug`) | In one batch: events whose `matched_slug` is the link or whose install was attributed through its clicks; the link's app opens; `customers.first_install_id` cleared where it pointed at those installs; the attributed installs; every click on the link; the link row. The data disappears from Overview and per-link analytics. |
-| Delete a temporary link | The same cascade. |
+| Delete a link (dashboard **Delete**, `DELETE /api/v1/links/:slug`) | Nothing at once: the link is marked deleted and stops answering. Thirty days later the daily job sets the personal columns of its clicks and app opens to `NULL` (see [Scheduled jobs](/self-hosting/scheduled-jobs-and-retention/#deleted-links-daily)); the counts stay. |
+| Delete a link permanently (dashboard **Delete permanently**, `?permanent=true`) | In one batch: events whose `matched_slug` is the link or whose install was attributed through its clicks; the link's app opens and referrals; `customers.first_install_id` cleared where it pointed at those installs; the attributed installs; every click on the link; the link row. The data disappears from Overview and per-link analytics. |
+| Delete a temporary link | The same two paths. |
 | "Delete expired" temporary links | Only the `temp_links` rows; clicks and installs stay. |
 | Delete an app | Its links fall back to the oldest remaining app; installs and clicks are untouched; its store notification URLs stop working. |
 | Regenerate the API key | The old key stops working immediately. |

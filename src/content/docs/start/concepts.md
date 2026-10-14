@@ -36,7 +36,7 @@ A link is a slug under your subdomain. Slugs contain letters, digits, `_` and `-
 
 | | Permanent link | Temporary link |
 |---|---|---|
-| Lifetime | Until you delete it | Expires after a TTL of 60 seconds to 30 days (dashboard: 5 min, 1 hour, 1 day, 7 days) |
+| Lifetime | Until you delete it, or until an expiry you set | Expires after a TTL of 60 seconds to 30 days (dashboard: 5 min, 1 hour, 1 day, 7 days) |
 | Slug | Required | Optional; auto-generated as `t_` plus 10 hex characters |
 | App | Chosen per link, else the default app | Always the default app |
 | Target (**Fallback URL**) | Optional; `null` inherits the app's fallback URL | Same |

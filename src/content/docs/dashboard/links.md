@@ -1,6 +1,6 @@
 ---
 title: Links
-description: Create permanent and temporary links, read the per-link numbers, edit tracking, previews and routing, and understand what deleting a link removes.
+description: Create permanent and temporary links, read the per-link numbers, edit tracking, previews and routing, and pause, expire, archive, delete and restore links.
 sidebar:
   order: 2
 ---
@@ -64,13 +64,13 @@ The complete decision order for a tap is in [How a tap is routed](/links/how-a-t
 
 ## The list
 
-Two tabs, **Permanent {n}** and **Temporary {n}**, sit above a table. The **Search links** box filters the current tab in the browser, case-insensitively: slug, destination, campaign and label on the Permanent tab; slug and destination on the Temporary tab. There is no pagination; the screen loads every link.
+Two tabs, **Permanent {n}** and **Temporary {n}**, sit above a table. Next to them, **Active**, **Archived** and **Deleted** pick which links the tabs show: active links (paused and expired ones included), archived links, or deleted links, with a count once there is one. The **Search links** box filters the current tab in the browser, case-insensitively: slug, destination, campaign and label on the Permanent tab; slug and destination on the Temporary tab. There is no pagination; the screen loads every link.
 
 ### Permanent links
 
 | Column | What it shows | Period |
 |---|---|---|
-| **Link** | `/slug`, which opens the live link in a new tab; a copy icon that turns into a check mark for 1.5 seconds; chips for the campaign and the label when set; underneath, the destination host and path, or `App fallback` when the link inherits the app's Fallback URL. | |
+| **Link** | `/slug`, which opens the live link in a new tab; a copy icon that turns into a check mark for 1.5 seconds; chips for the campaign and the label when set, and **Paused** (amber; hover for your reason), **Expired** (red; hover for where taps go) or **Archived**; underneath, the destination host and path, or `App fallback` when the link inherits the app's Fallback URL, then `· expires in 3d 4h` when an expiry is set. | |
 | **Clicks** | The link's click counter. It increases on every web tap, every click reported by the SDK and every click the server reconstructs from an install referrer, and it never decreases. A green `+{n} 7d` underneath counts the clicks of the last 7 days. | Lifetime; the `7d` line covers a rolling 7 days |
 | **Installs** | Installs matched to one of this link's clicks, excluding reinstalls. Underneath, `{n}% conv.` is installs ÷ the click counter, rounded to a whole percent, shown only when both are above 0. | Lifetime Click the number to list those installs; each opens the install detail described on [Overview](/dashboard/overview/#recent-installs). |
 | **Opens** | Times this link opened the already installed app. | Lifetime |
@@ -80,7 +80,7 @@ Two tabs, **Permanent {n}** and **Temporary {n}**, sit above a table. The **Sear
 
 All per-link numbers are all-time totals, which is why they do not match the Overview's 7-, 30- or 90-day figures.
 
-Each row ends with **Edit** (a pencil; the label reads "Edit (custom social preview)" and the icon carries a dot when the link has its own preview) and **Delete** (a trash can).
+Each row ends with **Edit** (a pencil; the label reads "Edit (custom social preview)" and the icon carries a dot when the link has its own preview), **Pause** or **Resume**, **Archive** or **Unarchive**, and **Delete** (a trash can). On the **Deleted** view the row offers **Restore** and **Delete permanently** instead. See [Pausing, archiving and deleting](#pausing-archiving-and-deleting).
 
 ### Temporary links
 
@@ -91,17 +91,21 @@ Each row ends with **Edit** (a pencil; the label reads "Edit (custom social prev
 
 Temporary links show no click, install or revenue numbers.
 
-**Delete expired** appears on the Temporary tab once at least one link has expired. It asks "Delete ALL expired temporary links? This cannot be undone." and removes every temporary link whose expiry has passed. Their clicks and installs are kept, and their slugs become free again. The server's daily job does the same automatically 24 hours after a link expires.
+**Delete expired** appears on the Temporary tab of the Active view once at least one link has expired. It asks "Delete ALL expired temporary links? This cannot be undone." and removes every temporary link whose expiry has passed. Their clicks and installs are kept, and their slugs become free again. The server's daily job does the same automatically 24 hours after a link expires, except for links with an expired URL, which keep sending taps there.
 
 Empty states: "No permanent links yet.", "No temporary links. Pick an expiry when creating a link to make one." and "No links match your search."
 
 ## Editing a link
 
-**Edit** opens a side drawer titled **Edit link** `/slug`. Permanent links get three blocks; temporary links get only the social preview.
+**Edit** opens a side drawer titled **Edit link** `/slug`. Permanent links get four blocks; temporary links get the expiry and the social preview.
 
 ### Tracking
 
 Permanent links only. The four fields from the create form, each up to 255 characters, with their own **Save tracking** button. Saving sends all four values; an emptied field clears the stored value. The button is followed by "Saved" or the server's error.
+
+### Expiry
+
+**Expires at** (permanent links; a date and time in your browser's time zone, empty for never) and **After expiry, send visitors to** (a URL; empty serves a "Link expired" page with status 410). A temporary link shows its fixed expiry instead of the date box. While the link is paused, a third box, **Why it is paused (only you see this)**, edits the pause note. **Save expiry** sends the block. An expired link records no clicks: taps go straight to the URL, or get the 410 page.
 
 ### Preview
 
@@ -134,26 +138,36 @@ The last row sets the same `fallback_url` field, with the same labels, as the cr
 
 **Save** sends the preview choice and, for permanent links, every routing field at once; an emptied field clears the stored value. Before sending, the drawer checks "Enter the custom redirect URL" and "Enter the custom fallback URL" when a Custom URL option is selected with an empty box. Success shows "Saved ✓"; failures show the server's message.
 
-## Deleting a link
+## Pausing, archiving and deleting
 
-The trash icon asks:
+| Action | What happens |
+|---|---|
+| **Pause** | Asks "Pause "{slug}"? Taps get a "link paused" page and nothing is recorded." with an optional reason that only you see. Every tap then gets a "Link paused" page with status 410, bots included, and nothing is counted: no click, no install credit, no app open. **Resume** turns it back on and clears the reason. |
+| **Archive** | Moves the link to the **Archived** view. It keeps working and counting; archiving only tidies the list. **Unarchive** moves it back. |
+| **Delete** | Asks "Delete link "{slug}"? It stops working and leaves this list. Its clicks, installs and revenue stay in your stats, and you can restore it from Deleted." The link answers 404, moves to the **Deleted** view, and keeps its slug: creating a link with that slug fails until you restore it or delete it permanently. Thirty days after the delete, its clicks and app opens lose their device data (IP hash, device id, user agent), the same anonymisation retention applies after `RETENTION_DAYS`; the counts stay. |
+| **Restore** | On the **Deleted** view: the link works again, with its history. |
+| **Delete permanently** | On the **Deleted** view; see below. |
 
-> Delete link "{slug}"?
+### Delete permanently
+
+The trash icon on the **Deleted** view asks:
+
+> Delete "{slug}" permanently?
 >
 > This also deletes its {n} clicks, the installs, events and app opens attributed to it, and removes them from the Overview. This cannot be undone.
 
 For temporary links the first line reads "its clicks" without a count.
 
-Deleting is a single atomic batch that removes, in this order:
+Deleting permanently is a single atomic batch that removes, in this order:
 
 1. the events attributed to the link, by slug or through one of its installs;
-2. the app opens through the link;
+2. the app opens through the link, and the referrals it converted;
 3. the `first_install_id` of customers whose first install came through the link (the customer record itself stays);
 4. the installs matched to one of the link's clicks;
 5. the link's clicks;
 6. the link itself.
 
-The Overview, the Customers screen and the per-link totals drop those rows immediately. The request succeeds even for a slug that no longer exists. If the request fails, the list reloads without showing a message.
+The Overview, the Customers screen and the per-link totals drop those rows immediately. The request succeeds even for a slug that no longer exists. If the request fails, the list reloads and shows "Could not delete "{slug}": …".
 
 The slug is free again as soon as the link is gone, for permanent and temporary links alike.
 

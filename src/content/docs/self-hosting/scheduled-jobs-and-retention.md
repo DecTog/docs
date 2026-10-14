@@ -35,10 +35,10 @@ More than 100 pending tokens are spread over successive passes. The three inline
 ## Temporary-link purge (daily)
 
 ```sql
-DELETE FROM temp_links WHERE expires_at < <now minus 24 hours>
+DELETE FROM temp_links WHERE expires_at < <now minus 24 hours> AND expired_url IS NULL
 ```
 
-A temporary link therefore keeps answering for up to a day after it expires: the redirect shows the 410 page and `GET /api/v1/resolve/:user/:slug` still returns `200` with `is_expired: true`. After the purge the slug is free again and both answer 404. The link's clicks and the installs attributed to them are kept; only the `temp_links` row goes. The dashboard's "Delete expired" button and `DELETE /api/admin/temp-links/expired` remove expired links immediately with the same effect. See [Temporary links](/links/temporary-links/).
+A temporary link therefore keeps answering for up to a day after it expires: the redirect shows the 410 page, `GET /api/v1/resolve/:user/:slug` answers `410 link_expired`, and `GET /api/v1/temp-links/:slug` still works. A link with an expired URL is never purged: it keeps sending taps there until its owner deletes it. After the purge the slug is free again and both answer 404. The link's clicks and the installs attributed to them are kept; only the `temp_links` row goes. The dashboard's "Delete expired" button and `DELETE /api/admin/temp-links/expired` remove expired links immediately with the same effect. See [Temporary links](/links/temporary-links/).
 
 ## Exchange rates (daily)
 
@@ -65,6 +65,10 @@ Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currenc
 
 The screen profile is dropped early because it is only ever read inside the fingerprint window, which never exceeds 30 days (720 hours). `enriched_at` is kept on purpose: it is the "first beacon wins" gate, and a null would let a late beacon rewrite the row.
 
+### Deleted links (daily)
+
+`anonymiseDeletedLinks` gives the clicks and app opens of a link deleted more than 30 days ago (`links.deleted_at` or `temp_links.deleted_at`) the same treatment as above, whatever their age: the `clicks` personal columns and screen profile, and the `app_opens` columns, are set to `NULL`, only on rows that still carry a value. Thirty days is the cap of the attribution window, so an install from a tap made before the delete can still match its click until then. The link's installs and events belong to your app's users rather than to the link, and keep the `RETENTION_DAYS` schedule. A deleted link's counts stay; a permanent delete removes the rows instead.
+
 ### What stays after the cutoff
 
 - **Clicks:** `id`, `user_id`, `username`, `link_slug`, `link_kind`, `source`, `device_type`, `os`, `os_major`, `browser`, `country`, `session_id`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `metadata`, `clicked_at`, `referrer` (origin only), `enriched_at`, `lang`, `ua_arch`, `connection_type`, `bot_score`, `link_params`, `client_click_time`, `origin`.
@@ -80,7 +84,7 @@ The screen profile is dropped early because it is only ever read inside the fing
 ### Limits
 
 - One `RETENTION_DAYS` for the whole deployment; there is no per-tenant value.
-- The sweep anonymizes; it does not delete installs, clicks or events. Deleting a link is the only cascade a tenant can trigger (see [Privacy and data](/self-hosting/privacy-and-data/)).
+- The sweep anonymizes; it does not delete installs, clicks or events. Deleting a link permanently is the only cascade a tenant can trigger (see [Privacy and data](/self-hosting/privacy-and-data/)); a plain delete keeps the rows.
 - The sweep runs once a day at 03:17 UTC. Data older than the cutoff can exist for up to 24 hours before it is anonymized, and a Worker that is undeployed or erroring skips its runs silently.
 
 ### Checking that it ran

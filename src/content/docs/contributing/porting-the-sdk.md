@@ -115,7 +115,7 @@ Create `src/models/index.ts` with interfaces:
 
 - `DectogLink` (`slug`, `target`, `url`, `clickCount`, `createdAt`, `updatedAt?`, `metadata?`, plus the routing, social and tracking fields).
 - `DectogTempLink` (`slug`, `target`, `url`, `expiresAt`, `createdAt`, `ttlSeconds?`).
-- `DectogLinkResolution` (`id`, `slug`, `target`, `url`, `type`, `isExpired`, `createdAt`, `clickCount?`, `expiresAt?`, `ttlSeconds?`, `metadata?`, the deep-link paths).
+- `DectogLinkResolution` (`id`, `slug`, `target`, `url`, `type`, `createdAt`, `clickCount?`, `expiresAt?`, `ttlSeconds?`, `metadata?`, the deep-link paths). A paused or expired link answers 410 (`link_paused`, `link_expired`), which surfaces as a `DectogError`.
 - `DectogLinkClick` (`originalUrl`, `slug`, `username`, `receivedAt`, `error?`, `linkResolution?`).
 - `DectogAppInstallRequest` and `DectogAppInstallResponse`.
 

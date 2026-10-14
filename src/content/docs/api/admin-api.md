@@ -74,14 +74,16 @@ See [Dashboard: Settings](/dashboard/settings/).
 
 | Method and path | Auth | Purpose | Response |
 |---|---|---|---|
-| `GET /api/admin/links` | session | Every link, newest first, no pagination. | `200 {links: [...], temp_links: [...]}`. Each permanent link has every column, `metadata` parsed, plus `url`, `clicks_7d` (rolling 7 days), and lifetime `installs` (matched, non-reinstall), `opens`, `leads` and `revenue` (every currency summed, 2 decimals). Each temporary link has every column plus `url` and `is_expired`. |
+| `GET /api/admin/links` | session | Every link, newest first, no pagination; deleted links only with `?include_deleted=1`. | `200 {links: [...], temp_links: [...]}`. Each permanent link has every column (the lifecycle ones included), `metadata` parsed, plus `url`, `clicks_7d` (rolling 7 days), and lifetime `installs` (matched, non-reinstall), `opens`, `leads` and `revenue` (every currency summed, 2 decimals). Each temporary link has every column plus `url` and `is_expired`. |
 | `POST /api/admin/links` | session | Same fields and rules as the v1 create, with the slug trimmed. | `201 {id, slug, target, url, click_count: 0, created_at, metadata}` (a subset of the v1 Link); `400 Invalid or missing slug`, `Invalid target: must be a valid http(s) URL`, `Unknown app_id`, the `og_*` and routing messages; `409 Slug already exists` with `slug` |
-| `PUT /api/admin/links/:slug` | session | Same partial-update semantics as v1 (absent keeps, `null` or `""` clears). | `200 {ok: true, link: <raw row>}`: `metadata` is still a JSON string and there is no `url`; `404 Link not found` |
-| `DELETE /api/admin/links/:slug` | session | Deletes the link and its clicks, attributed installs, events and app opens. | Always `200 {deleted: true}`, even for an unknown slug |
+| `PUT /api/admin/links/:slug` | session | Same partial-update semantics as v1 (absent keeps, `null` or `""` clears), lifecycle fields included. | `200 {ok: true, link: <raw row>}`: `metadata` is still a JSON string and there is no `url`; `404 Link not found` |
+| `DELETE /api/admin/links/:slug` | session | Soft delete, like v1; `?permanent=1` deletes the link and its clicks, attributed installs, events and app opens. | Always `200 {deleted: true}`, even for an unknown slug |
+| `POST /api/admin/links/:slug/restore` | session | Restores a deleted link. | `200 {ok: true}`; `404 Link not found` |
 | `POST /api/admin/temp-links` | session | Same fields and TTL rules as v1 (`ttlSeconds` default 900, `0` becomes 900, clamped to 60 to 2,592,000; auto slug `t_<10 hex>`). | `201 {id, slug, target, url, ttl_seconds, expires_at, created_at, og_title, og_description, og_image_url}`; `400 ttlSeconds must be a number`, `Invalid slug`; `409 Slug already exists` |
-| `PUT /api/admin/temp-links/:slug` | session | `target` and `og_*` only. | `200 {ok: true}`; `404 Temporary link not found` |
+| `PUT /api/admin/temp-links/:slug` | session | `target`, `og_*` and the lifecycle fields (no `expires_at`). | `200 {ok: true}`; `404 Temporary link not found` |
 | `DELETE /api/admin/temp-links/expired` | session | Deletes every temporary link of the account whose `expires_at` has passed. Their clicks and installs are kept. | `200 {deleted: <count>}` |
-| `DELETE /api/admin/temp-links/:slug` | session | Delete with history, like permanent links. | Always `200 {deleted: true}` |
+| `DELETE /api/admin/temp-links/:slug` | session | Soft delete; `?permanent=1` deletes with history, like permanent links. | Always `200 {deleted: true}` |
+| `POST /api/admin/temp-links/:slug/restore` | session | Restores a deleted temporary link. | `200 {ok: true}`; `404 Temporary link not found` |
 
 ## Apps
 
