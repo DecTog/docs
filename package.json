@@ -18,7 +18,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "serve:cf": "wrangler dev --port 8788",
-    "deploy": "astro build && wrangler deploy"
+    "deploy": "astro build && wrangler deploy",
+    "sync:sdk-reference": "node scripts/sync-sdk-reference.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.6",

@@ -67,6 +67,11 @@ export default defineConfig({
 							description: 'Compact integration guide for AI coding agents.',
 						},
 						{
+							label: 'Flutter SDK agent reference',
+							url: 'https://raw.githubusercontent.com/DecTog/flutter_dectog/main/llms.txt',
+							description: 'llms.txt shipped inside the flutter_dectog package: types, link URLs, routing and init.',
+						},
+						{
 							label: 'Source code',
 							url: 'https://github.com/DecTog',
 							description: 'Server, Flutter SDK and these docs on GitHub.',

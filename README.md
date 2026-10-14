@@ -66,6 +66,9 @@ The site wears the dectog.com identity on top of Starlight:
   in the `starlightLlmsTxt` `details` in `astro.config.mjs`, which feed `llms.txt`.
 - `https://docs.dectog.com/llms.txt` and `/llms-full.txt` are generated at build time for AI
   agents; `dectog.com/SKILL.md` links to them.
+- `sdk/api-reference.md` is generated from `flutter_dectog/doc/api-reference.md`, which also
+  builds the SDK's `llms.txt`. Edit it in the SDK repo, then run `npm run sync:sdk-reference`
+  here (`-- --check` reports drift).
 
 ## Deployment
 

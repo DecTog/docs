@@ -5,6 +5,8 @@ sidebar:
   order: 10
 ---
 
+<!-- Generated from flutter_dectog/doc/api-reference.md by npm run sync:sdk-reference. Edit it there. -->
+
 Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nullable types are marked with `?`. Methods on `FlutterDectog` throw `DectogError` on failure; a method called before `initialize` throws a `configuration` error.
 
 ## FlutterDectog
@@ -128,6 +130,16 @@ A permanent link as the API returns it. All fields are `final`; `DectogLink.from
 | `redirectUrl` | `String?` | Mobile destination when the app is not installed |
 | `fallbackUrl` | `String?` | Desktop destination |
 | `label`, `campaign`, `adgroup`, `creative` | `String?` | Tracking defaults for every click |
+
+### DectogLinkPage
+
+One page of `getLinks`, newest first. `DectogLinkPage.fromJson` parses the API's `{"data": [...], "next_cursor": ...}` envelope.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `links` | `List<DectogLink>` | The links on this page |
+| `nextCursor` | `String?` | Pass to `getLinks(cursor:)` for the next page; `null` on the last one |
+| `hasMore` | `bool get` | `nextCursor != null` |
 
 ### DectogTempLink
 
@@ -316,4 +328,4 @@ A `StatelessWidget` hosting Apple's `UIPasteControl` on iOS 16 and newer; it bui
 
 ## Package version
 
-`flutter_dectog` reports its version in the `User-Agent` header (`DectogSDK/<version> (<platform>)`) and in the `flutter_plugin_version` metadata of clicks and installs. The version constant is internal (`lib/src/version.dart`) and matches `pubspec.yaml`.
+`flutter_dectog` sends `x-dectog-sdk: flutter_dectog/<version>` on every signed call, and also reports its version in the `User-Agent` header (`DectogSDK/<version> (<platform>)`) and in the `flutter_plugin_version` metadata of clicks and installs. The version constants are internal (`lib/src/version.dart`) and match `pubspec.yaml`.
