@@ -108,6 +108,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0053_web` | `api_keys.origins` (site keys, kind `site`), `links.append_click_id`, `events.web_click_id`, and a partial index on web events: [`dectog.js`](/sdk/web/) |
 | `0054_device_models` | `device_models` and `device_model_refresh`: marketing names for the device models installs report |
 | `0055_click_routing_rule` | `clicks.routing_rule`: the routing rule (geo, language, schedule or A/B variant) a tap matched |
+| `0056_events_install_index` | An index on `events(user_id, install_id)`, for the `ltv` metric |
 
 ### Commands
 
