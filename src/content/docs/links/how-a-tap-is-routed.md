@@ -23,7 +23,7 @@ A link such as `https://acme.dectog.com/welcome` is served by the redirect engin
 | 1 | The username does not exist | `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or the 404 page when that variable is unset. Applies in path mode too. |
 | 2 | The slug is a temporary link whose `expires_at` has passed | `410` page, for bots as well |
 | 3 | No permanent or temporary link has this slug | `404` page |
-| 4 | The user agent is a bot, or Cloudflare's bot score is below 30 | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
+| 4 | The request is a `HEAD`, the user agent is a bot, or Cloudflare's bot score is below 30 | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
 | 5 | Otherwise | A click row is built. The app is the link's app, or the account's default (oldest) app. |
 | 6 | The user agent is iOS or Android | The mobile chain below |
 | 7 | Anything else, or a mobile visitor with no destination at all | The shared tail below |
@@ -111,8 +111,9 @@ Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at
 
 | Path | Click |
 |---|---|
-| Bot user agent or Cloudflare bot score below 30 | None |
+| `HEAD`, bot user agent, or Cloudflare bot score below 30 | None |
 | 404, 410, unknown username | None |
+| `x-dectog-no-track: 1` header or `?dtg_nt=1` on the link | None. Routing is exactly that of a real tap; use it for QA taps and uptime monitors. The parameter never reaches the destination. |
 | Tap-to-store page, interstitial page, intent bounce | Written before the response is sent |
 | Hint-less Chromium plain redirect | None on the first request; the hinted retry writes it |
 | Every other redirect and the QR page | Written in the background after the response |
