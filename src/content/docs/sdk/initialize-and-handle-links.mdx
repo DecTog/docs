@@ -156,9 +156,23 @@ For every recognized link the SDK sends, without blocking your handler:
 
 Neither call is retried, and a failure never affects the emitted click.
 
-<Aside type="caution" title="Scheme opens with a deep-link path">
-A link that has a deep-link path opens as `{scheme}://{path}` on Android and iOS. The parser then reads the first path segment as the username and the second as the slug, so `username`, `slug` and `linkResolution` are wrong for that click and the reported click lands on an unknown slug. Route such URLs from `originalUrl` in your own code.
+<Aside title="Scheme opens with a deep-link path">
+A link that has a deep-link path opens as `{scheme}://{path}?…&dtg_l={username}/{slug}` on Android and iOS. The SDK names the link from `dtg_l`, never from the path, so `username`, `slug` and `linkResolution` are right, and `originalUrl` carries your app's own route (`{scheme}://{path}`) for your router.
 </Aside>
+
+## Links tapped inside your app
+
+iOS and Android never hand a Universal Link or an App Link back to the app that shows it. A DecTog link in your own chat, feed or help screen therefore opens the browser when tapped. Pass it to the SDK instead:
+
+```dart
+// In your own link tap handler:
+final click = await FlutterDectog().handleUrl(url);
+if (click == null) {
+  await launchUrl(Uri.parse(url)); // not a DecTog link: open it as usual
+}
+```
+
+`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `DectogLinkClick`. It counts as an app open, not as a click (decision C19): the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not a DecTog link (including a custom domain the SDK does not know) and for an authentication callback.
 
 ## Complete example
 

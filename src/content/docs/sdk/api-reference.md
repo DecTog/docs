@@ -26,6 +26,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 |---|---|---|
 | `onLinkClick` | `Stream<DectogLinkClick> get onLinkClick` | Broadcast stream. Emits for links opened while running and for the cold-start link. |
 | `getInitialLink` | `Future<DectogLinkClick?> getInitialLink()` | The link that launched the app, consumed once per process; `null` without one or after a relaunch from the Android recents screen. |
+| `handleUrl` | `Future<DectogLinkClick?> handleUrl(String url)` | A DecTog link tapped inside the app's own UI (chat, feed), which the system never hands back to the app: routed like an incoming link (`onLinkClick` emits it once, `inApp: true`) and counted as an app open, not a click. `null` for a URL that is not a DecTog link, and for an authentication callback. |
 | `resolveLink` | `Future<DectogLinkResolution> resolveLink(String username, String slug)` | `GET /api/v1/resolve/{username}/{slug}`, public, unsigned. |
 
 ### Link management
@@ -231,6 +232,7 @@ The public resolve result, for permanent and temporary links. Only a live link r
 | `receivedAt` | `DateTime` | |
 | `error` | `DectogError?` | Set for non-DecTog URLs, processing failures and calls before `initialize` |
 | `linkResolution` | `DectogLinkResolution?` | Set when the resolve call succeeded |
+| `inApp` | `bool` | The link came through `handleUrl`, from the app's own UI |
 | `isResolved` | `bool get` | `linkResolution != null && error == null` |
 | `targetUrl` | `String? get` | `linkResolution?.target` |
 | `linkType` | `String? get` | `linkResolution?.type` |
