@@ -176,9 +176,9 @@ A self-hosted deployment can set `MIN_SDK_VERSION` (for example `1.1.0`) to reti
 
 ## Rate limits
 
-Every authenticated `/api/v1` response reports the account window in three headers: `x-ratelimit-limit` (3000), `x-ratelimit-remaining` and `x-ratelimit-reset` (seconds until the window ends). They describe the account counter only; the device and IP counters below can refuse a request first.
+Every authenticated `/api/v1` response reports the account limit in `x-ratelimit-limit` (3000). They describe the account counter only; the device and IP counters below can refuse a request first.
 
-Limits are fixed windows aligned to the wall clock: the window is the current minute (`floor(now / 60 s)`), the first request of a new minute resets the counter, and a request that is rejected still counts. Several counters apply to one request.
+The hosted service, and a self-hosted deployment set up with `npm run setup`, count the account, device, IP and beacon limits with Cloudflare's Rate Limiting bindings: one-minute windows kept per Cloudflare location, so the limits are approximate, and the response carries only `x-ratelimit-limit`. A deployment without those bindings in its Wrangler config (local development, an older config) counts them in D1 instead: fixed windows aligned to the wall clock (the current minute, `floor(now / 60 s)`), reset by the first request of a new minute, where a rejected request still counts; there the response also carries `x-ratelimit-remaining` and `x-ratelimit-reset` (seconds until the window ends). Several counters apply to one request.
 
 | Limit | Window | Counter key | Applies to |
 |---|---|---|---|
@@ -193,7 +193,7 @@ The hashed IP is `sha256(IP_SALT + ":" + ip)` with IPv6 addresses cut to their /
 Over a limit, `/api/v1` answers `429` with code `rate_limited` and a `Retry-After` header holding the number of seconds until the current minute ends (1 to 60). Wait at least that long before retrying. The IP counter is per account and IP, so one account's traffic never consumes another account's allowance.
 
 :::note[Fail-open and fail-closed]
-If the rate-limit counter cannot be written (a database failure), the account, device and IP limiters **let the request through** and log the failure: the limiter never takes the API down with it. The beacon limiter does the opposite and answers 429 when its counter write fails.
+If the rate-limit counter cannot be written (a database or binding failure), the account, device and IP limiters **let the request through** and log the failure: the limiter never takes the API down with it. The beacon limiter does the opposite and answers 429 when its D1 counter write fails.
 :::
 
 `GET /api/v1/resolve/:username/:slug` is not rate limited.

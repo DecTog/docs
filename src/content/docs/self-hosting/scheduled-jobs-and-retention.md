@@ -1,6 +1,6 @@
 ---
 title: Scheduled jobs and retention
-description: The two cron triggers, what each one runs, and exactly which columns the daily anonymization nulls, deletes or keeps.
+description: The two cron triggers, what each one runs, how the daily rollups are built, and exactly which rows and columns the daily retention sweep deletes, nulls or keeps.
 sidebar:
   order: 4
 ---
@@ -9,10 +9,10 @@ The Worker has two cron triggers, declared identically at the top level and in `
 
 | Expression | Fires | Runs |
 |---|---|---|
-| `7 * * * *` | Every hour at :07 | Apple Search Ads retry only |
-| `17 3 * * *` | Daily at 03:17 UTC | Apple Search Ads retry, then the temporary-link purge and the anonymization sweep |
+| `7 * * * *` | Every hour at :07 | Apple Search Ads retry and the daily rollups |
+| `17 3 * * *` | Daily at 03:17 UTC | Apple Search Ads retry and the daily rollups, then the temporary-link purge, the deleted-link anonymization, the exchange rates and, once the rollups are done, the retention sweep |
 
-The code branches on the expression: `7 * * * *` returns after the Apple Search Ads pass; any other expression runs everything. All three jobs run inside `waitUntil`, so a failure in one does not stop the others. There is no job-level logging beyond console warnings.
+The code branches on the expression: `7 * * * *` returns after the Apple Search Ads pass and the rollups; any other expression runs everything. The jobs run inside `waitUntil`, so a failure in one does not stop the others, except that the retention sweep waits for the rollup build. There is no job-level logging beyond console warnings.
 
 `wrangler dev` does not fire crons. Start it with `--test-scheduled` and call `http://localhost:8787/__scheduled?cron=17+3+*+*+*` (or `7+*+*+*+*`) to run a trigger by hand; see the [Local quick start](/self-hosting/local-quick-start/).
 
@@ -32,6 +32,16 @@ The code branches on the expression: `7 * * * *` returns after the Apple Search 
 
 More than 100 pending tokens are spread over successive passes. The three inline attempts the install request itself makes, five seconds apart, are described on [Attribution internals](/self-hosting/attribution-internals/).
 
+## Daily rollups (both triggers)
+
+`buildRollups` (`apps/worker/src/rollups.ts`) fills `link_daily`: per account, link, UTC day and platform (`ios`, `android`, `desktop`, `other`), the clicks, first installs and the credited ones, app opens, leads, net revenue in the account's currency, and the events credited to a link because it re-opened the app. Installs and events no link earned sit under the slug `''`. The rows are rebuilt from the raw rows, a whole day at a time and never on the request path, so a tap costs no extra write.
+
+Each account has a `rollup_state` row: `through_day`, the last built day, and `frozen_through` (below). A run takes the accounts furthest behind and builds up to 40 steps of 31 days across them, so a new deployment, or an account with years of data, backfills itself over the next runs; nothing needs to be run by hand. Reads take every day after `through_day` from the raw rows, so the dashboard is exact while the rollups catch up.
+
+A change to a raw row of a built day moves `through_day` back to the day before it, and the next run rebuilds from there: a late claim that credits an older install, a store notification that changes an amount or reverses a refund, an exchange rate that arrives late, a new re-engagement window on an app (every unfrozen day), a deleted app, a new account currency, and a permanent link delete, which also removes the link's rollup rows.
+
+What reads the rollups: the Overview's clicks, installs, opens, leads and revenue, its clicks per day and per device, for windows over 7 days (which are whole UTC days, today included), and the lifetime installs, opens, leads and revenue of every link on the Links screen.
+
 ## Temporary-link purge (daily)
 
 ```sql
@@ -46,7 +56,11 @@ Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currenc
 
 ## Anonymization sweep (daily)
 
-`anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. The cutoff is `now minus RETENTION_DAYS` (default 400; `0`, blank or non-numeric also means 400). Rows are kept for aggregate analytics; the personal columns are set to `NULL`.
+The cutoff is `now minus RETENTION_DAYS` (default 400; `0`, blank or non-numeric also means 400).
+
+First, for every account whose rollups are built through the cutoff's day, the clicks, installs, events and app opens older than the cutoff are deleted, and `frozen_through` becomes the cutoff's day: those days' totals now live only in `link_daily` and are never rebuilt (a later change of account currency converts them with each day's exchange rates instead). This is what keeps storage at about the retention window's worth of rows; see [What it costs to run](/self-hosting/cost/).
+
+Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. Rows of accounts whose rollups are not that far yet are kept for aggregate analytics with their personal columns set to `NULL`, as below.
 
 ### What is deleted, nulled and kept
 
@@ -84,7 +98,7 @@ The screen profile is dropped early because it is only ever read inside the fing
 ### Limits
 
 - One `RETENTION_DAYS` for the whole deployment; there is no per-tenant value.
-- The sweep anonymizes; it does not delete installs, clicks or events. Deleting a link permanently is the only cascade a tenant can trigger (see [Privacy and data](/self-hosting/privacy-and-data/)); a plain delete keeps the rows.
+- Past the cutoff, raw rows are deleted once their day is in the rollups, and only anonymized until then. Within the retention window, deleting a link permanently is the only cascade a tenant can trigger (see [Privacy and data](/self-hosting/privacy-and-data/)); a plain delete keeps the rows.
 - The sweep runs once a day at 03:17 UTC. Data older than the cutoff can exist for up to 24 hours before it is anonymized, and a Worker that is undeployed or erroring skips its runs silently.
 
 ### Checking that it ran
@@ -96,4 +110,11 @@ npx wrangler d1 execute dectog --remote --env production \
   --command "SELECT COUNT(*) FROM clicks WHERE ip_raw IS NOT NULL AND clicked_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-400 days')"
 ```
 
-A count of 0 means the last sweep covered everything older than the cutoff. `test/retention.test.ts` in the Worker repository pins the behavior described on this page.
+A count of 0 means the last sweep covered everything older than the cutoff. To see how far the rollups are:
+
+```bash
+npx wrangler d1 execute dectog --remote --env production \
+  --command "SELECT user_id, through_day, frozen_through FROM rollup_state ORDER BY through_day LIMIT 20"
+```
+
+`test/retention.test.ts` and `test/rollups.test.ts` in the Worker repository pin the behavior described on this page.

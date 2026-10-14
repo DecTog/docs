@@ -13,7 +13,7 @@ Every number on this page is defined below exactly as the server computes it. Se
 
 | Control | What it does |
 |---|---|
-| **7d**, **30d**, **90d** | Selects the time range. The default is **7d**. The window ends now and starts exactly 7, 30 or 90 times 24 hours earlier, not at midnight. |
+| **7d**, **30d**, **90d** | Selects the time range. The default is **7d**. **7d** ends now and starts exactly 7 times 24 hours earlier. **30d** and **90d** are whole calendar days in UTC, today included: they start at midnight UTC 29 or 89 days ago, and their totals come from the daily rollups (see [Scheduled jobs](/self-hosting/scheduled-jobs-and-retention/#daily-rollups-both-triggers)). |
 | Live refresh | Every 15 seconds the page reloads the overview, the recent events and the attribution-quality panel. The timer restarts when you change the range. |
 | **Set up with your agent** | Copies the prompt `Read https://dectog.com/SKILL.md and help me get started with DecTog` to the clipboard. The label reads "Prompt copied — paste it into your agent" for two seconds. If the clipboard is blocked, a browser prompt shows the text instead. See [Automation and agents](/guides/automation-and-agents/). |
 
@@ -50,7 +50,7 @@ All seven cards always render. Counts use the server's own timestamps, so an ins
 
 An area chart with one point per calendar day in UTC. Days without clicks show 0. Labels are short dates such as "Oct 3".
 
-The chart buckets the last N calendar days, while the KPI window starts exactly N times 24 hours ago. Clicks from the partial day before the first bucket count in the **Clicks** KPI but do not appear in the chart.
+The chart buckets the last N calendar days. For **30d** and **90d** that is exactly the KPI window. For **7d** the KPI window starts exactly 7 times 24 hours ago, so clicks from the partial day before the first bucket count in the **Clicks** KPI but do not appear in the chart.
 
 ### Installs by campaign
 
@@ -70,7 +70,7 @@ The same grouping, using `utm_source` instead of `utm_campaign`, with no top-8 l
 
 ### Devices
 
-A donut of clicks in the window by device type, with a legend reading `{percent} · {count}`. The types are **iOS**, **Android**, **Desktop**, **Mobile** and **Unknown**. "Desktop" is any browser that does not identify as iPhone, iPad, iPod or Android, which includes iPadOS Safari in desktop mode.
+A donut of clicks in the window by device type, with a legend reading `{percent} · {count}`. The types are **iOS**, **Android**, **Desktop** and **Other** (a click whose device type is none of those). "Desktop" is any browser that does not identify as iPhone, iPad, iPod or Android, which includes iPadOS Safari in desktop mode.
 
 ### Attribution quality
 

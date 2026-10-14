@@ -16,11 +16,11 @@ Every request's address is read from `CF-Connecting-IP` (else the first `X-Forwa
 
 | Table | Hashed | Raw | Until |
 |---|---|---|---|
-| `clicks` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | both nulled at retention |
-| `app_installs` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | both nulled at retention |
-| `events` | none | `ip_raw`, only with `STORE_RAW_IP=1` | nulled at retention |
-| `app_opens` | `ip_hash` | none | nulled at retention |
-| `rate_limits` | in the key | none | rows deleted after the window passes |
+| `clicks` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | the row is deleted at retention (nulled while the daily rollups catch up) |
+| `app_installs` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | the same |
+| `events` | none | `ip_raw`, only with `STORE_RAW_IP=1` | the same |
+| `app_opens` | `ip_hash` | none | the same |
+| `rate_limits` | in the key | none | rows deleted after the window passes; with the Rate Limiting bindings (the default config) only the sign-in and reset limits use it |
 
 Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click row. Link taps set no cookies; the only cookies are the dashboard session and the two Google sign-in cookies.
 
@@ -133,7 +133,7 @@ A self-hosted DecTog makes you the controller of this data. Items a policy and t
 5. **Apple Search Ads attribution token**, if `collect` names `appleSearchAdsToken`.
 6. **Advertising identifier** (IDFA after ATT, GAID), only with the `flutter_dectog_adid` package.
 7. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
-8. **Retention:** personal columns anonymized after `RETENTION_DAYS` (400 by default), screen profiles after 30 days, Apple tokens as soon as resolved; aggregate rows kept.
+8. **Retention:** clicks, installs, events and app opens deleted after `RETENTION_DAYS` (400 by default), keeping only daily per-link counts; other personal columns anonymized then; screen profiles after 30 days, Apple tokens as soon as resolved.
 9. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
 
 Adjust `RETENTION_DAYS` on the [Configuration reference](/self-hosting/configuration-reference/) if 400 days is longer than your policy allows.
