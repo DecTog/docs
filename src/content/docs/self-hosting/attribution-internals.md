@@ -142,6 +142,24 @@ With strict mode off (the default) flags are annotations and the attribution sta
 
 The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the install webhook (`app.installed`) of the oldest app. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
 
+## Worked examples
+
+Each row is a golden scenario the worker's test suite runs end to end on every change (`apps/worker/test/fixtures/attribution-cases.json` in the server repository): taps go through the redirect engine, installs and claims through the signed API. "Same network" means the install came from the tap's IP address. A row marked as a known defect documents today's behaviour; the plan item named there changes it.
+
+| Scenario | What happens | Verdict |
+|---|---|---|
+| Android store referrer names the click | tap on android (Pixel 9); install i1 (store referrer; other network) | i1: `matched: true`, `match_source: referrer`, `match_confidence: guaranteed` |
+| A self-describing referrer stands in for a click row that never landed | no recorded tap; install i1 (store referrer) | i1: `matched: true`, `match_source: referrer`, `match_confidence: guaranteed` |
+| iOS pasteboard link with the click id | tap on ios, no model hint; install i1 (pasteboard link; other network) | i1: `matched: true`, `match_source: clipboard`, `match_confidence: guaranteed` |
+| Fingerprint with a device-model match is credited | tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high` |
+| Fingerprint without corroboration routes but does not credit | tap on android, no model hint; install i1 (no signal; same network) | i1: `matched: false`, `match_source: null`, `match_confidence: medium`, routing routes to promo |
+| No click at all is organic | install i1 (no signal; other network) | i1: `matched: false`, `match_source: null`, routing none |
+| One install per click: a second device replaying the referrer gets nothing | tap on android (Pixel 9); install i1 (store referrer; other network); install i2 (store referrer; other network) | i1: `matched: true`, `match_source: referrer`<br>i2: `matched: false` |
+| A retried registration replays the stored verdict | tap on android (Pixel 9); install i1 (store referrer, attempt id; other network); install i2 (store referrer, attempt id; other network) | i1: `matched: true`<br>i2: `matched: true`, `replayed: true` |
+| A referrer delivered on a later launch upgrades an organic install | tap on android (Pixel 9); install i1 (no signal; other network); later claim on i1 (late_referrer) | i1: `matched: false`<br>claim i1: `claim: upgraded`, `matched: true`, `match_source: referrer` |
+| An app update never runs the fingerprint | tap on android (Pixel 9); install i1 (app update; same network) | i1: `matched: false`, routing none |
+| Two taps from one phone tie and credit nobody *(known defect, P2.1)* | tap on android (Pixel 9); tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: false`, `match_confidence: low` |
+
 ## Claims
 
 `POST /api/v1/app-installs/:id/claim` carries any subset of the signal fields above plus `attempt`, `asa_token` and `claim_source` (`late_referrer`, `paste_control` or `clipboard`; validated with a 400, and stored as `claim_source` on the row when the claim upgrades it, so a paste control can be told apart from an automatic pasteboard read). The install must belong to the caller (404 otherwise). Every call refreshes the stored telemetry (a later, more informative referrer read overwrites; absent fields keep their value), bumps `attempt` to the maximum seen, and sets `clipboard_slug` if it was empty.
