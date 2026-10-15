@@ -43,7 +43,7 @@ Every `/api/v1` route except `resolve` requires a key as a Bearer token:
 Authorization: Bearer dtg_pub_0123456789abcdef0123456789abcdef
 ```
 
-There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/settings/), which shows SDK and site keys again but the account key only once, when it is created or regenerated:
+There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/settings/). Settings shows SDK and site keys again; the account key is shown only once, when it is created or regenerated:
 
 | Key | Looks like | Use it in | Scopes |
 |---|---|---|---|
