@@ -197,6 +197,23 @@ first sketch, which would have counted every screen in the totals the dashboard
 sells; and a table of its own, a second copy of the queue, retention and erasure
 paths for one column of difference.
 
+**29. Each SDK keeps its logic in its own language; native code is shared as
+source (P5.2).** `flutter_dectog` (Dart) and `react-native-dectog` (TypeScript)
+each implement the attribution logic and sit on thin native layers, and the
+native reads (store referrers, pasteboard, paste control, Keychain id, install
+dates) live once, in framework-free Kotlin and Swift files both bridges call;
+the React Native repository copies them and its CI fails on a difference. One
+fixture set (the server's wire responses, the URL cases) and one harness per
+SDK keep the implementations equal. The React Native port took about 4,000
+lines of TypeScript and a 400-line bridge, with no native code of its own.
+Native iOS and Android SDKs, when built, are ports on the same terms: Swift and
+Kotlin logic held to the same fixtures, calling the same shared files directly.
+*Rejected:* standalone native SDKs (`DecTogKit`, `dectog-android`) that the
+Flutter and React Native packages wrap, Grovs' shape: every fix would wait for
+a native release and a wrapper release (R19), the Dart and TypeScript tests
+would only test bridges, and two of the four implementations would be thrown
+away.
+
 ## Rejected designs
 
 From the competitor teardown in the server repository (`docs/improvement-plan-2026-10.md`, section 6). Each appears in at least one competitor.
