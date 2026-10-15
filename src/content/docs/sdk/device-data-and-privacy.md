@@ -70,7 +70,7 @@ Without `deviceTier`:
 
 ### Post-install events
 
-`identify`, `trackConversion` and `trackEvent` send what you pass: `customer_id`, `name`, `email`, `phone`, revenue, currency, event names and metadata. The server stores the customer's name, email and phone **in plain text** on the customer record until the retention cutoff. See [Events](/sdk/events/).
+`identify`, `trackConversion`, `trackEvent` and `trackScreenView` send what you pass: `customer_id`, `name`, `email`, `phone`, revenue, currency, event names and metadata. The server stores the customer's name, email and phone **in plain text** on the customer record until the retention cutoff. See [Events](/sdk/events/).
 
 ### In-app clicks and opens
 

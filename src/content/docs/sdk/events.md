@@ -52,6 +52,26 @@ await dectog.trackEvent('level_up', data: {'level': 3});
 
 `eventName` is required; `data` becomes the event's metadata.
 
+## Screen views
+
+```dart
+await dectog.trackScreenView('product', params: {'id': 42});
+```
+
+A screen view is an event of type `screen_view`, named by the screen. It counts in no event total: not in Leads, Revenue, the re-open counts or a customer's events. It feeds the links page's **Screens after open**, which lists the screens people reached in the 30 minutes after a link opened the app (see [Links](/dashboard/links/#screens-after-open)). The name is trimmed and cut to 200 characters, and an empty name sends nothing. `params` keeps strings (cut to 256 characters), finite numbers and booleans and drops the rest; the SDK adds the previous screen it reported as `previous_screen`.
+
+To report every page route instead, add the observer to the navigator:
+
+```dart
+MaterialApp(
+  navigatorObservers: [DectogNavigatorObserver()],
+  // …
+);
+// go_router: GoRouter(observers: [DectogNavigatorObserver()], …)
+```
+
+It reports each page route the navigator shows, after a push, a replace or a pop, by `RouteSettings.name` (or `nameOf: (route) => …`); routes without a name, dialogs and sheets are skipped. A screen is reported once it has been on top for 350 ms (`debounce`), so a burst of transitions sends only the screen that settles, and the same screen twice in a row is sent once. Only the name goes unless `captureParams: {'id'}` allows route arguments, when `settings.arguments` is a map. Keep personal data out of screen names and parameters: they are stored like any event's metadata.
+
 ## Queue, flush, logout
 
 Events are appended to `.dectog_event_queue.jsonl` in the SDK's backup-excluded directory and delivered at least once:

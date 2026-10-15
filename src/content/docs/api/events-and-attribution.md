@@ -21,8 +21,8 @@ Each event:
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
-| `type` | string | yes | `identify`, `lead`, `conversion` or `custom`. |
-| `event_name` | string, 200 | no | Free text, for example `purchase` or `signup`. |
+| `type` | string | yes | `identify`, `lead`, `conversion`, `custom` or `screen_view`. |
+| `event_name` | string, 200 | `screen_view` only | Free text, for example `purchase` or `signup`; for a `screen_view`, the screen. |
 | `revenue` | number | `conversion` only (not for a cancel) | Must be finite and not negative. Stored as sent, and also converted into the account's revenue currency (`revenue_base`). |
 | `currency` | string, 8 | no | Upper-cased on storage (`usd` becomes `USD`). Totals convert it with the ECB reference rate of the event's day; no currency means the account's currency. |
 | `customer_id` | string, 200 | `identify` only | Your user id. |
@@ -88,6 +88,7 @@ The per-event errors in `rejected`:
 
 - **`identify`** upserts the customer row keyed by (`account`, `customer_id`). `name`, `email` and `phone` are stored **in plain text**. On a repeat `identify`, a non-null value in the new call overwrites the stored one and an omitted field keeps its stored value; `first_install_id` is set once, from the first `identify` that carried an `install_id`, and never replaced. The `identify` is also stored as an event row of type `identify`. See [Dashboard: Customers](/dashboard/customers/).
 - **Automatic signup lead.** The first `identify` of a customer the account has not seen before, sent from a fresh install (the batch's `install_id`, else the device's latest install, created within the last 30 days and not a reinstall), also stores a `lead` event with `event_name: "signup"` and `metadata: {"auto": true, "source": "identify"}`. A `lead` with `event_name: "signup"` that you post for a customer who already has one is counted in `duplicates` and not stored.
+- **`screen_view`** is a screen the app showed. It needs `event_name` and refuses `revenue`. It counts in no event total or list (per-link re-open events, the rollups, customers, the install detail, the SDK-build table, the events list unless asked for with `?type=screen_view`); the raw and per-subject exports and erasure include it. Per link, the dashboard lists the screens reached in the 30 minutes after the link opened the app (`GET /api/admin/links/:slug/screens`, on [Admin API](/api/admin-api/#links)).
 - **`lead`**, **`conversion`**, **`custom`** are stored as sent. `conversion` requires `revenue` unless it is a `cancel`. A conversion whose `store` + `transaction_id` + `transaction_type` the account already has is a duplicate. Net revenue, the figure every dashboard total shows, adds purchases and subtracts refunds, in the account's revenue currency. See [Revenue](/sdk/revenue/).
 
 Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. Per-link numbers credit an event to `open_slug` instead when it happened within the re-engagement window after that open: the window of the re-opening link's app (`reengagement_window_hours`, the default app's for a link bound to none), else `REENGAGEMENT_WINDOW_HOURS` (default 168 hours). It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row only when the deployment sets `STORE_RAW_IP=1`.

@@ -60,6 +60,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `identify` | `Future<void> identify({required String customerId, String? name, String? email, String? phone})` | Queues an `identify` event unless identical to the previous one; persists the customer id. |
 | `trackConversion` | `Future<void> trackConversion({required double revenue, String? currency, String? eventName, String? productId, String? transactionId, String? originalTransactionId, DectogStore? store, DectogPurchaseType? purchaseType, int? quantity, String? appStoreJws, DectogTransactionType transactionType = DectogTransactionType.purchase, Map<String, dynamic>? metadata})` | Queues a `conversion` event; `eventName` defaults to `purchase` (or `refund` / `cancel`). With `transactionId` and `store` a purchase reported twice counts once; a renewal names its first purchase as `originalTransactionId` and is credited to the same link; a refund is subtracted, a cancel counts nothing. `appStoreJws` is a StoreKit 2 `jwsRepresentation`: the server verifies it and takes the transaction id, price and currency from it. See [Revenue](#revenue-types). |
 | `trackEvent` | `Future<void> trackEvent(String eventName, {Map<String, dynamic>? data})` | Queues a `custom` event. |
+| `trackScreenView` | `Future<void> trackScreenView(String name, {Map<String, Object?>? params})` | Queues a `screen_view` event: `name` (trimmed, cut to 200 characters; an empty name sends nothing), the previous screen reported, and `params` reduced to strings (cut to 256 characters), finite numbers and booleans. Screen views count in no event total; the dashboard's **Screens after open** lists what people reached in the 30 minutes after a link opened the app. `DectogNavigatorObserver` calls it for you. |
 | `flush` | `Future<void> flush()` | Sends up to 100 queued events now (`POST /api/v1/events`). |
 | `logout` | `Future<void> logout()` | Flushes, then forgets the customer id. |
 | `setEnabled` | `Future<void> setEnabled(bool enabled)` | Persisted; until the app first calls it, `DectogConfig.enabled` decides (default `true`). `false` makes no request of the SDK's own: no click, app-open, install, claim, attribution, settings, resolve or device-ping request, no pasteboard read. Events are held on the device (up to the queue's 7 days), and the click and open of a link that arrives are held in memory. Links are still delivered to `onLinkClick`, as parsed, without `linkResolution`. `true` starts sending: the held events, the install registration if it never was, and the held link reports. A `false` in between drops the held link reports, not the held events. Calls the app makes itself (`createLink`, `getLinks`, `createTempLink`, `resolveLink`, …) still go out. |
@@ -421,6 +422,18 @@ A `StatelessWidget` hosting Apple's `UIPasteControl` on iOS 16 and newer; it bui
 `enum DectogPasteDisplayMode { iconAndLabel, iconOnly, labelOnly }`
 
 `enum DectogPasteCornerStyle { capsule, dynamic, fixed, large, medium, small }`
+
+### DectogNavigatorObserver
+
+```dart
+DectogNavigatorObserver({
+  Set<String> captureParams = const {},
+  String? Function(Route<dynamic> route)? nameOf,
+  Duration debounce = const Duration(milliseconds: 350),
+})
+```
+
+A `NavigatorObserver` for `MaterialApp(navigatorObservers: [...])` or `GoRouter(observers: [...])` that calls `trackScreenView` for each page route the navigator shows: on a push, a replace, and the route a pop reveals. Dialogs, sheets and other popup routes are not screens. The name is `nameOf(route)`, else `route.settings.name`; a route with neither is skipped. A screen is reported once it has been on top for `debounce`, so rapid transitions collapse into the one that settles, and the same screen twice in a row is reported once. Only the name is sent unless `captureParams` names route arguments (when `settings.arguments` is a map) to send with it, filtered like `trackScreenView`'s `params`. Reports before `initialize()` are dropped.
 
 ## Package version
 

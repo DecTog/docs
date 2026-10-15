@@ -187,6 +187,16 @@ not attribute themselves (AppLovin, Unity, ironSource and similar) and needs
 the advertising id consented on the device; *revisit* when a user asks for one
 of them.
 
+**28. Screen views are their own event type, outside every event total (P5.5,
+C13 default).** A `screen_view` names the screen in `event_name`, carries no
+revenue, and is left out of re-open counts, rollups, customer and install views
+and the events list; it stays in exports, erasure and retention activity. Its
+one read-out is per link: the screens reached within 30 minutes of the link
+opening the app. *Rejected:* a `custom` event named `screen_view`, the plan's
+first sketch, which would have counted every screen in the totals the dashboard
+sells; and a table of its own, a second copy of the queue, retention and erasure
+paths for one column of difference.
+
 ## Rejected designs
 
 From the competitor teardown in the server repository (`docs/improvement-plan-2026-10.md`, section 6). Each appears in at least one competitor.

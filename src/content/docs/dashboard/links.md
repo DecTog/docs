@@ -81,7 +81,11 @@ Two tabs, **Permanent {n}** and **Temporary {n}**, sit above a table. Next to th
 
 All per-link numbers are all-time totals, which is why they do not match the Overview's 7-, 30- or 90-day figures.
 
-Each row ends with **Edit** (a pencil; the label reads "Edit (custom social preview)" and the icon carries a dot when the link has its own preview), **Pause** or **Resume**, **Archive** or **Unarchive**, and **Delete** (a trash can). On the **Deleted** view the row offers **Restore** and **Delete permanently** instead. See [Pausing, archiving and deleting](#pausing-archiving-and-deleting).
+Each row ends with **Edit** (a pencil; the label reads "Edit (custom social preview)" and the icon carries a dot when the link has its own preview), **Screens after open** (a numbered list), **Pause** or **Resume**, **Archive** or **Unarchive**, and **Delete** (a trash can). On the **Deleted** view the row offers **Restore** and **Delete permanently** instead. See [Pausing, archiving and deleting](#pausing-archiving-and-deleting).
+
+### Screens after open
+
+The numbered-list icon opens a side panel with the screens people reached in your app right after this link opened it, for the last 7, 30 or 90 days. An open is the first launch of an install credited to the link, or a later re-open through it; a screen counts once per open when it was viewed within 30 minutes. **Reached** is how many opens got to the screen, with its share of the opens that reported any screen; **First screen** is how many started there, which shows whether the link's deep link landed people where you meant. At most 20 screens are listed. The screens come from the SDK's [`trackScreenView` or its navigator observer](/sdk/events/#screen-views); without them the panel stays empty. Screen views count in no event total on this page or any other.
 
 ### Temporary links
 
