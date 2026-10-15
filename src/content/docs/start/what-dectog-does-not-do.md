@@ -11,7 +11,7 @@ DecTog does deep linking and install attribution for your own links, on your own
 
 - **No SKAdNetwork or AdAttributionKit.** No conversion values, no postbacks, no ad-network attribution on iOS.
 - **No ad-network clicks and no postbacks.** Ad networks cannot send DecTog their clicks or impressions server to server, and DecTog sends no postbacks to Meta Ads, Google Ads, TikTok Ads or any other network. An install from an ad is attributed only when the ad's tap went through a DecTog link. Why, and when this would change: [Design decisions](/start/design-decisions/) (27).
-- **Two ad-platform signals only.** The Apple Search Ads token (AdServices, resolved with Apple) and Meta's on-device install referrer from the Facebook and Instagram apps, which the SDK reads only when your app sets `fbAppId` in `DectogConfig`. The referrer credits the DecTog link it names, not an ad.
+- **Two ad-platform signals only.** The Apple Search Ads token (AdServices, resolved with Apple) and Meta's on-device install referrer from the Facebook and Instagram apps, which the SDK reads on Android when the app has a Facebook App ID (`DectogConfig.fbAppId`, else the one saved on the Apps page). The referrer credits the DecTog link it names, not an ad.
 - **Advertising identifiers only on request, and never matched on.** The core SDK never reads the GAID or the IDFA and never shows the App Tracking Transparency prompt; an app that wants them adds the separate `flutter_dectog_adid` package and asks for tracking itself. The server stores the id per install and joins it to nothing: attribution never uses it. There is no identity graph and no cross-app or cross-account identity: device ids are vendor-scoped and stay inside one account.
 
 ## Probabilistic matching

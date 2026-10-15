@@ -174,9 +174,9 @@ export function dectogHeaders(apiKey, rawBody = "") {
 
 ## SDK identity
 
-SDKs also send `x-dectog-sdk: <name>/<version>`, for example `flutter_dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
+SDKs also send `x-dectog-sdk: <name>/<version>`: `flutter_dectog/1.0.0`, `react-native-dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
 
-A self-hosted deployment can set `MIN_SDK_VERSION` (for example `1.1.0`) to retire old builds: an identified SDK older than that answers `400` with code `sdk_too_old` and the `min_version`. Callers that do not identify as an SDK are not checked.
+A self-hosted deployment can set `MIN_SDK_VERSION` to retire old builds, per SDK (`flutter_dectog/1.1.0, react-native-dectog/1.0.2`) or as a bare version for every SDK without its own entry (`1.1.0`): an identified SDK older than its minimum answers `400` with code `sdk_too_old` and the `min_version`. An SDK the setting does not name, and callers that do not identify as an SDK, are not checked.
 
 ## Rate limits
 

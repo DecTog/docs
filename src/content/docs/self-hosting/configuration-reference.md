@@ -49,7 +49,7 @@ Bindings:
 |---|---|---|---|
 | `DB` (D1) | database `dectog`, id `local-dev`, local state under `.wrangler/state` | database `dectog`, your id | The only data store. `migrations_dir` is `migrations` in both. |
 | `ASSETS` (static assets) | none | `../web/out`, `run_worker_first: true`, `html_handling: auto-trailing-slash` | The dashboard and marketing export built by `npm run build:static` in `apps/web`. |
-| `EXPORTS` (R2, optional) | none | none until you add it | Holds CSV exports larger than `EXPORT_STREAM_MAX_ROWS`, each deleted after 7 days. Create a bucket (`wrangler r2 bucket create dectog-exports`) and add `"r2_buckets": [{ "binding": "EXPORTS", "bucket_name": "dectog-exports" }]` to `env.production` in `wrangler.jsonc`. Without it a larger export answers `422 export_too_large`. |
+| `EXPORTS` (R2, optional) | none | none until you add it | Holds CSV exports larger than `EXPORT_STREAM_MAX_ROWS`, each deleted after 7 days. Create a bucket (`wrangler r2 bucket create dectog-exports`) and add `"r2_buckets": [{ "binding": "EXPORTS", "bucket_name": "dectog-exports" }]` to `env.production` in `wrangler.jsonc`; on a deployment made with `npm run setup`, pass `--exports-bucket dectog-exports` to it instead. Without it a larger export answers `422 export_too_large`. |
 | `ASA_FETCHER`, `WEBHOOK_FETCHER`, `OG_FETCHER`, `GOOGLE_FETCHER`, `CF_API_FETCHER` | test only | never | Service bindings the test suite uses to stand in for Apple, your webhook, fetched social-preview pages, Google's token endpoint and Cloudflare's custom hostnames and DNS-over-HTTPS APIs. In production the Worker uses global `fetch`. |
 
 ## Secrets

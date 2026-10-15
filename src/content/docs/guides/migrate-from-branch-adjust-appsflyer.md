@@ -118,4 +118,4 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 
 ## What DecTog does not do
 
-DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).
+DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).

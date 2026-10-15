@@ -23,6 +23,8 @@ Custom link domains (`go.yourbrand.com`, one per account) use [Cloudflare for Sa
 5. Route the customers' hostnames to the Worker: uncomment the `*/*` route next to `dectog.com/*` and `*.dectog.com/*` in `wrangler.jsonc`. The existing routes already cover every host on the zone, so the new one adds only custom hostnames.
 6. Apply migration `0052_custom_domains` and deploy.
 
+On a deployment made with `npm run setup`, steps 4 and 5 are one option: put the two secrets with `--config wrangler.self-host.jsonc` in place of `--env production`, and pass `--custom-domain-target domains.example.com` to setup, which adds the variable and the `*/*` route (setup rewrites its config on every run, so pass it every time). The [Terraform module](/self-hosting/deploy/#infrastructure-as-code-with-terraform) with `custom_domains_origin = true` does step 2.
+
 Cloudflare includes a number of custom hostnames with each plan and charges per hostname beyond it; see Cloudflare for SaaS pricing.
 
 ## How the Worker handles a domain
