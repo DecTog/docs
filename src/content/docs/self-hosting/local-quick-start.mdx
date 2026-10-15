@@ -184,7 +184,7 @@ Run the scheduled jobs locally. `npm run dev` does not fire cron triggers; start
 ```bash
 npx wrangler dev --port 8787 --test-scheduled
 curl "http://localhost:8787/__scheduled?cron=17+3+*+*+*"    # daily sweep
-curl "http://localhost:8787/__scheduled?cron=7+*+*+*+*"     # hourly Apple Search Ads retry
+curl "http://localhost:8787/__scheduled?cron=7+*+*+*+*"     # hourly: rollups, retries, exports, custom domains
 ```
 
 What each trigger does is on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). When you are ready for a real domain, continue with [Deploy to Cloudflare](/self-hosting/deploy/).
