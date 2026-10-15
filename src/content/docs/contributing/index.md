@@ -39,8 +39,9 @@ DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog
 | `lib/src/models/` | `DectogConfig`, `DectogLink`, `DectogTempLink`, `DectogLinkResolution`, `DectogLinkClick`, `DectogAppInstallRequest`, `DectogAppInstallResponse`, `DectogClickParams`, `DectogError` |
 | `lib/src/services/` | Device identity and hardware, the install referrer service, the install state store (the `.dectog_install.json` sentinel), the event queue, request signing, the retry policy, the sensitive-URL filter, the link deduper |
 | `lib/src/widgets/dectog_paste_button.dart` | `DectogPasteButton` |
-| `android/src/main/kotlin/app/dectog/flutter_dectog/` | `DectogIdentifiersPlugin.kt`, `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
-| `ios/flutter_dectog/` | The Swift package: `DectogIdentifiersPlugin.swift`, `DectogInstallDates.swift`, `DectogKeychain.swift`, `DectogPasteControl.swift`; `ios/flutter_dectog.podspec` for CocoaPods hosts |
+| `android/src/main/kotlin/app/dectog/core/` | The framework-free Android reads every DecTog SDK shares as source: `DectogDevice.kt` (device id, carrier, package and launch info, Meta referrer, App Links state), `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
+| `android/src/main/kotlin/app/dectog/flutter_dectog/` | `DectogIdentifiersPlugin.kt`, which maps the method channel onto `app.dectog.core` |
+| `ios/flutter_dectog/` | The Swift package. Framework-free, shared as source: `DectogDevice.swift`, `DectogInstallDates.swift`, `DectogKeychain.swift`, `DectogPasteTargetView.swift`; Flutter glue: `DectogIdentifiersPlugin.swift`, `DectogPasteControl.swift`. `ios/flutter_dectog.podspec` for CocoaPods hosts |
 | `example/` | The example app; reads `env/dev.json` for `DECTOG_API_KEY`, `DECTOG_BASE_URL`, `DECTOG_LINK_ROOT_DOMAIN` |
 | `test/` | Unit tests for the models, the referrer service, the state store, the event queue, signing, the retry policy, the URL parser and the paste button |
 | `doc/react_native_port.md` | The draft port guide; see [Porting the SDK](/contributing/porting-the-sdk/) |
