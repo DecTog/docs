@@ -38,6 +38,8 @@ The quickest way to exercise every SDK path is the local worker plus the bundled
 
    In your own app the equivalent is `DectogConfig(apiKey: ..., baseUrl: 'http://10.0.2.2:8787')` on Android and `baseUrl: 'http://localhost:8787'` on iOS, with no `linkRootDomain`.
 
+   The example is Trails, a small app: a link opens it on a trail, a new install lands on the shared trail after signing up, invites go through the referral link, a demo purchase goes through `trackConversion`, and every screen is reported. Its `README.md` lists how to try each flow; its Debug screen runs `diagnostics()`, `getAttributionData()` and the consent switch.
+
 3. Fire links at the running app. The example app's manifest carries intent filters for `dectog://`, `http://10.0.2.2` and `https://localhost`; its `Info.plist` registers the `dectog` scheme.
 
    ```bash
