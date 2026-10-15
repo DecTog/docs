@@ -36,7 +36,7 @@ claude mcp add --transport http dectog https://app.dectog.com/mcp \
 
 Other clients take the same two values, the URL and the `Authorization` header, in their MCP settings.
 
-The DecTog plugin for Claude Code bundles the same server with four skills: links and the API, the Flutter SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
+The DecTog plugin for Claude Code bundles the same server with five skills: links and the API, the Flutter SDK, the React Native SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
 
 ```text
 /plugin install dectog --marketplace DecTog/dectog
