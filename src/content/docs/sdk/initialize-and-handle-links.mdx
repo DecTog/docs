@@ -41,7 +41,7 @@ Rules:
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. With debug logging on, the SDK warns when it is given an account key. |
+| `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. |
 | `baseUrl` | `String?` | `null` → `https://app.dectog.com` | API base URL. Set it only when self-hosting. Trailing slashes are stripped. |
 | `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). Set it when self-hosted links live on a different host than the API. |
 | `linkDomains` | `List<String>` | `[]` | Your [custom link domains](/links/custom-domains/), like `go.yourbrand.com`: `https://go.yourbrand.com/{slug}` is a link of your account. The SDK also learns the active domain from the server after its first answer; listing it covers a link that opens the app on its very first start. |
@@ -52,6 +52,8 @@ Rules:
 | `advertisingIdProvider` | `Future<DectogAdvertisingId?> Function()?` | `null` | Reads the IDFA or GAID; pass `DectogAdId.provider` from `flutter_dectog_adid`. |
 | `fbAppId` | `String?` | `null` → the Facebook App ID saved in the dashboard | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
 | `persistDeviceId` | `bool` | `true` | Keep the first iOS IDFV in the Keychain so the device id survives reinstall. |
+| `enabled` | `bool` | `true` | Whether collection is on before the app calls `setEnabled`. `false` waits for consent; see [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent). |
+| `environment` | `DectogEnvironment?` | `null` | The environment this build's key should belong to, `live` or `test`. `diagnostics()` warns when the key belongs to the other one. See [Testing](/sdk/testing/). |
 
 The config also exposes `DectogConfig.defaultBaseUrl` (`https://app.dectog.com`), `DectogConfig.defaultLinkRootDomain` (`dectog.com`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
 
@@ -84,6 +86,7 @@ An incoming URL is a DecTog link when it matches one of these forms. `baseHost` 
 | Form | Example | Used for |
 |---|---|---|
 | `https://{username}.{root}/{slug}` | `https://acme.dectog.com/launch` | Hosted and self-hosted subdomain links. The username must contain no dot, and the host must differ from `baseHost`. |
+| `https://{domain}/{slug}`, for a host in `linkDomains` or the custom domain the server names | `https://go.yourbrand.com/launch` | Your [custom link domain](/links/custom-domains/). The link belongs to the key's own account, which the SDK reads from the server. `{domain}/r/{username}/{slug}` works too. A host equal to `baseHost` or under `root` is never a custom domain. |
 | `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
 | any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |
 | any non-http(s) scheme whose query carries `dtg_l={username}/{slug}` | `myapp://products/42?dtg_click=…&dtg_l=acme/launch` | Custom-scheme opens and the Android `intent://` bounce. The host and path are the app's own route; the link comes from `dtg_l`. |

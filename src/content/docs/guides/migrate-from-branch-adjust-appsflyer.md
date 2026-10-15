@@ -45,7 +45,8 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 | NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`DectogCollection.pasteboard`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `DectogPasteButton` renders `UIPasteControl` for late pastes. |
 | Install referrer readers (Play, Huawei, Samsung, Xiaomi) | Built in, with retries. Play, Huawei and vivo need no extra library. Samsung and Xiaomi activate when the host app adds their libraries. See [Deterministic attribution](/sdk/deterministic-attribution/). |
 | Reinstall event | `isReinstall: true`, `installState: 'reinstall'`. A reinstall goes through the ladder and the fingerprint like a first install; the dashboard leaves it out of the Installs KPI and the per-link counts. |
-| Journeys, Universal Email, Deepviews, Data Feeds, Data Export API | No equivalent |
+| Data Export API | The [raw export](/api/export/) of clicks, installs, opens and events, with the account key |
+| Journeys, Universal Email, Deepviews, Data Feeds | No equivalent |
 
 ## Adjust
 
@@ -65,7 +66,7 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | `retry_in` | The SDK honors `Retry-After`: up to 10 seconds in-process, longer waits defer to the next launch |
 | Apple Search Ads through AdServices | `DectogCollection.appleSearchAdsToken` in `collect` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
 | Server callbacks | Webhooks |
-| Reattribution | No equivalent. A late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. |
+| Reattribution | No equivalent for installs: a late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. Events within the re-engagement window after a link opens the installed app (7 days by default, per app) count for that link; see [Events](/sdk/events/#how-events-reach-a-link). |
 | SKAdNetwork, ad-network integrations | None |
 
 ## AppsFlyer
@@ -86,7 +87,7 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | `logEvent` with `af_revenue` and `af_currency` | `trackConversion(revenue: ..., currency: ...)` |
 | `af_sig` | The request signature on every SDK call |
 | Push API | Webhooks: installs, conversions, leads, opens and referrals |
-| Pull API, Master API | `GET /api/v1/links` (lifetime `click_count`) and the dashboard |
+| Pull API, Master API | The [raw export](/api/export/) of clicks, installs, opens and events, and the MCP [`analytics` tool](/guides/automation-and-agents/#mcp-server) for totals by link, campaign, country and other dimensions, both with the account key; `GET /api/v1/links` (lifetime `click_count`); the dashboard |
 | Protect360 | Eight rules: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. Strict fraud mode makes flagged installs count as organic. |
 | Apple Search Ads | `appleSearchAds` on the verdict |
 | SKAdNetwork, Conversion Studio, ad-network integrations | None |
@@ -117,4 +118,4 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 
 ## What DecTog does not do
 
-DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, no cohort or LTV reports yet, and an SDK for Flutter only. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).
+DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).

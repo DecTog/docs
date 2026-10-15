@@ -133,7 +133,7 @@ Checks run in this order and stop at the first failure:
 | 400 | `{"error": {"code": "invalid_request", "message": "Invalid ios_deep_link_path: must be a relative path, not a full URL (no \":\": no scheme, no spaces, no \"#\"/\";\")"}}`, `{"error": {"code": "invalid_request", "message": "Invalid android_deep_link_path: deep link path is too long (max 512 chars)"}}` |
 | 400 | `{"error": {"code": "invalid_request", "message": "Invalid redirect_url: must be a valid http(s) URL"}}`, same for `fallback_url` |
 
-The server also rejects `og_title` or `og_description` longer than 150 characters and an `og_image_url` that is not an http(s) URL. On `POST` the response for those is not a clean 400, so validate the three preview fields before sending them; `PUT` returns the 400 strings listed below.
+The server also rejects `og_title` or `og_description` longer than 150 characters and an `og_image_url` that is not an http(s) URL, with the `400` strings listed under [Update a link](#update-a-link).
 
 ```bash title="Create a link"
 dectog POST /api/v1/links '{

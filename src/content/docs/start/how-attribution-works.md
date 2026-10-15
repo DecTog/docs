@@ -26,7 +26,7 @@ On the first launch the SDK registers the install once (an idempotent `install_a
 
 - the Google Play install referrer, or the Huawei, Samsung, Xiaomi or vivo one, waiting at most 5 seconds (`installReferrerTimeout`);
 - the pasteboard, on iOS by default (`DectogCollection.pasteboard`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
-- Meta's on-device install referrer on Android, when `DectogConfig.fbAppId` is set;
+- Meta's on-device install referrer on Android, when the app has a Facebook App ID (`DectogConfig.fbAppId`, else the one saved on the Apps page);
 - the device tier (model, OS, language, screen, connectivity, carrier), on by default, which the fingerprint needs;
 - the Apple Search Ads token when `collect` names `appleSearchAdsToken`.
 
@@ -114,7 +114,7 @@ Every install is checked against explainable rules. The hits ride on the verdict
 | `stale_meta` | The same for Meta's install referrer |
 | `click_reuse` | A deterministic signal named a click another device's install already consumed |
 
-With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the `app.installed` webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
+With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the `app.installed` webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the app the verdict concerns: the credited or routed link's app, else the install's own app, else the oldest app.
 
 ## Apple Search Ads
 

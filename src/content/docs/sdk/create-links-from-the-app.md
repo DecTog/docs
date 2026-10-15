@@ -128,6 +128,6 @@ try {
 
 For API errors `e.type` is `DectogErrorType.api`, `e.statusCode` is the HTTP status, `e.code` the server's error code, `e.requestId` the request id, and `e.details` every field of the server's `error` object. Network failures and timeouts (30 seconds per request) throw `DectogErrorType.network` with no status code. Calling any of these methods before `initialize` throws `DectogErrorType.configuration`.
 
-:::note[Invalid social fields on create]
-`updateLink` and `updateTempLink` answer 400 for an `ogTitle` or `ogDescription` over 150 characters or a non-`http(s)` `ogImageUrl`. On `createLink` and `createTempLink` the same input currently surfaces as a server error (HTTP 500) instead of a 400. Validate those fields in the app before creating.
+:::note[Invalid social fields]
+`createLink`, `createTempLink`, `updateLink` and `updateTempLink` answer 400 for an `ogTitle` or `ogDescription` over 150 characters or a non-`http(s)` `ogImageUrl`.
 :::

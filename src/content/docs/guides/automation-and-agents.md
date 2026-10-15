@@ -187,7 +187,7 @@ while :; do
 done
 ```
 
-There is no list endpoint for temporary links on `/api/v1`; read them one at a time with `GET /api/v1/temp-links/{slug}`. Installs, opens, leads and revenue per link are on the dashboard only. The dashboard's own API uses a cookie session and is not meant for scripts; see [Admin API](/api/admin-api/).
+There is no list endpoint for temporary links on `/api/v1`; read them one at a time with `GET /api/v1/temp-links/{slug}`. Installs, opens, leads and revenue per link come from the MCP server's [`analytics` tool](#mcp-server) with `group_by: link`, or row by row from the [raw export](/api/export/); both need the account key. The dashboard's own API uses a cookie session and is not meant for scripts; see [Admin API](/api/admin-api/).
 
 ## A temporary link for every CI build
 

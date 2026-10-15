@@ -15,6 +15,9 @@ like a first install and is credited when a signal matches; it carries
 Only `install_state: 'update'` and a reused click skip the fingerprint.
 *Rejected:* skipping matching for reinstalls, which would lose re-acquisition
 campaigns. *Revisit* if re-attribution windows become a feature. (2026-10-13)
+*Note (2026-10-15):* the fingerprint is also skipped for an install without an
+IP hash, a registration that carries `recovered_from` (P2.8), and an app whose
+**Probabilistic match** switch is off (P2.15).
 
 **2. v1 DELETE answers 404 for an unknown slug; the admin DELETE answers 200.**
 Different clients: an SDK or script wants to know the slug was wrong; the
@@ -47,6 +50,9 @@ uptime monitors as visitors.
 **7. Webhook secrets are write-only.** The apps list returns a hint (the last
 four characters); a generate/rotate route returns a new `whsec_` secret once.
 *Rejected:* returning the secret on every GET and showing it in the form.
+*Note (2026-10-15):* since webhooks moved to their own table (P3.1, migration
+0049), the webhooks list returns no secret and no hint; creating a webhook and
+`POST /api/admin/webhooks/:id/rotate-secret` return the secret once.
 
 **8. Sign-in is limited per IP, never per account.** 10 attempts a minute per
 hashed IP; reset requests 5 per IP and 3 per address. *Rejected:* a per-account
@@ -89,6 +95,9 @@ every scope. *Rejected:* moving the account key into `api_keys`, which needs a
 rebuild of the `users` table (its hash column is `UNIQUE`) on a production
 database for no user-visible gain; and one key for everything, which put a
 link-deleting credential in every app binary.
+*Note (2026-10-15):* there are now three kinds: site keys (`dtg_site_…`, P3.13)
+are `api_keys` rows of kind `site` that web pages carry for `dectog.js`, limited
+to the two web routes and the origins each key lists.
 
 **16. One contract table generates the spec and the route index.** Every
 `/api` route is declared once in `src/contracts.ts`; `/openapi.json` and the
@@ -147,6 +156,8 @@ first-party cookie, waits for `dectog.consent(true)` in the EU and EEA, the UK
 and Switzerland, treats Global Privacy Control as a no, and uses its own key
 kind (`dtg_site_`), one per account. *Rejected:* `sessionStorage`, which loses
 the click when the visitor comes back in a new tab, and consent in the EU only.
+*Note (2026-10-15):* an account can hold up to 10 active site keys, each with
+its own list of origins.
 
 **23. An in-app `handleUrl` open counts as an open, not a click (P3.15, C19
 default).** The link was already tapped inside the app, so no click row is
@@ -233,7 +244,7 @@ From the competitor teardown in the server repository (`docs/improvement-plan-20
 | R11 | Row-per-impression storage and recomputed attribution views | D1's size cap and read billing; verdicts are computed at write time |
 | R12 | Documenting ahead of code | Docs state what the code does; gaps are tracked in `docs/FOLLOW-UPS.md` |
 | R13 | A CLA on the AGPL server | Inbound = outbound is the simpler story (open decision C20) |
-| R14 | Silent dedupe of events | Batch answers will say what was accepted, duplicated and rejected (P2.4) |
+| R14 | Silent dedupe of events | Batch answers will say what was accepted, duplicated and rejected (P2.4). *Note (2026-10-15):* done in P2.4 |
 | R15 | Fingerprint first, deterministic signal as the fallback | A deterministic signal never waits behind a guess |
 | R16 | Holding the app's own events until attribution resolves | Events are independent of the verdict; the server stamps `matched_slug` |
 | R17 | Requiring apps to turn off Flutter's own deep linking | The `app_links` stream coexists with `go_router` and Navigator 2.0 |

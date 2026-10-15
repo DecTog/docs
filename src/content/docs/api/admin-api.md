@@ -14,8 +14,8 @@ Everything under `/api/admin` and `/api/auth` exists to serve the dashboard. Rou
 - Authentication is a cookie, `dectog_session`, set by login, signup and Google sign-in. It holds an HS256 JWT signed with `JWT_SECRET` that expires after 30 days. Flags: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` only when the request came over https. Login without `remember` sets a browser-session cookie (the token inside still lasts 30 days); `remember: true`, signup and Google sign-in set `Max-Age` of 30 days.
 - Logout deletes the cookie; tokens are never revoked server-side. A password reset does not end existing sessions. Rotating `JWT_SECRET` signs everyone out.
 - Routes marked **session** answer `401` with code `not_authenticated` without a cookie and `401` with code `invalid_session` for a bad or expired token or a deleted user.
-- Routes marked **owner** additionally require the `owner` role (`403 {"error": {"code": "forbidden", "message": "Owner access required"}}`). The owner is the account created by bootstrap or the demo seed; signup and Google sign-in always create `user`, and there is no route to change roles. See [Account and sign-in](/dashboard/account-and-sign-in/).
-- Every query is scoped to the signed-in account. There is no cross-account view.
+- Routes whose **Auth** is **owner** additionally require the platform `owner` role (`403 {"error": {"code": "forbidden", "message": "Owner access required"}}`), which is separate from the team roles under [Teams](#teams). The owner is the account created by bootstrap or the demo seed; signup and Google sign-in always create `user`, and there is no route to change roles. See [Account and sign-in](/dashboard/account-and-sign-in/).
+- Every query is scoped to the account the dashboard shows: your own, one you joined (see [Teams](#teams)), or the test environment of either. There is no cross-account view.
 - CORS on `/api/admin/*`: `access-control-allow-origin` is `WEB_URL`, with `access-control-allow-credentials: true`, `vary: Origin` and allowed headers `authorization, content-type, x-request-id`; `x-request-id` is exposed. `OPTIONS /api/*` answers 204.
 - Errors use the same `{"error": {"code", "message", "request_id"}}` envelope as the v1 API ([Errors](/api/overview/#errors)). A body that is not valid JSON answers `400 {"error": {"code": "invalid_request", "message": "Invalid JSON body"}}`.
 
@@ -45,7 +45,7 @@ Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_
 | `GET /api/auth/google/pending` | pending cookie | The parked identity for the username step. | `200 {email, name}`; `404 Google sign-in expired — try again` |
 | `POST /api/auth/google/complete` | pending cookie | `{username}`. Creates the account with a random password (set a real one through forgot-password). | `201 {user: {id, email, username, role: "user"}, api_key}`; `401 Google sign-in expired — try again`; `403 Signup is currently closed`; `400` username rules; `409 That username is taken` or `An account with this Google email already exists — sign in instead` |
 
-Password rule for signup and reset: 8 to 72 characters with at least one lowercase letter, one uppercase letter and one digit (`Password must be at least 8 characters`, `Password must be less than 72 characters`, `Password must include a lowercase letter`, `Password must include an uppercase letter`, `Password must include a number`). Username rule: `^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$` after lower-casing; reserved: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`.
+Password rule for signup and reset: 8 to 72 characters with at least one lowercase letter, one uppercase letter and one digit (`Password must be at least 8 characters`, `Password must be less than 72 characters`, `Password must include a lowercase letter`, `Password must include an uppercase letter`, `Password must include a number`). Username rule: `^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$` after lower-casing; reserved: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-` (the prefix of test environments).
 
 ### Bootstrap
 
@@ -73,7 +73,7 @@ See [Dashboard: Settings](/dashboard/settings/).
 
 ## Teams
 
-Every session route needs a team role in the account it acts on, and the role is checked before the handler runs: a role that falls short answers `403 {code: "insufficient_role", role, required_role}`, and a route with no entry in the contract table answers `403` whatever the role. By default a viewer may read and a member may change; reads of keys, raw exports, customers, the audit log and webhook deliveries need a member, and keys, the team, the custom domain, the account's settings, the test environment and erasures need an owner. `GET /api/admin/settings` returns `api_key: null` to anyone but an owner.
+Every session route needs a team role in the account it acts on, and the role is checked before the handler runs: a role that falls short answers `403 {code: "insufficient_role", role, required_role}`, and a route with no entry in the contract table answers `403` whatever the role. By default a viewer may read and a member may change; reads of keys, raw exports, customers, the audit log and webhook deliveries need a member, and keys, the team, the custom domain, the account's settings, the test environment and erasures need an owner. `GET /api/admin/settings` returns the account key's prefix, never the key, to every role.
 
 | Method and path | Role | Purpose | Response |
 |---|---|---|---|
@@ -210,7 +210,7 @@ App fields and their validation messages (`400`). Every text field is trimmed be
 | `mmp_pid` | Optional media source for the handoff: 1 to 100 letters, digits, `.`, `-`, `_` |
 | `low_entropy_window_hours` | Whole number 1 to 720, or `null` / `""` for the deployment default: `low_entropy_window_hours must be a whole number of hours between 1 and 720` |
 | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
-| `fb_app_id` | Free text, trimmed. The worker only stores it; the SDK reads Meta's install referrer when `DectogConfig.fbAppId` is set in the app, not based on this field. |
+| `fb_app_id` | Free text, trimmed. Served to the SDK by `GET /api/v1/sdk-config`; the SDK reads Meta's install referrer for this id unless `DectogConfig.fbAppId` in the app sets one. |
 
 ## Analytics
 

@@ -113,7 +113,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 | 120 per minute | The interstitial beacon `POST /_/collect`, per IP | 429 with an empty body; this limiter also returns 429 when its database write fails |
 | 5 per hour | The contact form, per IP | `Too many messages — try again later`, no `Retry-After` |
 
-`Retry-After` is the number of seconds until the current one-minute window ends, at least 1. Windows are aligned to the clock, not sliding. When the limiter's database is unavailable, SDK and API requests go through. The SDK honors `Retry-After` up to 10 seconds in-process and defers longer waits to the next launch; event batches rejected with 429 stay queued. Scripts should sleep for `Retry-After` seconds. See [API overview](/api/overview/).
+`Retry-After` is the number of seconds until the current one-minute window ends, at least 1. The hosted service, and a deployment set up with `npm run setup`, count the account, device, IP and beacon limits with Cloudflare's Rate Limiting bindings, per Cloudflare location and approximately; without the bindings the counters live in D1, in windows aligned to the clock, not sliding. When the limiter's binding or database fails, SDK and API requests go through. The SDK honors `Retry-After` up to 10 seconds in-process and defers longer waits to the next launch; event batches rejected with 429 stay queued. Scripts should sleep for `Retry-After` seconds. See [API overview](/api/overview/).
 
 ## Webhooks not arriving
 

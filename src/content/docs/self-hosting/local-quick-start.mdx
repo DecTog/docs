@@ -43,7 +43,7 @@ A local DecTog is two processes. The Cloudflare Worker runs on port 8787 with a 
    GOOGLE_CLIENT_SECRET=
    ```
 
-   Set `JWT_SECRET` before you bootstrap: it signs the dashboard session and also encrypts the viewable copy of each API key, so a key created while it is empty can only be shown as a mask. Leave `IP_SALT` empty and the worker falls back to `dtg-default-salt` with a console warning (production refuses to start a request without it). Leave `BOOTSTRAP_TOKEN` empty and the bootstrap call needs no header. The Google fields stay empty unless you test Sign in with Google (the redirect URI is `http://localhost:3000/api/auth/google/callback`).
+   Set `JWT_SECRET` before you bootstrap: it signs the dashboard session and also encrypts the viewable copy of each SDK and site key, so a key created while it is empty can only be shown as a mask. Leave `IP_SALT` empty and the worker falls back to `dtg-default-salt` with a console warning (production refuses to start a request without it). Leave `BOOTSTRAP_TOKEN` empty and the bootstrap call needs no header. The Google fields stay empty unless you test Sign in with Google (the redirect URI is `http://localhost:3000/api/auth/google/callback`).
 
 3. Start the worker.
 
@@ -69,10 +69,10 @@ curl -s -X POST -H 'x-bootstrap-token: <BOOTSTRAP_TOKEN>' http://localhost:8787/
 ```
 
 ```json
-{"ok":true,"email":"demo@dectog.local","username":"demo","api_key":"dtg_…","demo":true}
+{"ok":true,"email":"demo@dectog.local","username":"demo","api_key":"dtg_…","sdk_key":null,"demo":true}
 ```
 
-The demo password is `demo1234`; it is not in the response. The demo account's key is stored hash-only, so Settings shows the masked prefix until you regenerate it. Copy the key from this response if you want to use it with the SDK.
+The demo password is `demo1234`; it is not in the response. The demo account's key is stored hash-only, like every account key, so Settings shows only its prefix; **Regenerate** replaces it and shows the new key once. Copy the key from this response if you want to use it with the SDK.
 
   </TabItem>
   <TabItem label="One owner account (JSON body)">
@@ -84,10 +84,10 @@ curl -s -X POST http://localhost:8787/api/admin/bootstrap \
 ```
 
 ```json
-{"ok":true,"email":"you@example.com","username":"acme","api_key":"dtg_…","demo":false}
+{"ok":true,"email":"you@example.com","username":"acme","api_key":"dtg_…","sdk_key":"dtg_pub_…","demo":false}
 ```
 
-This creates exactly that account with role `owner` and no demo data. The key is shown here and, because `JWT_SECRET` was set, again in Settings.
+This creates exactly that account with role `owner` and no demo data. The account key is shown only here; Settings keeps its prefix. The SDK key is listed again in Settings, because `JWT_SECRET` was set.
 
   </TabItem>
 </Tabs>

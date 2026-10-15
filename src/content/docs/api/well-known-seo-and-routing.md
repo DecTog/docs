@@ -136,7 +136,7 @@ A HEAD request runs the same handler as GET and the response is returned without
 `GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 30, "applied": 30, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 62, "applied": 62, "missing": [] } }
 ```
 
 It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.

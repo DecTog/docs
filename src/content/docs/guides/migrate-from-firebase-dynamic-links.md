@@ -16,13 +16,13 @@ On your own deployment the API base is `PUBLIC_BASE_URL` and links use your `ROO
 | Firebase Dynamic Links | DecTog | Notes |
 |---|---|---|
 | Firebase project | Account: one username, an account key for servers and SDK keys for apps | The username is the link subdomain. See [Concepts](/start/concepts/). |
-| Dynamic link domain (`*.page.link` or your own) | `https://{username}.dectog.com` | One subdomain per account. The hosted service does not serve links on other domains. |
+| Dynamic link domain (`*.page.link` or your own) | `https://{username}.dectog.com`, or a subdomain of your own as a [custom domain](/links/custom-domains/), where the deployment offers it | One subdomain per account, and at most one custom domain. |
 | Short dynamic link | Link: `slug` plus stored routing | You choose the slug (`[A-Za-z0-9_-]`, up to 128 characters). Slugs are unique across permanent and temporary links. |
 | `suffix.option: UNGUESSABLE` | Temporary link with an automatic slug `t_<10 hex>` | Temporary links expire after `ttlSeconds` (60 seconds to 30 days). See [Temporary links](/links/temporary-links/). |
 | Long dynamic link (every parameter in the URL) | No equivalent. Every link is stored. Per-tap overrides go in `dec_*` query parameters. | See [URL parameters](/links/url-parameters/). |
 | App registered in Firebase | App on the Apps page | Package, SHA-256 fingerprints, bundle ID, Team ID, store URLs, custom schemes. See [Apps](/dashboard/apps/). |
 | Automatic `assetlinks.json` and AASA | Generated from the registered apps and served on `https://{username}.dectog.com/.well-known/` | See [Platform setup](/sdk/platform-setup/). |
-| Link analytics (`getLinkStats`) | Overview and Links in the dashboard; `click_count` on `GET /api/v1/links` | See [Overview](/dashboard/overview/). |
+| Link analytics (`getLinkStats`) | Overview and Links in the dashboard; `click_count` on `GET /api/v1/links`; installs, opens, leads and revenue per link from the MCP `analytics` tool or the raw export | See [Overview](/dashboard/overview/) and [Export raw data](/api/export/). |
 | Deferred deep link on first open | Install verdict: `onAppInstalled` with `matched`, `routing`, `deepLink`, `link` and `customParameters` | See [Install attribution](/sdk/install-attribution/). |
 
 ## URL parameters
@@ -66,7 +66,7 @@ Two routing differences to plan for:
 | `analyticsInfo.googlePlayAnalytics` | The link's own `utm_*` fields (added to its web destinations), or `utm_*` on the URL you share |
 | `suffix.option` | Your own `slug`; temporary links get `t_<10 hex>` when you omit it |
 | API key in the query string | `Authorization: Bearer dtg_…` plus the request signature |
-| `GET …/v1/{shortLink}/linkStats` | `GET /api/v1/links` returns `click_count` per link; installs and opens are on the dashboard |
+| `GET …/v1/{shortLink}/linkStats` | `GET /api/v1/links` returns `click_count` per link; installs and opens per link come from the MCP [`analytics` tool](/guides/automation-and-agents/#mcp-server) or the [raw export](/api/export/), with the account key |
 
 Every `/api/v1` call except `resolve` is signed with an HMAC of the key it sends. The [Automation and agents](/guides/automation-and-agents/) guide has a verified shell helper; the [API overview](/api/overview/) has the scheme. Field names and validation are on [Links API](/api/links/).
 
@@ -128,7 +128,7 @@ DecTog's order is similar but broader:
 
 1. Android: the store redirect carries `referrer=dtg_click=<id>&dtg_l=<username>/<slug>`. The SDK reads the Play Install Referrer (and the Huawei, Samsung, Xiaomi and vivo store referrers) on first launch, retries transient errors, and sends a referrer that arrives later as a late claim.
 2. iOS: the SDK reads the pasteboard on first launch by default. The iOS tap-to-store page (Apps, Advanced) copies the link before opening the App Store. `DectogPasteButton` covers users who declined the iOS 16 paste alert.
-3. Otherwise a server-side fingerprint over recent store-redirect clicks assigns a confidence. `high` is credited (`matched: true`), `medium` only returns a `routing` candidate, `low` returns nothing.
+3. Otherwise a server-side fingerprint over recent mobile web clicks assigns a confidence. `high` is credited (`matched: true`), `medium` only returns a `routing` candidate, `low` returns nothing.
 
 The link's `metadata` comes back as `customParameters`, the `dec_deeplink` of the tapped URL as `deepLink`. See [How attribution works](/start/how-attribution-works/) and [Deterministic attribution](/sdk/deterministic-attribution/).
 
@@ -149,7 +149,7 @@ Per-link numbers on the Links page are lifetime totals. See [Links](/dashboard/l
 - Minimum app version gating (`amv`, `imv`).
 - iPad-specific fallback and bundle (`ipfl`, `ipbi`).
 - Long dynamic links built in the app (`buildLink`).
-- A custom link domain on the hosted service. Self-host to serve links on your own domain.
+- More than one link domain of your own per account, and any where the deployment does not offer [custom domains](/links/custom-domains/).
 - Firebase Analytics integration and the Firebase console link list.
 - App Store analytics tags other than the `ct` DecTog sets itself.
 
@@ -172,11 +172,11 @@ The **DecTog columns** preset takes headers named like the [create fields](/api/
 
 ## Migration checklist
 
-1. Sign up at `https://app.dectog.com/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen and again in Settings. See [Quickstart](/start/quickstart/).
+1. Sign up at `https://app.dectog.com/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen. Settings lists the SDK key again; the account key is shown only that once, and **Regenerate** in Settings replaces it. See [Quickstart](/start/quickstart/).
 2. Register the app on the Apps page: package and SHA-256 fingerprints (include the Play App Signing key), bundle ID and Team ID, both store URLs, your custom scheme. Use the Verify buttons.
 3. Add `applinks:{username}.dectog.com` to Associated Domains and an `autoVerify` intent filter for `{username}.dectog.com`. Reinstall the app. See [Platform setup](/sdk/platform-setup/).
 4. Replace `firebase_dynamic_links` with `flutter_dectog` using the table above. Inject the SDK key (`dtg_pub_…`) at build time with `--dart-define`.
 5. Recreate your links. The quickest way is the Firebase console's export: on the Links page, **Import CSV**, choose **Firebase Dynamic Links export** and pick the file (see [Importing an FDL export](#importing-an-fdl-export)). From a script, send up to 100 links per call to `POST /api/v1/links/bulk`. Either way the old suffixes become the slugs, the former `link` destination the `target`, and its path the in-app route.
-6. Replace the old `page.link` URLs wherever they are published. FDL domains cannot be pointed at DecTog.
+6. Replace the old `page.link` URLs wherever they are published: those domains belong to Google and cannot be pointed at DecTog. A subdomain of your own that served FDL links, such as `links.yourbrand.com`, can move to DecTog as a [custom domain](/links/custom-domains/), where the deployment offers it.
 7. Test on a physical device: tap a link, install from the store, open the app, and check Overview and `onAppInstalled`. See [Testing](/sdk/testing/).
 8. Update your privacy declarations for the device data the SDK collects by default. See [Device data and privacy](/sdk/device-data-and-privacy/).

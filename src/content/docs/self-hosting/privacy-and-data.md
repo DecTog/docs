@@ -5,7 +5,7 @@ sidebar:
   order: 7
 ---
 
-This page lists the personal data a self-hosted DecTog handles, table by table, with the retention each column gets from the daily sweep (`RETENTION_DAYS`, default 400). The sweep itself is specified on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). "Forever" means no code ever removes the value; "retention" means it is set to `NULL` once the row is older than the cutoff.
+This page lists the personal data a self-hosted DecTog handles, table by table, with the retention each column gets from the daily sweep (`RETENTION_DAYS`, default 400, or an account's shorter window). The sweep itself is specified on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). "Retention" means the value is set to `NULL` once the row is older than the cutoff; "forever" means the sweep never blanks it, so it lasts as long as its row. Rows of `clicks`, `app_installs`, `events` and `app_opens` older than the cutoff are deleted outright once the daily rollups hold their day, which leaves only the per-link daily counts.
 
 ## IP addresses
 
@@ -34,7 +34,7 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 | Raw User-Agent | `ua_raw` | header, cut to 512 characters | retention |
 | Language | `accept_language` (128 characters), `lang` (primary tag) | `Accept-Language` | `accept_language` at retention; `lang` forever |
 | Geo and network | `country`; `region`, `city`, `asn`, `as_org` (128 characters) | Cloudflare's `cf` object | `country` forever; the rest at retention |
-| Screen profile | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `connection_type` | the interstitial beacon, only for apps with the mobile interstitial on | screen fields after `min(RETENTION_DAYS, 30)` days; `connection_type` forever |
+| Screen profile | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `connection_type` | the beacon of the pages a phone gets instead of a plain redirect: the mobile interstitial, the iOS tap-to-store page, and the Facebook and Instagram page on Android | screen fields after `min(RETENTION_DAYS, 30)` days; `connection_type` forever |
 | Traffic source | `referrer` | `Referer` header reduced to its origin; null for the deployment's own hosts | forever |
 | Campaign | `utm_*`, `link_params` (`dec_*` values) | the link URL's query string | forever |
 | Bot score | `bot_score` | Cloudflare bot management, scores of 30 and above | forever |
@@ -71,9 +71,9 @@ The device tier (`DectogCollection.deviceTier`) is on by default and `persistDev
 ## Customers and events
 
 - `customers.name` (200 characters), `email` (254) and `phone` (32) are stored **in plain text**, exactly as your app sends them in `identify` events (`apps/worker/src/api_events.ts`). A later identify that sends a field overwrites it; a field it omits keeps its old value. Only `first_install_id` is first-seen. They are nulled once the customer's `updated_at` is older than the retention cutoff. `customer_id`, the identifier your app chose, is kept forever.
-- Every event row keeps `type`, `event_name`, `revenue`, `currency`, `install_id` and `matched_slug` forever; `device_id`, `customer_id`, `metadata` (free JSON from your app) and `ip_raw` are nulled at retention.
+- Event rows are deleted at retention once the rollups hold their day. Until then a row past the cutoff keeps `type`, `event_name`, `revenue`, `currency`, `install_id` and `matched_slug`, and has `device_id`, `customer_id`, `metadata` (free JSON from your app) and `ip_raw` nulled.
 - `device_pings` rows (device id, app version, OS, time) are deleted at retention.
-- `app_opens` keep the slug and time forever; `device_id`, `install_id`, `click_id` and `ip_hash` are nulled at retention.
+- `app_opens` rows go the same way: deleted at retention once the rollups hold their day; until then they keep the slug and time and have `device_id`, `install_id`, `click_id` and `ip_hash` nulled.
 
 The dashboard masks the email in the Customers list (`e****@domain`) but shows it in full on the detail page, together with the attributed click's geo and network, and its raw IP when the deployment stores one (`STORE_RAW_IP=1`). See [Customers](/dashboard/customers/).
 

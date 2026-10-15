@@ -16,7 +16,8 @@ The SDK sends data in tiers. `DectogConfig.collect` names what a build collects;
 // dashboard sets them, no Apple Search Ads token, no advertising id.
 const DectogConfig(apiKey: 'dtg_pub_…');
 
-// Before consent: only the store referrers; no device tier, no pasteboard.
+// Fewer signals: only the store referrers; no device tier, no pasteboard.
+// To wait for consent, pass enabled: false instead (see Waiting for consent).
 const DectogConfig(
   apiKey: 'dtg_pub_…',
   collect: {DectogCollection.oemReferrers},
@@ -65,7 +66,7 @@ Without `deviceTier`:
 - reinstalls cannot be detected by device id, and the fingerprint has fewer signals to corroborate a candidate, so more installs come back as `routing` only or organic.
 
 :::caution[Decide before initialize]
-`DectogConfig` is read once. The SDK cannot be initialized twice in one process, so `collect` holds for the life of the process. For an opt-in consent flow, initialize after consent, or initialize with a set without `deviceTier` and accept the reduced tier until the next launch. Deterministic signals (store referrers, the pasteboard) are not time-limited, but a fingerprint match only works inside the server's attribution windows (24 hours, or 2 hours for low-entropy clicks and cellular installs), so a long delay before `initialize` costs fingerprint matches.
+`DectogConfig` is read once. The SDK cannot be initialized twice in one process, so `collect` holds for the life of the process. For an opt-in consent flow, initialize with `enabled: false` and call `setEnabled(true)` once the user agrees; see [Waiting for consent](#waiting-for-consent). A fingerprint match only works inside the server's attribution windows (24 hours, or 2 hours for low-entropy clicks and cellular installs), so a long wait for consent costs fingerprint matches.
 :::
 
 ### Post-install events
@@ -187,4 +188,4 @@ Every authenticated call carries the API key as a Bearer token plus an HMAC-SHA2
 
 ## Retention on the server
 
-The server anonymizes device fields, hashed and raw IPs, user agents and customer contact details after the retention window (400 days by default on the hosted service). What is kept and when it is removed is listed under [Privacy and data](/self-hosting/privacy-and-data/).
+After the retention window (400 days by default on the hosted service, shorter if the account sets its own), the server deletes the raw clicks, installs, events and app opens once its daily per-link counts hold their day, blanking their device fields, IPs and user agents until then, and blanks customers' contact details. What is kept and when it is removed is listed under [Privacy and data](/self-hosting/privacy-and-data/).

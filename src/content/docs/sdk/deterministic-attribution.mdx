@@ -97,7 +97,7 @@ final willPrompt = await FlutterDectog().willShowPasteboardPrompt();
 if (willPrompt) {
   // Show your explanation, then initialize.
 }
-await FlutterDectog().initialize(DectogConfig(apiKey: 'dtg_your_api_key'));
+await FlutterDectog().initialize(DectogConfig(apiKey: 'dtg_pub_your_sdk_key'));
 ```
 
 It returns `true` only when all of these hold: the device runs iOS 16 or newer, the read is enabled for iOS (the optional `collect` argument stands in for the config's before `initialize`; then the dashboard setting and the platform default apply), the install has not been registered yet, and the pasteboard currently holds a URL (checked silently). It is always `false` on Android.

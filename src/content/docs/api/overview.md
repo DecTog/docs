@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use from scripts and backends to manage links or read attribution. An account has two kinds of key: the account key for servers and scripts, and SDK keys for the apps you ship. This page covers what every route has in common; the routes themselves are on the following pages.
+The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use from scripts and backends to manage links or read attribution. An account has three kinds of key: the account key for servers and scripts, SDK keys for the apps you ship, and site keys for your web pages. This page covers what every route has in common; the routes themselves are on the following pages.
 
 ## Base URLs
 
@@ -43,7 +43,7 @@ Every `/api/v1` route except `resolve` requires a key as a Bearer token:
 Authorization: Bearer dtg_pub_0123456789abcdef0123456789abcdef
 ```
 
-There are two kinds of key, both shown in [Dashboard: Settings](/dashboard/settings/):
+There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/settings/), which shows SDK and site keys again but the account key only once, when it is created or regenerated:
 
 | Key | Looks like | Use it in | Scopes |
 |---|---|---|---|
@@ -61,7 +61,7 @@ There are two kinds of key, both shown in [Dashboard: Settings](/dashboard/setti
 - A new account gets its account key and one SDK key, "App key". Create more SDK keys (one per app or per build channel) and revoke them in Settings; an account holds up to 20 active SDK keys.
 - The server stores only each key's SHA-256 and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `invalid_api_key`, a revoked SDK key `revoked_api_key`, before anything else is checked. A key without the route's scope answers `403` with code `insufficient_scope` and the `required_scope`.
 - Revoking an SDK key stops every build that ships it at once; release a build with a new key first. Regenerating the account key affects only servers and scripts.
-- Keep both keys out of source control where you can, and only ever send them to your DecTog base URL.
+- Keep the account and SDK keys out of source control where you can, and only ever send them to your DecTog base URL.
 
 ## Request signing
 
@@ -253,7 +253,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 - Timestamps are ISO 8601 in UTC with milliseconds, `2026-10-12T09:00:00.000Z`. Epoch fields in install payloads are milliseconds.
 - Ids are UUIDs, except click ids, which are 16 hexadecimal characters.
 - Nullable fields are always present in responses and come back as `null`, never omitted. Fields that exist only in some situations (for example the attribution fields of a matched install) are omitted when they do not apply; the route pages say which.
-- List routes return complete arrays. There is no pagination or filtering on `/api/v1`.
+- `GET /api/v1/links` and the [raw export routes](/api/export/) return one page at a time, `{data, next_cursor}`: pass `next_cursor` back as `cursor` until it is `null`. The export routes also filter by time with `since` and `until`, and the links list takes `include_deleted`. `GET /api/v1/link-templates` returns every template in one page.
 - Routes do not use trailing slashes.
 
 ## Health check
@@ -269,7 +269,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 `GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 30, "applied": 30, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 62, "applied": 62, "missing": [] } }
 ```
 
 It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.

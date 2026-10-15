@@ -11,9 +11,9 @@ DecTog is small. Everything in the dashboard, the API and the SDK maps onto the 
 
 An account is one tenant, one username and one link subdomain. The username is the first label of every link URL (`https://acme.dectog.com/welcome` belongs to the account `acme`) and the value the SDK and the verdict call `username`. It cannot be renamed, and an account cannot be deleted from the dashboard.
 
-Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. Both kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
+Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. A third kind, the site key (`dtg_site_` and 32 hex characters), sits in your web pages for [`dectog.js`](/sdk/web/) and works only from the origins it lists. All three kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
 
-Everything an account stores is scoped to it. There is no cross-account view; the only extra privilege is the owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
+Everything an account stores is scoped to it. There is no cross-account view. Several people can work in one account, each with a team role: owner, member or viewer. Beyond the account, the only privilege is the platform owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
 
 ## Apps and the default app
 

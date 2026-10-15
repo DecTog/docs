@@ -101,10 +101,10 @@ Each queued event carries a `client_timestamp` (device clock, ISO 8601), a `clie
 | Limit | Behavior |
 |---|---|
 | More than 100 events in one batch | `413 {"error":{"code":"payload_too_large","message":"events batch exceeds 100 items"}}`. The SDK never exceeds it. |
-| One invalid event in a batch | The whole batch is rejected with 400 and nothing in it is stored. Because that is a permanent rejection, the SDK drops the batch. |
-| `identify` without `customer_id` | 400 |
-| `conversion` without `revenue`, or a negative or non-numeric revenue | 400 |
-| Metadata that cannot be serialized to JSON | 400 |
+| One invalid event in a batch | The server stores the other events and lists the invalid one in `rejected`, with its index and the error. Only a batch in which every event is invalid answers 400. Either way the batch leaves the SDK's queue. |
+| `identify` without `customer_id` | Rejected, as above |
+| `conversion` without `revenue`, or a negative or non-numeric revenue | Rejected, as above |
+| Metadata that cannot be serialized to JSON | Rejected, as above |
 | `event_name`, `customer_id`, `name` | truncated to 200 characters |
 | `email` | truncated to 254 characters |
 | `phone` | truncated to 32 characters |
@@ -115,7 +115,7 @@ The SDK only produces `identify`, `conversion` and `custom` events (`lead` is ac
 
 ## How events reach a link
 
-The server denormalizes `matched_slug` when it stores an event: from the batch's `install_id` when that install was credited, else from the device's latest credited install. Events from organic installs carry no slug and appear only in account-wide totals. The Customers page shows each customer's events (latest 200) next to the link that brought them in; see [Customers](/dashboard/customers/).
+The server denormalizes `matched_slug` when it stores an event: from the batch's `install_id` when that install was credited, else from the device's latest credited install. Events from organic installs carry no `matched_slug`; they count for a link only when one re-opened the app within the re-engagement window (below), and otherwise appear only in account-wide totals. The Customers page shows each customer's events (latest 200) next to the link that brought them in; see [Customers](/dashboard/customers/).
 
 When a DecTog link opens the already-installed app, the SDK remembers it (`slug`, click id, time) and stamps every later event with `open_slug`, `open_click_id` and `open_at`, plus a `session_id` that is new for every app process. An event within the re-engagement window after that open (7 days by default, set per app on the Apps page) counts for the re-opening link instead of the link that brought the install. The window is applied when the dashboard reads the numbers, so changing it changes past credit too.
 

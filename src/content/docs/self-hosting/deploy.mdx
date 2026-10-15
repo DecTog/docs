@@ -14,7 +14,7 @@ Production is the `production` environment in `apps/worker/wrangler.jsonc`: one 
 - A zone on Cloudflare (the reference configuration uses `dectog.com`). Replace it with your own domain everywhere below.
 - DNS, both proxied (orange cloud): a record for the apex, and a wildcard record `*` pointing at the apex. Worker routes only see traffic that passes through Cloudflare's proxy, so an unproxied record never reaches the Worker. Tenant links live on `<username>.<ROOT_DOMAIN>` and the dashboard on `APP_HOST` (`app.<ROOT_DOMAIN>`), and the wildcard covers both.
 - Two routes with `zone_name` set: `<root>/*` and `*.<root>/*`. A more specific route in the same zone (for example a separate docs site on `docs.<root>/*`) takes precedence over the wildcard without any change here.
-- Usernames `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static` and `cdn` are reserved (`apps/worker/src/bootstrap.ts`), so no tenant can claim those hosts. Any other subdomain you use for something else can be claimed by a signup unless you add it to that list or close signups with `OPEN_SIGNUPS="0"`.
+- Usernames `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help` and `support`, and every name starting with `t-` (the prefix of test environments), are reserved (`apps/worker/src/bootstrap.ts`), so no signup can claim those hosts. Any other subdomain you use for something else can be claimed by a signup unless you add it to that list or close signups with `OPEN_SIGNUPS="0"`.
 - Node 22.12 or newer and a `wrangler login` session on the account that owns the zone (`npx wrangler whoami`).
 
 ## The production environment
@@ -115,10 +115,10 @@ For later releases, use `--config wrangler.self-host.jsonc` instead of `--env pr
      -H "x-bootstrap-token: $BOOTSTRAP_TOKEN" \
      -H 'content-type: application/json' \
      -d '{"email":"you@example.com","password":"<at least 12 characters>","username":"acme"}'
-   # {"ok":true,"email":"you@example.com","username":"acme","api_key":"dtg_…","demo":false}
+   # {"ok":true,"email":"you@example.com","username":"acme","api_key":"dtg_…","sdk_key":"dtg_pub_…","demo":false}
    ```
 
-   The key is shown here and again in Settings (it was encrypted with the `JWT_SECRET` you set in step 2). Status codes and validation messages are on the [Local quick start](/self-hosting/local-quick-start/). Then remove the token; with `ENVIRONMENT=production` and no token, every further bootstrap call is `403`.
+   The account key is shown only here: DecTog keeps its hash and prefix, and **Regenerate** in Settings replaces it. The SDK key is listed again in Settings (its copy was encrypted with the `JWT_SECRET` you set in step 2). Status codes and validation messages are on the [Local quick start](/self-hosting/local-quick-start/). Then remove the token; with `ENVIRONMENT=production` and no token, every further bootstrap call is `403`.
 
    ```bash
    npx wrangler secret delete BOOTSTRAP_TOKEN --env production
