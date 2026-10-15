@@ -1,0 +1,145 @@
+---
+title: React Native and Expo
+description: Install react-native-dectog, write the platform setup with its Expo config plugin, and handle links, deferred deep links, events and consent in a React Native or Expo app.
+sidebar:
+  order: 1
+---
+
+`react-native-dectog` is the React Native and Expo SDK. It speaks the same contract as the Flutter SDK and is held to the same golden fixtures: the server's wire responses and the link-URL cases every DecTog SDK runs. Its native reads (the store install referrers, the pasteboard and the paste button, the Keychain device id) are the Flutter SDK's own Kotlin and Swift, shared as source, so both SDKs behave the same on a device. The full API is on [API reference](/react-native/api-reference/).
+
+:::caution[Pre-release]
+The SDK is not on npm yet; it is published with the first release. The API may change until then.
+:::
+
+## Requirements
+
+- Expo SDK 57, or React Native 0.86 with [Expo modules](https://docs.expo.dev/bare/installing-expo-modules/) (`npx install-expo-modules` in a bare app).
+- iOS 16.4 or newer, Android 7 (API 24) or newer.
+- A development build. The SDK has native code: in Expo Go it delivers links but registers no install and keeps nothing between launches, and says so in its debug log.
+- An SDK key (`dtg_pub_…`) from the dashboard's Settings, SDK keys. Never ship the account key: it can delete links.
+
+## Install
+
+```sh
+npx expo install react-native-dectog
+```
+
+## Platform setup
+
+A DecTog link opens the app through Universal Links on iOS and App Links on Android, which need the link hosts declared in the app. In an Expo app the config plugin writes them when `expo prebuild` generates the native projects:
+
+```json title="app.json"
+{
+  "expo": {
+    "scheme": "acme",
+    "plugins": [["react-native-dectog", { "username": "acme", "scheme": "acme" }]]
+  }
+}
+```
+
+| Option | Meaning |
+|---|---|
+| `username` | Your DecTog username. Links are `https://<username>.<rootDomain>/<slug>`. Required. |
+| `rootDomain` | The link root. Default `dectog.com`, the hosted service; a self-hosted deployment uses its own. |
+| `linkDomains` | The account's [custom link domains](/links/custom-domains/), e.g. `["go.acme.com"]`. |
+| `scheme` | The app's URL scheme, as on the dashboard's Apps page. |
+| `testEnvironment` | `true` adds `t-<username>.<rootDomain>`, the host of the account's [test environment](/sdk/testing/). |
+
+The plugin adds `applinks:<host>` to the Associated Domains entitlement for each host, an `android:autoVerify="true"` https intent filter for the hosts no filter declares yet, and the scheme where the app does not declare it already. Running it again changes nothing, and it refuses an option it does not know, so a misspelt one fails the build instead of being ignored. The API key is not an option: it goes to `initialize`, in JavaScript.
+
+The dashboard's [Apps page](/dashboard/apps/) shows the plugin entry filled in for each app. Its Universal Links and App Links file checks confirm the server side; [`diagnostics()`](#check-the-setup) confirms the device side.
+
+On Android the library's own manifest adds what the install-referrer readers need: package visibility for the Play Store, Meta's apps and the Huawei and vivo referrer providers, and two normal permissions that show no prompt, `ACCESS_NETWORK_STATE` and Huawei AppGallery's `GET_COMMON_DATA`.
+
+### Bare React Native
+
+Without Expo's prebuild, add the same by hand, as in [Platform setup](/sdk/platform-setup/): the Associated Domains capability with `applinks:<username>.dectog.com` (and each custom domain) in Xcode, and on the main activity an `https` intent filter with `android:autoVerify="true"` and one `<data android:host>` per host. Links reach the SDK through React Native's `Linking`, so the iOS app delegate must forward `application(_:continue:restorationHandler:)` and `application(_:open:options:)` to `RCTLinkingManager`, as the React Native template does.
+
+## Initialize and handle links
+
+```tsx
+import Dectog from 'react-native-dectog';
+
+// Subscribe first: the link that opened the app arrives during initialize.
+Dectog.onLinkClick((click) => {
+  const route = click.clickParams?.deepLink ?? click.linkResolution?.iosDeepLinkPath;
+  if (route) router.push(`/${route}`);
+});
+
+await Dectog.initialize({ apiKey: 'dtg_pub_…' });
+```
+
+A self-hosted deployment also passes `baseUrl` (its API) and `linkRootDomain` (its link root). `onLinkClick` fires for every DecTog link that opens the app: Universal Links and App Links, the path form `<api host>/r/<username>/<slug>`, custom-domain links and custom-scheme links, which name their link in `dtg_l` (an app route such as `acme://products/42` without it is not a link). The cold-start link fires once per process; a relaunch from the Android recents screen replays nothing; OAuth and social-login callbacks are never reported or emitted. Each click carries `clickParams`, the link's `dec_*` values, and `queryParameters`, every parameter of the opened URL; see [URL parameters](/links/url-parameters/).
+
+For a DecTog link tapped inside the app (a chat message, a push), `Dectog.handleUrl(url)` routes it the same way and reports it as an open, not a click. `getInitialLink()` returns the cold-start link.
+
+## Deferred deep links and attribution
+
+On the first launch `initialize` registers the install, once per install, with an idempotency key it keeps until the server answers; a failure is retried on later launches with the same key. It reads the deterministic signals first: the Google Play, Huawei, Samsung, Xiaomi and vivo install referrers on Android, a copied DecTog link on iOS, Meta's on-device referrer when the app has a Facebook App ID, and the Apple Search Ads token when `collect` names it. The verdict arrives on `onAppInstalled`:
+
+```ts
+Dectog.onAppInstalled((verdict) => {
+  // matched: a link is credited; deepLink: where to send the user.
+  const route = verdict.deepLink ?? verdict.routing?.deepLink;
+  if (route) router.push(`/${route}`);
+});
+```
+
+`matchSource` and `matchConfidence` say how the install was matched; at medium confidence `routing` names a link to route to without credit. A signal that arrives after the registration (a store referrer that answered late, a link pasted with the paste button) is sent as a late claim, and an upgraded verdict fires `onAppInstalled` again. `getAttributionData()` returns the verdict later. How the server decides is on [How attribution works](/start/how-attribution-works/).
+
+## Events
+
+```ts
+await Dectog.identify({ customerId: user.id }); // the first one on a new install is the signup lead
+await Dectog.trackConversion({ revenue: 9.99, currency: 'USD', transactionId: purchase.id, store: 'app_store' });
+await Dectog.trackEvent('level_up', { level: 3 });
+```
+
+Events wait in a durable queue on the device and go out in batches of up to 100, at 20 events or every 30 seconds; each carries the customer id, the link that last opened the app and a `client_event_id`, so a resent batch is stored once. Conversions take the store transaction fields described on [Revenue](/sdk/revenue/), including a StoreKit 2 `appStoreJws`. The rules are the Flutter SDK's; see [Events](/sdk/events/).
+
+### Screen views
+
+```ts
+await Dectog.trackScreenView('product', { id: 42 });
+```
+
+Or, with React Navigation or Expo Router, every screen the navigator shows:
+
+```tsx
+const ref = useNavigationContainerRef(); // from @react-navigation/native or expo-router
+useEffect(() => {
+  const sub = Dectog.trackNavigation(ref, { captureParams: ['id'] });
+  return () => sub.remove();
+}, [ref]);
+```
+
+A screen is reported once it has been current for 350 ms, the same screen twice in a row once, and only the route name unless `captureParams` names params (strings cut to 256 characters, numbers and booleans). Screen views count in no event total; the links page's [Screens after open](/dashboard/links/#screens-after-open) lists what people reached after a link opened the app. Keep personal data out of screen names and params.
+
+## Consent
+
+```ts
+await Dectog.initialize({ apiKey, enabled: false }); // nothing is sent until the user agrees
+await Dectog.setEnabled(true);                        // the install, held events and the link report go out
+```
+
+While collection is off the SDK makes no request of its own and never reads the pasteboard. Events wait on the device for up to seven days; the click and open of a link that opened the app wait in memory, and the link still reaches `onLinkClick`. The choice is stored and wins over `enabled` on later launches; `setEnabled(false)` stops collection again and drops held link reports, not held events. See [Device data and privacy](/sdk/device-data-and-privacy/) for what each tier sends.
+
+## The iOS paste alert
+
+On iOS 16 and newer, reading the pasteboard shows the system's "Allow paste" alert. The SDK reads it only on the first launch, only when it holds a URL (a silent check runs first), and sends only a DecTog link that names a click; it clears the pasteboard only after the server credited that link and only if nothing was copied since. `willShowPasteboardPrompt()` tells the app beforehand. `<DectogPasteButton />` renders Apple's `UIPasteControl`, which pastes without the alert because the tap is the consent; a DecTog link pasted with it is sent as a late claim. Leave `'pasteboard'` out of `collect` to turn the automatic read off.
+
+## Check the setup
+
+```ts
+const report = await Dectog.diagnostics();
+```
+
+`report.warnings` lists what does not match the dashboard's record of the app: the bundle ID or package, the iOS URL scheme in `CFBundleURLTypes`, each link host Android has not verified for App Links, and a key from the other environment (a test key in a release build, or the reverse of the `environment` the config names). An empty list means the setup matches.
+
+## What it collects
+
+The same as the Flutter SDK, under the same switches, named in `DectogConfig.collect`: `deviceTier`, `pasteboard`, `oemReferrers`, `appleSearchAdsToken` and `adId`. The store disclosures each triggers are in the [API reference](/react-native/api-reference/#dectogconfig) and on [Device data and privacy](/sdk/device-data-and-privacy/). The SDK never reads an advertising id; an app that wants one on the install passes `advertisingIdProvider`. The iOS privacy manifest is bundled, and every request is signed with the SDK key.
+
+## Differences from the Flutter SDK
+
+The behaviour is the same; the shape is JavaScript's. Methods take option objects (`createLink({ slug, target })`), listeners return a subscription with `remove()`, times are `Date` objects and absent values `null`, `collect` is an array, and the referrer wait is `installReferrerTimeoutMs`. The paste button is a component, and React Navigation and Expo Router tracking is `trackNavigation` instead of a navigator observer.

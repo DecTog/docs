@@ -90,6 +90,10 @@ Section text: "Package name and SHA-256 fingerprints generate your App Links fil
 
 Below the fields, **App Links file** `/.well-known/assetlinks.json` has its own **Verify** button and ⓘ guide: the package and fingerprints generate the file once both are saved; add an https intent filter with `android:autoVerify="true"` for each tenant host, listed explicitly because intent filters take no wildcards; Chrome verifies at install or update, and until then taps still open the app through an `intent://` redirect carrying your scheme and package. **⧉ Copy for AI** copies the prompt with your package and fingerprints filled in. How brands are detected and store URLs tagged is in [App stores and OEM routing](/links/app-stores-and-oem-routing/).
 
+### React Native and Expo
+
+Section text: "The react-native-dectog config plugin writes the Associated Domains and App Links setup above into the native projects. This app's entry, filled in:". Below it, the plugin entry for this app, ready for `plugins` in app.json: your username (the test environment's while the dashboard shows it), the deployment's link root when it is not `dectog.com`, the account's custom link domain when it has one, and the iOS scheme (else the Android one) as `scheme`. **Copy** copies it. Run `npx expo prebuild` after adding it; the two file checks above confirm the server side, and `Dectog.diagnostics()` in the app the device side. See [React Native and Expo](/react-native/#platform-setup).
+
 ### Social sharing preview
 
 Section text: "How your links look when shared on social media or in messaging apps. Used for every link without its own preview."
