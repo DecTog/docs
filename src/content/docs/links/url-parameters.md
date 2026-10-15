@@ -88,6 +88,12 @@ A link can carry its own `utm_source`, `utm_medium`, `utm_campaign`, `utm_term` 
 
 So `https://shop.example.com/sale` behind a link with `utm_source=newsletter` opens as `https://shop.example.com/sale?utm_source=newsletter`, and the shop's web analytics name the same campaign as DecTog.
 
+## Your own parameters
+
+Keys without the `dec_` or `utm_` prefix are not read. A browser tap stores only its `dec_*` and `utm_*` values, so after a deferred install those are all that come back on the verdict: `?productId=42` on a shared link does not survive the trip through the store. On a warm open the SDK gives the app the whole opened URL, so `click.queryParameters['productId']` (`DectogLinkClickX`) works there, but only there, and the SDK reports none of those keys to the server.
+
+To send a route that works on both paths, put it in `dec_deeplink`: `?dec_deeplink=products/42`. The prefix also keeps DecTog's keys apart from your website's own parameters. The reasons are in [Design decisions](/start/design-decisions/).
+
 ## Reserved parameters
 
 | Parameter | Set by | Meaning |

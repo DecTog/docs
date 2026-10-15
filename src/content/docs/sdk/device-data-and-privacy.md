@@ -74,7 +74,7 @@ Without `deviceTier`:
 
 ### In-app clicks and opens
 
-Every recognized link open sends the slug, the opened URL (in metadata), its `utm_*` and `dec_*` values, platform, OS version, language, the device id and model (device tier only) and, on Android, the launching package. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+Every recognized link open sends the slug, the opened URL's `utm_*` and `dec_*` values, platform, OS version, language, the device id and model (device tier only) and, on Android, the launching package. The rest of the URL (other query parameters, the fragment) stays on the device. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 
 ## The device identifier
 
