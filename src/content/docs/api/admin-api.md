@@ -74,7 +74,7 @@ See [Dashboard: Settings](/dashboard/settings/).
 
 ## Teams
 
-Every session route needs a team role in the account it acts on, and the role is checked before the handler runs: a role that falls short answers `403 {code: "insufficient_role", role, required_role}`, and a route with no entry in the contract table answers `403` whatever the role. By default a viewer may read and a member may change; reads of keys, raw exports, customers, the audit log and webhook deliveries need a member, and keys, the team, the custom domain, the account's settings, the test environment and erasures need an owner. `GET /api/admin/settings` returns the account key's prefix, never the key, to every role.
+Every session route needs a team role in the account it acts on, and the role is checked before the handler runs: a role that falls short answers `403 {code: "insufficient_role", role, required_role}`, and a route with no entry in the contract table answers `403` whatever the role. By default a viewer may read and a member may change; reads of keys, raw exports, customers, the audit log and webhook deliveries need a member, and keys, the team, the custom domain, the account's settings, the test environment and erasures need an owner. `GET /api/admin/settings` returns the account key's prefix, never the key, to every role. A viewer's copy of `GET /api/admin/events`, `/installs/:id` and `/links` leaves out `customer_id`, `device_id`, event and install `metadata`, a tap's `city`, `region`, `asn` and `as_org`, and a link's `referrer_customer_id` (the install detail adds `personal_data_hidden: true`), and `GET /api/admin/webhooks` gives a viewer each `url` as its origin only.
 
 | Method and path | Role | Purpose | Response |
 |---|---|---|---|

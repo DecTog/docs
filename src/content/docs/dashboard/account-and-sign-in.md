@@ -79,7 +79,7 @@ Several people can work in one account. Each person signs in as themselves, to t
 |---|---|
 | **Owner** | Everything: links, apps, webhooks, customers and exports, plus the keys, the team, the custom domain, the revenue currency, the retention window, the test environment, and erasing a device or a customer. |
 | **Member** | Links, link templates, temporary links, apps, webhooks, customers, exports and the audit log. Sees the SDK keys but does not create or revoke them. |
-| **Viewer** | Reads the numbers: Overview, Links, Apps and the parts of Settings without keys. No customers, exports, keys or audit log. |
+| **Viewer** | Reads the numbers: Overview, Links, Apps and the parts of Settings without keys. No customers, exports, keys or audit log, and no one's personal data: the events, installs and links a viewer reads leave out customer and device ids, the metadata an app sent, where a tap was (city, region, network) and a referral link's customer, and webhook URLs show only their address (`https://hooks.example.com`), since a webhook's path can work as a password. |
 
 The person who owns an account is always its owner, and cannot be removed or demoted. Owners can make others owners too.
 
