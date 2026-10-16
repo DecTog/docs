@@ -22,7 +22,7 @@ DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog)
 |---|---|
 | `apps/worker/src/` | The Worker: `index.ts` routes hosts and paths; `redirect.ts` is the link engine; `api_links.ts`, `api_clicks.ts`, `api_installs.ts`, `api_events.ts` are the SDK API; `attribution.ts`, `fraud.ts`, `asa.ts` decide verdicts; `api_admin.ts`, `api_auth.ts`, `api_google.ts`, `api_customers.ts`, `api_attribution_admin.ts`, `api_blog.ts` serve the dashboard; `auth.ts`, `ratelimit.ts`, `webhook.ts`, `wellknown.ts`, `ogpreview.ts`, `collect.ts`, `seed.ts`, `bootstrap.ts` |
 | `apps/worker/src/db/` | The typed data layer: `tables.ts` (column registry), `write.ts` (`insertStmt`, `updateById`), `links.ts`, `tempLinks.ts`, `users.ts` (the shared lookups) |
-| `apps/worker/migrations/` | `0001_init.sql` to `0062_session_epoch.sql` |
+| `apps/worker/migrations/` | `0001_schema.sql` (the whole schema), then one numbered file per later change |
 | `apps/worker/test/` | Vitest suites on the Workers pool with an isolated D1 |
 | `apps/worker/wrangler.jsonc` | Dev defaults and the `production` environment |
 | `apps/web/src/app/` | The Next.js app: `(site)` marketing pages, `login`, `reset-password`, `dashboard/**` |
@@ -97,8 +97,7 @@ To run the server locally with the demo account, follow [Local quick start](/sel
 ## Migration rules
 
 - `apps/worker/migrations/` is append-only. A migration that has been applied to a shared or remote database is never edited or deleted; add a new numbered file.
-- Files apply in name order. Two files are numbered `0012` (`0012_blog.sql`, `0012_mobile_interstitial.sql`) and that is fine; do not renumber them.
-- `0003_hashed_api_keys.sql` wipes tenant data. It only matters for databases that predate it.
+- Files apply in name order. `0001_schema.sql` creates the whole schema; a change is the next numbered file.
 - A migration that adds or removes a column must also change the row type in `src/types.ts` and the column registry in `src/db/tables.ts`. `tsc` enforces the type-registry pair and `test/schema.test.ts` compares the registry with `PRAGMA table_info` on the migrated test database.
 - Deploys run `wrangler d1 migrations apply DB --remote --env production` before `wrangler deploy --env production`. Plain `npm run deploy` uses the dev configuration. See [Database and migrations](/self-hosting/database-and-migrations/).
 

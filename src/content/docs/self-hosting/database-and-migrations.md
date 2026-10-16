@@ -1,6 +1,6 @@
 ---
 title: Database and migrations
-description: The 16 D1 tables, every migration file and what it does, the append-only rule, and the typed data layer that keeps schema, row types and SQL in step.
+description: The 35 D1 tables, the schema file, the append-only rule, and the typed data layer that keeps schema, row types and SQL in step.
 sidebar:
   order: 6
 ---
@@ -9,7 +9,7 @@ DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. 
 
 ## Tables
 
-The schema at migration 0062 has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by the account (`user_id`, or `tenant_id` in `memberships` and `invites`) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
+The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by the account (`user_id`, or `tenant_id` in `memberships` and `invites`) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
 
 | Table | One line |
 |---|---|
@@ -52,73 +52,9 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 
 ## Migrations
 
-`apps/worker/migrations/` holds one `.sql` file per change. `wrangler d1 migrations apply` runs the files that are not yet recorded in the `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. Two files share the number 0012; `0012_blog.sql` sorts before `0012_mobile_interstitial.sql`, and both apply. Do not renumber them.
+`apps/worker/migrations/0001_schema.sql` creates the whole schema: the 35 tables above and their 49 indexes. `wrangler d1 migrations apply` runs the files in the folder that are not yet recorded in the database's `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. A schema change is the next numbered file, `0002_…` onwards.
 
-| File | Purpose |
-|---|---|
-| `0001_init` | `users` (plain-text API key), `apps`, `links`, `temp_links`, `clicks`, `app_installs` and the first indexes |
-| `0002_attribution_indexes` | Replaces the global IP index with `clicks (user_id, ip_hash, clicked_at)`; adds `app_installs (matched_click_id)` |
-| `0003_hashed_api_keys` | Rebuilds `users` with `api_key_hash` + `key_prefix`. **Destructive:** existing keys become unusable `legacy:` hashes and the migration deletes every row in `links`, `temp_links`, `clicks`, `app_installs` and `apps`. It was written for a pre-release database; on a fresh database it runs on empty tables. |
-| `0004_rate_limits` | `rate_limits` |
-| `0005_device_data` | Device-tier columns on `clicks` and `app_installs`, `is_reinstall`, the device index, `ad_identifiers` |
-| `0006_social_preview` | `og_*` on `apps` and `links` |
-| `0007_temp_link_social` | `og_*` on `temp_links` |
-| `0008_install_webhook` | `install_webhook_url`, `install_webhook_secret` on `apps` (moved into `webhooks` and dropped by 0049) |
-| `0009_app_scheme` | `ios_app_scheme`, `android_app_scheme` |
-| `0010_click_referrer` | `clicks.referrer` (origin only, analytics) |
-| `0011_link_routing` | Deep-link paths, `redirect_url`, `fallback_url` on `links` |
-| `0012_blog` | `blog_categories`, `blog_posts`, `contact_messages` |
-| `0012_mobile_interstitial` | `apps.mobile_interstitial`; beacon columns `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `enriched_at` on `clicks` |
-| `0013_auth_flows` | `password_resets` |
-| `0014_user_roles` | `users.role` (default `user`); promotes the oldest existing account to `owner` |
-| `0015_optional_link_target` | Rebuilds `links` and `temp_links` so `target` is nullable (copies every row) |
-| `0016_events_pipeline` | `app_installs.match_source`; `customers`, `events`, `device_pings`; `ip_raw` on `clicks` and `app_installs`. Its header comment says customers store "hashes only"; the code stores name, email and phone in plain text. |
-| `0017_antifraud_matching` | Click-time signals (`ua_raw`, `accept_language`, `lang`, `os_major`, `ua_arch`, `connection_type`, geo, `asn`, `as_org`, `bot_score`); install provenance and fraud columns (`web_user_agent`, `cpu_family`, `package_name`, `is_physical_device`, `installer_package`, referrer timestamps, `meta_referrer`, `referrer_source`, `clipboard_slug`, `fraud_flags`); `apps.strict_fraud_mode`, `apps.fb_app_id`; `app_opens` |
-| `0018_install_times` | `install_time`, `update_time` |
-| `0019_meta_referrer_is_ct` | `meta_referrer_is_ct` |
-| `0020_customer_indexes` | Customers list and events-by-customer indexes |
-| `0021_google_sign_in` | `users.google_sub` with a unique partial index |
-| `0022_link_params` | `clicks.link_params`; `label`, `campaign`, `adgroup`, `creative` on `links` |
-| `0023_api_key_viewable` | `users.api_key_enc`, an encrypted copy of the account key (dropped by 0061) |
-| `0024_auto_signup_leads` | Index for the one-signup-lead-per-customer check |
-| `0025_shared_device_index` | `events (user_id, device_id, customer_id)` |
-| `0026_attribution_reliability` | Install contract v2: `install_attempt_id` with a unique partial index, attempt and client timestamps, referrer telemetry and server timestamps, `install_state`, `first_install_ts`, `match_confidence`, `match_score`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `asn`, `asa_token`, `asa_attribution`, `claimed_at`, `updated_at`; `clicks.client_click_time`, `launch_referrer`, `origin`; `apps.ios_tap_to_store`, OEM store URLs, `low_entropy_window_hours`; the `(user_id, ip_hash, created_at)` install index |
-| `0027_apple_search_ads` | `asa_status`, `asa_attempts`, `asa_token_at`, `asa_resolved_at` and the pending-token index |
-| `0028_claim_source` | `claim_source` on `app_installs`: which late signal upgraded the install |
-| `0029_sdk_identity` | `sdk_name` and `sdk_version` on `app_installs`, `events` and `clicks` |
-| `0030_api_keys` | `api_keys`: SDK keys with scopes, environment, last use, expiry and revocation |
-| `0031_fp_collapse` | `app_installs.collapsed_from`: identical fingerprint candidates counted as one |
-| `0032_deterministic_window` | `apps.deterministic_window_hours`: how long a pasted link or Meta referrer earns credit |
-| `0033_event_idempotency` | `events.client_event_id` with a unique partial index |
-| `0034_revenue` | Store transaction columns on `events` (`transaction_id`, `original_transaction_id`, `product_id`, `store`, `purchase_type`, `quantity`, `transaction_type`, `revenue_base`), `users.base_currency`, `fx_rates` |
-| `0035_probabilistic_match` | `apps.probabilistic_match` |
-| `0036_rejected_requests` | `rejected_requests`: refused v1 calls, kept 30 days |
-| `0037_install_recovery` | `app_installs.recovered_from` |
-| `0038_reengagement` | `open_slug`, `open_click_id`, `open_at`, `session_id` on `events`; `apps.reengagement_window_hours` |
-| `0039_match_details` | `app_installs.match_details`: the stored match explanation |
-| `0040_referrals` | `links.referrer_customer_id` (unique per customer), `referrals` |
-| `0041_sdk_config` | `apps.oem_store_referrers`, `apps.read_clipboard_on_install` |
-| `0042_store_notifications` | `events.source`, `app_store_endpoints`, `store_notifications` |
-| `0043_link_lifecycle` | Pause, expiry, expired URL, archive and soft delete columns on `links` and `temp_links` |
-| `0044_link_daily` | `link_daily` (daily rollups) and `rollup_state` |
-| `0045_link_page_overrides` | `ios_tap_to_store`, `mobile_interstitial` on `links` (null follows the app) |
-| `0046_routing_rules` | `links.routing_rules`: geo and language rules |
-| `0047_link_templates` | `link_templates`; `template_id`, the five `utm_*` and `external_id` (unique per account) on `links` |
-| `0048_mmp_handoff` | `apps.mmp_handoff`, `apps.mmp_pid` |
-| `0049_webhooks` | `webhooks` and `webhook_deliveries`; copies each app's 0008 webhook into `webhooks`, then **drops** `apps.install_webhook_url` and `apps.install_webhook_secret`. Deploy the worker right after applying it: the previous worker still writes those columns when an app is saved. |
-| `0050_export_jobs` | `export_jobs`: CSV exports too large to stream, written to the optional `EXPORTS` R2 bucket |
-| `0051_click_cta` | `cta`, `cta_at` on `clicks`: the first button a visitor took on a link page |
-| `0052_custom_domains` | `custom_domains`, and `users.custom_domain` (unique when set): the account's active custom link domain |
-| `0053_web` | `api_keys.origins` (site keys, kind `site`), `links.append_click_id`, `events.web_click_id`, and a partial index on web events: [`dectog.js`](/sdk/web/) |
-| `0054_device_models` | `device_models` and `device_model_refresh`: marketing names for the device models installs report |
-| `0055_click_routing_rule` | `clicks.routing_rule`: the routing rule (geo, language, schedule or A/B variant) a tap matched |
-| `0056_events_install_index` | An index on `events(user_id, install_id)`, for the `ltv` metric |
-| `0057_audit_events` | `audit_events`, the audit log (P4.2), keyed by `(user_id, seq)` without a rowid |
-| `0058_erasure` | `users.retention_days` (the account's own window) and `users.erasures_until`; `erasures`, the tombstones of erased devices and customers (P4.1) |
-| `0059_test_environment` | `users.test_of`: on an account's test environment, the live account it belongs to (P4.4) |
-| `0060_teams` | `memberships` (a person's role in another account) and `invites` (by email, the token as its SHA-256) (P4.3) |
-| `0061_account_key_show_once` | Drops `users.api_key_enc`: the account key is shown once and stored as its SHA-256 and prefix only |
-| `0062_session_epoch` | `users.session_epoch`: sessions signed before it moved on end; a password reset and connecting Google raise it |
+The 63 migrations written before the first release were combined into `0001_schema.sql` on 2026-10-16. The numbers such as 0026 that code comments and older notes cite name those files; the server repository's git history keeps them. A local database made before then has the old files recorded, so `migrations apply` stops at the first table it creates (`table users already exists`): delete `apps/worker/.wrangler/state/v3/d1` and apply again.
 
 ### Commands
 
