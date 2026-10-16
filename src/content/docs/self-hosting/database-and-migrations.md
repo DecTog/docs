@@ -9,11 +9,11 @@ DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. 
 
 ## Tables
 
-The schema at migration 0061 has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by the account (`user_id`, or `tenant_id` in `memberships` and `invites`) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
+The schema at migration 0062 has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by the account (`user_id`, or `tenant_id` in `memberships` and `invites`) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
 
 | Table | One line |
 |---|---|
-| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix` (the account key is never stored readable), `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`), `test_of` (on a test environment: its live account) |
+| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix` (the account key is never stored readable), `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`), `test_of` (on a test environment: its live account), `session_epoch` (raised to end every session) |
 | `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |
@@ -118,6 +118,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 | `0059_test_environment` | `users.test_of`: on an account's test environment, the live account it belongs to (P4.4) |
 | `0060_teams` | `memberships` (a person's role in another account) and `invites` (by email, the token as its SHA-256) (P4.3) |
 | `0061_account_key_show_once` | Drops `users.api_key_enc`: the account key is shown once and stored as its SHA-256 and prefix only |
+| `0062_session_epoch` | `users.session_epoch`: sessions signed before it moved on end; a password reset and connecting Google raise it |
 
 ### Commands
 

@@ -22,7 +22,7 @@ DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog)
 |---|---|
 | `apps/worker/src/` | The Worker: `index.ts` routes hosts and paths; `redirect.ts` is the link engine; `api_links.ts`, `api_clicks.ts`, `api_installs.ts`, `api_events.ts` are the SDK API; `attribution.ts`, `fraud.ts`, `asa.ts` decide verdicts; `api_admin.ts`, `api_auth.ts`, `api_google.ts`, `api_customers.ts`, `api_attribution_admin.ts`, `api_blog.ts` serve the dashboard; `auth.ts`, `ratelimit.ts`, `webhook.ts`, `wellknown.ts`, `ogpreview.ts`, `collect.ts`, `seed.ts`, `bootstrap.ts` |
 | `apps/worker/src/db/` | The typed data layer: `tables.ts` (column registry), `write.ts` (`insertStmt`, `updateById`), `links.ts`, `tempLinks.ts`, `users.ts` (the shared lookups) |
-| `apps/worker/migrations/` | `0001_init.sql` to `0061_account_key_show_once.sql` |
+| `apps/worker/migrations/` | `0001_init.sql` to `0062_session_epoch.sql` |
 | `apps/worker/test/` | Vitest suites on the Workers pool with an isolated D1 |
 | `apps/worker/wrangler.jsonc` | Dev defaults and the `production` environment |
 | `apps/web/src/app/` | The Next.js app: `(site)` marketing pages, `login`, `reset-password`, `dashboard/**` |
