@@ -118,7 +118,7 @@ To make a device register again during development, uninstall the app (iOS) or r
 
 ## When the server lost the install
 
-The SDK keeps the install id of its verdict. If the server no longer knows it, because the database was restored, the retention sweep removed it, or the app now points at a fresh database, the events endpoint answers `action: reregister` and the attribution pull answers `404 install_not_found`. The SDK then resets its sentinel and registers again: a new attempt id, `install_state: reinstall`, and `recovered_from` naming the lost id. The server never fingerprints that registration, because the device is not a new install; a store referrer the SDK still holds can match deterministically. The new verdict is emitted on `onAppInstalled`. Events sent in between are kept.
+The SDK keeps the install id of its verdict. If the server no longer knows it, because the database was restored, the retention sweep removed it, or the app now points at a fresh database, the events endpoint answers `action: reregister` and the attribution pull answers `404 install_not_found`. The SDK then resets its sentinel and registers again: a new attempt id, `install_state: reinstall`, and `recovered_from` naming the lost id. The server never fingerprints that registration, because the device is not a new install, and the SDK does not read the pasteboard for it (no paste prompt mid-session; a link copied since says nothing about how the install began), nor would the server use one; a store referrer the SDK still holds can match deterministically. The new verdict is emitted on `onAppInstalled`. Events sent in between are kept.
 
 ## Getting the verdict later
 
