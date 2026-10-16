@@ -176,7 +176,7 @@ The AASA file lists every app that has both a bundle ID and a Team ID, as `TEAMI
 
 ## Deleting an app
 
-The trash icon asks `Delete app "<name>"? Links using it will fall back to your default app. This cannot be undone.` Links bound to the app lose their binding and are served by the oldest remaining app from the next tap on. Clicks and installs recorded for the app stay. The status line shows "Deleted ✓".
+The trash icon asks `Delete app "<name>"? Links using it will fall back to your default app. This cannot be undone.` Links bound to the app lose their binding and are served by the oldest remaining app from the next tap on; so do link templates that named it, and the links made from them afterwards. The webhooks limited to the app are deleted with their delivery logs, and its store notification URLs stop working; account-wide webhooks stay. Clicks and installs recorded for the app stay. The status line shows "Deleted ✓".
 
 <Aside type="note" title="Self-hosting">
 The well-known files are served on your own root domain, so the Associated Domains entry becomes `applinks:your-username.your-root-domain` and the intent-filter hosts become `your-username.your-root-domain`. In path mode (a root domain that starts with `localhost`) the files are reachable only with `?u=your-username`, and on-device verification, which fetches them from the link host over https, is not possible.

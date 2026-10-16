@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-DecTog POSTs events to your own backend: every install verdict, conversions and leads, app opens, referrals, link changes and, if you ask, every tap. Add webhooks in [Dashboard: Apps](/dashboard/apps/), under an app's **Webhooks**. A webhook receives either that app's events or every app's, and the events you tick. Every delivery is logged for 30 days and retried for about a day when your endpoint does not answer 2xx.
+DecTog POSTs events to your own backend: every install verdict, conversions and leads, app opens, referrals, link changes and, if you ask, every tap. Add webhooks in [Dashboard: Apps](/dashboard/apps/), under an app's **Webhooks**. A webhook receives either that app's events or every app's, and the events you tick. Deleting an app deletes the webhooks limited to it. Every delivery is logged for 30 days and retried for about a day when your endpoint does not answer 2xx.
 
 ## Adding a webhook
 
