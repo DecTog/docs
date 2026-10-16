@@ -35,7 +35,7 @@ dectog.track('viewed_pricing');                                // a custom event
 | `signup`, `lead` | A lead |
 | anything else | A custom event, unless `type` says `lead` or `conversion` |
 
-The second argument also takes `customer_id`, `metadata` (an object) and `event_id`. Pass `order_id` for every purchase: it becomes the event's id (`order-<order_id>`), so a reloaded thank-you page or a second tab never counts the order twice. Calls made before the script loaded wait in `window.dectog` when the page pushes them as `window.dectog.push(['track', 'signup'])`; the first line of the snippet makes that possible.
+The second argument also takes `customer_id`, `metadata` (an object) and `event_id`. Pass `order_id` for every purchase: it becomes the event's id (`order-<order_id>`), so a reloaded thank-you page or a second tab never counts the order twice. Calls made before the script loaded wait in `window.dectog` when the page pushes them as `window.dectog.push(['track', 'signup'])`; the first line of the snippet makes that possible, and the snippet Settings copies has it. `push` keeps working once the script has loaded, so a page can use it for every call.
 
 The event counts for the link of the click in `dtg_click` when the visitor landed with one (from the URL, else from the cookie), with that tap's country, campaign and UTM values in analytics. An event without a click, or with another account's click id, is stored without a link. Webhooks deliver leads and conversions as `event.lead` and `event.conversion` with `source: "web"`.
 

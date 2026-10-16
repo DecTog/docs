@@ -94,7 +94,7 @@ The stores can report purchases, renewals and refunds themselves, including rene
 
 ### App Store
 
-In App Store Connect, open the app, then **App Information → App Store Server Notifications**, choose **Version 2** and paste the App Store URL for Production. For Sandbox, paste the URL of the same app in your [test environment](/dashboard/settings/#test-environment): switch the dashboard to **Test**, then **Apps → your app → Store notifications → Turn on**. Sandbox purchases then count in the test environment; sent to the live URL, they would count as live revenue (tagged `store_environment: "Sandbox"`). The server verifies each notification and the transaction inside it against Apple Root CA - G3 and refuses one for another bundle ID than the app's.
+In App Store Connect, open the app, then **App Information → App Store Server Notifications**, choose **Version 2** and paste the App Store URL for Production. For Sandbox, paste the URL of the same app in your [test environment](/dashboard/settings/#test-environment): switch the dashboard to **Test**, then **Apps → your app → Store notifications → Turn on**. Sandbox purchases then count in the test environment; sent to the live URL, they would count as live revenue (tagged `store_environment: "Sandbox"`). The server verifies each notification and the transaction inside it against Apple Root CA - G3 and refuses one for another bundle ID than the app's, with a `422` so Apple sends it again: once you fix the app's bundle ID, the next attempt is recorded. A recorded purchase is also sent to your webhooks as `event.conversion` with `source: "store"`.
 
 | Notification | Recorded as |
 |---|---|
