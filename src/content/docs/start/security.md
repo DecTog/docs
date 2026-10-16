@@ -19,7 +19,9 @@ What holds today, in the server (`dectog`), the Flutter SDK (`flutter_dectog`) a
 | Weekly dependency updates (Dependabot), CI on each | npm, GitHub Actions | pub (package, companion package, example), Gradle, GitHub Actions | npm, GitHub Actions |
 | Advisories checked in CI | `npm audit`: high or critical fails the Worker; critical fails the dashboard | `flutter pub outdated` printed on every run | `npm audit`: critical fails |
 | GitHub Actions pinned to commit SHAs | yes | yes | yes |
-| How a release ships | deployed by hand from a reviewed commit; no workflow holds Cloudflare credentials | published by CI from a version tag that must match the package version, with pub.dev's OIDC publishing (no long-lived token) | built by CI; deployed by hand until the deploy token is set |
+| How a release ships | deployed by hand from a reviewed commit; no workflow in the server repository holds Cloudflare credentials | published by CI from a version tag that must match the package version, with pub.dev's OIDC publishing (no long-lived token) | built and deployed by CI on every push to `main`, with a Cloudflare API token (`CLOUDFLARE_API_TOKEN`) |
+
+The docs deploy token has the Workers Scripts: Edit permission, which Cloudflare grants on a whole account: in the account that also runs the server, it could deploy the server's Worker too. Whoever can push to this site's `main` or read its secrets holds that power; a separate Cloudflare account for the docs would take it away.
 
 The dashboard and this site are static builds: their npm packages run only while they are built, on their own sources, so a high advisory there is a build-time risk, not a running one. The dashboard's Next.js 15 bundles a PostCSS release with such advisories (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q and two follow-ups), which need attacker-controlled CSS at build time; the Next.js 16 upgrade removes them.
 
