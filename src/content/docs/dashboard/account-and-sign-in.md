@@ -31,25 +31,33 @@ A footer line reads "Your account gets its own link subdomain and API key." Ever
 | **Forgot password?** | Opens the reset form described below. |
 | **Sign in with Google** | Shown when the deployment has Google sign-in configured. |
 
-The session is a cookie named `dectog_session` holding a signed token that expires 30 days after sign-in whatever the checkbox; the checkbox only decides whether the browser keeps the cookie across restarts. **Log out** (the icon in the sidebar footer) deletes the cookie and returns to the login page. The server keeps no list of sessions: logging out, or resetting the password, does not end sessions open in other browsers; those run until their token expires.
+The session is a cookie named `dectog_session` holding a signed token that expires 30 days after sign-in whatever the checkbox; the checkbox only decides whether the browser keeps the cookie across restarts. **Log out** (the icon in the sidebar footer) deletes the cookie and returns to the login page; sessions open in other browsers keep running until their token expires. Two things end every session at once, in every browser: [resetting the password](#forgot-and-reset-password) and [connecting Google](#connect-google).
 
 Local development builds also show "Demo account: demo@dectog.local · demo1234" under the form; the hosted service does not.
 
 ## Sign in with Google
 
-**Sign in with Google** (or **Sign up with Google** on the Sign up tab) sends you to Google's account chooser and back, through a server-side OAuth authorization-code flow with PKCE. What happens next depends on the verified Google email:
+**Sign in with Google** (or **Sign up with Google** on the Sign up tab) sends you to Google's account chooser and back, through a server-side OAuth authorization-code flow with PKCE. What happens next depends on the Google account and its verified email:
 
 | Situation | Result |
 |---|---|
-| The Google account is already linked to a DecTog account. | You are signed in. |
-| A DecTog account uses the same email and is not linked to any Google account. | The two are linked automatically and you are signed in. This works even when signups are closed. |
-| A DecTog account uses the same email but is linked to a different Google account. | Error: `That email is already linked to a different Google account.` |
+| The Google account is connected to a DecTog account. | You are signed in, whatever its email is now. |
+| A DecTog account uses the same email and has no Google account connected. | Error: `A DecTog account already uses that email. Sign in with its password, then connect Google in Settings → Account.` Nothing is linked. |
+| A DecTog account uses the same email but is connected to a different Google account. | Error: `That email is already linked to a different Google account.` |
 | No account uses the email and signups are open. | One more step: **Signed in with Google as {email}. One last step:** with a **Choose a username** box that follows the signup rules. **Create Account** creates the account and shows the API key screen; **Cancel** abandons it. You have 15 minutes to finish, after which the page reports `Google sign-in expired — try again`. |
 | No account uses the email and signups are closed. | Error: `No DecTog account uses that Google email, and signup is currently closed.` |
 
 Other errors shown on return: `Google sign-in was cancelled.`; `Google sign-in timed out — please try again.` (the handshake must complete within 10 minutes); `Couldn't verify your Google account — please try again.`; `Google sign-in is not available right now.`. Username errors on the last step: `That username is taken` and `An account with this Google email already exists — sign in instead`.
 
-An account created through Google has no usable password: the server stores a random one. To sign in with a password later, use **Forgot password?** to set one. Linking cannot be undone from the dashboard.
+An account created through Google has no usable password: the server stores a random one. To sign in with a password later, use **Forgot password?** to set one.
+
+### Connect Google
+
+A matching email is not enough to link an existing account: sign-up does not check that the address belongs to whoever signs up, so an account with your email might not be yours. To add Google sign-in to an account you have, sign in with its password, open Settings → **Account**, and select **Connect Google** next to **Sign in with Google** (shown when the deployment has Google sign-in configured). Choose the Google account; back in Settings, "Google is connected" confirms it, and the row reads **Connected**. Any Google account works, whatever its email. Connecting signs out every other session of the account; this browser stays signed in.
+
+Errors shown in Settings: `That Google account already signs in to another DecTog account.`, `Your sign-in is already connected to a different Google account.`, `Connecting Google was cancelled.`, `Connecting Google timed out. Please try again.`, `Couldn't verify your Google account. Please try again.`. Connecting cannot be undone from the dashboard.
+
+If an account with your email exists that you did not create, use **Forgot password?**: the reset link goes to your address, and the new password signs out every session of whoever made it.
 
 ## Forgot and reset password
 
@@ -61,7 +69,7 @@ The email, with the subject "Reset your DecTog password", carries a link to `htt
 - can be used once; the server marks it used in the same step that changes the password, so a second submit fails;
 - is cancelled by any newer request: only the most recent link works.
 
-The reset page ("Choose a new password for your account") has **New password** and **Confirm new password** boxes and an **Update Password** button. Errors: `This reset link is missing its token — open the link from your email.`, the password rules, `Passwords do not match`, `This reset link is invalid or has expired`, `This reset link has already been used`. Success: "Password updated — sign in with your new password." The reset does not sign you in and does not end existing sessions.
+The reset page ("Choose a new password for your account") has **New password** and **Confirm new password** boxes and an **Update Password** button. Errors: `This reset link is missing its token — open the link from your email.`, the password rules, `Passwords do not match`, `This reset link is invalid or has expired`, `This reset link has already been used`. Success: "Password updated — sign in with your new password." The reset does not sign you in, and it ends every session of the account, in every browser.
 
 ## Teams
 

@@ -13,10 +13,11 @@ The Settings screen, at https://app.dectog.com/dashboard/settings, has up to ten
 |---|---|
 | **Email** | The email you sign in with. |
 | **Username / subdomain** | Your username, which is also the host of your links: `https://{username}.dectog.com/{slug}`. |
+| **Sign in with Google** | Shown when the deployment has Google sign-in configured: **Connect Google** links a Google account to your sign-in (yours, in every account you work in), and the row then reads **Connected**. Connecting signs out your other sessions. See [Connect Google](/dashboard/account-and-sign-in/#connect-google). |
 | **Revenue currency** | The currency every revenue total is in, EUR by default; one of the about 30 currencies the European Central Bank publishes reference rates for. Changing it converts every stored amount again. See [Revenue](/sdk/revenue/). |
 | **Data retention** | How many days the account keeps raw taps, installs, events and app starts, 1 to the deployment's maximum (400 on the hosted service). Empty keeps the maximum. **Save** applies it from the next daily run (03:17 UTC): older rows lose their personal columns, or go once the daily totals hold their day; totals stay. See [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/#anonymization-sweep-daily). |
 
-Apart from the revenue currency and the retention window nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
+Apart from the revenue currency, the retention window and connecting Google nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
 
 ## Account key
 
