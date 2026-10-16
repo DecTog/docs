@@ -35,8 +35,8 @@ Each event:
 | `purchase_type` | `one_time` or `subscription` | no | Conversions. |
 | `quantity` | integer 1 to 10000 | no | Conversions. |
 | `transaction_type` | `purchase`, `refund` or `cancel` | no | Conversions, default `purchase`. A refund subtracts its `revenue`; a cancel counts nothing and needs no `revenue`. |
-| `open_slug` | string, 128 | no | The link that last opened the app before this event. With it, `open_at` is required. |
-| `open_click_id` | string, 8 to 32 of `A-Z a-z 0-9 - _` | no | That open's click id. |
+| `open_slug` | string, 128 | no | The link that last opened the app before this event. With it, `open_at` is required. Not stored when it names no link of the account, or a link deleted, paused or expired before `open_at`: an open `/app-opens` refused takes no credit. |
+| `open_click_id` | string, 8 to 32 of `A-Z a-z 0-9 - _` | no | That open's click id. Anything else is dropped; the event is still stored. |
 | `open_at` | ISO 8601 date | with `open_slug` | When that link opened the app. A time after the request is stored as the request time. |
 | `session_id` | string, 64 | no | The app process the event came from (the SDK sends a new id per process). |
 | `app_store_jws` | string, 16384 | no | Conversions: a StoreKit 2 transaction (`jwsRepresentation`). Verified against Apple Root CA - G3; its `transactionId`, `originalTransactionId`, `productId`, price and currency replace the event's, `store` becomes `app_store`, and the row is stored with `source: "store"`. Its bundle ID must be one of the account's apps. With it, `revenue` is optional. |
@@ -77,7 +77,6 @@ The per-event errors in `rejected`:
 | `purchase_type must be one of one_time, subscription` |
 | `quantity must be a whole number from 1 to 10000` |
 | `open_at must be an ISO 8601 date` |
-| `open_click_id is not a click id` |
 | `app_store_jws must be a JWS of at most 16384 characters` |
 | `app_store_jws: <reason>` (the signature, chain or dates do not verify) |
 | `app_store_jws names no transaction` |
