@@ -96,7 +96,7 @@ The numbered-list icon opens a side panel with the screens people reached in you
 
 Temporary links show no click, install or revenue numbers.
 
-**Delete expired** appears on the Temporary tab of the Active view once at least one link has expired. It asks "Delete ALL expired temporary links? This cannot be undone." and removes every temporary link whose expiry has passed. Their clicks and installs are kept, and their slugs become free again. The server's daily job does the same automatically 24 hours after a link expires, except for links with an expired URL, which keep sending taps there.
+**Delete expired** appears on the Temporary tab of the Active view once at least one link has expired. It asks "Delete all expired temporary links? They leave this list. Their clicks, installs and revenue stay in your stats, and you can restore them from Deleted." and deletes every temporary link whose expiry has passed, as the trash icon does: they move to the **Deleted** view with their clicks and installs, and keep their slugs until you restore them or delete them permanently. The server's daily job does the same automatically 24 hours after a link expires, except for links with an expired URL, which keep sending taps there.
 
 Empty states: "No permanent links yet.", "No temporary links. Pick an expiry when creating a link to make one." and "No links match your search."
 
@@ -122,7 +122,7 @@ Permanent links only. **Template** (when the account has templates) picks the li
 
 ### Geo and language routing
 
-Permanent links only (the block is titled **Routing rules**). **Add rule** adds a block with its name in the header (placeholder `Rule 1`; recorded on each click it routes), **Countries** (two-letter codes such as `DE, AT, CH`), **Languages** (such as `de`), **From** and **Until** (scheduled routing, in your browser's time zone), **Share of visitors (%)** (an A/B split; empty for everyone), and the destinations it replaces for a matching tap: **Desktop destination**, **Mobile without the app**, **iOS deep link path**, **Android deep link path** and **Fallback URL**. Empty fields keep the link's own. The first matching rule wins; **Move up** reorders and **Remove** deletes a rule. **Save rules** sends them all; the server's error, such as `routing_rules[0] needs a condition: countries, languages, percent, starts_at or ends_at`, shows next to the button. Taps that match no rule are routed as usual. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
+Permanent links only (the block is titled **Routing rules**). **Add rule** adds a block with its name in the header (placeholder `Rule 1`; recorded on each click it routes), **Countries** (two-letter codes such as `DE, AT, CH`), **Languages** (such as `de`), **From** and **Until** (scheduled routing, in your browser's time zone), **Share of visitors (%)** (an A/B split, a whole number such as `50` or `50%`; empty for everyone), and the destinations it replaces for a matching tap: **Desktop destination**, **Mobile without the app**, **iOS deep link path**, **Android deep link path** and **Fallback URL**. Empty fields keep the link's own. The first matching rule wins; **Move up** reorders and **Remove** deletes a rule. **Save rules** sends them all; the server's error, such as `routing_rules[0] needs a condition: countries, languages, percent, starts_at or ends_at`, shows next to the button. Taps that match no rule are routed as usual. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
 
 ### Preview
 
