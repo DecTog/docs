@@ -31,7 +31,7 @@ The two TXT records let the certificate issue while `go.yourbrand.com` still poi
 | **Waiting for DNS** | Cloudflare has not seen the TXT records (or the CNAME) yet. Its message is shown under the records. | Add the records; DNS changes can take a while to spread. |
 | **Issuing certificate** | Ownership is proven; the certificate is being issued. | Wait a few minutes. |
 | **Ready: point the CNAME** | The hostname and its certificate are live. | Add (or change) the CNAME. |
-| **Active** | The CNAME points at DecTog: the server saw it in DNS, or a request arrived while DNS sends the domain to Cloudflare. Every new link URL uses the domain. | Add it to your apps (below). |
+| **Active** | The CNAME points at DecTog: the server saw it in DNS, or a request arrived while DNS sends the domain to Cloudflare. Every new link URL uses the domain. It stays active while Cloudflare renews its certificate or redeploys the hostname. | Add it to your apps (below). |
 | **No longer points here** | It was active, and Cloudflare reports the CNAME moved away. Links are built on your DecTog subdomain again. | Restore the CNAME; otherwise the domain is removed 7 days later. |
 | **Failed** | Cloudflare refused the hostname or gave up validating it. | Remove it and add it again, or check the records. |
 
@@ -56,3 +56,5 @@ Ship a build with these before you share links on the new domain: until then, ta
 ## Remove it
 
 **Remove** asks first. A domain that was serving is suspended rather than deleted: new links are built on your DecTog subdomain at once, taps on the domain keep working for 7 days, and **Restore** undoes the removal in that time. After 7 days the hostname is deleted. A domain that never went live is deleted at once.
+
+Adding another domain during those 7 days replaces the removed one only once Cloudflare has accepted the new hostname: if it refuses (the hostname is taken, or Cloudflare does not answer), the removed domain keeps serving and **Restore** still works. Adding the removed domain again restores it.
