@@ -26,7 +26,7 @@ The plugin reads every store's install referrer natively, in parallel, on the fi
 | Samsung Galaxy Store | `samsung` | Samsung's client library, reached by reflection, capped at 2 seconds | the host app adds `store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0` |
 | Xiaomi GetApps | `xiaomi` | Xiaomi's client library, reached by reflection, capped at 3 seconds | the host app adds `com.miui.referrer:homereferrer:1.0.0.7` |
 
-`oemStoreReferrers` (default `true`) controls whether the four OEM readers run at all; with `false` only Google Play is read.
+`DectogCollection.oemReferrers` (on by default, or as the dashboard sets it) controls whether the four OEM readers run at all; a `collect` set without it reads Google Play only.
 
 <Aside type="caution" title="OEM store pass-through is unverified">
 Only Google Play documents how it hands the `referrer` parameter of a store URL back to the installed app. DecTog tags the Huawei, Samsung, Xiaomi and vivo store URLs the same way and the SDK reads each store's referrer, but whether each store passes the value through has not been confirmed with a real install. Verify it on a device from that store before relying on it; until then, treat installs through those stores as fingerprint-attributed.
@@ -59,11 +59,13 @@ Only Google Play documents how it hands the `referrer` parameter of a store URL 
 
 ## Meta's on-device referrer
 
-`DectogConfig.fbAppId` is what enables this read. The Facebook App ID field on the dashboard's Apps page is only stored with the app record; it does not switch anything on in the SDK. With `fbAppId` set to your Facebook App ID (digits only), the plugin queries the install-referrer content providers of the Facebook, Instagram and Facebook Lite apps for that app id and sends what they recorded as `meta_referrer`, with Meta's timestamp and its click-through flag (`meta_referrer_is_ct`). When the recorded referrer carries `dtg_click`, the server credits that click with `matchSource: 'referrer'` and `referrerSource: 'meta'`. The read has a 1.5-second budget and runs only on Android; iOS has no equivalent.
+The Facebook App ID enables this read: the one saved on the dashboard's Apps page, which the SDK reads at start-up, or `DectogConfig.fbAppId`, which takes precedence. With the ID set to your Facebook App ID (digits only), the plugin queries the install-referrer content providers of the Facebook, Instagram and Facebook Lite apps for that app id and sends what they recorded as `meta_referrer`, with Meta's timestamp and its click-through flag (`meta_referrer_is_ct`). When the recorded referrer carries `dtg_click`, the server credits that click with `matchSource: 'referrer'` and `referrerSource: 'meta'`. The read has a 1.5-second budget and runs only on Android; iOS has no equivalent.
+
+Meta's referrer earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page. An older one opens the link's content (`routing`) but the install counts as organic with the flag `stale_meta`.
 
 ## Pasteboard on Android
 
-`readClipboardOnInstall` defaults to off on Android, where the Play referrer is already deterministic and Android 12 and newer shows a "pasted from your clipboard" notice on every read. Passing `true` forces the read: a description-only check first (the clip must be textual and not flagged sensitive), then the first clip item is accepted when it is a single token of at most 2048 characters with a valid scheme (`http(s)` needs a host, a custom scheme needs `://`). Everything else is the same as on iOS.
+The pasteboard read defaults to off on Android, where the Play referrer is already deterministic and Android 12 and newer shows a "pasted from your clipboard" notice on every read. A `collect` set with `DectogCollection.pasteboard` forces the read: a description-only check first (the clip must be textual and not flagged sensitive), then the first clip item is accepted when it is a single token of at most 2048 characters with a valid scheme (`http(s)` needs a host, a custom scheme needs `://`). Everything else is the same as on iOS.
 
 </TabItem>
 <TabItem label="iOS">
@@ -72,18 +74,19 @@ Only Google Play documents how it hands the `referrer` parameter of a store URL 
 
 iOS has no install referrer, so DecTog uses the pasteboard. The web side seeds it: with **iOS tap-to-store** enabled in the app's Advanced settings, an iPhone tap sees a one-button page whose "Get the app" button copies the link with its click id (`https://{username}.dectog.com/{slug}?dtg_click={id}`) and then opens the App Store. The mobile interstitial's "Open app" button copies the same value before trying your scheme.
 
-On the first launch the SDK, with `readClipboardOnInstall` at its default (`null` means on for iOS):
+On the first launch the SDK, with the pasteboard read at its default (on for iOS):
 
 1. Asks `UIPasteboard.general.hasURLs` whether a URL is there. This is a metadata check and shows no alert.
 2. Only when a URL is present, reads it (`pasteboard.url`, else `pasteboard.string`, at most 2048 characters). On iOS 16 and newer this read is what shows Apple's "Allow paste from …?" alert. iOS 15 shows the passive "pasted from" banner instead.
-3. Checks on the device whether the text parses as a DecTog link for this deployment (the same forms the link handler recognizes). Anything else is discarded on the device and never sent.
-4. Sends a DecTog URL as `clipboard_url` with the registration and clears the pasteboard, so a later launch or another app cannot replay it.
+3. Checks on the device whether the text parses as a DecTog link for this deployment (the same forms the link handler recognizes) **and** names a click or a link (`dtg_click=` or `dtg_l=`), which is what the tap-to-store page copies. Anything else, including a plain share link the user copied to paste into a chat, is left on the pasteboard and never sent.
+4. Sends the URL as `clipboard_url` with the registration and notes the pasteboard's change counter (`UIPasteboard.changeCount`).
+5. Clears the pasteboard only when the server credited the link (`matchSource: 'clipboard'`, or a late claim answered `upgraded`) **and** the change counter is unchanged, so nothing the user copied in the meantime is wiped. A link the server did not credit stays where it was.
 
 The read has a 6-second budget because the user has to answer the alert. When the answer arrives after the registration left, the URL is sent as a late claim (`claim_source: clipboard`).
 
 **What the server accepts** (`clipboard_url`): an `http(s)` URL whose host is the deployment's root domain or one of its subdomains, or its API host, or whose path starts with `/r/`; or any custom-scheme URL. The last path segment must be a valid slug. The URL attributes only when it carries `dtg_click`; a bare copied link is recorded as `clipboard_slug` for diagnostics but earns no credit, and a late claim with a bare link is rejected with `no_signal`. A credited pasteboard match has `matchSource: 'clipboard'` and `matchConfidence: 'guaranteed'`.
 
-Pass `readClipboardOnInstall: false` to opt out on iOS.
+Pass a `collect` set without `DectogCollection.pasteboard` to opt out on iOS.
 
 ### Explaining the alert first
 
@@ -94,10 +97,10 @@ final willPrompt = await FlutterDectog().willShowPasteboardPrompt();
 if (willPrompt) {
   // Show your explanation, then initialize.
 }
-await FlutterDectog().initialize(DectogConfig(apiKey: 'dtg_your_api_key'));
+await FlutterDectog().initialize(DectogConfig(apiKey: 'dtg_pub_your_sdk_key'));
 ```
 
-It returns `true` only when all of these hold: the device runs iOS 16 or newer, the read is enabled for iOS (the optional `readClipboardOnInstall` argument overrides the config and the platform default), the install has not been registered yet, and the pasteboard currently holds a URL (checked silently). It is always `false` on Android.
+It returns `true` only when all of these hold: the device runs iOS 16 or newer, the read is enabled for iOS (the optional `collect` argument stands in for the config's before `initialize`; then the dashboard setting and the platform default apply), the install has not been registered yet, and the pasteboard currently holds a URL (checked silently). It is always `false` on Android.
 
 ## DectogPasteButton
 
@@ -132,7 +135,7 @@ The pasted link must carry `dtg_click` to attribute; the same server rules as th
 
 ## Apple Search Ads
 
-With `collectAppleSearchAdsToken: true` the plugin reads the AdServices attribution token (`AAAttribution.attributionToken()`, iOS 14.3 and newer). The token carries no identifier and shows no prompt; it is `nil` on the simulator. The first launch gives it 0.5 seconds; when it was not ready, later launches fetch it and send it through a claim until the server acknowledges it. The token travels as `asa_token`.
+With `DectogCollection.appleSearchAdsToken` in `collect` the plugin reads the AdServices attribution token (`AAAttribution.attributionToken()`, iOS 14.3 and newer). The token carries no identifier and shows no prompt; it is `nil` on the simulator. The first launch gives it 0.5 seconds; when it was not ready, later launches fetch it and send it through a claim until the server acknowledges it. The token travels as `asa_token`.
 
 The server exchanges the token with Apple: three attempts 5 seconds apart inside the install request, then one attempt per scheduled pass (both cron triggers, up to 100 pending tokens each) until Apple answers or the token's 24-hour lifetime passes. The result is `DectogAppInstallResponse.appleSearchAds`, a `DectogAppleSearchAds`:
 
@@ -151,6 +154,11 @@ Apple Search Ads attribution is provenance only. It never changes `matched`, whi
 
 </TabItem>
 </Tabs>
+
+## How long a pasted link counts
+
+A pasted link, whether read on the first launch or through `DectogPasteButton`, earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page (1 to 720 hours). A link copied weeks ago, or re-shared as text, still opens its content in the app through `routing`, but the install counts as organic with the flag `stale_clipboard`; with strict fraud mode on it does neither. A late paste of such a link answers `claim: rejected`, `claimReason: stale_click`. Store referrers are not limited this way.
+
 
 <Aside type="note" title="Which signal wins">
 The server walks the signals in a fixed order: store referrer, then clipboard URL, then Meta's referrer. The first one that names a click no other device's install has consumed wins. A click that another device already consumed makes the server move on to the next signal, and `click_reuse` is flagged only when nothing later matches. Only when no deterministic signal applies does the fingerprint run. See [How attribution works](/start/how-attribution-works/).

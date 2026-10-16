@@ -41,22 +41,29 @@ Rules:
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. With debug logging on, the SDK warns when it is given an account key. |
+| `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. |
 | `baseUrl` | `String?` | `null` → `https://app.dectog.com` | API base URL. Set it only when self-hosting. Trailing slashes are stripped. |
 | `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). Set it when self-hosted links live on a different host than the API. |
+| `linkDomains` | `List<String>` | `[]` | Your [custom link domains](/links/custom-domains/), like `go.yourbrand.com`: `https://go.yourbrand.com/{slug}` is a link of your account. The SDK also learns the active domain from the server after its first answer; listing it covers a link that opens the app on its very first start. |
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
 | `installReferrerProvider` | `Future<String?> Function()?` | `null` | Replaces the built-in Android referrer readers with your own Play referrer string. |
 | `installReferrerTimeout` | `Duration` | 5 seconds | How long the first-launch registration waits for the Android install referrer. Android only. |
-| `oemStoreReferrers` | `bool` | `true` | Also read the Huawei AppGallery, Samsung Galaxy Store, Xiaomi GetApps and vivo referrers. Android only. |
-| `collectDeviceData` | `bool` | `true` | Send the device tier: device id, hardware, screen, network and carrier. |
-| `readClipboardOnInstall` | `bool?` | `null` → on for iOS, off for Android | Read the pasteboard once at first launch for a copied DecTog link. |
-| `fbAppId` | `String?` | `null` | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
+| `collect` | `Set<DectogCollection>?` | `null` → the device tier on; the pasteboard (iOS) and the OEM referrers as the dashboard sets them; no Apple Search Ads token; the advertising id when a provider is set | What this build collects: `deviceTier`, `pasteboard`, `oemReferrers`, `appleSearchAdsToken`, `adId`. A set is exact. See [Device data and privacy](/sdk/device-data-and-privacy/#choosing-what-to-collect). |
+| `advertisingIdProvider` | `Future<DectogAdvertisingId?> Function()?` | `null` | Reads the IDFA or GAID; pass `DectogAdId.provider` from `flutter_dectog_adid`. |
+| `fbAppId` | `String?` | `null` → the Facebook App ID saved in the dashboard | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
 | `persistDeviceId` | `bool` | `true` | Keep the first iOS IDFV in the Keychain so the device id survives reinstall. |
-| `collectAppleSearchAdsToken` | `bool` | `false` | Read the AdServices attribution token on iOS 14.3 and newer. |
+| `enabled` | `bool` | `true` | Whether collection is on before the app calls `setEnabled`. `false` waits for consent; see [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent). |
+| `environment` | `DectogEnvironment?` | `null` | The environment this build's key should belong to, `live` or `test`. `diagnostics()` warns when the key belongs to the other one. See [Testing](/sdk/testing/). |
 
 The config also exposes `DectogConfig.defaultBaseUrl` (`https://app.dectog.com`), `DectogConfig.defaultLinkRootDomain` (`dectog.com`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
 
 The attribution options are explained on [Install attribution](/sdk/install-attribution/), [Deterministic attribution](/sdk/deterministic-attribution/) and [Device data and privacy](/sdk/device-data-and-privacy/).
+
+### Settings from the dashboard
+
+`initialize` also reads the app's settings from the server (`GET /api/v1/sdk-config`): the Facebook App ID, the OEM store referrers switch and the pasteboard setting saved on the Apps page, the app's custom schemes and identifiers, and the hosts its links live on. They apply wherever the corresponding `DectogConfig` field is left `null`, so a change in the dashboard reaches installed apps without a release. The SDK caches the answer for an hour: a launch with a fresh cache makes no request, the very first launch waits at most 1.5 seconds before registering the install, and a stale cache is refreshed in the background.
+
+`FlutterDectog().diagnostics()` compares the build with that record and returns warnings, also printed with `enableDebugLogging`: a bundle ID or package that differs from the dashboard's, an iOS URL scheme missing from `CFBundleURLTypes`, and on Android 12 and newer every link host the system has not verified for App Links. It never stops the SDK; call it from a debug screen or a test build.
 
 ### Self-hosted backends
 
@@ -79,6 +86,7 @@ An incoming URL is a DecTog link when it matches one of these forms. `baseHost` 
 | Form | Example | Used for |
 |---|---|---|
 | `https://{username}.{root}/{slug}` | `https://acme.dectog.com/launch` | Hosted and self-hosted subdomain links. The username must contain no dot, and the host must differ from `baseHost`. |
+| `https://{domain}/{slug}`, for a host in `linkDomains` or the custom domain the server names | `https://go.yourbrand.com/launch` | Your [custom link domain](/links/custom-domains/). The link belongs to the key's own account, which the SDK reads from the server. `{domain}/r/{username}/{slug}` works too. A host equal to `baseHost` or under `root` is never a custom domain. |
 | `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
 | any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |
 | any non-http(s) scheme whose query carries `dtg_l={username}/{slug}` | `myapp://products/42?dtg_click=…&dtg_l=acme/launch` | Custom-scheme opens and the Android `intent://` bounce. The host and path are the app's own route; the link comes from `dtg_l`. |
@@ -146,14 +154,28 @@ OAuth and social-login callbacks that open the app through `app_links` are neith
 
 For every recognized link the SDK sends, without blocking your handler:
 
-- `POST /api/v1/clicks` with the slug, `is_mobile_app: true`, platform, language, `client_click_time` (when the URL reached the device), the opened URL's `utm_*` and `dec_*` values, the device id and model when `collectDeviceData` is on, and on Android the launching package (`launch_referrer`). When the URL carries `dtg_click` from an `intent://` bounce, the server converts the existing web click row (if it is less than 24 hours old) instead of inserting a second one.
+- `POST /api/v1/clicks` with the slug, `is_mobile_app: true`, platform, language, `client_click_time` (when the URL reached the device), the opened URL's `utm_*` and `dec_*` values, the device id and model with the device tier, and on Android the launching package (`launch_referrer`). When the URL carries `dtg_click` from an `intent://` bounce, the server converts the existing web click row (if it is less than 24 hours old) instead of inserting a second one.
 - `POST /api/v1/app-opens`, which feeds the per-link Opens count and `lastOpen` on attribution re-pulls. Skipped when the user opted out.
 
 Neither call is retried, and a failure never affects the emitted click.
 
-<Aside type="caution" title="Scheme opens with a deep-link path">
-A link that has a deep-link path opens as `{scheme}://{path}` on Android and iOS. The parser then reads the first path segment as the username and the second as the slug, so `username`, `slug` and `linkResolution` are wrong for that click and the reported click lands on an unknown slug. Route such URLs from `originalUrl` in your own code.
+<Aside title="Scheme opens with a deep-link path">
+A link that has a deep-link path opens as `{scheme}://{path}?…&dtg_l={username}/{slug}` on Android and iOS. The SDK names the link from `dtg_l`, never from the path, so `username`, `slug` and `linkResolution` are right, and `originalUrl` carries your app's own route (`{scheme}://{path}`) for your router.
 </Aside>
+
+## Links tapped inside your app
+
+iOS and Android never hand a Universal Link or an App Link back to the app that shows it. A DecTog link in your own chat, feed or help screen therefore opens the browser when tapped. Pass it to the SDK instead:
+
+```dart
+// In your own link tap handler:
+final click = await FlutterDectog().handleUrl(url);
+if (click == null) {
+  await launchUrl(Uri.parse(url)); // not a DecTog link: open it as usual
+}
+```
+
+`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `DectogLinkClick`. It counts as an app open, not as a click (decision C19): the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not a DecTog link (including a custom domain the SDK does not know) and for an authentication callback.
 
 ## Complete example
 

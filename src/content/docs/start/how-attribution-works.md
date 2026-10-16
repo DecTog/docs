@@ -25,10 +25,10 @@ If the app is already installed and the OS opens it directly, there is no instal
 On the first launch the SDK registers the install once (an idempotent `install_attempt_id` makes retries safe) with every deterministic signal it can read:
 
 - the Google Play install referrer, or the Huawei, Samsung, Xiaomi or vivo one, waiting at most 5 seconds (`installReferrerTimeout`);
-- the pasteboard, on iOS by default (`readClipboardOnInstall`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
-- Meta's on-device install referrer on Android, when `DectogConfig.fbAppId` is set;
-- the device tier (model, OS, language, screen, connectivity, carrier) when `collectDeviceData` is on, which the fingerprint needs;
-- the Apple Search Ads token when `collectAppleSearchAdsToken` is on.
+- the pasteboard, on iOS by default (`DectogCollection.pasteboard`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
+- Meta's on-device install referrer on Android, when the app has a Facebook App ID (`DectogConfig.fbAppId`, else the one saved on the Apps page);
+- the device tier (model, OS, language, screen, connectivity, carrier), on by default, which the fingerprint needs;
+- the Apple Search Ads token when `collect` names `appleSearchAdsToken`.
 
 A signal that arrives later, in the same process or on a later launch, is sent as a claim. See [Late claims](#late-claims) below.
 
@@ -65,7 +65,7 @@ The dashboard's **Match confidence & referrer health** panel explains each level
 | Low | ambiguous or contradicted — nothing | `false` | absent |
 | No candidate | no click from this network in the window | `false` | absent |
 
-In fingerprint terms: *unique* means the best candidate leads the runner-up by at least 10 points or is the only one; *corroborated* means a device-model match, a screen-profile agreement together with an OS-major agreement, or any score of 15 or more; *medium* is a unique best candidate scoring 0 to 14, for example an OS-major agreement cancelled by a language mismatch; *low* is a tie or a negative score. A device-model mismatch excludes a candidate outright.
+In fingerprint terms: *unique* means the best candidate leads the runner-up by at least 10 points or is the only one; *corroborated* means a device-model match, a screen-profile agreement together with an OS-major agreement, or any score of 15 or more; *medium* is a unique best candidate scoring 0 to 14, for example an OS-major agreement cancelled by a language mismatch; *low* is a tie between candidates that differ, or a negative score. Repeat taps from one phone (identical signals) count as one candidate, so they never tie with each other. A device-model mismatch excludes a candidate outright.
 
 Use `matched` for credit and `routing` for navigation. Routing a new user to the content they tapped is cheap to get wrong; crediting a campaign is not.
 
@@ -78,14 +78,14 @@ Only mobile web clicks of your account, from the same hashed IP (IPv6 at /64) an
 | The click carries a device model, the install carries one too, and the install is not on cellular data | 24 hours (`ATTRIBUTION_WINDOW_HOURS`) |
 | Everything else: a click without a model (iOS Safari sends none), or an install on cellular data | 2 hours (`ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS`), or the app's **Low-entropy attribution window** (1 to 720 hours), never longer than the 24-hour window |
 
-The per-app window is read from the account's default (oldest) app. The deterministic ladder has no window: a referrer older than 30 days still matches, with the fraud flag `stale_referrer`.
+The per-app window is the install's own app's: the app whose package or bundle ID the SDK reports, or the only app of a one-app account. An install is also only matched against clicks on its own app's links, and on links bound to no app. A store referrer has no window: one older than 30 days still matches, with the fraud flag `stale_referrer`. An app can turn the probabilistic match off (Apps, Advanced, **Probabilistic match**); its installs then use the deterministic signals only. A pasted link and Meta's referrer count for 7 days (the app's **Pasted-link and Meta window**, 1 to 720 hours). An older one opens the link's content in the app (routing) but earns no credit and carries `stale_clipboard` or `stale_meta`; with strict fraud mode on it does nothing.
 
 ## Reinstalls and app updates
 
 | Case | How it is detected | What happens |
 |---|---|---|
 | App update | The SDK sees that the app was installed before this build (`install_state: update`) | Registered, never fingerprint-matched. The Overview's quality panel counts these as "kept out of matching". A deterministic signal still applies. |
-| Reinstall | The server has seen the device id before, or the SDK classifies it from the iOS Keychain dates (`install_state: reinstall`) | Registered with `is_reinstall: true`. It still runs the ladder, but the Installs KPI and the per-link install counts exclude it. The quality panel includes it. |
+| Reinstall | The server has seen the device id before, or the SDK classifies it from the iOS Keychain dates (`install_state: reinstall`) | Registered with `is_reinstall: true`. It still runs the ladder, but the Installs KPI and the per-link install counts exclude it. The quality panel includes it. When nothing else matches, it is routed (not credited) to the link its earlier install on the same device came from, if that tap is within the pasted-link window (7 days by default), so the user lands on the same content again. |
 
 The device id survives a reinstall by default (`ANDROID_ID` on Android, the first IDFV kept in the Keychain on iOS with `persistDeviceId`). Repeated test installs on one device therefore show as reinstalls.
 
@@ -97,7 +97,7 @@ The verdict can change once, from organic or fingerprint to deterministic:
 - A link pasted through `DectogPasteButton` (iOS 16 and later, no system alert) is sent as a claim.
 - A late Meta read is sent as a claim.
 
-Claims never run the fingerprint and never downgrade: a deterministic verdict is final, including a strict-mode verdict that was zeroed. The response carries `claim: upgraded | unchanged | rejected` with a `claim_reason` (`click_reuse`, `click_not_found`, `no_signal`, `already_deterministic`), and the SDK re-emits an upgraded verdict on `onAppInstalled`.
+Claims never run the fingerprint and never downgrade: a deterministic verdict is final, including a strict-mode verdict that was zeroed. The response carries `claim: upgraded | unchanged | rejected` with a `claim_reason` (`click_reuse`, `click_not_found`, `no_signal`, `already_deterministic`, `stale_click`), and the SDK re-emits an upgraded verdict on `onAppInstalled`.
 
 ## Fraud flags and strict mode
 
@@ -110,13 +110,15 @@ Every install is checked against explainable rules. The hits ride on the verdict
 | `install_velocity_ip` | The same hashed IP already produced 5 installs in 24 hours (25 on cellular data) |
 | `click_storm_ip` | The matched click's IP produced more than 100 clicks in the hour before it |
 | `stale_referrer` | The referrer or clipboard click is older than 30 days |
+| `stale_clipboard` | A pasted link's click is older than the pasted-link window (7 days by default); the install is routed, not credited |
+| `stale_meta` | The same for Meta's install referrer |
 | `click_reuse` | A deterministic signal named a click another device's install already consumed |
 
-With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the install webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the default app.
+With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the `app.installed` webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the app the verdict concerns: the credited or routed link's app, else the install's own app, else the oldest app.
 
 ## Apple Search Ads
 
-Apple Search Ads is a separate signal and never changes `matched`. When `collectAppleSearchAdsToken` is on, the SDK sends Apple's AdServices token with the install (or with a later claim). The server exchanges it with Apple: three attempts 5 seconds apart during the request, then one attempt per cron run, until the token's 24-hour lifetime ends. The verdict's `apple_search_ads` object reports the status:
+Apple Search Ads is a separate signal and never changes `matched`. When `collect` names `appleSearchAdsToken`, the SDK sends Apple's AdServices token with the install (or with a later claim). The server exchanges it with Apple: three attempts 5 seconds apart during the request, then one attempt per cron run, until the token's 24-hour lifetime ends. The verdict's `apple_search_ads` object reports the status:
 
 | Status | Meaning |
 |---|---|
@@ -132,5 +134,5 @@ The field is always present on the verdict and is `null` until a token was ever 
 ## Where you see the verdict
 
 - In the app: `onAppInstalled` on first launch and on upgrades; `getAttributionData()` later, re-pulled from the server when the cache is empty.
-- On your server: the install webhook.
+- On your server: the `app.installed` webhook.
 - In the dashboard: the Installs and Conversion cards, the **Attribution quality** card, the **Match confidence & referrer health** panel (confidence per platform, Android referrer coverage, fingerprint accuracy, click-to-install latency) and each customer's attribution block.

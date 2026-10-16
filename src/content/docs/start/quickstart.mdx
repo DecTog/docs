@@ -18,12 +18,12 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
    | Field | Rule |
    |---|---|
    | Email | A valid address. It is lowercased and becomes your sign-in name. |
-   | Username | 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit (`^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$`). Reserved names: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`. The form suggests a username from your email until you edit it. |
+   | Username | 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit (`^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$`). Reserved names: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-`. The form suggests a username from your email until you edit it. |
    | Password | 8 to 72 characters with at least one uppercase letter, one lowercase letter and one digit. |
 
    The username is your link subdomain. Every link you create is `https://acme.dectog.com/{slug}`, and the hint under the field reads "Your links live on acme.dectog.com". There is no way to rename an account later.
 
-   Click **Create Account**. The next screen says "Account created" and shows two keys: **SDK key, for your app** (`dtg_pub_` and 32 hex characters), which goes into the SDK, and **Account key, for servers and scripts** (`dtg_` and 32 hex characters), which never goes into an app. You can view and copy both again under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
+   Click **Create Account**. The next screen says "Account created" and shows two keys: **SDK key, for your app** (`dtg_pub_` and 32 hex characters), which goes into the SDK, and **Account key, for servers and scripts** (`dtg_` and 32 hex characters), which never goes into an app. Copy the account key now: it is shown only this once (**Settings** can replace it). The SDK key stays listed under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
 
    <Aside type="note" title="Self-hosting">
    On your own deployment the first account comes from `POST /api/admin/bootstrap`, not from the signup form. See [Local quick start](/self-hosting/local-quick-start/).

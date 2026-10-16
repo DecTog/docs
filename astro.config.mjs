@@ -11,6 +11,10 @@ const description =
 export default defineConfig({
 	site: 'https://docs.dectog.com',
 	trailingSlash: 'always',
+	// Pages that moved; published copies of SKILL.md and the plugin still link the old URLs.
+	redirects: {
+		'/api/install-webhook/': '/api/webhooks/',
+	},
 	integrations: [
 		starlight({
 			title: 'DecTog Docs',
@@ -45,6 +49,7 @@ export default defineConfig({
 				{ label: 'Start here', collapsed: true, items: [{ autogenerate: { directory: 'start' } }] },
 				{ label: 'Links & routing', collapsed: true, items: [{ autogenerate: { directory: 'links' } }] },
 				{ label: 'Flutter SDK', collapsed: true, items: [{ autogenerate: { directory: 'sdk' } }] },
+				{ label: 'React Native SDK', collapsed: true, items: [{ autogenerate: { directory: 'react-native' } }] },
 				{ label: 'Dashboard', collapsed: true, items: [{ autogenerate: { directory: 'dashboard' } }] },
 				{ label: 'REST API', collapsed: true, items: [{ autogenerate: { directory: 'api' } }] },
 				{ label: 'Self-hosting', collapsed: true, items: [{ autogenerate: { directory: 'self-hosting' } }] },
@@ -57,8 +62,8 @@ export default defineConfig({
 					description,
 					details: [
 						'DecTog is a self-hostable deep-linking and install-attribution service: short links that open an installed app or route visitors through the app stores, deferred deep linking for new installs, post-install events and a real-time dashboard.',
-						'The hosted service lives at https://dectog.com (API at https://app.dectog.com, links on `{username}.dectog.com`). The server (Cloudflare Worker + D1 + Next.js dashboard) is AGPL-3.0; the Flutter SDK `flutter_dectog` is MIT.',
-						'These pages describe the behaviour of flutter_dectog 1.0.x and the server at database migration 0027.',
+						'The hosted service lives at https://dectog.com (API at https://app.dectog.com, links on `{username}.dectog.com`). The server (Cloudflare Worker + D1 + Next.js dashboard) is AGPL-3.0; the Flutter SDK `flutter_dectog` and the React Native SDK `react-native-dectog` are MIT.',
+						'These pages describe the behaviour of flutter_dectog 1.0.x, react-native-dectog 1.0.x and the server on its current database migrations.',
 					].join('\n\n'),
 					optionalLinks: [
 						{
@@ -72,14 +77,20 @@ export default defineConfig({
 							description: 'llms.txt shipped inside the flutter_dectog package: types, link URLs, routing and init.',
 						},
 						{
+							label: 'React Native SDK agent reference',
+							url: 'https://raw.githubusercontent.com/DecTog/react-native-dectog/main/llms.txt',
+							description: 'llms.txt shipped inside the react-native-dectog package: types, link URLs, setup and init.',
+						},
+						{
 							label: 'Source code',
 							url: 'https://github.com/DecTog',
-							description: 'Server, Flutter SDK and these docs on GitHub.',
+							description: 'Server, SDKs and these docs on GitHub.',
 						},
 					],
 					customSets: [
 						{ label: 'Flutter SDK', paths: ['sdk/**'], description: 'Installing and using the Flutter SDK.' },
-						{ label: 'REST API', paths: ['api/**'], description: 'The SDK-facing REST API and the install webhook.' },
+						{ label: 'React Native SDK', paths: ['react-native/**'], description: 'Installing and using the React Native and Expo SDK.' },
+						{ label: 'REST API', paths: ['api/**'], description: 'The REST API: links, attribution, events, raw export and webhooks.' },
 						{ label: 'Self-hosting', paths: ['self-hosting/**'], description: 'Running your own DecTog server.' },
 					],
 				}),

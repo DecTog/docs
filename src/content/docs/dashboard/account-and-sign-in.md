@@ -12,12 +12,12 @@ Sign-in lives at https://app.dectog.com/login. The page is titled **Dashboard Ac
 | Field | Rules |
 |---|---|
 | **Email** | A valid address. Stored trimmed and lower-cased. |
-| **Username** | Suggested from the part of your email before `@` until you edit it. 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`. The hint reads "Your links live on {username}.{root domain}" (`dectog.com` on the hosted service): the username is your link subdomain and cannot be changed later. |
+| **Username** | Suggested from the part of your email before `@` until you edit it. 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-`, the prefix of [test environments](/dashboard/settings/#test-environment). The hint reads "Your links live on {username}.{root domain}" (`dectog.com` on the hosted service): the username is your link subdomain and cannot be changed later. |
 | **Password** | 8 to 72 characters with at least one lowercase letter, one uppercase letter and one digit. Hint: "At least 8 characters, with upper and lowercase letters and a number". |
 
 **Create Account** submits. Errors, verbatim from the server: `Please enter a valid email address`; the password rule that failed, such as `Password must include an uppercase letter`; `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`; `Username '{name}' is reserved`; `An account with this email or username already exists`; and `Signup is currently closed` when the deployment has closed signups, in which case the Sign up tab is hidden as well.
 
-On success you are signed in and see **Account created — you are signed in.**, a **Your API key** box with the full key, the note "You can view and copy it any time in Settings." and a **Go to dashboard** button. The same key is shown on the [Settings](/dashboard/settings/) screen afterwards.
+On success you are signed in and see **Account created — you are signed in.** with two keys: **SDK key, for your app** (listed again under Settings → [SDK keys](/dashboard/settings/#sdk-keys)) and **Account key, for servers and scripts**, which this screen shows once: "Copy it now: it is not shown again (Settings can replace it)." Then **Go to dashboard**.
 
 A footer line reads "Your account gets its own link subdomain and API key." Every account created through signup has the `user` role (see [Roles](#roles)).
 
@@ -31,25 +31,33 @@ A footer line reads "Your account gets its own link subdomain and API key." Ever
 | **Forgot password?** | Opens the reset form described below. |
 | **Sign in with Google** | Shown when the deployment has Google sign-in configured. |
 
-The session is a cookie named `dectog_session` holding a signed token that expires 30 days after sign-in whatever the checkbox; the checkbox only decides whether the browser keeps the cookie across restarts. **Log out** (the icon in the sidebar footer) deletes the cookie and returns to the login page. The server keeps no list of sessions: logging out, or resetting the password, does not end sessions open in other browsers; those run until their token expires.
+The session is a cookie named `dectog_session` holding a signed token that expires 30 days after sign-in whatever the checkbox; the checkbox only decides whether the browser keeps the cookie across restarts. **Log out** (the icon in the sidebar footer) deletes the cookie and returns to the login page; sessions open in other browsers keep running until their token expires. Two things end every session at once, in every browser: [resetting the password](#forgot-and-reset-password) and [connecting Google](#connect-google).
 
 Local development builds also show "Demo account: demo@dectog.local · demo1234" under the form; the hosted service does not.
 
 ## Sign in with Google
 
-**Sign in with Google** (or **Sign up with Google** on the Sign up tab) sends you to Google's account chooser and back, through a server-side OAuth authorization-code flow with PKCE. What happens next depends on the verified Google email:
+**Sign in with Google** (or **Sign up with Google** on the Sign up tab) sends you to Google's account chooser and back, through a server-side OAuth authorization-code flow with PKCE. What happens next depends on the Google account and its verified email:
 
 | Situation | Result |
 |---|---|
-| The Google account is already linked to a DecTog account. | You are signed in. |
-| A DecTog account uses the same email and is not linked to any Google account. | The two are linked automatically and you are signed in. This works even when signups are closed. |
-| A DecTog account uses the same email but is linked to a different Google account. | Error: `That email is already linked to a different Google account.` |
+| The Google account is connected to a DecTog account. | You are signed in, whatever its email is now. |
+| A DecTog account uses the same email and has no Google account connected. | Error: `A DecTog account already uses that email. Sign in with its password, then connect Google in Settings → Account.` Nothing is linked. |
+| A DecTog account uses the same email but is connected to a different Google account. | Error: `That email is already linked to a different Google account.` |
 | No account uses the email and signups are open. | One more step: **Signed in with Google as {email}. One last step:** with a **Choose a username** box that follows the signup rules. **Create Account** creates the account and shows the API key screen; **Cancel** abandons it. You have 15 minutes to finish, after which the page reports `Google sign-in expired — try again`. |
 | No account uses the email and signups are closed. | Error: `No DecTog account uses that Google email, and signup is currently closed.` |
 
 Other errors shown on return: `Google sign-in was cancelled.`; `Google sign-in timed out — please try again.` (the handshake must complete within 10 minutes); `Couldn't verify your Google account — please try again.`; `Google sign-in is not available right now.`. Username errors on the last step: `That username is taken` and `An account with this Google email already exists — sign in instead`.
 
-An account created through Google has no usable password: the server stores a random one. To sign in with a password later, use **Forgot password?** to set one. Linking cannot be undone from the dashboard.
+An account created through Google has no usable password: the server stores a random one. To sign in with a password later, use **Forgot password?** to set one.
+
+### Connect Google
+
+A matching email is not enough to link an existing account: sign-up does not check that the address belongs to whoever signs up, so an account with your email might not be yours. To add Google sign-in to an account you have, sign in with its password, open Settings → **Account**, and select **Connect Google** next to **Sign in with Google** (shown when the deployment has Google sign-in configured). Choose the Google account; back in Settings, "Google is connected" confirms it, and the row reads **Connected**. Any Google account works, whatever its email. Connecting signs out every other session of the account; this browser stays signed in.
+
+Errors shown in Settings: `That Google account already signs in to another DecTog account.`, `Your sign-in is already connected to a different Google account.`, `Connecting Google was cancelled.`, `Connecting Google timed out. Please try again.`, `Couldn't verify your Google account. Please try again.`. Connecting cannot be undone from the dashboard.
+
+If an account with your email exists that you did not create, use **Forgot password?**: the reset link goes to your address, and the new password signs out every session of whoever made it.
 
 ## Forgot and reset password
 
@@ -61,13 +69,31 @@ The email, with the subject "Reset your DecTog password", carries a link to `htt
 - can be used once; the server marks it used in the same step that changes the password, so a second submit fails;
 - is cancelled by any newer request: only the most recent link works.
 
-The reset page ("Choose a new password for your account") has **New password** and **Confirm new password** boxes and an **Update Password** button. Errors: `This reset link is missing its token — open the link from your email.`, the password rules, `Passwords do not match`, `This reset link is invalid or has expired`, `This reset link has already been used`. Success: "Password updated — sign in with your new password." The reset does not sign you in and does not end existing sessions.
+The reset page ("Choose a new password for your account") has **New password** and **Confirm new password** boxes and an **Update Password** button. Errors: `This reset link is missing its token — open the link from your email.`, the password rules, `Passwords do not match`, `This reset link is invalid or has expired`, `This reset link has already been used`. Success: "Password updated — sign in with your new password." The reset does not sign you in, and it ends every session of the account, in every browser.
+
+## Teams
+
+Several people can work in one account. Each person signs in as themselves, to their own account, and the account's owners invite others from Settings → [Team](/dashboard/settings/#team), each with a role:
+
+| Role | Can |
+|---|---|
+| **Owner** | Everything: links, apps, webhooks, customers and exports, plus the keys, the team, the custom domain, the revenue currency, the retention window, the test environment, and erasing a device or a customer. |
+| **Member** | Links, link templates, temporary links, apps, webhooks, customers, exports and the audit log. Sees the SDK keys but does not create or revoke them. |
+| **Viewer** | Reads the numbers: Overview, Links, Apps and the parts of Settings without keys. No customers, exports, keys or audit log, and no one's personal data: the events, installs and links a viewer reads leave out customer and device ids, the metadata an app sent, where a tap was (city, region, network) and a referral link's customer, and webhook URLs show only their address (`https://hooks.example.com`), since a webhook's path can work as a password. |
+
+The person who owns an account is always its owner, and cannot be removed or demoted. Owners can make others owners too.
+
+### Joining by invite
+
+An invite email links to `{WEB_URL}/invite?token=…`. The link works for 7 days, once, and only for the invited address: sign in, or create an account, with that email, and select **Join**. A person signed in with another address is told so. Every person has an account of their own, with its own username and keys, whether they use it or not.
+
+After joining, an **Account** menu at the top of the sidebar lists your own account and every account you belong to, each with your role there; choosing one reloads the dashboard on it, on its live data. **Leave** at the bottom of the Team card leaves the account shown; an owner has to invite you again. When an owner removes you, your next request lands on your own account.
 
 ## Roles
 
-Every account has a role: `owner` or `user`.
+Every account also has a platform role: `owner` or `user`. It is separate from the team roles above.
 
-- **Users** see Overview, Links, Apps, Customers and Settings, scoped to their own account. There is no cross-account view.
+- **Users** see Overview, Links, Apps, Customers and Settings of the account chosen in the **Account** menu, as far as their team role there allows (a viewer has no Customers). There is no cross-account view.
 - The **owner** additionally sees **Blog** and **Messages** in the sidebar; see [Blog and messages](/dashboard/blog-and-messages/). Non-owners who open `/dashboard/blog` or `/dashboard/messages` by URL are sent back to the Overview, and the API answers `403 Owner access required`.
 
 The owner is the account created by the deployment's bootstrap call, or by the local demo seed. When the role column was introduced, the oldest existing account became the owner. Signup and Google sign-in always create `user` accounts, and there is no screen or API call to change a role. On the hosted service, accounts created through signup are `user` accounts with the full dashboard; Blog and Messages belong to the site operator.
@@ -76,6 +102,7 @@ The owner is the account created by the deployment's bootstrap call, or by the l
 
 - **Renaming the username.** It is your link subdomain; there is no endpoint to change it.
 - **Changing the email.**
+- **Transferring an account.** Owners can add owners, but the account's own login stays its owner.
 - **Deleting the account.** Links can be deleted one by one, which removes their data; the account itself cannot. Contact the operator of the deployment.
 - **Changing the password while signed in.** Use **Forgot password?** and the emailed link.
 - **Ending other sessions.** A session ends when its token expires, 30 days after sign-in.

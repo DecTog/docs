@@ -38,6 +38,8 @@ The quickest way to exercise every SDK path is the local worker plus the bundled
 
    In your own app the equivalent is `DectogConfig(apiKey: ..., baseUrl: 'http://10.0.2.2:8787')` on Android and `baseUrl: 'http://localhost:8787'` on iOS, with no `linkRootDomain`.
 
+   The example is Trails, a small app: a link opens it on a trail, a new install lands on the shared trail after signing up, invites go through the referral link, a demo purchase goes through `trackConversion`, and every screen is reported. Its `README.md` lists how to try each flow; its Debug screen runs `diagnostics()`, `getAttributionData()` and the consent switch.
+
 3. Fire links at the running app. The example app's manifest carries intent filters for `dectog://`, `http://10.0.2.2` and `https://localhost`; its `Info.plist` registers the `dectog` scheme.
 
    ```bash
@@ -52,6 +54,19 @@ The quickest way to exercise every SDK path is the local worker plus the bundled
    The custom scheme shows iOS's "Open in app?" prompt. Universal Links need a real HTTPS domain that serves the association file, so they cannot be tested against a local worker. On Android the `http://10.0.2.2` and `https://localhost` filters never pass App Links verification, so on Android 12 and newer they only open the app from explicit intents like the ones above.
 
 With `enableDebugLogging: true` the SDK prints what it does: `Processing DecTog link: username=demo, slug=welcome`, `Mobile click logged successfully`, `First app launch detected - tracking app install`, `Install referrer: …`, and either `App install matched to deferred click: …` or `App install tracked as organic`.
+
+## A test environment for debug builds
+
+Create a test environment in the dashboard (Settings → [Test environment](/dashboard/settings/#test-environment)): a second account, `t-<username>`, with the same apps. Give debug builds its SDK key, and its link host in their associated domains (`applinks:t-acme.dectog.com` and the Android intent filter), so nothing you test reaches your live numbers:
+
+```dart
+await dectog.initialize(DectogConfig(
+  apiKey: kReleaseMode ? liveSdkKey : testSdkKey,
+  environment: kReleaseMode ? DectogEnvironment.live : DectogEnvironment.test,
+));
+```
+
+`environment` is a check, not a switch: the key decides the account. `diagnostics()` warns when the key belongs to the other environment, and, without `environment`, when a release build carries a test key. In the dashboard, the **Live** / **Test** switch at the top of the sidebar shows either account.
 
 ## Testing link handling
 
@@ -92,7 +107,7 @@ Things that look like failures and are not:
 - [ ] `applinks:{username}.dectog.com` in every entitlements file your build configurations use; an `autoVerify` intent filter for `{username}.dectog.com` in the manifest; `adb shell pm get-app-links <package>` reports `verified`.
 - [ ] Custom scheme registered on both platforms if you saved one in the app record.
 - [ ] SDK key (`dtg_pub_…`, not the account key) injected at build time, not committed. `baseUrl` and `linkRootDomain` set only when self-hosting.
-- [ ] `collectDeviceData`, `readClipboardOnInstall`, `persistDeviceId` and `collectAppleSearchAdsToken` chosen deliberately, and the privacy policy, Play Data safety form and App Store privacy labels updated for what you send. See [Device data and privacy](/sdk/device-data-and-privacy/).
+- [ ] `collect`, `advertisingIdProvider` and `persistDeviceId` chosen deliberately, and the privacy policy, Play Data safety form and App Store privacy labels updated for what you send. See [Device data and privacy](/sdk/device-data-and-privacy/).
 - [ ] If you ship through the Galaxy Store or GetApps, their referrer libraries added to the app module. See [Installation](/sdk/installation/).
 - [ ] `identify` called after signup and login, `trackConversion` on purchases, so leads and revenue reach the dashboard.
 - [ ] `onAppInstalled` handled as a stream that can emit more than once; routing taken from `routing` or `deepLink`, credit only from `matched`.

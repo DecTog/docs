@@ -1,11 +1,38 @@
 ---
 title: Device data and privacy
-description: What the SDK sends in each data tier, how collectDeviceData and persistDeviceId gate it, what the bundled iOS privacy manifest declares, what to declare in the stores, and how the collection switch and local storage work.
+description: What the SDK sends in each data tier, how DectogConfig.collect and persistDeviceId gate it, what each option means for the App Store and Play disclosures, the optional advertising-id package, the bundled iOS privacy manifest, and how the collection switch and local storage work.
 sidebar:
   order: 6
 ---
 
-The SDK sends data in tiers. The device tier is on by default and can be turned off with `collectDeviceData: false`. The core package never reads an advertising identifier.
+The SDK sends data in tiers. `DectogConfig.collect` names what a build collects; the device tier is on by default. The core package never reads an advertising identifier; the separate `flutter_dectog_adid` package does, for apps that want it.
+
+## Choosing what to collect
+
+`collect` is a `Set<DectogCollection>?`. Leave it `null` for the defaults, or pass a set to say exactly what this build collects. A set is exact: a value it leaves out is never collected, whatever the dashboard says.
+
+```dart
+// Defaults: the device tier, the pasteboard (iOS) and OEM referrers as the
+// dashboard sets them, no Apple Search Ads token, no advertising id.
+const DectogConfig(apiKey: 'dtg_pub_…');
+
+// Fewer signals: only the store referrers; no device tier, no pasteboard.
+// To wait for consent, pass enabled: false instead (see Waiting for consent).
+const DectogConfig(
+  apiKey: 'dtg_pub_…',
+  collect: {DectogCollection.oemReferrers},
+);
+```
+
+| Value | Default (`collect: null`) | What it sends | App Store (App Privacy) | Google Play (Data safety) |
+|---|---|---|---|---|
+| `deviceTier` | on | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, connectivity, carrier; the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
+| `pasteboard` | the dashboard setting, else on for iOS, off for Android | A copied DecTog link that names a click, read once at first launch | Nothing to declare (no required-reason API); iOS 16 and later shows the paste alert | Nothing to declare; Android 12 and later shows the clipboard notice |
+| `oemReferrers` | the dashboard setting, else on | The Huawei, Samsung, Xiaomi and vivo store referrers (Android) | Not applicable | Nothing of its own: the store's referrer for this install |
+| `appleSearchAdsToken` | off | The AdServices attribution token (iOS 14.3 and later); no IDFA, no prompt | Advertising Data, for developer advertising | Not applicable |
+| `adId` | on once `advertisingIdProvider` is set | The IDFA after App Tracking Transparency, or the GAID | Device ID, used for tracking; the ATT prompt | Advertising ID; the `AD_ID` permission |
+
+These rows are a starting point for your answers, not legal advice: declare what your app does with the data, including what you send through events.
 
 ## What is sent
 
@@ -19,9 +46,9 @@ The SDK sends data in tiers. The device tier is on by default and can be turned 
 | Reliability | `install_attempt_id`, `attempt`, `created_at_client`, `sent_at_client` | The SDK's sentinel |
 | Metadata | plugin version, Dart version, platform, `build_signature` (the Android signing-key hex, when available), every store's raw referrer read status | The SDK |
 
-Optional signals ride along when enabled: `meta_referrer` (with `fbAppId`), `clipboard_url` (the pasteboard read), `asa_token` (with `collectAppleSearchAdsToken`). See [Deterministic attribution](/sdk/deterministic-attribution/).
+Optional signals ride along when enabled: `meta_referrer` (with `fbAppId`), `clipboard_url` (the pasteboard read), `asa_token` (with `appleSearchAdsToken`), `ad_id` and `ad_tracking_limited` (with `advertisingIdProvider`). See [Deterministic attribution](/sdk/deterministic-attribution/).
 
-### The device tier (`collectDeviceData`, default `true`)
+### The device tier (`deviceTier`, on by default)
 
 | Tier | Fields | Source | Server use |
 |---|---|---|---|
@@ -31,40 +58,56 @@ Optional signals ride along when enabled: `meta_referrer` (with `fbAppId`), `cli
 | Network | `connectivity_type` (`wifi`, `cellular`, `ethernet`, `vpn`, `bluetooth`, `none`), `carrier_mcc` and `carrier_mnc` (Android only; iOS hides carrier identity) | `connectivity_plus`, `TelephonyManager` | connectivity and carrier breakdowns, the fingerprint windows |
 | Web UA | `web_user_agent` (Android only) | `WebSettings.getDefaultUserAgent` | fingerprint input |
 
-With `collectDeviceData: false`:
+Without `deviceTier`:
 
 - none of the fields above is sent, with the install or with in-app clicks;
-- the device ping (`POST /api/v1/device-ping`, one row per app start, kept for retention read-outs that are not built yet) is not sent;
+- the device ping (`POST /api/v1/device-ping`, one row per app start, which feeds the Overview's Retention card) is not sent;
 - event batches and app-open reports carry the `install_id` only, and `getAttributionData()` re-pulls by `install_id` instead of `device_id`;
 - reinstalls cannot be detected by device id, and the fingerprint has fewer signals to corroborate a candidate, so more installs come back as `routing` only or organic.
 
 :::caution[Decide before initialize]
-`DectogConfig` is read once. The SDK cannot be initialized twice in one process, so the value of `collectDeviceData` holds for the life of the process. For an opt-in consent flow, initialize after consent, or initialize with `collectDeviceData: false` and accept the reduced tier until the next launch. Deterministic signals (store referrers, the pasteboard) are not time-limited, but a fingerprint match only works inside the server's attribution windows (24 hours, or 2 hours for low-entropy clicks and cellular installs), so a long delay before `initialize` costs fingerprint matches.
+`DectogConfig` is read once. The SDK cannot be initialized twice in one process, so `collect` holds for the life of the process. For an opt-in consent flow, initialize with `enabled: false` and call `setEnabled(true)` once the user agrees; see [Waiting for consent](#waiting-for-consent). A fingerprint match only works inside the server's attribution windows (24 hours, or 2 hours for low-entropy clicks and cellular installs), so a long wait for consent costs fingerprint matches.
 :::
 
 ### Post-install events
 
-`identify`, `trackConversion` and `trackEvent` send what you pass: `customer_id`, `name`, `email`, `phone`, revenue, currency, event names and metadata. The server stores the customer's name, email and phone **in plain text** on the customer record until the retention cutoff. See [Events](/sdk/events/).
+`identify`, `trackConversion`, `trackEvent` and `trackScreenView` send what you pass: `customer_id`, `name`, `email`, `phone`, revenue, currency, event names and metadata. The server stores the customer's name, email and phone **in plain text** on the customer record until the retention cutoff. See [Events](/sdk/events/).
 
 ### In-app clicks and opens
 
-Every recognized link open sends the slug, the opened URL (in metadata), its `utm_*` and `dec_*` values, platform, OS version, language, the device id and model (device tier only) and, on Android, the launching package. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+Every recognized link open sends the slug, the opened URL's `utm_*` and `dec_*` values, platform, OS version, language, the device id and model (device tier only) and, on Android, the launching package. The rest of the URL (other query parameters, the fragment) stays on the device. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 
 ## The device identifier
 
 The device id is vendor-scoped: `Settings.Secure.ANDROID_ID` on Android, `identifierForVendor` (IDFV) on iOS. Neither is an advertising identifier.
 
-`persistDeviceId` (default `true`) keeps the first IDFV the SDK reads in the iOS Keychain (service `app.dectog.flutter_dectog`, account `device_id`, accessibility `AfterFirstUnlockThisDeviceOnly`, so it never migrates to another device through a backup). Later reads return the stored value, which is how a reinstall keeps its device id and is reported as a reinstall. When the Keychain is locked (before the first unlock after a reboot) the plain IDFV is returned and nothing is written. With `persistDeviceId: false` the plain IDFV is sent and changes on reinstall; a reinstall then looks like a new device unless a deterministic signal attributes it. The setting has no effect on Android, where `ANDROID_ID` already survives reinstall for the same signing key, and no effect at all when `collectDeviceData` is off.
+`persistDeviceId` (default `true`) keeps the first IDFV the SDK reads in the iOS Keychain (service `app.dectog.flutter_dectog`, account `device_id`, accessibility `AfterFirstUnlockThisDeviceOnly`, so it never migrates to another device through a backup). Later reads return the stored value, which is how a reinstall keeps its device id and is reported as a reinstall. When the Keychain is locked (before the first unlock after a reboot) the plain IDFV is returned and nothing is written. With `persistDeviceId: false` the plain IDFV is sent and changes on reinstall; a reinstall then looks like a new device unless a deterministic signal attributes it. The setting has no effect on Android, where `ANDROID_ID` already survives reinstall for the same signing key, and no effect at all without the device tier.
 
 The iOS plugin also keeps two install dates in the Keychain (`first_install_time`, `latest_install_time`) to classify reinstalls and updates. They are timestamps, not identifiers.
 
-## No advertising identifiers
+## The advertising identifier
 
-The core SDK does not read or send the Google Advertising ID or the IDFA. It depends on no Play services artifact and declares no `AD_ID` permission on Android; on iOS it links neither `AdSupport` nor `AppTrackingTransparency`, and the privacy manifest sets `NSPrivacyTracking` to `false`.
+The core SDK does not read or send the Google Advertising ID or the IDFA. It depends on no Play services artifact and declares no `AD_ID` permission on Android; on iOS it links neither `AdSupport` nor `AppTrackingTransparency`, and its privacy manifest sets `NSPrivacyTracking` to `false`.
 
-The server's install body does accept `ad_id` and `ad_tracking_limited` and stores them in a separate table that is never joined to the device id. An opt-in ad-identifier package that would fill them is planned, not shipped; the core SDK exposes no API for it and nothing in it sends `ad_id`.
+Apps that want the advertising id add the companion package `flutter_dectog_adid`. It is the only DecTog package that links `AdSupport` and `AppTrackingTransparency` (iOS) and Play services ads-identifier with the `AD_ID` permission (Android):
 
-The Apple Search Ads token (`collectAppleSearchAdsToken`, off by default) is not an identifier and shows no prompt.
+```dart
+import 'package:flutter_dectog_adid/flutter_dectog_adid.dart';
+
+await DectogAdId.requestTracking(); // iOS: the ATT prompt, once
+await FlutterDectog().initialize(const DectogConfig(
+  apiKey: 'dtg_pub_…',
+  advertisingIdProvider: DectogAdId.provider,
+));
+```
+
+- `DectogAdId.provider` only reads; it never prompts. Ask with `requestTracking()` before `initialize()` so the install registration can carry the IDFA. iOS shows the prompt only while the app is active and only when `Info.plist` has `NSUserTrackingUsageDescription`.
+- When the user did not allow tracking (ATT not authorized, an Android opt-out, the all-zero id), the install carries `ad_tracking_limited: true` and no id.
+- The server stores `ad_id` in its own table, never joined to the device id, and deletes it at the retention cutoff.
+- Its privacy manifest declares the IDFA as a Device ID used for tracking (`NSPrivacyTracking` `true`, no tracking domains: the package itself contacts no server). On Android, declare the Advertising ID in the Play Console (Policy, App content, Advertising ID) and in Data safety.
+- A `collect` set without `DectogCollection.adId` turns the read off even with a provider.
+
+The Apple Search Ads token (`appleSearchAdsToken`, off by default) is not an identifier and shows no prompt.
 
 ## The iOS privacy manifest
 
@@ -86,9 +129,30 @@ Declare the collection in your privacy policy and in both store forms (Google Pl
 - Device or other IDs: the vendor-scoped device id, persisted across reinstall on iOS when `persistDeviceId` is on.
 - App info and performance / usage data: install and open events, app version, OS, device model, screen, connectivity, carrier (Android).
 - User IDs, purchase history, contact info: only if you pass them through `identify` and `trackConversion`.
+- Advertising ID: only with `flutter_dectog_adid` (see above).
 - Location: none. The SDK sends no location; the server derives country and ASN from the request's network address.
 
-If your consent regime is opt-in, call `setEnabled(false)` before the user is asked (the choice persists), and `setEnabled(true)` once they consent. `collectDeviceData: false` only drops the device tier.
+If your consent regime is opt-in, start with `DectogConfig(enabled: false)` and call `setEnabled(true)` once the user agrees; see [Waiting for consent](#waiting-for-consent). Leaving `deviceTier` out of `collect` only drops the device tier.
+
+## Waiting for consent
+
+```dart
+await dectog.initialize(DectogConfig(apiKey: '…', enabled: false));
+// … the user agrees:
+await dectog.setEnabled(true);
+```
+
+`enabled: false` holds collection until the app calls `setEnabled(true)`. The app's choice is stored, so from then on it wins over the config on every launch: a user who agreed once is not asked again, and one who said no stays off.
+
+While collection is off, the SDK makes no request of its own:
+
+- no click, app-open, install, claim, attribution, settings, resolve or device-ping request, and no pasteboard read;
+- events you track are held in the on-disk queue, up to the queue's 7 days;
+- a link that opens the app still reaches `onLinkClick`, as parsed from the URL: `slug`, `username`, `clickParams` and the query, without `linkResolution`. Its click and open are held in memory for this process.
+
+`setEnabled(true)` then sends the held events, registers the install if it never was, and reports the held links with the time they arrived. The store referrer still attributes the install deterministically; the fingerprint window has usually passed by then. Events held longer than 7 days are dropped, never sent.
+
+Calls your app makes itself still go out while collection is off: `createLink`, `getLinks`, `createTempLink`, `createReferralLink`, `resolveLink` and the other link-management methods. They carry no device data.
 
 ## Turning collection off
 
@@ -98,7 +162,7 @@ final on = await dectog.isEnabled();
 await dectog.setEnabled(true);       // resume
 ```
 
-`setEnabled(false)` is persisted in the SDK state file, so the next cold start begins disabled. While it is off, the SDK records nothing: no click or app-open reports, no install registration, no late claims, no pasteboard reads, no device pings, and new events are discarded (the on-disk queue is cleared when you disable). Incoming links are still parsed and delivered to `onLinkClick`, and resolving a link still calls the public resolve endpoint. `setEnabled(true)` restarts the event sender and, when this install was never registered because the SDK started disabled, registers it then: the store referrer still attributes it deterministically, but the fingerprint window may have passed.
+`setEnabled(false)` stops the same requests as above, from the next call on; a request already on its way completes. Events stay held on the device, and link reports held since the last consent are dropped, so a later `setEnabled(true)` sends the events but never reports a link that arrived before the user said no.
 
 ## Local storage
 
@@ -124,4 +188,4 @@ Every authenticated call carries the API key as a Bearer token plus an HMAC-SHA2
 
 ## Retention on the server
 
-The server anonymizes device fields, hashed and raw IPs, user agents and customer contact details after the retention window (400 days by default on the hosted service). What is kept and when it is removed is listed under [Privacy and data](/self-hosting/privacy-and-data/).
+After the retention window (400 days by default on the hosted service, shorter if the account sets its own), the server deletes the raw clicks, installs, events and app opens once its daily per-link counts hold their day, blanking their device fields, IPs and user agents until then, and blanks customers' contact details. What is kept and when it is removed is listed under [Privacy and data](/self-hosting/privacy-and-data/).

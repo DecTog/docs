@@ -49,7 +49,7 @@ dectog.onAppInstalled.listen((install) {
 
 ### Fraud flags and strict mode
 
-`fraudFlags` lists the rules the install tripped: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`. By default the attribution stands and the flags are informational. With the app's strict fraud mode on, a flagged install comes back with `matched: false` and `matchSource: null`, while `referrerSource` and `matchConfidence` keep their values as evidence; `slug`, `link` and the other attribution fields are absent from the verdict (the server keeps the matched slug on its record and the install webhook still carries it). Strict mode is read from the account's oldest app (see [Apps](/dashboard/apps/)).
+`fraudFlags` lists the rules the install tripped: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. `stale_clipboard` and `stale_meta` mark a pasted link or Meta referrer older than the app's window: the verdict routes (`routing`) but is not credited. By default the attribution stands and the flags are informational. With the app's strict fraud mode on, a flagged install comes back with `matched: false` and `matchSource: null`, while `referrerSource` and `matchConfidence` keep their values as evidence; `slug`, `link` and the other attribution fields are absent from the verdict (the server keeps the matched slug on its record). Strict mode is read from the app the install concerns (see [Apps](/dashboard/apps/)).
 
 ### Other fields
 
@@ -80,6 +80,7 @@ Outcomes, as `claim` and `claimReason` on the returned verdict:
 | `rejected` | `click_reuse` | The click is already credited to another device's install. The flag `click_reuse` is added. |
 | `rejected` | `click_not_found` | The click id is unknown and the signal carried no usable `dtg_l` tag to synthesize it. |
 | `rejected` | `no_signal` | The body carried no `dtg_click` at all. |
+| `rejected` | `stale_click` | The pasted link or Meta referrer names a click older than the app's deterministic window (7 days by default). |
 
 The referrer question is marked settled in the sentinel only after the server acknowledged the claim (200, or 404 for an install the server no longer knows), so a claim lost to a network error is retried on the next launch. Claims never run the fingerprint.
 
@@ -115,6 +116,10 @@ To make a device register again during development, uninstall the app (iOS) or r
 
 `install_attempt_id` is the SDK's idempotency key. It is generated and persisted before the first request and reused on every retry, in-process and across launches. The server keeps a unique index on it per account: a retry of a request whose response was lost returns the stored verdict with `replayed: true`, and two retries racing each other produce exactly one install. A deterministic signal that names a click already credited to an install of the **same device** also replays that install's verdict, so a device that lost its SDK state adopts its earlier install id.
 
+## When the server lost the install
+
+The SDK keeps the install id of its verdict. If the server no longer knows it, because the database was restored, the retention sweep removed it, or the app now points at a fresh database, the events endpoint answers `action: reregister` and the attribution pull answers `404 install_not_found`. The SDK then resets its sentinel and registers again: a new attempt id, `install_state: reinstall`, and `recovered_from` naming the lost id. The server never fingerprints that registration, because the device is not a new install, and the SDK does not read the pasteboard for it (no paste prompt mid-session; a link copied since says nothing about how the install began), nor would the server use one; a store referrer the SDK still holds can match deterministically. The new verdict is emitted on `onAppInstalled`. Events sent in between are kept.
+
 ## Getting the verdict later
 
-`getAttributionData()` returns the cached verdict when this process registered the install, otherwise it re-pulls `GET /api/v1/attribution` by `device_id` (when `collectDeviceData` is on) or by the persisted `install_id`. An organic install comes back as a verdict with `matched: false`; `null` means the server knows no install for this device at all. Re-pulled verdicts also carry `lastOpen`, the latest link that opened the installed app.
+`getAttributionData()` returns the cached verdict when this process registered the install, otherwise it re-pulls `GET /api/v1/attribution` by `device_id` (with the device tier) or by the persisted `install_id`. An organic install comes back as a verdict with `matched: false`; `null` means the server knows no install for this device at all. Re-pulled verdicts also carry `lastOpen`, the latest link that opened the installed app.

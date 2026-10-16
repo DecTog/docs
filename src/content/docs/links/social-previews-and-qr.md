@@ -38,6 +38,34 @@ Limits: the title and the description are each at most 150 characters after trim
 
 Use a 1200 × 630 px JPG or PNG. That is the size the link editor recommends and the size large-image cards expect; the Apps form still hints 200 × 200 px, but the same 1200 × 630 px image works best there too. Previews are cached by each platform, so a change can take a while to show up in an existing chat or post.
 
+## Check the preview on each platform
+
+The link drawer's **Check the preview on each platform** (`GET /api/admin/links/:slug/preview-check`) shows what eight platforms get for a link, as their crawlers ask for it:
+
+| Platform | User agent it is checked with |
+|---|---|
+| Facebook | `facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)` |
+| X | `Twitterbot/1.0` |
+| LinkedIn | `LinkedInBot/1.0 (compatible; Mozilla/5.0; Apache-HttpClient +http://www.linkedin.com)` |
+| Slack | `Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)` |
+| Discord | `Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)` |
+| WhatsApp | `WhatsApp/2.23.20.0 A` |
+| iMessage | a Safari user agent ending in `facebookexternalhit/1.1 Facebot Twitterbot/1.0` |
+| Telegram | `TelegramBot (like TwitterBot)` |
+
+The link is rendered through the redirect engine itself with each user agent, so the check sees exactly what the engine answers that crawler, and records no click. A crawler the engine took for a person would be redirected (or get the QR page); the check then fetches that destination as the platform would and reports "not taken for a crawler" with the title it shows instead. The preview image is fetched over the network with each crawler's user agent, because image hosts and CDNs often refuse some of them.
+
+| Issue | Meaning |
+|---|---|
+| No title | The platform shows the bare address. |
+| No image | A card without a picture. |
+| The image host refused … (HTTP 401, 403 or 429) | That platform shows no picture; allow its crawler on your image host. |
+| The image is … MB | X and LinkedIn skip images over 5 MB, Facebook over 8 MB. |
+| The image address answers … rather than an image | The URL is a page, not a picture. |
+| X shows the picture as a small square | `twitter:card` is not `summary_large_image`. The link page sets it whenever there is an image. |
+
+What the check cannot see: a firewall or Bot Fight Mode rule on your own Cloudflare zone that blocks a crawler before the Worker runs, because a Worker cannot request its own zone. If a platform shows no preview although the check is clean, look there first.
+
 ## Auto-fill from a web page
 
 On the Apps page, **Auto-fill from fallback URL** reads the Open Graph tags of the app's Fallback URL and fills the empty preview fields; existing values are kept. It appears once the Fallback URL is a valid http(s) address and at least one preview field is empty, and reports "Filled from your fallback URL" on success, with a reminder to review and save.
@@ -65,9 +93,9 @@ Desktop visitors land on the QR page when no other destination applies: no `dec_
 | Brand line | The app's name, else "DecTog" |
 | QR code | An SVG (220 px) of the canonical link URL, `https://acme.dectog.com/welcome`, without any query string. Scanning it is a fresh mobile tap with its own click and store tag. |
 | Heading | "Scan to open on your phone", then "Point your camera at the code to continue to {host} in the app." when a target exists |
-| Store buttons | **App Store** and **Google Play**, linking to the plain store URLs without an attribution tag |
+| Store badges | Apple's **Download on the App Store** badge (the US/UK one in every language) and Google's **Get it on Google Play** badge in the page's language, linking to the plain store URLs without an attribution tag |
 | Scheme buttons | **Open in the iOS app** and **Open in the Android app**, one per configured scheme, or a single **Open in app** when both platforms share a scheme (the Android deep-link path is preferred). These carry no `dtg_click`. |
 | Continue link | "Continue to {host} on desktop", only when the link has a target or inherits an app fallback |
 | Footer | "Powered by DecTog" when the page is branded with an app name |
 
-The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `dec_deeplink` from the URL; without a path they open `scheme://acme/welcome`.
+The texts are in the visitor's language (English, German, French, Spanish or Italian), and which button the visitor took is recorded on the click; see [The link pages](/links/how-a-tap-is-routed/#the-link-pages). The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `dec_deeplink` from the URL; without a path they open `scheme://acme/welcome`.

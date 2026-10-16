@@ -47,14 +47,14 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 ### The fingerprint found nothing
 
 - Candidates are web clicks from an iOS or Android user agent with the same hashed IP and the same OS family as the install that no other install has claimed. Clicks the SDK logged from inside the app and desktop clicks are never candidates.
-- The window is 24 hours only when both the click and the install carry a device model and the install is not on cellular. Everything else gets 2 hours, or the low-entropy window of the account's oldest app (1 to 720 hours), never more than the wide window. With `collectDeviceData: false` the install carries no model or screen data and only ever gets the short window.
+- The window is 24 hours only when both the click and the install carry a device model and the install is not on cellular. Everything else gets 2 hours, or the low-entropy window of the install's own app (1 to 720 hours), never more than the wide window. Without the device tier the install carries no model or screen data and only ever gets the short window.
 - `medium` confidence returns a `routing` candidate but no credit. `low` returns nothing. See [How attribution works](/start/how-attribution-works/).
 - One install per click. A click another install already consumed moves the ladder on; `click_reuse` is flagged only when nothing later matches.
 - App updates (`install_state: update`) never run the fingerprint; the panel's "kept out of matching" line counts them. Reinstalls (`is_reinstall`) run the full ladder and the fingerprint. They are left out of the Installs KPI and the per-link counts, not out of matching, so a reinstall can hold a click that the install you are looking for needed.
 
 ### Strict fraud mode made it organic
 
-With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`) is stored with `matched: false` and `match_source: null`. It keeps `match_confidence`, `referrer_source` and `matched_slug` on the record; the verdict and the webhook send the first two but never the slug. The click stays consumed. Strict mode is read from the account's oldest app. The fraud box on the Overview and the chips on a customer's detail page show the rules that fired.
+With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`) is stored with `matched: false` and `match_source: null`. It keeps `match_confidence`, `referrer_source` and `matched_slug` on the record; the verdict and the webhook send the first two but never the slug. The click stays consumed. Strict mode is read from the app the install concerns: the credited link's app, else the app whose package the SDK reports. The fraud box on the Overview and the chips on a customer's detail page show the rules that fired.
 
 ### iOS specifics
 
@@ -66,6 +66,10 @@ With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emu
 
 - `onAppInstalled` emits once per install, plus once more when a late claim upgrades the verdict. `currentAppInstall` holds the latest verdict. To retest, uninstall the app; on Android `adb shell pm clear <package>` also works. The SDK keeps its state in `.dectog_install.json` in a backup-excluded directory and validates it against the package's first-install time, so a restored backup does not suppress a real install.
 - Set `enableDebugLogging: true` and look for the install POST. A 401 means the key was regenerated or is wrong; the server's four 401 bodies are listed under [Automation and agents](/guides/automation-and-agents/). A 429 is retried after `Retry-After` (up to 10 seconds in-process, otherwise on the next launch).
+
+## Check the app against the dashboard
+
+Call `FlutterDectog().diagnostics()` from a debug build. It reads the app's record from the server and reports a bundle ID or package that differs, an iOS URL scheme missing from `Info.plist`, and on Android 12 and newer each link host the system has not verified for App Links (`none` means verification failed or never ran). With `enableDebugLogging` the warnings are also printed.
 
 ## App Links do not verify (Android)
 
@@ -109,20 +113,21 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 | 120 per minute | The interstitial beacon `POST /_/collect`, per IP | 429 with an empty body; this limiter also returns 429 when its database write fails |
 | 5 per hour | The contact form, per IP | `Too many messages — try again later`, no `Retry-After` |
 
-`Retry-After` is the number of seconds until the current one-minute window ends, at least 1. Windows are aligned to the clock, not sliding. When the limiter's database is unavailable, SDK and API requests go through. The SDK honors `Retry-After` up to 10 seconds in-process and defers longer waits to the next launch; event batches rejected with 429 stay queued. Scripts should sleep for `Retry-After` seconds. See [API overview](/api/overview/).
+`Retry-After` is the number of seconds until the current one-minute window ends, at least 1. The hosted service, and a deployment set up with `npm run setup`, count the account, device, IP and beacon limits with Cloudflare's Rate Limiting bindings, per Cloudflare location and approximately; without the bindings the counters live in D1, in windows aligned to the clock, not sliding. When the limiter's binding or database fails, SDK and API requests go through. The SDK honors `Retry-After` up to 10 seconds in-process and defers longer waits to the next launch; event batches rejected with 429 stay queued. Scripts should sleep for `Retry-After` seconds. See [API overview](/api/overview/).
 
-## Install webhook: "Send test"
+## Webhooks not arriving
 
-The button appears only while editing an existing app and is disabled while the URL box is empty. It posts `event: "app.installed"` with `test: true`, `matched: false`, `type: "organic"` and `device_model: "DecTog test probe"` to the saved URL, signed like a real delivery (`x-dectog-signature: sha256=<hex>` over the raw body, `x-dectog-timestamp` separate and unsigned), with a 10-second timeout.
+Open the app on the Apps page, then **Deliveries** on the webhook:
 
-| Message | Meaning |
+| What the log shows | Meaning |
 |---|---|
-| `Test event delivered — endpoint replied 200` | Your endpoint answered 2xx |
-| `Event delivered, but the endpoint replied 500` | Your endpoint answered, but not with 2xx |
-| `Save the webhook URL and secret first` | The server needs both the URL and the secret saved. The button checks only the URL box, so an unsaved or empty secret ends here. |
-| `Webhook delivery failed: <reason>` | Network failure or timeout |
+| Nothing for an event you expected | The webhook is not subscribed to it, or takes another app's events (an install belongs to the credited link's app, else the install's own app, else the oldest app). A webhook added in the last 30 seconds may not have reached every server yet. |
+| **Retry {time}** with `HTTP 500`, `HTTP 401` … | Your endpoint answered but not 2xx; the response start is in the last column. A `401` from your own check usually means the body was parsed and re-serialized before verifying, or the secret was rotated. |
+| **Retry** with a network error or `The operation was aborted` | The endpoint could not be reached, or took more than 10 seconds |
+| **Failed** | Six attempts over about a day failed; **Resend** tries again now |
+| Status chip **Off: 20 failed deliveries in a row** | The webhook was turned off; fix the endpoint, then **Turn on** |
 
-Real deliveries are fire-and-forget with no retries, and they go to the webhook of the account's oldest app. See [Install webhook](/api/install-webhook/).
+**Send test** delivers a `webhook.test` event, logged like the others. See [Webhooks](/api/webhooks/).
 
 ## Social preview: "Auto-fill from fallback URL"
 
@@ -157,10 +162,10 @@ A Google sign-in whose verified email matches an existing account links that acc
 | Response | When | Page text |
 |---|---|---|
 | 302 to `https://dectog.com/` | The username does not exist | None (hosted service) |
-| 404 page | The slug does not exist, or a temporary link was purged | `Link not found` and `This DecTog link does not exist.` |
+| 404 page | The slug does not exist, or its link was deleted (an expired temporary link is, a day after expiry) | `Link not found` and `This DecTog link does not exist.` |
 | 410 page | A temporary link has expired, bots included | `Link expired` and `This temporary link has expired and is no longer available.` |
 | JSON `404 {"error":{"code":"not_found","message":"Not found"}}` | Two or more path segments on a link host | None |
 
 Both HTML pages carry `noindex`, a "Go to DecTog" button and the footer `Check the link for typos, or ask whoever shared it for a new one.`
 
-Expired temporary links keep answering `GET /api/v1/resolve/{username}/{slug}` with 200 and `is_expired: true` until the daily purge removes links expired for more than 24 hours. After that the slug is free and the link is a 404. Deleting a link from the dashboard removes its clicks, installs, events and opens from the Overview. See [Temporary links](/links/temporary-links/).
+An expired link answers `GET /api/v1/resolve/{username}/{slug}` with `410 link_expired`, and a paused one with `410 link_paused`; neither records clicks. The daily job deletes temporary links expired for more than 24 hours that have no expired URL; after that the link is a 404, and its slug stays reserved until you restore it or delete it permanently. Deleting a link from the dashboard hides it and keeps its numbers in the Overview; only **Delete permanently** removes its clicks, installs, events and opens. See [Temporary links](/links/temporary-links/).

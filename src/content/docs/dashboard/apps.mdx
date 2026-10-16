@@ -12,7 +12,7 @@ The Apps screen, at https://app.dectog.com/dashboard/apps, holds the identifiers
 An **Add app** button opens the editor. While the editor is closed, a status line shows "Saved ✓", "Deleted ✓" or the last error.
 
 <Aside type="caution" title="Which app's settings apply">
-Most settings belong to the app a link is bound to: the link's **App**, or your oldest app when a link has none. Three settings do not. **Strict fraud mode**, the **Low-entropy attribution window** and the **Install webhook** are always read from your **oldest app**, whichever app the link or the install belongs to. On an account with one app this makes no difference. On an account with several apps, set those three on the oldest app; the same controls on younger apps are saved but never consulted.
+Most settings belong to the app a link is bound to: the link's **App**, or your oldest app when a link has none. **Strict fraud mode** and the **Low-entropy attribution window** belong to the app an install concerns, and so does an install's webhook event: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The app's identifiers matter here: an install whose package name matches none of your apps falls back to the oldest app on an account with several.
 </Aside>
 
 ## App cards
@@ -47,7 +47,7 @@ Editing a saved app opens with a checklist the server computes on every visit; n
 | First install registered | An install of this app reached the server |
 | First install attributed to a link | One of them was credited to a link; the slug is shown |
 | First event received | The account received an `identify`, lead, conversion or custom event |
-| Install webhook configured (optional) | A URL and a secret are saved; not counted in the total |
+| Webhook configured (optional) | An active webhook takes this app's events (its own, or an account-wide one); not counted in the total |
 
 A platform you have not set up is greyed out and not counted. Each step that is not done says what to do next. On a local deployment (`http://localhost`) both file steps stay open, because Universal Links and App Links only work over https.
 
@@ -84,11 +84,15 @@ Section text: "Package name and SHA-256 fingerprints generate your App Links fil
 | **Android package** | Placeholder `com.example.myapp`. | Same shape as the bundle ID. Error: `android_package must look like com.company.app`. |
 | **Play Store URL** | Placeholder `https://play.google.com/store/apps/details?id=…`. Where Android taps go when the app is not installed. | The host must be exactly `play.google.com`. Error: `android_store_url must be a play.google.com URL`. |
 | **Android app scheme** | Placeholder `myapp`, with the `://` suffix. ⓘ "The android:scheme registered in the app's intent filters. Leave it equal to the iOS one if both platforms share a scheme." | The same rules and messages as the iOS scheme, prefixed `android_app_scheme`. |
-| **Facebook App ID (optional)** | Placeholder `1234567890123456`. ⓘ "Also set fbAppId in DectogConfig in your app: the SDK reads Meta's on-device install referrer (Facebook/Instagram apps) only when its own config carries the ID. This field is stored for reference until the SDK fetches app settings from the server." | Free text, trimmed. The server only stores this value; nothing reads it back. The Android SDK reads Meta's install referrer only when `DectogConfig.fbAppId` is set in the app itself, so set it there. See [Deterministic attribution](/sdk/deterministic-attribution/). |
+| **Facebook App ID (optional)** | Placeholder `1234567890123456`. ⓘ "The SDK reads it from here at start-up and uses it for Meta's on-device install referrer (Facebook and Instagram apps, Android). A fbAppId set in DectogConfig in your app takes precedence." | Free text, trimmed. Served to the SDK by `GET /api/v1/sdk-config`. See [Deterministic attribution](/sdk/deterministic-attribution/). |
 | **SHA-256 fingerprints (one per line)** | Placeholder `AA:BB:CC:…`. Hint: "Include your release / Play App Signing key, not only the debug key." | Each line must be 32 hex byte pairs separated by colons. Values are stored in uppercase; blank lines are dropped. Error: `SHA-256 fingerprints must be 32 hex byte pairs separated by colons (AA:BB:…)`. |
 | **Other Android stores**: **Huawei AppGallery URL**, **Samsung Galaxy Store URL**, **Xiaomi GetApps URL**, **vivo store URL** | ⓘ "Optional. Devices from these brands are sent to their own store instead of Google Play — e.g. Huawei phones without Google services. Each store passes the install referrer back to the SDK, so installs still attribute deterministically. Leave empty to always use Google Play." | Huawei: a host under `appgallery.huawei.com`, `appgallery.cloud.huawei.com` or `url.cloud.huawei.com`. Samsung: `galaxystore.samsung.com`, `apps.samsung.com` or `galaxy.store`. Xiaomi: `global.app.mi.com` or `app.mi.com`. vivo: any http(s) URL. Errors read `huawei_store_url must be a appgallery.huawei.com / appgallery.cloud.huawei.com / url.cloud.huawei.com URL` and so on, or `vivo_store_url must be a valid http(s) URL`. An OEM URL is used only for phones of that brand and works without a Play Store URL. |
 
 Below the fields, **App Links file** `/.well-known/assetlinks.json` has its own **Verify** button and ⓘ guide: the package and fingerprints generate the file once both are saved; add an https intent filter with `android:autoVerify="true"` for each tenant host, listed explicitly because intent filters take no wildcards; Chrome verifies at install or update, and until then taps still open the app through an `intent://` redirect carrying your scheme and package. **⧉ Copy for AI** copies the prompt with your package and fingerprints filled in. How brands are detected and store URLs tagged is in [App stores and OEM routing](/links/app-stores-and-oem-routing/).
+
+### React Native and Expo
+
+Section text: "The react-native-dectog config plugin writes the Associated Domains and App Links setup above into the native projects. This app's entry, filled in:". Below it, the plugin entry for this app, ready for `plugins` in app.json: your username (the test environment's while the dashboard shows it), the deployment's link root when it is not `dectog.com`, the account's custom link domain when it has one, and the iOS scheme (else the Android one) as `scheme`. **Copy** copies it. Run `npx expo prebuild` after adding it; the two file checks above confirm the server side, and `Dectog.diagnostics()` in the app the device side. See [React Native and Expo](/react-native/#platform-setup).
 
 ### Social sharing preview
 
@@ -104,25 +108,34 @@ A **Live preview** card renders the three values, captioned "How the app default
 
 **Auto-fill from fallback URL** appears in the section header when the Fallback URL is an http(s) address and at least one of the three preview fields is empty. It reads "Fetching…" while running, fills only the empty fields from the page's `og:` and `twitter:` tags, and reports `✓ Filled from your fallback URL — review, then save.` or `✕` followed by the server's error: `No title, description or image found on that page`, `Enter a valid public http(s) URL` (private and loopback hosts are refused), `Couldn't reach that URL`, or a message naming the HTTP status the page returned. The fetch follows redirects, gives up after 8 seconds or 512 KB, and cuts titles and descriptions to 150 characters. Nothing is saved until you save the form.
 
-### Install webhook
+### Webhooks
 
-Section text: "A signed POST (HMAC-SHA256, `X-Dectog-Signature`) to your server on every app install. Leave empty to disable."
+Shown for a saved app. Section text: "Signed POSTs to your servers (HMAC-SHA256 in `X-Dectog-Signature`) for installs, conversions, opens, referrals and link changes. Every delivery is logged and retried for a day." The list holds the webhooks that receive this app's events: the app's own and the account-wide ones. Each row shows its URL, a status chip (**On**, the number of failures in a row such as **3 failed in a row**, or **Off** with the reason), whether it takes **this app** or **every app**, and its events.
 
-| Field | What to enter | Rules |
-|---|---|---|
-| **Webhook URL** | Placeholder `https://myapp.com/api/dectog/install-webhook`. | http(s): `install_webhook_url must be a valid http(s) URL`. |
-| **Webhook secret** | The key your server uses to check the signature. **Generate secret** (or **Rotate secret** once one is set) creates a strong one and shows it once, with a Copy button; you can also paste your own. | Free text, trimmed. Write-only: once saved it is never shown again, only its last four characters in the placeholder. Leave the box empty to keep the saved secret. Rotating asks for confirmation, because the old secret stops working at once. |
+| Button | What it does |
+|---|---|
+| **Deliveries** | The last 20 deliveries: time, event, **Delivered** with the HTTP status, **Retry** with the time of the next attempt, or **Failed** with the error, the attempt number, the start of the response, and **Resend**. |
+| **Send test** | Delivers a `webhook.test` event now and opens the log; a failure is shown above the list and does not count toward the thresholds. |
+| **Rotate secret** | Asks first, then shows the new signing secret once; the old one stops working at once. |
+| **Turn off**, **Turn on** | Stops or resumes deliveries. Turning on resets the failure count, and pending retries go out with the next hourly run. |
+| **Delete** | Asks first, then deletes the webhook and its log. |
 
-Both values must be saved for deliveries to happen. The server posts `app.installed` on every first launch and `app.install_updated` when a later claim or an Apple Search Ads result upgrades the verdict. Each request is signed as `sha256=` plus the hex HMAC-SHA256 of the raw body and carries an `x-dectog-timestamp` header that is not part of the signed data. There are no retries. The payload and verification code are in [Install webhook](/api/install-webhook/).
+**Add webhook** asks for the **URL**, **Events of this app** or **Events of every app**, and the events, each with a short note (`click.recorded`, one delivery per tap, is not ticked at first). **Add webhook** then shows the signing secret once: "The signing secret. Copy it now: it will not be shown again." The envelope, the events, retries and verification code are in [Webhooks](/api/webhooks/).
 
-**Send test** sits in the section header while you edit an existing app and is disabled until both a URL and a secret are saved. Its tooltip: "Sends a signed test event to the saved webhook URL. Needs a saved URL and secret; save changes first if you edited the fields". The test posts an `app.installed` event with `test: true`, `matched: false`, `type: "organic"`, the device model `DecTog test probe` and null for everything else, waits up to 10 seconds, and reports one of:
+### Store notifications
 
-- `✓ Test event delivered — endpoint replied <status>` for a 2xx response;
-- `✕ Event delivered, but the endpoint replied <status>` for any other status;
-- `✕ Webhook delivery failed: <reason>` when the endpoint could not be reached in time;
-- `✕ Save the webhook URL and secret first` when either value is not saved yet.
+Shown for a saved app. **Turn on store notifications** creates the app's two URLs:
 
-Real deliveries go to the webhook of your oldest app only; see the note at the top of this page.
+| Item | Meaning |
+|---|---|
+| **App Store Server Notifications URL** | Paste it in App Store Connect → the app → App Information → App Store Server Notifications, Version 2. Needs the app's iOS bundle ID. |
+| **Google Play Pub/Sub push endpoint** | The endpoint of a Pub/Sub push subscription on the topic named in Play Console → Monetization setup, with authentication on. Needs the app's Android package. |
+| **Pub/Sub service account** | The service account of that subscription. **Save account** stores it; pushes signed for any other account are refused. |
+| **New URLs** | Replaces both URLs after a confirmation; the old ones stop working at once. |
+| **Turn off** | Deletes both URLs after a confirmation. |
+| **Refresh** | Reloads the list below. |
+
+Below the buttons, the last 20 notifications: time received, store, notification type (with subtype and a non-production environment), transaction id, and the result (`recorded`, `updated`, `duplicate`, `ignored`, `unmatched`, `test`, `rejected`). What each notification records is on [Revenue](/sdk/revenue/#store-notifications).
 
 ### Advanced
 
@@ -131,11 +144,17 @@ Section text: "Attribution behaviour. Everything here is off by default."
 | Setting | Control | What it does, as the screen describes it |
 |---|---|---|
 | **Strict fraud mode** | Switch | "Off: installs that trip a fraud rule (emulator, impossible click-to-install timing, install velocity per IP, click storm, stale referrer) keep their attribution and carry the flags. On: flagged installs count as organic — the click they claimed stays consumed either way." With the switch on, a flagged install is stored as unmatched, but the server keeps the referrer source, the confidence and the matched slug on the record as evidence. Neither the app's verdict nor the webhook names the slug of an uncredited install. |
+| **Probabilistic match** | Switch, on by default | "On: when no store referrer, copied link or Meta referrer names the click, the server compares the install with recent taps from the same network and credits a unique, corroborated match. Off: installs of this app are matched by those deterministic signals only, and the comparison never runs. Apple's rules prohibit fingerprinting; turn this off if your App Store review requires it." The switch is read from the app the install belongs to (its package name or bundle ID). |
+| **OEM store referrers** | Switch, on by default | "The SDK also reads the Huawei, Samsung, Xiaomi and vivo store referrers on Android. It picks this up at start-up; a value set in DectogConfig in the app takes precedence." |
+| **Pasteboard read at first launch** | Select: Platform default, On, Off | "Default: on for iOS (shows Apple's paste alert on iOS 16+), off for Android. The SDK picks this up at start-up; a value set in DectogConfig in the app takes precedence." |
 | **Mobile beacon interstitial** | Switch | "Off: mobile taps get an instant redirect to the store or app. On: taps see a brief “Opening the app…” page that records the screen profile on the click, which sharpens install matching. Adds roughly half a second." When iOS tap-to-store is on, the row shows an **Android only** badge and continues "iPhone taps are handled by iOS tap-to-store (its page sends the same beacon), so this switch now affects Android only."; otherwise it continues "On iPhone, iOS tap-to-store takes over when it is on; Android taps still get this page." |
 | **iOS tap-to-store** | Switch | "Off: iPhone taps go straight to the App Store. On: taps see a one-button page whose “Get the app” tap copies the link to the clipboard before opening the App Store. The SDK reads it on first launch, so iOS installs attribute deterministically instead of by IP. Inside Instagram and Facebook the page offers “Open in app” first. There is no automatic redirect: Safari only lets the page copy from a tap. On iPhone this replaces the beacon interstitial." The page is used only when the tap's destination is the App Store. |
 | **Low-entropy attribution window** | Number box, 1 to 720, placeholder `2`, suffix "hours" | "Hours an IP-only click (no device model, or an install on mobile data) stays matchable. Shorter is safer on shared carrier networks. Empty uses the deployment default (2 hours); clicks that carry a device model keep the full 24-hour window." The server accepts a whole number from 1 to 720 or an empty box; anything else gets `low_entropy_window_hours must be a whole number of hours between 1 and 720`. The effective value never exceeds the wide window of 24 hours. |
+| **MMP click handoff** | Switch, and a **Media source (pid)** box (optional, letters, digits, `.`, `-`, `_`, up to 100) shown when on | "For a migration from AppsFlyer, Singular or Adjust: when a link sends visitors to one of their tracking links (onelink.me, sng.link, app.adjust.com, adj.st), add DecTog's click id as clickid, so both tools report the same tap and their verdicts can be compared. A clickid or pid already in the link wins." See [Running both for a while](/guides/migrate-from-branch-adjust-appsflyer/#running-both-for-a-while). |
+| **Pasted-link and Meta window** | Number box, 1 to 720, placeholder `168`, suffix "hours" | "Hours a copied link (iOS tap-to-store, paste button) or a Meta install referrer still earns credit. An older click sends the user to the link but counts the install as organic, flagged stale_clipboard or stale_meta; with strict fraud mode on it does not even route. Empty uses the deployment default (168 hours, 7 days). Store referrers keep 30 days." The server accepts a whole number from 1 to 720 or an empty box. |
+| **Re-engagement window** | Number box, 1 to 720, placeholder `168`, suffix "hours" | "Hours after one of this app's links re-opened the installed app during which purchases and other events count for that link instead of the link that brought the install. Empty uses the deployment default (168 hours, 7 days)." Applied when the dashboard reads the numbers, so a change also moves past credit. |
 
-Strict fraud mode and the low-entropy window are read from the oldest app. The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules, windows and confidence levels are explained in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
+Strict fraud mode and both windows are read from the app the install concerns (see the note at the top of this page). The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules, windows and confidence levels are explained in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
 
 ## Saving
 
@@ -157,7 +176,7 @@ The AASA file lists every app that has both a bundle ID and a Team ID, as `TEAMI
 
 ## Deleting an app
 
-The trash icon asks `Delete app "<name>"? Links using it will fall back to your default app. This cannot be undone.` Links bound to the app lose their binding and are served by the oldest remaining app from the next tap on. Clicks and installs recorded for the app stay. The status line shows "Deleted ✓".
+The trash icon asks `Delete app "<name>"? Links using it will fall back to your default app. This cannot be undone.` Links bound to the app lose their binding and are served by the oldest remaining app from the next tap on; so do link templates that named it, and the links made from them afterwards. The webhooks limited to the app are deleted with their delivery logs, and its store notification URLs stop working; account-wide webhooks stay. Clicks and installs recorded for the app stay. The status line shows "Deleted ✓".
 
 <Aside type="note" title="Self-hosting">
 The well-known files are served on your own root domain, so the Associated Domains entry becomes `applinks:your-username.your-root-domain` and the intent-filter hosts become `your-username.your-root-domain`. In path mode (a root domain that starts with `localhost`) the files are reachable only with `?u=your-username`, and on-device verification, which fetches them from the link host over https, is not possible.

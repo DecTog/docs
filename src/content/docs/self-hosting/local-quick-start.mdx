@@ -43,7 +43,7 @@ A local DecTog is two processes. The Cloudflare Worker runs on port 8787 with a 
    GOOGLE_CLIENT_SECRET=
    ```
 
-   Set `JWT_SECRET` before you bootstrap: it signs the dashboard session and also encrypts the viewable copy of each API key, so a key created while it is empty can only be shown as a mask. Leave `IP_SALT` empty and the worker falls back to `dtg-default-salt` with a console warning (production refuses to start a request without it). Leave `BOOTSTRAP_TOKEN` empty and the bootstrap call needs no header. The Google fields stay empty unless you test Sign in with Google (the redirect URI is `http://localhost:3000/api/auth/google/callback`).
+   Set `JWT_SECRET` before you bootstrap: it signs the dashboard session and also encrypts the viewable copy of each SDK and site key, so a key created while it is empty can only be shown as a mask. Leave `IP_SALT` empty and the worker falls back to `dtg-default-salt` with a console warning (production refuses to start a request without it). Leave `BOOTSTRAP_TOKEN` empty and the bootstrap call needs no header. The Google fields stay empty unless you test Sign in with Google (the redirect URI is `http://localhost:3000/api/auth/google/callback`).
 
 3. Start the worker.
 
@@ -69,10 +69,10 @@ curl -s -X POST -H 'x-bootstrap-token: <BOOTSTRAP_TOKEN>' http://localhost:8787/
 ```
 
 ```json
-{"ok":true,"email":"demo@dectog.local","username":"demo","api_key":"dtg_…","demo":true}
+{"ok":true,"email":"demo@dectog.local","username":"demo","api_key":"dtg_…","sdk_key":null,"demo":true}
 ```
 
-The demo password is `demo1234`; it is not in the response. The demo account's key is stored hash-only, so Settings shows the masked prefix until you regenerate it. Copy the key from this response if you want to use it with the SDK.
+The demo password is `demo1234`; it is not in the response. The demo account's key is stored hash-only, like every account key, so Settings shows only its prefix; **Regenerate** replaces it and shows the new key once. Copy the key from this response if you want to use it with the SDK.
 
   </TabItem>
   <TabItem label="One owner account (JSON body)">
@@ -84,10 +84,10 @@ curl -s -X POST http://localhost:8787/api/admin/bootstrap \
 ```
 
 ```json
-{"ok":true,"email":"you@example.com","username":"acme","api_key":"dtg_…","demo":false}
+{"ok":true,"email":"you@example.com","username":"acme","api_key":"dtg_…","sdk_key":"dtg_pub_…","demo":false}
 ```
 
-This creates exactly that account with role `owner` and no demo data. The key is shown here and, because `JWT_SECRET` was set, again in Settings.
+This creates exactly that account with role `owner` and no demo data. The account key is shown only here; Settings keeps its prefix. The SDK key is listed again in Settings, because `JWT_SECRET` was set.
 
   </TabItem>
 </Tabs>
@@ -110,7 +110,7 @@ Bootstrap has no rate limit. The owner password rule (at least 12 characters) di
 
 | Item | Content |
 |---|---|
-| User | `demo@dectog.local` / `demo1234`, username `demo`, role `owner`, `api_key_enc` null |
+| User | `demo@dectog.local` / `demo1234`, username `demo`, role `owner`; its account key is never shown (Settings → Regenerate gives you one) |
 | App | "Demo App": iOS bundle `com.example.demoapp`, Team ID `8H7C9JL2K3`, App Store URL `https://apps.apple.com/app/id6470000000`; Android package `com.example.demoapp`, one placeholder SHA-256 fingerprint (`AA:BB:CC:…`), Play URL `https://play.google.com/store/apps/details?id=com.example.demoapp`. No schemes, fallback URL, social preview, webhook, interstitial, tap-to-store, strict mode or OEM store URLs. |
 | Links | 6, all bound to the app: `welcome` (direct, 18 %), `launch-ph` (Product Hunt, 22 %), `social-x` (X, 16 %), `reddit-ama` (Reddit, 12 %), `tiktok-demo` (TikTok, 14 %), `newsletter` (Newsletter, 18 %). Targets are `https://example.com/<path>`. The campaign is stored in both `links.campaign` and `metadata.campaign`. |
 | Clicks | About 1,880 over the last 90 days: a base of `14 + round(0.12 × days since start)` per day, weekends at 55 %, plus a spike of +45 / +220 / +90 on days 31, 30 and 29 ago (the "Product Hunt launch"). Devices 48 % iOS, 37 % Android, 15 % desktop. Countries US 32 %, DE 12 %, GB 11 %, IN 10 %, FR 7 %, BR 7 %, JP 6 %, CA 6 %, AU 5 %, NL 4 %. About 400 distinct fake IP hashes (`seed_<n>`), fake `10.x.x.x` raw IPs, `utm_source` and `utm_campaign` set to the campaign name with `utm_medium=link`, `origin` `redirect`. |
@@ -184,7 +184,7 @@ Run the scheduled jobs locally. `npm run dev` does not fire cron triggers; start
 ```bash
 npx wrangler dev --port 8787 --test-scheduled
 curl "http://localhost:8787/__scheduled?cron=17+3+*+*+*"    # daily sweep
-curl "http://localhost:8787/__scheduled?cron=7+*+*+*+*"     # hourly Apple Search Ads retry
+curl "http://localhost:8787/__scheduled?cron=7+*+*+*+*"     # hourly: rollups, retries, exports, custom domains
 ```
 
 What each trigger does is on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). When you are ready for a real domain, continue with [Deploy to Cloudflare](/self-hosting/deploy/).

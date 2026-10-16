@@ -11,21 +11,21 @@ DecTog is small. Everything in the dashboard, the API and the SDK maps onto the 
 
 An account is one tenant, one username and one link subdomain. The username is the first label of every link URL (`https://acme.dectog.com/welcome` belongs to the account `acme`) and the value the SDK and the verdict call `username`. It cannot be renamed, and an account cannot be deleted from the dashboard.
 
-Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. Both kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
+Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. A third kind, the site key (`dtg_site_` and 32 hex characters), sits in your web pages for [`dectog.js`](/sdk/web/) and works only from the origins it lists. All three kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
 
-Everything an account stores is scoped to it. There is no cross-account view; the only extra privilege is the owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
+Everything an account stores is scoped to it. There is no cross-account view. Several people can work in one account, each with a team role: owner, member or viewer. Beyond the account, the only privilege is the platform owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
 
 ## Apps and the default app
 
-An app is a registered iOS and/or Android application: its identifiers, store URLs, custom schemes, social preview, install webhook and attribution options. An account can register any number of apps on the **Apps** page.
+An app is a registered iOS and/or Android application: its identifiers, store URLs, custom schemes, social preview, webhooks and attribution options. An account can register any number of apps on the **Apps** page.
 
-The **default app** is the oldest app of the account, the first one you registered. It matters in four places:
+The **default app** is the oldest app of the account, the first one you registered. It matters in these places:
 
 | Situation | What the default app does |
 |---|---|
 | A permanent link created without an app, or whose app was deleted | The link routes through the default app's store URLs, schemes and fallback URL. |
 | Every temporary link | Temporary links have no app of their own and always use the default app. |
-| Strict fraud mode, the low-entropy attribution window and the install webhook | These three settings are read from the default app for every install of the account, whichever app the matched link belongs to. On a single-app account "per app" and "per account" are the same thing. |
+| Strict fraud mode, the low-entropy attribution window and the webhooks of an app | Only as the last resort. These are read from the app the install concerns: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. |
 | Deleting an app | Its links are re-pointed to the default app. Clicks and installs are untouched. |
 
 The well-known files are account-wide: `apple-app-site-association` lists every app with a bundle ID and Team ID, `assetlinks.json` every app with a package.
@@ -36,7 +36,7 @@ A link is a slug under your subdomain. Slugs contain letters, digits, `_` and `-
 
 | | Permanent link | Temporary link |
 |---|---|---|
-| Lifetime | Until you delete it | Expires after a TTL of 60 seconds to 30 days (dashboard: 5 min, 1 hour, 1 day, 7 days) |
+| Lifetime | Until you delete it, or until an expiry you set | Expires after a TTL of 60 seconds to 30 days (dashboard: 5 min, 1 hour, 1 day, 7 days) |
 | Slug | Required | Optional; auto-generated as `t_` plus 10 hex characters |
 | App | Chosen per link, else the default app | Always the default app |
 | Target (**Fallback URL**) | Optional; `null` inherits the app's fallback URL | Same |
@@ -55,7 +55,9 @@ The server builds link URLs in one of two modes, set by `LINK_URL_MODE` and `ROO
 | `subdomain` | `https://{username}.{ROOT_DOMAIN}/{slug}` | Hosted service (`ROOT_DOMAIN=dectog.com`) and production self-hosts with a wildcard DNS record |
 | `path` | `{PUBLIC_BASE_URL}/r/{username}/{slug}` | Local development, `workers.dev` deployments. Forced whenever `ROOT_DOMAIN` starts with `localhost`, whatever the mode says. |
 
-Three request forms reach the redirect engine on any deployment: `/{slug}` on a tenant subdomain (exactly one path segment), `/r/{username}/{slug}` on any host, and `/?user={username}/{slug}` on any host except the dashboard host. The SDK recognizes all three when a link opens the app.
+An account with an active [custom domain](/links/custom-domains/) gets `https://{custom domain}/{slug}` in either mode; its subdomain or path URLs keep working.
+
+Three request forms reach the redirect engine on any deployment: `/{slug}` on a tenant subdomain or a custom domain (exactly one path segment), `/r/{username}/{slug}` on any host (on a custom domain only for its own account), and `/?user={username}/{slug}` on any host except the dashboard host and custom domains. The SDK recognizes all three when a link opens the app.
 
 When an app is opened through a custom scheme, the URL is `scheme://{username}/{slug}`, or `scheme://{path}` when the link (or a `dec_deeplink` parameter) sets a deep-link path for that platform. Either way the query ends with `dtg_l={username}/{slug}`, which names the link: the SDK reads the link from that tag, because a path such as `products/42` cannot be told apart from a username and slug by its shape.
 
@@ -101,9 +103,9 @@ After the install the SDK can report:
 
 See [Events](/sdk/events/) and [Events and attribution](/api/events-and-attribution/).
 
-## Install webhook
+## Webhooks
 
-An app can name a webhook URL and secret. The server POSTs `app.installed` for every first-launch verdict and `app.install_updated` when a claim upgrades it or Apple Search Ads resolves with attribution. The body is signed with `x-dectog-signature: sha256=<HMAC-SHA256 of the raw body>` and carries `x-dectog-timestamp`. Delivery is fire-and-forget with no retries, and only the default app's webhook is used. See [Install webhook](/api/install-webhook/).
+An account can have any number of webhooks, each taking one app's events or every app's. The server POSTs the events a webhook is subscribed to: `app.installed` for every first-launch verdict and `app.install_updated` when a claim upgrades it, conversions and leads, app opens, referrals, link changes and, opt-in, every tap. The body is the envelope `{event_id, event, created_at, attempt, data}`, signed with `x-dectog-signature: sha256=<HMAC-SHA256 of the raw body>`. Every delivery is logged, and a failed one is retried for about a day. See [Webhooks](/api/webhooks/).
 
 ## Where things live
 

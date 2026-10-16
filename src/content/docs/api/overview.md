@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use from scripts and backends to manage links or read attribution. An account has two kinds of key: the account key for servers and scripts, and SDK keys for the apps you ship. This page covers what every route has in common; the routes themselves are on the following pages.
+The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use from scripts and backends to manage links or read attribution. An account has three kinds of key: the account key for servers and scripts, SDK keys for the apps you ship, and site keys for your web pages. This page covers what every route has in common; the routes themselves are on the following pages.
 
 ## Base URLs
 
@@ -28,8 +28,11 @@ Every example in this section uses the hosted base. A self-hosted deployment use
 | `POST /api/v1/clicks` | key + signature | [Clicks and installs](/api/clicks-and-installs/) |
 | `POST /api/v1/app-installs`, `POST /api/v1/app-installs/:id/claim` | key + signature | [Clicks and installs](/api/clicks-and-installs/) |
 | `POST /api/v1/events`, `GET /api/v1/attribution`, `POST /api/v1/device-ping`, `POST /api/v1/app-opens` | key + signature | [Events and attribution](/api/events-and-attribution/) |
-| Install webhook (outbound) | HMAC signature | [Install webhook](/api/install-webhook/) |
-| `/api/admin/*`, `/api/auth/*` | session cookie | [Admin API](/api/admin-api/) |
+| `GET /api/v1/clicks`, `GET /api/v1/app-installs`, `GET /api/v1/app-opens`, `GET /api/v1/events` | account key + signature | [Export raw data](/api/export/) |
+| `GET /api/v1/web-config`, `POST /api/v1/web-events` | site key, from an allowed origin | [Web pixel](/sdk/web/) |
+| `GET /api/v1/devices/:id/export`, `DELETE /api/v1/devices/:id`, the same for `/api/v1/customers/:id` | account key + signature | [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person) |
+| Webhooks (outbound) | HMAC signature | [Webhooks](/api/webhooks/) |
+| `/api/admin/*`, `/api/auth/*` | session cookie, and a team role | [Admin API](/api/admin-api/) |
 | `/.well-known/*`, `/robots.txt`, `/sitemap.xml`, `/healthz`, `/readyz` | none | [Well-known files, SEO and routing](/api/well-known-seo-and-routing/) |
 
 ## Authentication
@@ -40,12 +43,13 @@ Every `/api/v1` route except `resolve` requires a key as a Bearer token:
 Authorization: Bearer dtg_pub_0123456789abcdef0123456789abcdef
 ```
 
-There are two kinds of key, both shown in [Dashboard: Settings](/dashboard/settings/):
+There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/settings/). Settings shows SDK and site keys again; the account key is shown only once, when it is created or regenerated:
 
 | Key | Looks like | Use it in | Scopes |
 |---|---|---|---|
 | **SDK key** | `dtg_pub_` and 32 hex characters | The apps you ship. Anyone can extract it from a build. | `sdk` (installs, claims, clicks, events, opens, the attribution pull), `temp_links`, `links:read`; plus `links:write` only for a key created with that option |
-| **Account key** | `dtg_` and 32 hex characters | Your servers and scripts. Never in an app. | Everything, including creating, changing and deleting links |
+| **Site key** | `dtg_site_` and 32 hex characters | Your web pages, with [`dectog.js`](/sdk/web/). Public. | Only the two web routes, from the origins it lists |
+| **Account key** | `dtg_` and 32 hex characters | Your servers and scripts. Never in an app. | Everything, including creating, changing and deleting links, and the only key that can [export raw rows](/api/export/) |
 
 | Scope | Routes |
 |---|---|
@@ -57,7 +61,7 @@ There are two kinds of key, both shown in [Dashboard: Settings](/dashboard/setti
 - A new account gets its account key and one SDK key, "App key". Create more SDK keys (one per app or per build channel) and revoke them in Settings; an account holds up to 20 active SDK keys.
 - The server stores only each key's SHA-256 and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `invalid_api_key`, a revoked SDK key `revoked_api_key`, before anything else is checked. A key without the route's scope answers `403` with code `insufficient_scope` and the `required_scope`.
 - Revoking an SDK key stops every build that ships it at once; release a build with a new key first. Regenerating the account key affects only servers and scripts.
-- Keep both keys out of source control where you can, and only ever send them to your DecTog base URL.
+- Keep the account and SDK keys out of source control where you can, and only ever send them to your DecTog base URL.
 
 ## Request signing
 
@@ -170,15 +174,15 @@ export function dectogHeaders(apiKey, rawBody = "") {
 
 ## SDK identity
 
-SDKs also send `x-dectog-sdk: <name>/<version>`, for example `flutter_dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
+SDKs also send `x-dectog-sdk: <name>/<version>`: `flutter_dectog/1.0.0`, `react-native-dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
 
-A self-hosted deployment can set `MIN_SDK_VERSION` (for example `1.1.0`) to retire old builds: an identified SDK older than that answers `400` with code `sdk_too_old` and the `min_version`. Callers that do not identify as an SDK are not checked.
+A self-hosted deployment can set `MIN_SDK_VERSION` to retire old builds, per SDK (`flutter_dectog/1.1.0, react-native-dectog/1.0.2`) or as a bare version for every SDK without its own entry (`1.1.0`): an identified SDK older than its minimum answers `400` with code `sdk_too_old` and the `min_version`. An SDK the setting does not name, and callers that do not identify as an SDK, are not checked.
 
 ## Rate limits
 
-Every authenticated `/api/v1` response reports the account window in three headers: `x-ratelimit-limit` (3000), `x-ratelimit-remaining` and `x-ratelimit-reset` (seconds until the window ends). They describe the account counter only; the device and IP counters below can refuse a request first.
+Every authenticated `/api/v1` response reports the account limit in `x-ratelimit-limit` (3000). They describe the account counter only; the device and IP counters below can refuse a request first.
 
-Limits are fixed windows aligned to the wall clock: the window is the current minute (`floor(now / 60 s)`), the first request of a new minute resets the counter, and a request that is rejected still counts. Several counters apply to one request.
+The hosted service, and a self-hosted deployment set up with `npm run setup`, count the account, device, IP and beacon limits with Cloudflare's Rate Limiting bindings: one-minute windows kept per Cloudflare location, so the limits are approximate, and the response carries only `x-ratelimit-limit`. A deployment without those bindings in its Wrangler config (local development, an older config) counts them in D1 instead: fixed windows aligned to the wall clock (the current minute, `floor(now / 60 s)`), reset by the first request of a new minute, where a rejected request still counts; there the response also carries `x-ratelimit-remaining` and `x-ratelimit-reset` (seconds until the window ends). Several counters apply to one request.
 
 | Limit | Window | Counter key | Applies to |
 |---|---|---|---|
@@ -193,7 +197,7 @@ The hashed IP is `sha256(IP_SALT + ":" + ip)` with IPv6 addresses cut to their /
 Over a limit, `/api/v1` answers `429` with code `rate_limited` and a `Retry-After` header holding the number of seconds until the current minute ends (1 to 60). Wait at least that long before retrying. The IP counter is per account and IP, so one account's traffic never consumes another account's allowance.
 
 :::note[Fail-open and fail-closed]
-If the rate-limit counter cannot be written (a database failure), the account, device and IP limiters **let the request through** and log the failure: the limiter never takes the API down with it. The beacon limiter does the opposite and answers 429 when its counter write fails.
+If the rate-limit counter cannot be written (a database or binding failure), the account, device and IP limiters **let the request through** and log the failure: the limiter never takes the API down with it. The beacon limiter does the opposite and answers 429 when its D1 counter write fails.
 :::
 
 `GET /api/v1/resolve/:username/:slug` is not rate limited.
@@ -249,7 +253,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 - Timestamps are ISO 8601 in UTC with milliseconds, `2026-10-12T09:00:00.000Z`. Epoch fields in install payloads are milliseconds.
 - Ids are UUIDs, except click ids, which are 16 hexadecimal characters.
 - Nullable fields are always present in responses and come back as `null`, never omitted. Fields that exist only in some situations (for example the attribution fields of a matched install) are omitted when they do not apply; the route pages say which.
-- List routes return complete arrays. There is no pagination or filtering on `/api/v1`.
+- `GET /api/v1/links` and the [raw export routes](/api/export/) return one page at a time, `{data, next_cursor}`: pass `next_cursor` back as `cursor` until it is `null`. The export routes also filter by time with `since` and `until`, and the links list takes `include_deleted`. `GET /api/v1/link-templates` returns every template in one page.
 - Routes do not use trailing slashes.
 
 ## Health check
@@ -265,7 +269,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 `GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 30, "applied": 30, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 62, "applied": 62, "missing": [] } }
 ```
 
 It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.

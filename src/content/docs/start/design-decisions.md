@@ -15,6 +15,9 @@ like a first install and is credited when a signal matches; it carries
 Only `install_state: 'update'` and a reused click skip the fingerprint.
 *Rejected:* skipping matching for reinstalls, which would lose re-acquisition
 campaigns. *Revisit* if re-attribution windows become a feature. (2026-10-13)
+*Note (2026-10-15):* the fingerprint is also skipped for an install without an
+IP hash, a registration that carries `recovered_from` (P2.8), and an app whose
+**Probabilistic match** switch is off (P2.15).
 
 **2. v1 DELETE answers 404 for an unknown slug; the admin DELETE answers 200.**
 Different clients: an SDK or script wants to know the slug was wrong; the
@@ -47,14 +50,20 @@ uptime monitors as visitors.
 **7. Webhook secrets are write-only.** The apps list returns a hint (the last
 four characters); a generate/rotate route returns a new `whsec_` secret once.
 *Rejected:* returning the secret on every GET and showing it in the form.
+*Note (2026-10-15):* since webhooks moved to their own table (P3.1, migration
+0049), the webhooks list returns no secret and no hint; creating a webhook and
+`POST /api/admin/webhooks/:id/rotate-secret` return the secret once.
 
 **8. Sign-in is limited per IP, never per account.** 10 attempts a minute per
 hashed IP; reset requests 5 per IP and 3 per address. *Rejected:* a per-account
 lockout, which lets anyone lock a user out by failing on purpose.
 
-**9. `setEnabled` replaces `optOut`.** One persisted switch; while off the SDK
-records nothing (clicks, opens, the install, claims, pasteboard, pings, events),
-and turning it on registers an install that a disabled launch skipped.
+**9. `setEnabled` replaces `optOut`.** One persisted switch, and
+`DectogConfig(enabled: false)` to start off until consent. While off the SDK
+makes no request of its own and reads no pasteboard; it holds events on the
+device and the launch link's report in memory, and turning it on sends them and
+registers an install that a disabled launch skipped. A revoke drops the held
+link reports, not the held events.
 *Rejected:* keeping `optOut`, which never stopped clicks or the install, next to
 a second consent API.
 
@@ -77,6 +86,145 @@ those paths on every host.
 **14. No percentage from a zero baseline.** An Overview card whose previous
 window was 0 shows no delta. *Rejected:* reporting +100%.
 
+## Settled in Phase 1
+
+**15. Two kinds of key; the account key stays on `users` (2026-10-14).** Apps
+ship SDK keys (`dtg_pub_…`, table `api_keys`) that cannot change links unless
+created with `links:write`; servers use the account key (`dtg_…`), which keeps
+every scope. *Rejected:* moving the account key into `api_keys`, which needs a
+rebuild of the `users` table (its hash column is `UNIQUE`) on a production
+database for no user-visible gain; and one key for everything, which put a
+link-deleting credential in every app binary.
+*Note (2026-10-15):* there are now three kinds: site keys (`dtg_site_…`, P3.13)
+are `api_keys` rows of kind `site` that web pages carry for `dectog.js`, limited
+to the two web routes and the origins each key lists.
+
+**16. One contract table generates the spec and the route index.** Every
+`/api` route is declared once in `src/contracts.ts`; `/openapi.json` and the
+route list in the server repository's `docs/API_CONTRACT.md` are generated from it, and a test fails
+when a route and the table disagree. *Rejected:* zod schemas (a new runtime
+dependency for the Worker) and a hand-written spec (it drifts).
+
+## Settled in Phase 2
+
+**17. Repeat taps from one phone are one fingerprint candidate (P2.1).** Clicks
+from one network whose model or screen profile, OS major, language and CPU
+family all agree collapse into the newest before ranking, so a double tap no
+longer ties with itself. The cost: a household with identical phones on one
+network credits the newer tap instead of nobody. Clicks with neither a model
+nor a screen profile never collapse; agreeing on OS and language alone is not
+evidence of one device. *Rejected:* keeping the tie (the common double tap
+earned no credit and no routing), and reusing one click id per device at
+redirect time (a database read on every redirect for a gain the match-time
+collapse already gives).
+
+**18. A same-device reinstall is routed, not credited (P2.10, C6 default).** When
+nothing else matches, a reinstall on a device whose earlier install consumed a click
+gets that click back as routing inside the deterministic window (7 days by default).
+The credit stays with the first install, so one tap is never counted twice.
+*Rejected:* crediting the reinstall (double counting) and leaving it organic (the
+user who reinstalls right after a tap lands nowhere). Still owed: a device run that
+confirms the iOS device id survives the reinstall.
+
+## Settled in Phase 3
+
+**19. Webhook retries run on D1 and the hourly cron (P3.1, C7 default).** A
+failed delivery waits in `webhook_deliveries` for the hourly job, which sends at
+most 300 retries a run, so the 5- and 30-minute retries land at the next run.
+*Rejected:* Cloudflare Queues, which retries within the minute but is a second
+service to provision on every deployment. *Revisit* if a receiver's backlog
+outgrows 300 an hour.
+
+**20. Retention counts calendar days in UTC, and day N means exactly day N
+(P3.2, C8 default),** as Adjust and AppsFlyer report it; the weekly table counts
+any activity inside each week. *Rejected:* 24-hour buckets counted from the
+install time (an install at 23:00 and an open the next evening share a bucket)
+and each device's local day, which needs the device's time zone joined into
+every activity row.
+
+**21. A deleted link keeps its history under its slug (P3.3, P3.6, C9 default).**
+Rollups are rebuilt from the raw rows for closed days, never incremented, and a
+deleted link's numbers stay filed under its slug; creating that slug again
+answers 409 with `"deleted": true` until the link is restored or deleted
+permanently. *Rejected:* decrementing the rollups on delete (past totals would
+change) and incrementing them on every write (a written row per tap, and drift
+whenever a claim, refund or exchange rate changes a row later).
+
+**22. The web pixel keeps a first-party cookie and asks for consent where the
+law does (P3.13, C10 default).** `dectog.js` stores its click id in a 30-day
+first-party cookie, waits for `dectog.consent(true)` in the EU and EEA, the UK
+and Switzerland, treats Global Privacy Control as a no, and uses its own key
+kind (`dtg_site_`), one per account. *Rejected:* `sessionStorage`, which loses
+the click when the visitor comes back in a new tab, and consent in the EU only.
+*Note (2026-10-15):* an account can hold up to 10 active site keys, each with
+its own list of origins.
+
+**23. An in-app `handleUrl` open counts as an open, not a click (P3.15, C19
+default).** The link was already tapped inside the app, so no click row is
+written and the Clicks KPI keeps meaning taps on the web.
+
+## Settled in Phase 4
+
+**24. The audit log is append-only and numbered, without a hash chain (P4.2,
+C11 default).** Entries are numbered per account, so a deleted entry shows as a
+gap in **Check for gaps**, and kept as long as the account. *Rejected:* a hash
+chain with a verify route: whoever can rewrite the database can recompute the
+chain too, so without an outside anchor it adds a column, not a guarantee.
+
+**25. A test environment is a sibling account (P4.4, C12 default).** Account
+`acme` gets `t-acme`, with copies of its apps and templates and its own keys,
+links, installs, events, webhooks and audit log. *Rejected:* an `is_test` flag
+on every row, which needed a filter in every query and could leak test data into
+live totals.
+
+## Settled in Phase 5 (2026-10-15)
+
+**26. Only `dec_*` parameters survive a deferred install (P5.6, C14 default).**
+A browser tap stores its `dec_*` and `utm_*` values and nothing else, so those
+are all the install verdict can return (`click_params`). On a warm open the app
+reads the opened URL itself (`click.queryParameters`, from `originalUrl`); a
+route that must also survive the trip through the store goes in `dec_deeplink`
+(`products/42`), which works on both paths. *Rejected:* keeping the tapped
+URL's other parameters on the click to return them after the install: the click
+would store whatever a visitor's URL holds, personal data included, and an app
+would build on parameters that only some paths deliver.
+
+**27. No ad-network click route (P5.7, C15 default).** Ad networks cannot send
+DecTog their clicks server to server, and the advertising id is stored but never
+matched on; an ad's install is attributed when its tap went through a DecTog
+link. *Rejected for now:* an `s2s/click` route with per-network tokens and an
+advertising-id rung in the ladder, the plan's P5.7. It suits networks that do
+not attribute themselves (AppLovin, Unity, ironSource and similar) and needs
+the advertising id consented on the device; *revisit* when a user asks for one
+of them.
+
+**28. Screen views are their own event type, outside every event total (P5.5,
+C13 default).** A `screen_view` names the screen in `event_name`, carries no
+revenue, and is left out of re-open counts, rollups, customer and install views
+and the events list; it stays in exports, erasure and retention activity. Its
+one read-out is per link: the screens reached within 30 minutes of the link
+opening the app. *Rejected:* a `custom` event named `screen_view`, the plan's
+first sketch, which would have counted every screen in the totals the dashboard
+sells; and a table of its own, a second copy of the queue, retention and erasure
+paths for one column of difference.
+
+**29. Each SDK keeps its logic in its own language; native code is shared as
+source (P5.2).** `flutter_dectog` (Dart) and `react-native-dectog` (TypeScript)
+each implement the attribution logic and sit on thin native layers, and the
+native reads (store referrers, pasteboard, paste control, Keychain id, install
+dates) live once, in framework-free Kotlin and Swift files both bridges call;
+the React Native repository copies them and its CI fails on a difference. One
+fixture set (the server's wire responses, the URL cases) and one harness per
+SDK keep the implementations equal. The React Native port took about 4,000
+lines of TypeScript and a 400-line bridge, with no native code of its own.
+Native iOS and Android SDKs, when built, are ports on the same terms: Swift and
+Kotlin logic held to the same fixtures, calling the same shared files directly.
+*Rejected:* standalone native SDKs (`DecTogKit`, `dectog-android`) that the
+Flutter and React Native packages wrap, Grovs' shape: every fix would wait for
+a native release and a wrapper release (R19), the Dart and TypeScript tests
+would only test bridges, and two of the four implementations would be thrown
+away.
+
 ## Rejected designs
 
 From the competitor teardown in the server repository (`docs/improvement-plan-2026-10.md`, section 6). Each appears in at least one competitor.
@@ -90,13 +238,13 @@ From the competitor teardown in the server repository (`docs/improvement-plan-20
 | R5 | An `ee/` paywall or plan gating in the engine | The whole product is AGPL; limits are deployment config, never data model |
 | R6 | A multi-service analytics stack (queues, ClickHouse, Tinybird) | Rollup tables in D1 give the read speed with one service |
 | R7 | Reporting an install on every launch, or "organic" on a network failure | A sentinel, an `install_attempt_id` and retry on the next launch |
-| R8 | Targeting rules that 404 on non-match | Geo and language route a visitor; they never gate a link |
+| R8 | Targeting rules that 404 on non-match | Geo, language, schedule and A/B rules route a visitor; they never gate a link |
 | R9 | Opening `myapp://` automatically on page load | iOS shows "Cannot open page" to everyone without the app; schemes open from a tap only |
 | R10 | Push messaging, affiliate programs, domain sales, LLM link scanning | Outside the product's scope; each adds credentials and moving parts |
 | R11 | Row-per-impression storage and recomputed attribution views | D1's size cap and read billing; verdicts are computed at write time |
 | R12 | Documenting ahead of code | Docs state what the code does; gaps are tracked in `docs/FOLLOW-UPS.md` |
 | R13 | A CLA on the AGPL server | Inbound = outbound is the simpler story (open decision C20) |
-| R14 | Silent dedupe of events | Batch answers will say what was accepted, duplicated and rejected (P2.4) |
+| R14 | Silent dedupe of events | Batch answers will say what was accepted, duplicated and rejected (P2.4). *Note (2026-10-15):* done in P2.4 |
 | R15 | Fingerprint first, deterministic signal as the fallback | A deterministic signal never waits behind a guess |
 | R16 | Holding the app's own events until attribution resolves | Events are independent of the verdict; the server stamps `matched_slug` |
 | R17 | Requiring apps to turn off Flutter's own deep linking | The `app_links` stream coexists with `go_router` and Navigator 2.0 |

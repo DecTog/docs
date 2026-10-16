@@ -1,6 +1,6 @@
 ---
 title: Migrate from Branch, Adjust or AppsFlyer
-description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to DecTog links, dec_* parameters, the SDK verdict and the install webhook, with a plain list of what DecTog does not do.
+description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to DecTog links, dec_* parameters, the SDK verdict and the webhooks, with a plain list of what DecTog does not do.
 sidebar:
   order: 2
 ---
@@ -28,7 +28,7 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 | Identity (Branch `setIdentity`, AppsFlyer `setCustomerUserId`) | `dectog.identify(customerId: ..., name: ..., email: ..., phone: ...)`; `dectog.logout()` forgets it |
 | Events (Branch `BranchEvent`, Adjust event tokens, AppsFlyer `logEvent` with `af_revenue`) | `dectog.trackConversion(revenue: ..., currency: ...)` and `dectog.trackEvent(name)`. The first `identify` of a new customer on a fresh install records the signup lead. See [Events](/sdk/events/). |
 | Attribution read-back (AppsFlyer `onConversionDataSuccess`, Adjust attribution callback) | `onAppInstalled`, `currentAppInstall`, and `getAttributionData()`, which re-pulls `GET /api/v1/attribution` after a restart |
-| Server postback (Branch webhooks, Adjust callbacks, AppsFlyer Push API) | The install webhook: `app.installed`, and `app.install_updated` when a late claim upgrades the verdict or Apple Search Ads resolves with attribution. HMAC-SHA256 signed, no retries. See [Install webhook](/api/install-webhook/). |
+| Server postback (Branch webhooks, Adjust callbacks, AppsFlyer Push API) | [Webhooks](/api/webhooks/): `app.installed`, `app.install_updated`, `event.conversion`, `event.lead`, `app.opened`, `referral.converted`, link changes and, opt-in, `click.recorded`. HMAC-SHA256 signed, logged, retried for about a day. |
 | Request signing (AppsFlyer `af_sig`) | Every SDK call carries `x-dectog-timestamp` and `x-dectog-signature`. Unsigned requests get 401. |
 
 ## Branch
@@ -42,10 +42,11 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 | `$ios_url`, `$android_url` | `dec_redirect_ios` and `dec_redirect_android` per tap; the link's `redirect_url` for both platforms |
 | `$og_title`, `$og_description`, `$og_image_url` | `og_title`, `og_description`, `og_image_url` on the link, with the app's values as defaults |
 | `$web_only`, `$uri_redirect_mode` | No equivalent |
-| NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`readClipboardOnInstall`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `DectogPasteButton` renders `UIPasteControl` for late pastes. |
+| NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`DectogCollection.pasteboard`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `DectogPasteButton` renders `UIPasteControl` for late pastes. |
 | Install referrer readers (Play, Huawei, Samsung, Xiaomi) | Built in, with retries. Play, Huawei and vivo need no extra library. Samsung and Xiaomi activate when the host app adds their libraries. See [Deterministic attribution](/sdk/deterministic-attribution/). |
 | Reinstall event | `isReinstall: true`, `installState: 'reinstall'`. A reinstall goes through the ladder and the fingerprint like a first install; the dashboard leaves it out of the Installs KPI and the per-link counts. |
-| Journeys, Universal Email, Deepviews, Data Feeds, Data Export API | No equivalent |
+| Data Export API | The [raw export](/api/export/) of clicks, installs, opens and events, with the account key |
+| Journeys, Universal Email, Deepviews, Data Feeds | No equivalent |
 
 ## Adjust
 
@@ -63,9 +64,9 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | LinkMe | The pasteboard read plus the iOS tap-to-store page |
 | Install referrer with retries | Up to three connection attempts, 3 seconds apart, for transient Play errors. The first-launch registration waits up to `installReferrerTimeout` (default 5 seconds); a referrer that arrives later is sent as a late claim and `onAppInstalled` emits again. |
 | `retry_in` | The SDK honors `Retry-After`: up to 10 seconds in-process, longer waits defer to the next launch |
-| Apple Search Ads through AdServices | `collectAppleSearchAdsToken: true` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
-| Server callbacks | The install webhook |
-| Reattribution | No equivalent. A late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. |
+| Apple Search Ads through AdServices | `DectogCollection.appleSearchAdsToken` in `collect` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
+| Server callbacks | Webhooks |
+| Reattribution | No equivalent for installs: a late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. Events within the re-engagement window after a link opens the installed app (7 days by default, per app) count for that link; see [Events](/sdk/events/#how-events-reach-a-link). |
 | SKAdNetwork, ad-network integrations | None |
 
 ## AppsFlyer
@@ -85,23 +86,36 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | `setCustomerUserId` | `identify(customerId: ...)` |
 | `logEvent` with `af_revenue` and `af_currency` | `trackConversion(revenue: ..., currency: ...)` |
 | `af_sig` | The request signature on every SDK call |
-| Push API | The install webhook. Only installs are delivered; events are not. |
-| Pull API, Master API | `GET /api/v1/links` (lifetime `click_count`) and the dashboard |
-| Protect360 | Six rules: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `click_reuse`. Strict fraud mode makes flagged installs count as organic. |
+| Push API | Webhooks: installs, conversions, leads, opens and referrals |
+| Pull API, Master API | The [raw export](/api/export/) of clicks, installs, opens and events, and the MCP [`analytics` tool](/guides/automation-and-agents/#mcp-server) for totals by link, campaign, country and other dimensions, both with the account key; `GET /api/v1/links` (lifetime `click_count`); the dashboard |
+| Protect360 | Eight rules: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. Strict fraud mode makes flagged installs count as organic. |
 | Apple Search Ads | `appleSearchAds` on the verdict |
 | SKAdNetwork, Conversion Studio, ad-network integrations | None |
 
 AppsFlyer separates routing (UDL) from attribution data (GCD). DecTog separates them inside one object: `routing` says where to send a new user, `matched` and `clickParams` say who gets credit.
 
+## Running both for a while
+
+A migration is safer when both tools see the same traffic for a few weeks. Keep the MMP's SDK in the app next to flutter_dectog, point a DecTog link's **If the app isn't installed > Custom URL** (`redirect_url`) at the MMP's tracking link, and turn on **MMP click handoff** for the app on the Apps page. A tap then goes through DecTog, which records the click, and on to the MMP's link with DecTog's click id added:
+
+| Destination host | Added |
+|---|---|
+| `*.onelink.me`, `app.appsflyer.com` (AppsFlyer) | `clickid=<DecTog click id>`, and `pid=<your media source>` when the app sets one |
+| `*.sng.link` (Singular) | the same |
+| `app.adjust.com`, `adj.st` (Adjust) | the same |
+
+A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme links and other hosts are never changed. The click id is the 16-character `dtg_click` value that names the click in DecTog, so an install the MMP attributes can be looked up on the DecTog side by it. Whether the MMP keeps the `clickid` parameter in its raw data depends on the link and partner settings in its own dashboard; check one test install there before relying on it. The store redirect then belongs to the MMP's link, so DecTog's own install match for those taps falls back to the store referrer the MMP passes on, or to the fingerprint.
+
 ## How attribution differs
 
 - Deterministic signals win in this order: store install referrer, pasteboard, Meta referrer. Then the fingerprint. Then organic. See [How attribution works](/start/how-attribution-works/).
 - One install per click. A click another install already consumed moves the ladder on to the next signal; `click_reuse` is flagged only when nothing later matches.
-- Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that carry a device model and 2 hours for model-less clicks and installs on cellular. The 2-hour window can be set per account (1 to 720 hours) in the oldest app's Advanced settings.
+- Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that carry a device model and 2 hours for model-less clicks and installs on cellular. The 2-hour window can be set per app (1 to 720 hours) in the app's Advanced settings.
 - App updates (`install_state: update`) never run the fingerprint. Reinstalls do, and carry `is_reinstall: true`. Late claims never run the fingerprint.
-- Strict fraud mode, the low-entropy window and the install webhook are read from the account's oldest app. On a single-app account that is the app you expect.
+- Strict fraud mode, the low-entropy window and an install's webhook app are read from the app the install concerns, and an install is only matched against its own app's links.
+- A pasted link or a Meta referrer earns credit for 7 days (per app); an older one routes the user without credit. Store referrers keep 30 days.
 - Apple Search Ads is resolved server-side and arrives later: `pending`, then `resolved`, `no_attribution`, `invalid` or `expired`. Only `resolved` and `no_attribution` are final.
 
 ## What DecTog does not do
 
-DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, no advertising identifiers, no re-attribution windows, no cohort or LTV reports yet, and an SDK for Flutter only. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).
+DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).

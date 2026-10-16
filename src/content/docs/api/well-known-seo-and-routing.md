@@ -2,7 +2,7 @@
 title: Well-known files, SEO and routing
 description: How the worker serves the Apple and Android association files, robots.txt, the sitemap and blog post previews, and which host and path reaches which handler.
 sidebar:
-  order: 7
+  order: 8
 ---
 
 The DecTog worker answers every host in the zone: the apex (`dectog.com`), the dashboard host (`app.dectog.com`, `APP_HOST`) and every account host (`<username>.dectog.com`). This page lists what each host and path does. Self-hosted deployments substitute their own `ROOT_DOMAIN`, `APP_HOST`, `WEB_URL` and `PUBLIC_BASE_URL`; see [Configuration reference](/self-hosting/configuration-reference/).
@@ -107,7 +107,7 @@ Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/
 | any | `/r/<username>/<slug>` | The redirect engine (path-mode link URL). |
 | any except `APP_HOST` | `/?user=<username>/<slug>` | The redirect engine (query-mode link URL). |
 | any | `/.well-known/…` | The association files above. |
-| any | `/_/collect` | The interstitial beacon (POST). |
+| any | `/_/collect` | The link pages' beacon (POST): the screen profile, and which button the visitor took (P3.10). |
 | any | `/healthz`, `/readyz`, `/robots.txt`, `/sitemap.xml` | See this page. |
 | `app.dectog.com` | any other path | The dashboard's static export. `/blog/<slug>` serves the export's article page, which reads the slug client-side; for a published post the worker adds the post's head tags first (see [Blog post pages](#blog-post-pages)). `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | `dectog.com` | `/` | `302` to `WEB_URL`. |
@@ -136,7 +136,7 @@ A HEAD request runs the same handler as GET and the response is returned without
 `GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 30, "applied": 30, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 62, "applied": 62, "missing": [] } }
 ```
 
 It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.

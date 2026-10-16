@@ -36,7 +36,7 @@ claude mcp add --transport http dectog https://app.dectog.com/mcp \
 
 Other clients take the same two values, the URL and the `Authorization` header, in their MCP settings.
 
-The DecTog plugin for Claude Code bundles the same server with four skills: links and the API, the Flutter SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
+The DecTog plugin for Claude Code bundles the same server with five skills: links and the API, the Flutter SDK, the React Native SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
 
 ```text
 /plugin install dectog --marketplace DecTog/dectog
@@ -49,12 +49,16 @@ The DecTog plugin for Claude Code bundles the same server with four skills: link
 | `create_link` | One link. Takes the fields of [`POST /api/v1/links`](/api/links/). |
 | `create_links` | Up to 100 links in one call. Each succeeds or fails on its own; the result lists `created` and `errors`, with the index, slug and error code of each failure. |
 | `update_link` | Changes the given fields of a link. A missing field keeps its value; `null` or `""` clears it. |
-| `delete_link` | Deletes a link together with its clicks, attributed installs, events and opens. |
+| `upsert_link` | Updates the link with this `external_id` (else this `slug`), or creates it. For syncing links from your own system. |
+| `delete_link` | Deletes a link: it answers 404 and its history stays. With `permanent: true` its clicks, attributed installs, events and opens go too. |
+| `restore_link` | Brings back a link deleted without `permanent`. |
 | `create_temp_link` | A link that expires after `ttlSeconds`, 60 to 2,592,000, default 900. |
 | `resolve_link` | What a link points to, as the public resolve route answers it. |
 | `get_attribution` | The verdict of one install, by `device_id` or `install_id`. |
 | `overview` | The Overview page numbers for the last N days: clicks, visitors, installs, conversion, revenue, leads and opens with their change, plus campaigns, sources, countries, devices and fraud flags. Account key only. |
 | `attribution_quality` | Match sources and confidence per platform, referrer health, click-to-install latency and SDK versions. Account key only. |
+| `retention` | Day 1, 7 and 30 retention and weekly cohorts, optionally of one link, campaign or platform. Account key only. |
+| `analytics` | Clicks, installs, opens, leads and revenue over a window, by day (by hour for `24h`), by one or two dimensions, or as totals, with filters that keep or drop values. The [analytics query](/api/admin-api/#analytics) as a tool. Account key only. |
 | `list_apps` | Your apps with their store and platform identifiers, without secrets. Account key only. |
 | `setup_status` | The [setup checklist](/dashboard/apps/) of one app, including the Apple and Google rules for the well-known files. Account key only. |
 | `get_flutter_snippet` | The `pubspec.yaml` line and the `initialize()` call, filled with one of your SDK keys and your base URL. Account key only. |
@@ -123,8 +127,14 @@ dectog_call GET /api/v1/links | jq length
 dectog_call PUT /api/v1/links/spring-sale \
   '{"ios_deep_link_path":"sale/2","android_deep_link_path":"sale/2","campaign":"spring"}'
 
-# Delete. 200 {"success":true}; the link's clicks, attributed installs, events and opens go with it.
+# Pause it (taps get a 410, nothing recorded), resume it, or expire it at a time.
+dectog_call PUT /api/v1/links/spring-sale '{"disabled":true,"disabled_reason":"sale over"}'
+dectog_call PUT /api/v1/links/spring-sale '{"expires_at":"2026-12-31T23:59:00Z","expired_url":"https://shop.example.com/over"}'
+
+# Delete. 200 {"success":true}; the link answers 404 but its history stays (restorable).
 dectog_call DELETE /api/v1/links/spring-sale
+# Delete for good: the link's clicks, attributed installs, events and opens go with it.
+dectog_call DELETE "/api/v1/links/spring-sale?permanent=true"
 ```
 
 What to expect:
@@ -177,11 +187,11 @@ while :; do
 done
 ```
 
-There is no list endpoint for temporary links on `/api/v1`; read them one at a time with `GET /api/v1/temp-links/{slug}`. Installs, opens, leads and revenue per link are on the dashboard only. The dashboard's own API uses a cookie session and is not meant for scripts; see [Admin API](/api/admin-api/).
+There is no list endpoint for temporary links on `/api/v1`; read them one at a time with `GET /api/v1/temp-links/{slug}`. Installs, opens, leads and revenue per link come from the MCP server's [`analytics` tool](#mcp-server) with `group_by: link`, or row by row from the [raw export](/api/export/); both need the account key. The dashboard's own API uses a cookie session and is not meant for scripts; see [Admin API](/api/admin-api/).
 
 ## A temporary link for every CI build
 
-Temporary links expire on their own and are purged a day after expiry, so a pipeline needs no cleanup. `ttlSeconds` is clamped to 60 seconds to 30 days; 0 becomes 900.
+Temporary links expire on their own and are deleted a day after expiry, so a pipeline needs no cleanup; with a fixed slug, give each run a new one, since a deleted link keeps its slug. `ttlSeconds` is clamped to 60 seconds to 30 days; 0 becomes 900.
 
 ```yaml title=".github/workflows/build.yml (excerpt)"
 - name: Publish a link to this build
@@ -194,7 +204,7 @@ Temporary links expire on their own and are purged a day after expiry, so a pipe
     echo "Build ${GITHUB_SHA::7}: $url" >> "$GITHUB_STEP_SUMMARY"
 ```
 
-Temporary links use the default app's routing and fallback, have no click counter and no deep-link paths. After expiry the link serves a 410 page while `resolve` still answers 200 with `is_expired: true`, until the daily purge. See [Temporary links](/links/temporary-links/).
+Temporary links use the default app's routing and fallback, have no click counter and no deep-link paths. After expiry the link serves a 410 page and `resolve` answers 410 `link_expired`, until the daily delete. See [Temporary links](/links/temporary-links/).
 
 ## QR codes
 

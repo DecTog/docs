@@ -1,6 +1,6 @@
 ---
 title: Database and migrations
-description: The 16 D1 tables, every migration file and what it does, the append-only rule, and the typed data layer that keeps schema, row types and SQL in step.
+description: The 35 D1 tables, the schema file, the append-only rule, and the typed data layer that keeps schema, row types and SQL in step.
 sidebar:
   order: 6
 ---
@@ -9,12 +9,12 @@ DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. 
 
 ## Tables
 
-The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by `user_id` (the tenant) except the four platform tables at the end.
+The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped by the account (`user_id`, or `tenant_id` in `memberships` and `invites`) except the platform tables: `rate_limits`, the blog and contact tables, `fx_rates` and the device model tables.
 
 | Table | One line |
 |---|---|
-| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix`, the encrypted viewable key `api_key_enc`, `role` (`owner` or `user`), `google_sub` |
-| `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, webhook URL and secret, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
+| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix` (the account key is never stored readable), `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`), `test_of` (on a test environment: its live account), `session_epoch` (raised to end every session) |
+| `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |
 | `clicks` | One row per recorded tap or in-app open: link, device and browser, geo and ASN, hashed IP (raw IP only with `STORE_RAW_IP=1`), UTM, `link_params`, beacon screen profile, client hints, `origin` (`redirect`, `sdk`, `synthesized_referrer`) |
@@ -22,52 +22,39 @@ The schema at migration 0027 has 16 tables (`apps/worker/src/db/tables.ts`). Eve
 | `ad_identifiers` | Advertising id per install, isolated so it is never joined to the device tier |
 | `customers` | The tenant's own user identities from `identify` events: `customer_id`, name, email, phone, `first_install_id` |
 | `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP only with `STORE_RAW_IP=1` |
-| `device_pings` | One row per SDK init ping (device, app version, OS), collected for DAU and retention read-outs that are not built yet; nothing reads the table today |
+| `device_pings` | One row per SDK init ping (device, app version, OS): with app opens and events, the activity behind the Overview's Retention card |
 | `app_opens` | Warm opens: a link opened an already-installed app (slug, click id, device, hashed IP) |
 | `rate_limits` | Fixed-window counters keyed by account id, `dev:<account>:<device>`, `ip:<account>:<hash>` or `webcollect:<hash>` |
 | `blog_categories` | Marketing-site blog categories (platform-wide, owner-managed) |
 | `blog_posts` | Blog posts: Tiptap HTML plus optional block JSON, published flag and dates |
 | `contact_messages` | Submissions from the public contact form |
 | `password_resets` | Single-use reset tokens, stored as SHA-256 hashes with expiry and `used_at` |
+| `api_keys` | SDK keys (`dtg_pub_…`) and site keys (`dtg_site_…`, with their allowed `origins`): name, kind, scopes, SHA-256 of the key, prefix, the encrypted viewable key, `last_used_at`, `revoked_at` |
+| `link_templates` | Named defaults a link can take (`links.template_id`), as JSON |
+| `referrals` | One row per referred install: the referring and the referred customer, the link, the match source |
+| `rejected_requests` | SDK calls refused with 400 or 422, for the debugging view: route, reason, the body's hash and size, never the body; 30 days |
+| `app_store_endpoints` | Per app, the secret token in its Apple and Google store-notification URLs, and the Pub/Sub service account Google signs with |
+| `store_notifications` | The store notifications received, with their outcome; 90 days |
+| `fx_rates` | The ECB's daily euro reference rates, for revenue in the account's currency |
+| `link_daily` | The daily rollups: per account, link, UTC day and platform, the clicks, installs, opens, leads and net revenue |
+| `rollup_state` | Per account, the last day the rollups hold (`through_day`) and the last day whose raw rows are gone (`frozen_through`) |
+| `webhooks` | Webhook endpoints: URL, optional app, events, encrypted signing secret, failure count and why one turned off |
+| `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |
+| `export_jobs` | CSV exports past `EXPORT_STREAM_MAX_ROWS` rows: the query, progress, the R2 key and when the file goes |
+| `device_models`, `device_model_refresh` | Marketing names (brand, name) for the Android models installs reported, keyed by the lowercased model, and when Google's list was last read |
+| `memberships` | A person's role (`owner`, `member`, `viewer`) in another person's account; keyed by account and person |
+| `invites` | Team invitations: the account, the invited email and role, the SHA-256 of the token, expiry and when accepted |
+| `erasures` | One row per erased device or customer for 8 days: the SHA-256 of the account, the kind and the id, never the id itself, with when it was erased; events queued earlier are dropped on arrival |
+| `audit_events` | The audit log: per account, entries numbered by `seq` (the key, with `user_id`), the action, who acted, the target, the changed fields with secrets redacted, hashed IP, user agent, request id. Only ever inserted; kept as long as the account |
+| `custom_domains` | Each account's custom link domain: the Cloudflare hostname id, the state, the DNS records to add, errors, the checks, the suspension and its end. The active one is also `users.custom_domain`. |
 
 There are no foreign-key constraints. Cascades (deleting a link, deleting an app, unlinking a category) are done in the API layer.
 
 ## Migrations
 
-`apps/worker/migrations/` holds one `.sql` file per change. `wrangler d1 migrations apply` runs the files that are not yet recorded in the `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. Two files share the number 0012; `0012_blog.sql` sorts before `0012_mobile_interstitial.sql`, and both apply. Do not renumber them.
+`apps/worker/migrations/0001_schema.sql` creates the whole schema: the 35 tables above and their 49 indexes. `wrangler d1 migrations apply` runs the files in the folder that are not yet recorded in the database's `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. A schema change is the next numbered file, `0002_…` onwards.
 
-| File | Purpose |
-|---|---|
-| `0001_init` | `users` (plain-text API key), `apps`, `links`, `temp_links`, `clicks`, `app_installs` and the first indexes |
-| `0002_attribution_indexes` | Replaces the global IP index with `clicks (user_id, ip_hash, clicked_at)`; adds `app_installs (matched_click_id)` |
-| `0003_hashed_api_keys` | Rebuilds `users` with `api_key_hash` + `key_prefix`. **Destructive:** existing keys become unusable `legacy:` hashes and the migration deletes every row in `links`, `temp_links`, `clicks`, `app_installs` and `apps`. It was written for a pre-release database; on a fresh database it runs on empty tables. |
-| `0004_rate_limits` | `rate_limits` |
-| `0005_device_data` | Device-tier columns on `clicks` and `app_installs`, `is_reinstall`, the device index, `ad_identifiers` |
-| `0006_social_preview` | `og_*` on `apps` and `links` |
-| `0007_temp_link_social` | `og_*` on `temp_links` |
-| `0008_install_webhook` | `install_webhook_url`, `install_webhook_secret` on `apps` |
-| `0009_app_scheme` | `ios_app_scheme`, `android_app_scheme` |
-| `0010_click_referrer` | `clicks.referrer` (origin only, analytics) |
-| `0011_link_routing` | Deep-link paths, `redirect_url`, `fallback_url` on `links` |
-| `0012_blog` | `blog_categories`, `blog_posts`, `contact_messages` |
-| `0012_mobile_interstitial` | `apps.mobile_interstitial`; beacon columns `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `enriched_at` on `clicks` |
-| `0013_auth_flows` | `password_resets` |
-| `0014_user_roles` | `users.role` (default `user`); promotes the oldest existing account to `owner` |
-| `0015_optional_link_target` | Rebuilds `links` and `temp_links` so `target` is nullable (copies every row) |
-| `0016_events_pipeline` | `app_installs.match_source`; `customers`, `events`, `device_pings`; `ip_raw` on `clicks` and `app_installs`. Its header comment says customers store "hashes only"; the code stores name, email and phone in plain text. |
-| `0017_antifraud_matching` | Click-time signals (`ua_raw`, `accept_language`, `lang`, `os_major`, `ua_arch`, `connection_type`, geo, `asn`, `as_org`, `bot_score`); install provenance and fraud columns (`web_user_agent`, `cpu_family`, `package_name`, `is_physical_device`, `installer_package`, referrer timestamps, `meta_referrer`, `referrer_source`, `clipboard_slug`, `fraud_flags`); `apps.strict_fraud_mode`, `apps.fb_app_id`; `app_opens` |
-| `0018_install_times` | `install_time`, `update_time` |
-| `0019_meta_referrer_is_ct` | `meta_referrer_is_ct` |
-| `0020_customer_indexes` | Customers list and events-by-customer indexes |
-| `0021_google_sign_in` | `users.google_sub` with a unique partial index |
-| `0022_link_params` | `clicks.link_params`; `label`, `campaign`, `adgroup`, `creative` on `links` |
-| `0023_api_key_viewable` | `users.api_key_enc` |
-| `0024_auto_signup_leads` | Index for the one-signup-lead-per-customer check |
-| `0025_shared_device_index` | `events (user_id, device_id, customer_id)` |
-| `0026_attribution_reliability` | Install contract v2: `install_attempt_id` with a unique partial index, attempt and client timestamps, referrer telemetry and server timestamps, `install_state`, `first_install_ts`, `match_confidence`, `match_score`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `asn`, `asa_token`, `asa_attribution`, `claimed_at`, `updated_at`; `clicks.client_click_time`, `launch_referrer`, `origin`; `apps.ios_tap_to_store`, OEM store URLs, `low_entropy_window_hours`; the `(user_id, ip_hash, created_at)` install index |
-| `0027_apple_search_ads` | `asa_status`, `asa_attempts`, `asa_token_at`, `asa_resolved_at` and the pending-token index |
-| `0028_claim_source` | `claim_source` on `app_installs`: which late signal upgraded the install |
-| `0029_sdk_identity` | `sdk_name` and `sdk_version` on `app_installs`, `events` and `clicks` |
+The 63 migrations written before the first release were combined into `0001_schema.sql` on 2026-10-16. The numbers such as 0026 that code comments and older notes cite name those files; the server repository's git history keeps them. A local database made before then has the old files recorded, so `migrations apply` stops at the first table it creates (`table users already exists`): delete `apps/worker/.wrangler/state/v3/d1` and apply again.
 
 ### Commands
 

@@ -5,12 +5,13 @@ sidebar:
   order: 1
 ---
 
-DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog):
+DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog):
 
 | Repository | Contents | License |
 |---|---|---|
 | `DecTog/dectog` | The server: Cloudflare Worker, D1 database, Next.js dashboard and marketing site | AGPL-3.0 |
-| `DecTog/flutter_dectog` | The Flutter SDK, published on pub.dev as `flutter_dectog` | MIT |
+| `DecTog/flutter_dectog` | The Flutter SDK, the `flutter_dectog` package (not yet published on pub.dev) | MIT |
+| `DecTog/react-native-dectog` | The React Native and Expo SDK, the `react-native-dectog` package (not yet published on npm) | MIT |
 | `DecTog/docs` | This site | Content CC BY 4.0, site code MIT |
 
 ## Repository layout
@@ -21,7 +22,7 @@ DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog
 |---|---|
 | `apps/worker/src/` | The Worker: `index.ts` routes hosts and paths; `redirect.ts` is the link engine; `api_links.ts`, `api_clicks.ts`, `api_installs.ts`, `api_events.ts` are the SDK API; `attribution.ts`, `fraud.ts`, `asa.ts` decide verdicts; `api_admin.ts`, `api_auth.ts`, `api_google.ts`, `api_customers.ts`, `api_attribution_admin.ts`, `api_blog.ts` serve the dashboard; `auth.ts`, `ratelimit.ts`, `webhook.ts`, `wellknown.ts`, `ogpreview.ts`, `collect.ts`, `seed.ts`, `bootstrap.ts` |
 | `apps/worker/src/db/` | The typed data layer: `tables.ts` (column registry), `write.ts` (`insertStmt`, `updateById`), `links.ts`, `tempLinks.ts`, `users.ts` (the shared lookups) |
-| `apps/worker/migrations/` | `0001_init.sql` to `0027_apple_search_ads.sql` |
+| `apps/worker/migrations/` | `0001_schema.sql` (the whole schema), then one numbered file per later change |
 | `apps/worker/test/` | Vitest suites on the Workers pool with an isolated D1 |
 | `apps/worker/wrangler.jsonc` | Dev defaults and the `production` environment |
 | `apps/web/src/app/` | The Next.js app: `(site)` marketing pages, `login`, `reset-password`, `dashboard/**` |
@@ -29,6 +30,7 @@ DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog
 | `docs/API_CONTRACT.md` | The SDK-to-worker contract, route by route |
 | `docs/ATTRIBUTION-RELIABILITY-PLAN.md` | How attribution works and the status of each follow-up |
 | `docs/DATA-LAYER.md` | The data-layer rules summarized below |
+| `deploy/terraform/` | A Terraform module for the Cloudflare resources of a self-hosted deployment: the zone, DNS records, the D1 database, the optional exports bucket and custom-domain fallback origin. See [Deploy to Cloudflare](/self-hosting/deploy/#infrastructure-as-code-with-terraform) |
 
 ### `flutter_dectog` (SDK)
 
@@ -39,18 +41,36 @@ DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog
 | `lib/src/models/` | `DectogConfig`, `DectogLink`, `DectogTempLink`, `DectogLinkResolution`, `DectogLinkClick`, `DectogAppInstallRequest`, `DectogAppInstallResponse`, `DectogClickParams`, `DectogError` |
 | `lib/src/services/` | Device identity and hardware, the install referrer service, the install state store (the `.dectog_install.json` sentinel), the event queue, request signing, the retry policy, the sensitive-URL filter, the link deduper |
 | `lib/src/widgets/dectog_paste_button.dart` | `DectogPasteButton` |
-| `android/src/main/kotlin/app/dectog/flutter_dectog/` | `DectogIdentifiersPlugin.kt`, `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
-| `ios/flutter_dectog/` | The Swift package: `DectogIdentifiersPlugin.swift`, `DectogInstallDates.swift`, `DectogKeychain.swift`, `DectogPasteControl.swift`; `ios/flutter_dectog.podspec` for CocoaPods hosts |
-| `example/` | The example app; reads `env/dev.json` for `DECTOG_API_KEY`, `DECTOG_BASE_URL`, `DECTOG_LINK_ROOT_DOMAIN` |
+| `android/src/main/kotlin/app/dectog/core/` | The framework-free Android reads every DecTog SDK shares as source: `DectogDevice.kt` (device id, carrier, package and launch info, Meta referrer, App Links state), `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
+| `android/src/main/kotlin/app/dectog/flutter_dectog/` | `DectogIdentifiersPlugin.kt`, which maps the method channel onto `app.dectog.core` |
+| `ios/flutter_dectog/` | The Swift package. Framework-free, shared as source: `DectogDevice.swift`, `DectogInstallDates.swift`, `DectogKeychain.swift`, `DectogPasteTargetView.swift`; Flutter glue: `DectogIdentifiersPlugin.swift`, `DectogPasteControl.swift`. `ios/flutter_dectog.podspec` for CocoaPods hosts |
+| `example/` | Trails, the example app: shared links, invites and referrals, onboarding, `identify`, a demo purchase, screen views. Reads `env/dev.json` for `DECTOG_API_KEY`, `DECTOG_BASE_URL`, `DECTOG_LINK_ROOT_DOMAIN`; `example/site/` is its store-badges page |
 | `test/` | Unit tests for the models, the referrer service, the state store, the event queue, signing, the retry policy, the URL parser and the paste button |
-| `doc/react_native_port.md` | The draft port guide; see [Porting the SDK](/contributing/porting-the-sdk/) |
+| `doc/api-reference.md`, `llms.txt` | The API reference this site syncs, and the agent index generated from it (`dart run tool/gen_llms.dart`) |
+
+### `react-native-dectog` (SDK)
+
+A port of `flutter_dectog` on the same contract and fixtures; [Porting the SDK](/contributing/porting-the-sdk/) explains what it shares and what it reimplements.
+
+| Path | What it is |
+|---|---|
+| `src/Dectog.ts` | `DectogSdk` and the `Dectog` singleton: initialization, link handling, install registration, claims, events, link CRUD (the port of `lib/src/dectog_impl.dart`) |
+| `src/internal/` | The services: install state, event queue, request signing with its own SHA-256 and HMAC, the retry policy, the URL parser, the link filter and deduper, the referrer and pasteboard gates |
+| `src/models/`, `src/config.ts`, `src/errors.ts` | The public types, `DectogConfig` and `DectogError` |
+| `src/navigation.ts`, `src/PasteButton.tsx` | `trackNavigation` for React Navigation and Expo Router, and `DectogPasteButton` |
+| `ios/Shared/`, `android/src/main/java/app/dectog/core/` | Copies of the shared native reads; `tool/sync_shared.sh --check` fails on any difference from `flutter_dectog` |
+| `ios/DectogModule.swift`, `android/.../reactnative/DectogModule.kt` | The Expo module: the bridge onto the shared reads |
+| `plugin/src/` | The config plugin: associated domains, URL types, intent filters; `app.plugin.js` loads it |
+| `test/` | Jest suites against a fake native layer and a recording network; `test/fixtures/` are the shared wire fixtures and URL cases |
+| `example/` | An Expo app with the plugin configured; `expo prebuild` generates its native projects |
+| `doc/api-reference.md`, `llms.txt` | The API reference this site syncs, and the agent index (`npm run llms`) |
 
 ### `docs` (this site)
 
 | Path | What it is |
 |---|---|
 | `src/content/docs/<group>/<slug>.md` | One page per file; the sidebar groups are fixed in `astro.config.mjs` and pages are ordered by `sidebar.order` |
-| `src/components/Footer.astro` | The footer with the version note ("flutter_dectog 1.0.x, migration 0027") and the license split |
+| `src/components/Footer.astro` | The footer with the version note (the SDK versions and the latest migration) and the license split |
 | `wrangler.jsonc` | The Worker that serves `dist/` on the route `docs.dectog.com/*` |
 | `.github/workflows/deploy.yml` | Builds on every push and pull request; deploys on push to `main` |
 
@@ -58,12 +78,13 @@ DecTog is three repositories under [github.com/DecTog](https://github.com/DecTog
 
 ```bash
 # Server
-cd apps/worker && npm ci && npm test          # Vitest on the Workers pool, 28 suites, 300+ tests
+cd apps/worker && npm ci && npm test          # Vitest on the Workers pool (on macOS: npm run test:split)
 cd apps/worker && npm run typecheck           # tsc --noEmit
 cd apps/web && npm ci && npm run typecheck
 
-# SDK
+# SDKs
 cd flutter_dectog && flutter pub get && flutter analyze && flutter test
+cd react-native-dectog && npm ci && npm test && npm run typecheck && npm run sync:check
 
 # Docs
 cd docs && npm ci && npm run build            # fails on broken internal links
@@ -76,8 +97,7 @@ To run the server locally with the demo account, follow [Local quick start](/sel
 ## Migration rules
 
 - `apps/worker/migrations/` is append-only. A migration that has been applied to a shared or remote database is never edited or deleted; add a new numbered file.
-- Files apply in name order. Two files are numbered `0012` (`0012_blog.sql`, `0012_mobile_interstitial.sql`) and that is fine; do not renumber them.
-- `0003_hashed_api_keys.sql` wipes tenant data. It only matters for databases that predate it.
+- Files apply in name order. `0001_schema.sql` creates the whole schema; a change is the next numbered file.
 - A migration that adds or removes a column must also change the row type in `src/types.ts` and the column registry in `src/db/tables.ts`. `tsc` enforces the type-registry pair and `test/schema.test.ts` compares the registry with `PRAGMA table_info` on the migrated test database.
 - Deploys run `wrangler d1 migrations apply DB --remote --env production` before `wrangler deploy --env production`. Plain `npm run deploy` uses the dev configuration. See [Database and migrations](/self-hosting/database-and-migrations/).
 
@@ -94,9 +114,9 @@ The worker talks to D1 with raw, parameterized SQL and no ORM. From `docs/DATA-L
 ## Design decisions to keep
 
 - No billing. There is no billing or subscription code anywhere, and the docs do not describe any.
-- API keys are stored as a SHA-256 hash plus a prefix, with an AES-GCM encrypted copy (keyed from `JWT_SECRET`) so Settings can show the key again. Every SDK call is also HMAC-signed with the key.
+- API keys are stored as a SHA-256 hash plus a prefix. The account key is shown once and kept no other way; SDK and site keys also keep an AES-GCM encrypted copy (keyed from `JWT_SECRET`) so Settings can show them again. Every SDK call is also HMAC-signed with the key.
 - Attribution: deterministic signals first (store referrers, Meta, pasteboard), then a scored, tenant-scoped fingerprint; one install per click; 24-hour window for model-bearing candidates and 2 hours otherwise; credit only at high confidence, routing at medium, nothing on a tie. See [Attribution internals](/self-hosting/attribution-internals/).
-- Privacy: hashed IPs (IPv6 at /64), device-tier anonymization on the retention schedule, ad identifiers in their own table and never joined to device data, no cross-install identifiers. See [Privacy and data](/self-hosting/privacy-and-data/).
+- Privacy: hashed IPs (IPv6 at /64), raw rows deleted (or their personal columns blanked) on the retention schedule, ad identifiers in their own table and never joined to device data, and a vendor-scoped device id that survives a reinstall by default (`persistDeviceId` on iOS). See [Privacy and data](/self-hosting/privacy-and-data/).
 
 ## Proposing a change
 
@@ -104,7 +124,7 @@ The worker talks to D1 with raw, parameterized SQL and no ORM. From `docs/DATA-L
 2. Fork, branch, and keep the checks above green. A worker change that touches a route, a verdict field or a limit needs a test in `apps/worker/test/`; an SDK change needs one in `test/`.
 3. Keep the prose in step with the code. The pages of this site, `docs/API_CONTRACT.md`, `apps/web/public/SKILL.md` and `llms.txt` all describe the same behavior; update the ones your change affects, and bump the version note in `src/components/Footer.astro` when the SDK version or the latest migration changes.
 4. Never commit secrets. `.dev.vars`, `env/dev.json` and OAuth client secret files stay out of commits.
-5. Open a pull request. The docs site builds every pull request and deploys `main` automatically.
+5. Open a pull request. The docs site builds every pull request; a merged change reaches docs.dectog.com with the next deploy.
 
 Documentation fixes are the quickest contribution: every page has an "Edit page" link that opens the file on GitHub.
 

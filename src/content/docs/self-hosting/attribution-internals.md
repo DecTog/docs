@@ -34,11 +34,13 @@ For each signal that names a click id:
 
 When every signal is exhausted, the ladder's outcome is `reuse` if any signal pointed at a consumed click, else `not_found` if any pointed at an unknown click, else `none`. Only `reuse` leaves a mark: the fraud flag `click_reuse`, and no fingerprint for this install.
 
-A win sets `match_source` to `referrer` (store and Meta) or `clipboard`, `referrer_source` to the store name or `meta` (null for the clipboard) and `match_confidence` to `guaranteed`. The ladder has no time window; a very old click still matches, and `stale_referrer` flags it when it is older than 30 days.
+A win sets `match_source` to `referrer` (store and Meta) or `clipboard`, `referrer_source` to the store name or `meta` (null for the clipboard) and `match_confidence` to `guaranteed`. A store referrer has no time window: a very old click still matches, and `stale_referrer` flags it when it is older than 30 days.
+
+**Deterministic window (P2.3).** A pasted link and Meta's referrer are bounded by `deterministicWindowHours`: the app's `deterministic_window_hours`, else `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` (default 168, 7 days), never more than 30 days. The app is the clicked link's app, else the install's own. The age is measured from Meta's `meta_referrer_ts` when present, else the click row's `clicked_at`; a click synthesized from the tag carries the install time and is never stale. An older win is demoted (`staleSignalFlag`): it earns the flag `stale_clipboard` or `stale_meta`, consumes nothing, and the fingerprint decides as if no signal had matched. When the fingerprint neither credits nor routes, the stale click becomes `routing_click_id` with `match_confidence = 'medium'`, so the app still opens the link's content. With strict fraud mode the stale click does not route either. A claim carrying a stale signal is `rejected` with `claim_reason: "stale_click"`.
 
 ### 2. The scored fingerprint
 
-Runs when the ladder found nothing, and also (as a shadow, see below) when it did. It is skipped in exactly three cases (`api_installs.ts`, `canFingerprint`): the install has no IP hash, `install_state` is `update` (an existing user updating into an SDK build must never take a click from the pool), or the ladder ended in `click_reuse`.
+Runs when the ladder found nothing, and also (as a shadow, see below) when it did. It is skipped in exactly five cases (`api_installs.ts`, `canFingerprint`): the install has no IP hash, `install_state` is `update` (an existing user updating into an SDK build must never take a click from the pool), the ladder ended in `click_reuse`, the install's own app has `probabilistic_match = 0` (P2.15; then not even the shadow runs), or the registration carries `recovered_from` (P2.8: the SDK re-registering an install the server lost). A registration with `recovered_from` also ignores `clipboard_url`.
 
 Reinstalls are not one of those cases. An install with `install_state: 'reinstall'`, or one the server classifies as a reinstall because the same tenant already has a non-reinstall install with the same `device_id`, runs the full ladder and the fingerprint like a fresh install and can be credited. It is stored with `is_reinstall = 1`, which only keeps it out of the dashboard's Installs KPI, the per-link install counts and the other `is_reinstall = 0` analytics queries. App updates never fingerprint; reinstalls are matched but counted separately.
 
@@ -51,13 +53,18 @@ WHERE c.user_id = ?1 AND c.source = 'web' AND c.device_type IN ('ios','android')
   AND c.ip_hash = ?3                           -- same salted IP hash
   AND c.clicked_at >= ?4                       -- inside the wide window
   AND NOT EXISTS (SELECT 1 FROM app_installs i WHERE i.matched_click_id = c.id)
+  AND (?5 IS NULL OR c.link_kind != 'permanent' OR NOT EXISTS (   -- the install's app
+        SELECT 1 FROM links l WHERE l.user_id = c.user_id AND l.slug = c.link_slug
+          AND l.app_id IS NOT NULL AND l.app_id != ?5))
 ORDER BY c.clicked_at DESC
 LIMIT 50
 ```
 
+`?5` is the install's own app. A click on a link bound to a different app of the account is no candidate, so one account's two apps cannot take each other's installs. Clicks on temporary links and on links bound to no app stay candidates for every app. When the install's app is unknown (a package name that matches none of several apps) the pool is not scoped.
+
 So the pool is the 50 newest web clicks (recorded by the redirect engine or synthesized; an in-app open that flipped a row to `source = 'mobile_app'` is out) from the same hashed IP, on the same device family, inside the wide window, not yet credited to any install. A routing-only assignment does not consume a click.
 
-**Windows.** `fingerprintWindows` computes `wideHours = clamp(ATTRIBUTION_WINDOW_HOURS, 1, 720)` (default 24) and `lowHours = min(app override or ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS, wideHours)` (default 2). The app override is `low_entropy_window_hours` of the tenant's **oldest app**, not the matched link's app. A candidate keeps the wide window only when the install is not on cellular, the click carries a device model and the install carries one too. Every other candidate must be younger than `lowHours`.
+**Windows.** `fingerprintWindows` computes `wideHours = clamp(ATTRIBUTION_WINDOW_HOURS, 1, 720)` (default 24) and `lowHours = min(app override or ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS, wideHours)` (default 2). The app override is `low_entropy_window_hours` of the install's own app: the app whose Android package or iOS bundle ID equals `package_name`, or the only app of a one-app account (`appOfInstall` in `appscope.ts`). With no such app the deployment default applies. A candidate keeps the wide window only when the install is not on cellular, the click carries a device model and the install carries one too. Every other candidate must be younger than `lowHours`.
 
 **Scoring.** `scoreCandidate` adds points per signal. A signal missing on either side scores 0; absence is never evidence.
 
@@ -69,6 +76,8 @@ So the pool is the 50 newest web clicks (recorded by the redirect engine or synt
 | Screen short side | `min(screen_width, screen_height)` in physical px | `min(screen_width, screen_height) × pixel_ratio` from the interstitial beacon | +15 when within 3 % | −40 |
 | CPU family | `cpu_family` from `cpu_type` | `ua_arch` from `Sec-CH-UA-Arch` | +5 | −40 |
 | Network | `asn` | `asn` | +10 | 0 |
+
+**Repeat taps.** Before ranking, candidates with the same signature collapse into the newest of them: same IP hash and device family (the query already requires both), same device model, OS major, language, screen short side and CPU family. As far as the evidence goes such candidates are one phone tapping twice (a double tap, a pull-to-refresh, the same message tapped again), and without collapsing they would tie with each other and nobody would be credited. Only taps that carry a device model or a screen profile collapse: two taps that agree on nothing more than OS major and language are as likely two people on one network, so they keep competing and can still tie. The install stores `candidate_count` as the number of distinct candidates and `collapsed_from` as the number of click rows merged into the one the verdict used (null when nothing merged). The trade-off: two phones of the same model, OS, language and screen behind one address now look like one phone, and the newer tap is credited instead of nobody. The click rows themselves are kept; only the matching treats them as one.
 
 Candidates are sorted by score, highest first; the SQL order (newest first) and a stable sort mean recency only breaks ties.
 
@@ -126,9 +135,11 @@ When a deterministic signal decided, the fingerprint still runs and writes what 
 | `install_velocity_ip` | At least 5 installs (25 when the install reports `cellular`) from the same hashed IP in the last 24 hours. The count runs before the row is inserted, so on first launch it fires on the 6th (or 26th) install; on a claim the row already exists, so on the 5th (or 25th). Skipped when the install has no IP hash. |
 | `click_storm_ip` | The matched click's hashed IP produced more than 100 clicks in the hour up to that click |
 | `stale_referrer` | `match_source` is `referrer` or `clipboard` and the click is older than 30 days |
+| `stale_clipboard` | A pasted link's click is older than the deterministic window (7 days by default, per app). The install is routed to the link but not credited. |
+| `stale_meta` | The same for Meta's install referrer, timed by Meta's own click timestamp |
 | `click_reuse` | A deterministic signal named a click that another device's install already holds |
 
-With `strict_fraud_mode = 1` on the tenant's **oldest app**, any flag makes the stored row `matched = 0` and `match_source = NULL` while `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` are kept as evidence. Consequences:
+With `strict_fraud_mode = 1` on the app the verdict concerns (the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app), any flag makes the stored row `matched = 0` and `match_source = NULL` while `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` are kept as evidence. Consequences:
 
 - The click stays consumed, so a replayed signal cannot free it for the next install.
 - The API verdict says `matched: false`, `type: "organic"`, `match_source: null`, but still `referrer_source` and `match_confidence` (for example `guaranteed`); `username`, `slug` and `link` are absent and `routing` is null.
@@ -138,9 +149,28 @@ With `strict_fraud_mode = 1` on the tenant's **oldest app**, any flag makes the 
 
 With strict mode off (the default) flags are annotations and the attribution stands.
 
+### Same-device reinstall routing
+
+When the ladder and the fingerprint found nothing to credit or route, a reinstall (`is_reinstall = 1`) with a `device_id` gets the click its device's latest credited install consumed as `routing_click_id` with `match_confidence = 'medium'`, provided that tap is younger than the deterministic window of its link's app (`deterministic_window_hours`, default 168). The click stays credited to the first install; `match_details.reinstall_routing` names it. This is decision C6's default.
+
 ### 5. After the insert
 
-The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the install webhook (`app.installed`) of the oldest app. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
+The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one batch. Then, in `waitUntil`: the Apple Search Ads round-trip when `asa_token` was sent (three attempts five seconds apart, stopping at the first `5xx` or network error; `invalid` on 400; `pending` otherwise, for the cron), and the `app.installed` webhook event for the app the verdict concerns. The response is the verdict. `apple_search_ads` is always present (null when no token was ever sent); `link` is present only for a permanent link, a temporary-link match has `username` and `slug` with `custom_params` null.
+
+## The stored explanation
+
+Every install row keeps `match_details`, a JSON object the dashboard's install detail shows (`GET /api/admin/installs/:id`):
+
+| Field | Meaning |
+|---|---|
+| `method` | `referrer`, `clipboard`, `meta`, `fingerprint`, or null for an uncredited install |
+| `signal`, `referrer_source`, `click_id`, `synthesized` | The deterministic signal that named a click, when one did |
+| `stale` | `stale_clipboard` or `stale_meta` when that signal was older than the window |
+| `fingerprint_skipped` | `no_ip`, `update`, `click_reuse`, `probabilistic_off` or `recovery` when the fingerprint did not run |
+| `candidates`, `collapsed_from`, `window_hours`, `gap`, `confidence` | The fingerprint's pool after collapsing, the merged taps, the window of the best candidate, its lead over the runner-up |
+| `best`, `runner_up` | `{click_id, slug, clicked_at, score, signals, low_entropy}`; `signals` marks `device_model`, `os_major`, `lang`, `screen`, `cpu` and `asn` as `agree`, `mismatch` or `missing` |
+| `shadow` | The same fingerprint fields when a deterministic signal decided |
+| `claim_source`, `before_claim` | After a late claim upgraded the verdict: the claim's source and the explanation it replaced |
 
 ## Worked examples
 
@@ -158,7 +188,8 @@ Each row is a golden scenario the worker's test suite runs end to end on every c
 | A retried registration replays the stored verdict | tap on android (Pixel 9); install i1 (store referrer, attempt id; other network); install i2 (store referrer, attempt id; other network) | i1: `matched: true`<br>i2: `matched: true`, `replayed: true` |
 | A referrer delivered on a later launch upgrades an organic install | tap on android (Pixel 9); install i1 (no signal; other network); later claim on i1 (late_referrer) | i1: `matched: false`<br>claim i1: `claim: upgraded`, `matched: true`, `match_source: referrer` |
 | An app update never runs the fingerprint | tap on android (Pixel 9); install i1 (app update; same network) | i1: `matched: false`, routing none |
-| Two taps from one phone tie and credit nobody *(known defect, P2.1)* | tap on android (Pixel 9); tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: false`, `match_confidence: low` |
+| Two taps from one phone collapse into one candidate; the newest is credited | tap on android (Pixel 9); tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high`, credited to the second tap; `collapsed_from: 2` |
+| Taps from two different phones on one network still tie | tap on android (Pixel 9); tap on android (Pixel 8); install i1 (no signal, no model; same network) | i1: `matched: false`, `match_confidence: low` |
 
 ## Claims
 
@@ -171,7 +202,8 @@ Then, in order:
 3. `replay` (another row of the same device holds the click): the holder's verdict with `replayed: true`, `claim: "unchanged"`; the SDK adopts that install id.
 4. `reuse`: `click_reuse` is merged into the flags, `claim: "rejected"`, `claim_reason: "click_reuse"`.
 5. `not_found` / `none`: `claim: "rejected"` with `click_not_found` / `no_signal`.
-6. Otherwise the deterministic click wins over whatever the fingerprint had guessed (the old click is released by no longer being referenced) and over organic: `matched = 1`, `match_source`, `referrer_source`, `match_confidence = 'guaranteed'`, `routing_click_id = NULL`, `claimed_at = now`. Fraud rules are re-evaluated and merged, strict mode applies as above, and the webhook fires with `app.install_updated`. Response: `claim: "upgraded"`.
+6. A pasted link or Meta referrer older than the deterministic window: its flag (`stale_clipboard` / `stale_meta`) is merged, `claim: "rejected"`, `claim_reason: "stale_click"`.
+7. Otherwise the deterministic click wins over whatever the fingerprint had guessed (the old click is released by no longer being referenced) and over organic: `matched = 1`, `match_source`, `referrer_source`, `match_confidence = 'guaranteed'`, `routing_click_id = NULL`, `claimed_at = now`. Fraud rules are re-evaluated and merged, strict mode applies as above, and the webhook fires with `app.install_updated`. Response: `claim: "upgraded"`.
 
 An `asa_token` on a claim restarts the Apple round-trip unless the row is already `resolved` or `no_attribution`; `invalid` and `expired` rows accept a new token.
 

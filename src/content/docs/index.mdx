@@ -3,7 +3,7 @@ title: DecTog documentation
 description: Deep links, install attribution and real-time analytics for mobile apps. Hosted at dectog.com or on your own Cloudflare account.
 template: splash
 hero:
-  tagline: Short links that open your app, route new users through the stores and tell you which link brought each install. One Flutter SDK, one dashboard, your own infrastructure if you want it.
+  tagline: Short links that open your app, route new users through the stores and tell you which link brought each install. SDKs for Flutter and React Native, one dashboard, your own infrastructure if you want it.
   actions:
     - text: Quickstart
       link: /start/quickstart/
@@ -59,7 +59,7 @@ flutter pub add flutter_dectog
 final dectog = FlutterDectog();
 
 await dectog.initialize(DectogConfig(
-  apiKey: 'dtg_your_api_key',
+  apiKey: 'dtg_pub_your_sdk_key',
 ));
 ```
 
@@ -90,10 +90,11 @@ Create a link in the dashboard, over the REST API or from the app.
 		'Start here': 'Create an account, register your app, add the SDK and ship your first attributed install.',
 		'Links & routing': 'What happens when someone taps a link: app, store, QR page, bots, and every dec_* parameter.',
 		'Flutter SDK': 'Installation, platform setup, deferred deep links, install attribution, events and the full API reference.',
+		'React Native SDK': 'The Expo module and its config plugin: the same links, attribution and events from React Native.',
 		Dashboard: 'Every screen and every number on it, defined exactly as the server computes it.',
-		'REST API': 'Authentication, request signing, rate limits, links, installs, events and the install webhook.',
+		'REST API': 'Authentication, request signing, rate limits, links, installs, events and webhooks.',
 		'Self-hosting': 'Run DecTog on your own Cloudflare account: deploy, configure, operate and keep your data.',
 		Guides: 'Troubleshooting, migrating from Firebase Dynamic Links or Branch, automation and AI agents.',
-		Contributing: 'Repository layout, tests, migration rules and the licenses of the server, the SDK and these docs.',
+		Contributing: 'Repository layout, tests, migration rules and the licenses of the server, the SDKs and these docs.',
 	}}
 />
