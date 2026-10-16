@@ -98,7 +98,7 @@ These are code constants. Changing them means editing the source and redeploying
 | Session lifetime | 30 days (JWT); cookie Max-Age 30 days with "Remember me", otherwise a browser-session cookie | `auth.ts`, `api_admin.ts` |
 | Password reset | Token valid 1 hour, single use | `api_auth.ts` |
 | Google username step | 15 minutes | `api_google.ts` |
-| Temp links | TTL 60 s to 2,592,000 s (30 days), default 900; purged 24 h after expiry | `api_links.ts`, `index.ts` |
+| Temp links | TTL 60 s to 2,592,000 s (30 days), default 900; deleted (softly) 24 h after expiry | `api_links.ts`, `index.ts` |
 | Click screen profile | Nulled after `min(RETENTION_DAYS, 30)` days | `index.ts` |
 | Beacon binding | Same hashed IP, within 10 minutes of the click | `collect.ts` |
 | Bot threshold | Cloudflare bot score below 30 records no click | `redirect.ts` |

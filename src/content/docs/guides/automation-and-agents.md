@@ -191,7 +191,7 @@ There is no list endpoint for temporary links on `/api/v1`; read them one at a t
 
 ## A temporary link for every CI build
 
-Temporary links expire on their own and are purged a day after expiry, so a pipeline needs no cleanup. `ttlSeconds` is clamped to 60 seconds to 30 days; 0 becomes 900.
+Temporary links expire on their own and are deleted a day after expiry, so a pipeline needs no cleanup; with a fixed slug, give each run a new one, since a deleted link keeps its slug. `ttlSeconds` is clamped to 60 seconds to 30 days; 0 becomes 900.
 
 ```yaml title=".github/workflows/build.yml (excerpt)"
 - name: Publish a link to this build
@@ -204,7 +204,7 @@ Temporary links expire on their own and are purged a day after expiry, so a pipe
     echo "Build ${GITHUB_SHA::7}: $url" >> "$GITHUB_STEP_SUMMARY"
 ```
 
-Temporary links use the default app's routing and fallback, have no click counter and no deep-link paths. After expiry the link serves a 410 page and `resolve` answers 410 `link_expired`, until the daily purge. See [Temporary links](/links/temporary-links/).
+Temporary links use the default app's routing and fallback, have no click counter and no deep-link paths. After expiry the link serves a 410 page and `resolve` answers 410 `link_expired`, until the daily delete. See [Temporary links](/links/temporary-links/).
 
 ## QR codes
 

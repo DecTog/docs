@@ -162,10 +162,10 @@ A Google sign-in whose verified email matches an existing account links that acc
 | Response | When | Page text |
 |---|---|---|
 | 302 to `https://dectog.com/` | The username does not exist | None (hosted service) |
-| 404 page | The slug does not exist, or a temporary link was purged | `Link not found` and `This DecTog link does not exist.` |
+| 404 page | The slug does not exist, or its link was deleted (an expired temporary link is, a day after expiry) | `Link not found` and `This DecTog link does not exist.` |
 | 410 page | A temporary link has expired, bots included | `Link expired` and `This temporary link has expired and is no longer available.` |
 | JSON `404 {"error":{"code":"not_found","message":"Not found"}}` | Two or more path segments on a link host | None |
 
 Both HTML pages carry `noindex`, a "Go to DecTog" button and the footer `Check the link for typos, or ask whoever shared it for a new one.`
 
-An expired link answers `GET /api/v1/resolve/{username}/{slug}` with `410 link_expired`, and a paused one with `410 link_paused`; neither records clicks. The daily purge removes temporary links expired for more than 24 hours that have no expired URL; after that the slug is free and the link is a 404. Deleting a link from the dashboard hides it and keeps its numbers in the Overview; only **Delete permanently** removes its clicks, installs, events and opens. See [Temporary links](/links/temporary-links/).
+An expired link answers `GET /api/v1/resolve/{username}/{slug}` with `410 link_expired`, and a paused one with `410 link_paused`; neither records clicks. The daily job deletes temporary links expired for more than 24 hours that have no expired URL; after that the link is a 404, and its slug stays reserved until you restore it or delete it permanently. Deleting a link from the dashboard hides it and keeps its numbers in the Overview; only **Delete permanently** removes its clicks, installs, events and opens. See [Temporary links](/links/temporary-links/).

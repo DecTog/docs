@@ -141,7 +141,7 @@ Desktop never redirects to the link's target automatically. The target only appe
 |---|---|---|
 | 404 | "Link not found" / "This DecTog link does not exist." | Unknown slug, a deleted link, or unknown username when `UNKNOWN_HOST_REDIRECT` is unset |
 | 410 | "Link paused" / "This link is paused and not available right now." | A paused link |
-| 410 | "Link expired" / "This link has expired and is no longer available." | An expired link without an expired URL; for a temporary link until the daily purge removes it (after that: 404) |
+| 410 | "Link expired" / "This link has expired and is no longer available." | An expired link without an expired URL; for a temporary link until the daily delete (after that: 404) |
 
 Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at `https://dectog.com/` and the footer "Check the link for typos, or ask whoever shared it for a new one." They are in the visitor's language like every link page (see [The link pages](#the-link-pages)). Two or more path segments on a tenant host return JSON `404 {"error":{"code":"not_found","message":"Not found"}}` instead.
 

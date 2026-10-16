@@ -89,7 +89,7 @@ Every permanent-link route returns the full object, including fields you never s
 - Reserved: `healthz`, `readyz`, `bulk` and `upsert` (any case), and any slug starting with `ext_`, which names a link by its external id.
 - The slug is used exactly as sent. Leading or trailing whitespace makes it invalid. Slugs are case-sensitive: `Sale` and `sale` are two different links.
 - One namespace per account for permanent **and** temporary links. Creating either kind with a slug the other kind holds returns `409 {"error": {"code": "conflict", "message": "Slug already exists", "slug": "<slug>"}}`.
-- A slug becomes free again when the link is deleted permanently, or when an expired temporary link is purged. A deleted link keeps its slug, because its history is filed under it: creating that slug answers `409 {"error": {"code": "conflict", "message": "Slug belongs to a deleted link: restore it, or delete it permanently to reuse the slug", "slug": "<slug>", "deleted": true}}`.
+- A slug becomes free again only when the link is deleted permanently. The daily job's delete of an expired temporary link is a soft delete, so it keeps its slug. A deleted link keeps its slug, because its history is filed under it: creating that slug answers `409 {"error": {"code": "conflict", "message": "Slug belongs to a deleted link: restore it, or delete it permanently to reuse the slug", "slug": "<slug>", "deleted": true}}`.
 
 ## Create a link
 

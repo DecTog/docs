@@ -10,7 +10,7 @@ The Worker has two cron triggers, declared identically at the top level and in `
 | Expression | Fires | Runs |
 |---|---|---|
 | `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups, webhook retries, unfinished CSV exports and custom domain checks |
-| `17 3 * * *` | Daily at 03:17 UTC | The same, then the temporary-link purge, the deleted-link anonymization, the webhook delivery-log purge, the export-file purge, the exchange rates and, once the rollups are done, the retention sweep |
+| `17 3 * * *` | Daily at 03:17 UTC | The same, then the expired temporary links' delete, the deleted-link anonymization, the webhook delivery-log purge, the export-file purge, the exchange rates and, once the rollups are done, the retention sweep |
 
 The code branches on the expression: `7 * * * *` returns after the Apple Search Ads pass and the rollups; any other expression runs everything. The jobs run inside `waitUntil`, so a failure in one does not stop the others, except that the retention sweep waits for the rollup build. There is no job-level logging beyond console warnings.
 
@@ -66,25 +66,26 @@ The daily trigger also runs `purgeExportJobs`: a file is deleted from the bucket
 DELETE FROM webhook_deliveries WHERE created_at < <now minus 30 days>
 ```
 
-## Temporary-link purge (daily)
+## Expired temporary links (daily)
 
 ```sql
-DELETE FROM temp_links WHERE expires_at < <now minus 24 hours> AND expired_url IS NULL
+UPDATE temp_links SET deleted_at = <now>
+WHERE expires_at < <now minus 24 hours> AND expired_url IS NULL AND deleted_at IS NULL
 ```
 
-A temporary link therefore keeps answering for up to a day after it expires: the redirect shows the 410 page, `GET /api/v1/resolve/:user/:slug` answers `410 link_expired`, and `GET /api/v1/temp-links/:slug` still works. A link with an expired URL is never purged: it keeps sending taps there until its owner deletes it. After the purge the slug is free again and both answer 404. The link's clicks and the installs attributed to them are kept; only the `temp_links` row goes. The dashboard's "Delete expired" button and `DELETE /api/admin/temp-links/expired` remove expired links immediately with the same effect. See [Temporary links](/links/temporary-links/).
+A temporary link therefore keeps answering for up to a day after it expires: the redirect shows the 410 page, `GET /api/v1/resolve/:user/:slug` answers `410 link_expired`, and `GET /api/v1/temp-links/:slug` still works. A link with an expired URL is never deleted this way: it keeps sending taps there until its owner deletes it. After the delete both answer 404 and the link leaves the lists (`?include_deleted=1` lists it). It is a soft delete, like the dashboard's **Delete**: the link's clicks, installs and events stay, and its slug stays reserved (`409` with `deleted: true`) until the link is restored or deleted permanently, which takes its history too, so a new link never inherits it. Its taps lose their device data 30 days later, as for every [deleted link](#deleted-links-daily). The dashboard's **Delete expired** button and `DELETE /api/admin/temp-links/expired` do the same at once for every expired link. See [Temporary links](/links/temporary-links/).
 
 ## Exchange rates (daily)
 
-Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currency`, `rate`, plus `EUR` = 1), then fills `events.revenue_base` for up to 2,000 amounts that have none: the amount in the account's revenue currency, converted with the rate of the event's day (the last rate published on or before it, else the first after it). A failed download is logged and retried the next day; amounts keep waiting with `revenue_base` null and count as 0 in totals.
+Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currency`, `rate`, plus `EUR` = 1), then fills `events.revenue_base` for up to 2,000 amounts that have none and a rate can convert: the amount in the account's revenue currency, converted with the rate of the event's day (the last rate published on or before it, else the first after it). A failed download is logged and retried the next day; amounts keep waiting with `revenue_base` null and count as 0 in totals. An amount in a currency the ECB does not publish waits the same way, without holding up the others.
 
 ## Anonymization sweep (daily)
 
 The cutoff is `now minus RETENTION_DAYS` (default 400; `0`, blank or non-numeric also means 400). An account with a shorter window of its own (Settings → **Data retention**, 1 to 400 days; `PUT /api/admin/settings/retention`) is then swept again with its own cutoff, in the same order; a longer one has no effect.
 
-First, for every account whose rollups are built through the cutoff's day, the clicks, installs, events and app opens older than the cutoff are deleted, and `frozen_through` becomes the cutoff's day: those days' totals now live only in `link_daily` and are never rebuilt (a later change of account currency converts them with each day's exchange rates instead). This is what keeps storage at about the retention window's worth of rows; see [What it costs to run](/self-hosting/cost/).
+First, for every account whose rollups are built through the cutoff's day, the clicks, installs, events and app opens older than the cutoff are deleted, except events with a `transaction_id` (purchases, renewals, refunds), which stay and are nulled as below, so a restored purchase still counts once and a refund finds its purchase. `frozen_through` becomes the cutoff's day: those days' totals now live only in `link_daily` and are never rebuilt (a later change of account currency converts them with each day's exchange rates instead). This is what keeps storage at about the retention window's worth of rows; see [What it costs to run](/self-hosting/cost/).
 
-Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. Rows of accounts whose rollups are not that far yet are kept for aggregate analytics with their personal columns set to `NULL`, as below.
+Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. Each account's pass is on its own: one that fails is logged (`[dectog] retention: sweep failed`) and runs again the next day, and the others, and the purges in the table, still run. The sweep also runs when the day's rollup build failed, since it deletes only the days the rollups hold. Rows of accounts whose rollups are not that far yet are kept for aggregate analytics with their personal columns set to `NULL`, as below.
 
 ### What is deleted, nulled and kept
 
@@ -119,7 +120,7 @@ The screen profile is dropped early because it is only ever read inside the fing
 
 ### Tables the sweep never touches
 
-`users`, `apps`, `links`, `temp_links` (apart from the expiry purge), `audit_events` (kept as long as the account), `blog_categories`, `blog_posts`, `contact_messages` and `password_resets`. Contact-form messages and used or expired reset tokens (hashes only) therefore accumulate until someone deletes them: owners can delete messages in the dashboard; `password_resets` rows can only be removed with `wrangler d1 execute`.
+`users`, `apps`, `links`, `temp_links` (the expiry delete only sets `deleted_at`), `audit_events` (kept as long as the account), `blog_categories`, `blog_posts`, `contact_messages` and `password_resets`. Contact-form messages and used or expired reset tokens (hashes only) therefore accumulate until someone deletes them: owners can delete messages in the dashboard; `password_resets` rows can only be removed with `wrangler d1 execute`.
 
 ### Limits
 
