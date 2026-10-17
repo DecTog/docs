@@ -107,7 +107,7 @@ Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/
 | any | `/r/<username>/<slug>` | The redirect engine (path-mode link URL). |
 | any except `APP_HOST` | `/?user=<username>/<slug>` | The redirect engine (query-mode link URL). |
 | any | `/.well-known/…` | The association files above. |
-| any | `/_/collect` | The link pages' beacon (POST): the screen profile, and which button the visitor took (P3.10). |
+| any | `/_/collect` | The link pages' beacon (POST): the screen profile, and which button the visitor took. |
 | any | `/healthz`, `/readyz`, `/robots.txt`, `/sitemap.xml` | See this page. |
 | `app.dectog.com` | any other path | The dashboard's static export. `/blog/<slug>` serves the export's article page, which reads the slug client-side; for a published post the worker adds the post's head tags first (see [Blog post pages](#blog-post-pages)). `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | `dectog.com` | `/` | `302` to `WEB_URL`. |

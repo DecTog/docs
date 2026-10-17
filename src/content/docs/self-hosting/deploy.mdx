@@ -142,7 +142,7 @@ Run these in order from `apps/worker`:
 
 1. `git pull`, then `npm ci` here and in `../web`.
 2. `npm test` and `npm run typecheck` (worker), `npm run typecheck` (web). Optional, recommended.
-3. `npx wrangler d1 migrations apply DB --remote --env production`. Applying a migration while the old Worker is still live is safe when it only adds nullable or defaulted columns and indexes, which every migration after 0015 does; the old Worker ignores columns it does not know. The command prints which files it applied; `npx wrangler d1 migrations list DB --remote --env production` shows what is pending.
+3. `npx wrangler d1 migrations apply DB --remote --env production`. Applying a migration while the old Worker is still live is safe when it only adds nullable or defaulted columns and indexes; the old Worker ignores columns it does not know. The command prints which files it applied; `npx wrangler d1 migrations list DB --remote --env production` shows what is pending.
 4. `(cd ../web && npm run build:static)` so the deploy ships the current dashboard. Skipping this deploys the Worker with whatever `apps/web/out` already holds.
 5. `npx wrangler deploy --env production`.
 6. The smoke checks below.

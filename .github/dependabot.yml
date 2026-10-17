@@ -1,4 +1,4 @@
-# P4.6: weekly dependency updates; minor and patch versions arrive grouped.
+# Weekly dependency updates; minor and patch versions arrive grouped.
 version: 2
 updates:
   - package-ecosystem: npm

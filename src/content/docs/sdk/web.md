@@ -41,7 +41,7 @@ The event counts for the link of the click in `dtg_click` when the visitor lande
 
 ## Consent
 
-Decision C10: `dectog.js` stores a first-party cookie, so where the law asks for consent first, it waits for it.
+`dectog.js` stores a first-party cookie, so where the law asks for consent first, it waits for it.
 
 | `data-consent` on the script | Behaviour |
 |---|---|

@@ -54,7 +54,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 
 `apps/worker/migrations/0001_schema.sql` creates the whole schema: the 35 tables above and their 49 indexes. `wrangler d1 migrations apply` runs the files in the folder that are not yet recorded in the database's `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. A schema change is the next numbered file, `0002_…` onwards.
 
-The 63 migrations written before the first release were combined into `0001_schema.sql` on 2026-10-16. The numbers such as 0026 that code comments and older notes cite name those files; the server repository's git history keeps them. A local database made before then has the old files recorded, so `migrations apply` stops at the first table it creates (`table users already exists`): delete `apps/worker/.wrangler/state/v3/d1` and apply again.
+The 63 migrations written before the first release were combined into `0001_schema.sql` on 2026-10-16; the server repository's git history keeps those files. A local database made before then has the old files recorded, so `migrations apply` stops at the first table it creates (`table users already exists`): delete `apps/worker/.wrangler/state/v3/d1` and apply again.
 
 ### Commands
 

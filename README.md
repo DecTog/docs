@@ -62,7 +62,7 @@ The site wears the dectog.com identity on top of Starlight:
 - State behaviour, not intentions: numbers, limits, defaults and error strings come from the
   server and SDK source, and the page says which.
 - The footer on every page states the versions the docs apply to (`flutter_dectog` 1.0.x,
-  server migration 0027). When that changes, bump it in `src/components/Footer.astro` and
+  `react-native-dectog` 1.0.x, server migration `0001_schema`). When that changes, bump it in `src/components/Footer.astro` and
   in the `starlightLlmsTxt` `details` in `astro.config.mjs`, which feed `llms.txt`.
 - `https://docs.dectog.com/llms.txt` and `/llms-full.txt` are generated at build time for AI
   agents; `dectog.com/SKILL.md` links to them.
