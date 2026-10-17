@@ -38,7 +38,7 @@ Each event:
 | `open_slug` | string, 128 | no | The link that last opened the app before this event. With it, `open_at` is required. Not stored when it names no link of the account, or a link deleted, paused or expired before `open_at`: an open `/app-opens` refused takes no credit. |
 | `open_click_id` | string, 8 to 32 of `A-Z a-z 0-9 - _` | no | That open's click id. Anything else is dropped; the event is still stored. |
 | `open_at` | ISO 8601 date | with `open_slug` | When that link opened the app. A time after the request is stored as the request time. |
-| `session_id` | string, 64 | no | The app process the event came from (the SDK sends a new id per process). |
+| `session_id` | string, 64 | no | The app process the event came from (the SDK sends a new id per process). A `screen_view` is stored only with one. |
 | `app_store_jws` | string, 16384 | no | Conversions: a StoreKit 2 transaction (`jwsRepresentation`). Verified against Apple Root CA - G3; its `transactionId`, `originalTransactionId`, `productId`, price and currency replace the event's, `store` becomes `app_store`, and the row is stored with `source: "store"`. Its bundle ID must be one of the account's apps. With it, `revenue` is optional. |
 | `client_event_id` | string, 8 to 64 of `A-Z a-z 0-9 - _` | no | Your id for the event, unique per account. A resend with an id the account already stored is a duplicate and changes nothing. The SDK sends a UUID it stamps when the event is queued. |
 | `name`, `email`, `phone` | string 200, 254, 32 | no | Read on `identify` only. |
@@ -49,7 +49,7 @@ String values are trimmed and truncated to the stated length; empty strings beco
 
 - Each event stands on its own. An invalid event is listed in `rejected` with its index in the batch and the error; the other events are stored.
 - An event whose `client_event_id` the account already stored, or that repeats an id earlier in the same batch, counts in `duplicates` and is not stored again. This is what makes a resend after a lost response safe: a purchase is never counted twice.
-- The response is `200 {"accepted": n, "duplicates": n, "rejected": [{"index": i, "error": "…"}]}`.
+- The response is `200 {"accepted": n, "duplicates": n, "rejected": [{"index": i, "error": "…"}]}`. `accepted` counts the events stored and every valid `screen_view`, kept or not.
 - When the batch names an `install_id` the account does not have (after a database restore, a retention purge, or a build pointed at a fresh database), the events are still stored and the answer adds `"code": "install_not_found", "action": "reregister"`. The SDK then registers the install again.
 - When every event of the batch is invalid the answer is `400` with the same list: `{"error": {"code": "invalid_request", "message": "Every event in the batch is invalid", "rejected": [...]}}`.
 - More than 100 events answer `413 {"error": {"code": "payload_too_large", "message": "events batch exceeds 100 items"}}`.
@@ -87,7 +87,7 @@ The per-event errors in `rejected`:
 
 - **`identify`** upserts the customer row keyed by (`account`, `customer_id`). `name`, `email` and `phone` are stored **in plain text**. On a repeat `identify`, a non-null value in the new call overwrites the stored one and an omitted field keeps its stored value; `first_install_id` is set once, from the first `identify` that carried an `install_id`, and never replaced. The `identify` is also stored as an event row of type `identify`. See [Dashboard: Customers](/dashboard/customers/).
 - **Automatic signup lead.** The first `identify` of a customer the account has not seen before, sent from a fresh install (the batch's `install_id`, else the device's latest install, created within the last 30 days and not a reinstall), also stores a `lead` event with `event_name: "signup"` and `metadata: {"auto": true, "source": "identify"}`. A `lead` with `event_name: "signup"` that you post for a customer who already has one is counted in `duplicates` and not stored.
-- **`screen_view`** is a screen the app showed. It needs `event_name` and refuses `revenue`. It counts in no event total or list (per-link re-open events, the rollups, customers, the install detail, the SDK-build table, the events list unless asked for with `?type=screen_view`); the raw and per-subject exports and erasure include it. Per link, the dashboard lists the screens reached in the 30 minutes after the link opened the app (`GET /api/admin/links/:slug/screens`, on [Admin API](/api/admin-api/#links)); per customer and per install, the 20 newest app sessions (by `session_id`) with the first 50 screens of each (`screen_sessions` on `GET /api/admin/customers/:customerId` and `/installs/:id`). A screen view without a `session_id` is in neither session list.
+- **`screen_view`** is a screen the app showed. It needs `event_name` and refuses `revenue`. It is never stored as an event: the batch's screen views go, once per flush, onto the row of their app session (`session_id`), which keeps the device, install, customer and link open (`open_slug`, `open_click_id`, `open_at`) the session is first known by, the device time of its first screen, the screen count and the first 50 screens with their times, in the order shown. A session that starts before sign-in becomes the customer's at the `identify`, screens before it included; a session keeps the link open that started it. A screen view without a `session_id` is accepted and not stored. Screen views count in no event total or list, and are not in the raw events export; the per-subject export, erasure and retention carry the session rows. Per link, the dashboard lists the screens reached in the 30 minutes after the link opened the app (`GET /api/admin/links/:slug/screens`, on [Admin API](/api/admin-api/#links)); per customer and per install, the 20 newest sessions with the first 50 screens of each (`screen_sessions` on `GET /api/admin/customers/:customerId` and `/installs/:id`).
 - **`lead`**, **`conversion`**, **`custom`** are stored as sent. `conversion` requires `revenue` unless it is a `cancel`. A conversion whose `store` + `transaction_id` + `transaction_type` the account already has is a duplicate. Net revenue, the figure every dashboard total shows, adds purchases and subtracts refunds, in the account's revenue currency. See [Revenue](/sdk/revenue/).
 
 Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. Per-link numbers credit an event to `open_slug` instead when it happened within the re-engagement window after that open: the window of the re-opening link's app (`reengagement_window_hours`, the default app's for a link bound to none), else `REENGAGEMENT_WINDOW_HOURS` (default 168 hours). It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row only when the deployment sets `STORE_RAW_IP=1`.
@@ -154,7 +154,7 @@ dectog GET '/api/v1/attribution?install_id=3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f'
 
 ## POST /api/v1/device-ping
 
-One row per app start, feeding the daily-active and retention numbers.
+Marks the device active today: one `device_days` row per device and UTC day, written by the day's first ping; later pings that day write nothing. The SDKs send it once a day. It feeds the retention numbers.
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
@@ -162,7 +162,7 @@ One row per app start, feeding the daily-active and retention numbers.
 | `app_version` | string, 64 | no | |
 | `os` | string, 32 | no | |
 
-Response: `200 {"ok": true}`. Ping rows are deleted by the retention job; see [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
+Response: `200 {"ok": true}`. Device-day rows are deleted by the retention job; see [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
 
 ## POST /api/v1/app-opens
 

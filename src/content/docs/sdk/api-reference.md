@@ -67,7 +67,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `diagnostics` | `Future<DectogDiagnostics> diagnostics()` | Compares this build with the dashboard's record of the app (`GET /api/v1/sdk-config`): bundle ID or package, the iOS URL scheme in `CFBundleURLTypes`, and on Android 12+ the App Links verification of each link host. Returns the warnings and logs them with `enableDebugLogging`; never blocks the SDK. |
 | `isEnabled` | `Future<bool> isEnabled()` | The stored choice, else `DectogConfig.enabled`. |
 
-Background calls the SDK makes on its own, none of them while collection is off: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on every initialize with the device tier on, `POST /api/v1/events` for the queue, `GET /api/v1/sdk-config` for the dashboard's settings, and `GET /api/v1/resolve/…` for a link's details.
+Background calls the SDK makes on its own, none of them while collection is off: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on the first initialize of each UTC day with the device tier on, `POST /api/v1/events` for the queue, `GET /api/v1/sdk-config` for the dashboard's settings, and `GET /api/v1/resolve/…` for a link's details.
 
 ## DectogConfig
 

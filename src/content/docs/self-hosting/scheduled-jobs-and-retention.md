@@ -92,7 +92,8 @@ Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commit
 | Table | Action | Condition | Columns affected |
 |---|---|---|---|
 | `ad_identifiers` | DELETE rows | `created_at < cutoff` | whole row |
-| `device_pings` | DELETE rows | `created_at < cutoff` | whole row |
+| `device_days` | DELETE rows | `day` before the cutoff's day | whole row |
+| `app_sessions` | DELETE rows | `started_at < cutoff` | whole row |
 | `rejected_requests` | DELETE rows | `created_at` older than 30 days, whatever the retention setting | whole row |
 | `events` | SET NULL | `created_at < cutoff` | `device_id`, `customer_id`, `metadata`, `ip_raw` |
 | `customers` | SET NULL | `updated_at < cutoff` (last identify, not creation) | `name`, `email`, `phone`, `first_install_id` |
@@ -103,6 +104,8 @@ Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commit
 | `rate_limits` | DELETE rows | `window_start` older than the current 60 s window minus 2 | whole row |
 | `erasures` | DELETE rows | `expires_at` passed: 8 days after a device or customer was erased | whole row |
 | `webhook_deliveries` | DELETE rows | an account whose own window is under 30 days: older than its cutoff (otherwise the 30-day job below) | whole row |
+
+The sweep also deletes what an erasure missed: for every tombstone still standing, an event of the erased device or customer stored in the minute after the erasure (the life of an edge location's copy of the account, `SDK_AUTH_CACHE_SECONDS`) with a client time from before it; see [Privacy and data](/self-hosting/privacy-and-data/#a-request-from-one-person).
 
 The screen profile and the device settings are dropped early because the fingerprint reads them only inside its window, which never exceeds 30 days (720 hours). `enriched_at` is kept on purpose: it is the "first beacon wins" gate, and a null would let a late beacon rewrite the row.
 

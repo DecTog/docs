@@ -26,7 +26,7 @@ That is the whole setup for the hosted service: the SDK talks to `https://app.de
 What `initialize` does, in order:
 
 1. Loads the persisted SDK state (customer id, the `enabled` flag, install id).
-2. Starts the event queue and sends the device ping, unless the user opted out.
+2. Starts the event queue and sends the device ping (the first initialize of each UTC day), unless the user opted out.
 3. Subscribes to incoming links and processes the link that launched the app, while **at the same time** registering the install if this is the first launch. The call resolves when both are done.
 4. Schedules the launch-time late claims (a referrer that was not definitive, an Apple Search Ads token that was not ready) in the background.
 

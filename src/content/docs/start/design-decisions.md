@@ -210,7 +210,9 @@ app sessions with the screens shown in each, whole sessions, so a customer's
 screens before sign-in show too. *Rejected:* a `custom` event named `screen_view`, the first
 sketch, which would have counted every screen in the totals the dashboard
 sells; and a table of its own, a second copy of the queue, retention and erasure
-paths for one column of difference.
+paths for one column of difference. *2026-10-18:* the type and both read-outs
+stay; the storage changed, see 32: one row per session instead of an event
+row, and eight index rows, per screen.
 
 **29. Each SDK keeps its logic in its own language; native code is shared as
 source.** `flutter_dectog` (Dart) and `react-native-dectog` (TypeScript)
@@ -258,6 +260,45 @@ settings. *Rejected:* hashing settings into one identifier
 (R1); canvas, WebGL, audio and installed-font probes (Safari randomises them
 or they are the same on every iPhone of one iOS version, and the app has
 nothing to compare them with); scoring the settings before any calibration.
+
+## Settled for the cost of an app user (2026-10-18)
+
+**32. A session's screens are one row, written once per flush.** The flush
+keeps each app session's screen views on an `app_sessions` row: the device,
+install, customer and link open the session is first known by, the device
+time of its first screen, the count, and the first fifty screens as a JSON
+list in the order shown. The first flush inserts the row, four written rows
+with its indexes (six when the customer and the open are known by then);
+every later flush appends to the list and the count, one written row, where
+each screen view cost nine as an event. A sign-in in a
+session whose screens came before it makes the session the customer's, so the
+screens before sign-in show with the rest; a session keeps the open that
+started it, so a link opened while the app already runs is not a second open.
+Both read-outs read those rows: the per-link screens after an open, keyed by
+the device and the open time, and the sessions of an install or a customer.
+A screen view without a session id is accepted and not stored. *Rejected:*
+screen views as events behind narrower indexes, still six written rows per
+screen; the screens on the open's own row (`app_opens`, `app_installs`),
+which had no place for the sessions a customer or an install lists; an open
+per screen inside the list, which no index could serve.
+
+**33. An app start is one row per device and day.** `POST /api/v1/device-ping`
+writes a `device_days` row for the device's first start of the UTC day and
+nothing for the rest; the SDKs ping once a day. The retention read-out counts
+device days, which is all a ping ever fed. *Rejected:* one row per app start
+(three written rows each, at every start of every device), a timeline nothing
+read.
+
+**34. An SDK key and its account come from one read, kept per isolate for a
+minute.** Authentication joins `api_keys` to `users` in one statement, and an
+isolate keeps the pair for `SDK_AUTH_CACHE_SECONDS` (default 60), so an SDK
+call spends its round trips on its own data: a ping is one statement instead
+of three. The isolate that revokes a key or erases a subject forgets the
+account at once; the others keep their copy until it expires, so a revoked
+key may work, and an erasure may go unseen, for up to a minute. The daily
+job deletes the events that slipped past an erasure in that minute.
+*Rejected:* a shared cache (KV, a Durable Object), a round trip of its own;
+no cache, which held the measured D1 ceiling at about 130 pings a second.
 
 ## Rejected designs
 

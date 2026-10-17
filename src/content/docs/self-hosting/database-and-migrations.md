@@ -22,7 +22,8 @@ The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped
 | `ad_identifiers` | Advertising id per install, isolated so it is never joined to the device tier |
 | `customers` | The tenant's own user identities from `identify` events: `customer_id`, name, email, phone, `first_install_id` |
 | `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP only with `STORE_RAW_IP=1` |
-| `device_pings` | One row per SDK init ping (device, app version, OS): with app opens and events, the activity behind the Overview's Retention card |
+| `app_sessions` | One row per app session with screen views, keyed by the SDK's `session_id` and written once per flush: the device, install, customer and link open the session is first known by, the device time of its first screen, the screen count and the first 50 screens as JSON. The Screens lists of customers and installs and the links page's Screens after open read it |
+| `device_days` | One row per device and UTC day the app started (device, app version, OS, the first ping's time): with app opens and events, the activity behind the Overview's Retention card |
 | `app_opens` | Warm opens: a link opened an already-installed app (slug, click id, device, hashed IP) |
 | `rate_limits` | Fixed-window counters keyed by account id, `dev:<account>:<device>`, `ip:<account>:<hash>` or `webcollect:<hash>` |
 | `blog_categories` | Marketing-site blog categories (platform-wide, owner-managed) |
@@ -52,7 +53,7 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 
 ## Migrations
 
-`apps/worker/migrations/` holds the schema file plus the migrations after it, which together create the 35 tables above and their 49 indexes. `wrangler d1 migrations apply` runs the files in the folder that are not yet recorded in the database's `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. A schema change is the next numbered file.
+`apps/worker/migrations/` holds the schema file plus the migrations after it, which together create the 36 tables above and their 54 indexes. `wrangler d1 migrations apply` runs the files in the folder that are not yet recorded in the database's `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. A schema change is the next numbered file.
 
 The 63 migrations written before the first release were combined into `0001_schema.sql` on 2026-10-16; the server repository's git history keeps those files. A local database made before then has the old files recorded, so `migrations apply` stops at the first table it creates (`table users already exists`): delete `apps/worker/.wrangler/state/v3/d1` and apply again.
 
