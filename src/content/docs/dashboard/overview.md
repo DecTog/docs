@@ -246,7 +246,7 @@ The 12 newest installs, whatever the range: a chip with how each was matched (`r
 - **Verdict**: credited link or organic, match source, confidence, reinstall, fraud flags.
 - **Why**: the signal that named the click (store referrer, pasted link, Meta referrer, a late claim), or the fingerprint's best and runner-up candidates with each signal marked agree, mismatch or missing (device model, OS version, language, screen, CPU, network), their scores, the gap between them, the window that applied and how many repeat taps were merged. When a deterministic signal decided, the fingerprint's own pick is shown as well. When the fingerprint did not run, the reason is given.
 - **Tap**: the credited (or routed) tap with its time, device and country, and any late claim that upgraded the verdict.
-- **App opens** and **Events** of that install.
+- **App opens** and **Events** of that install, then its **Screens**: the install's app sessions with the screens shown in each, as on a [customer](/dashboard/customers/#screens).
 - **This device's data**: **Download everything stored (JSON)** and **Erase this device**, for a person's request to see or delete their data; see [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person). Erasing asks for confirmation, then shows what went ("Device erased: 1 install, 3 events…"). An install past the retention window has no device id left, and says so.
 
 Installs recorded before match explanations existed show the verdict without the **Why** part.

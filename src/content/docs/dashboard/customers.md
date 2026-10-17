@@ -63,7 +63,7 @@ Empty fields are hidden. Name, email and phone are stored in plain text; see [Pr
 
 ### Attribution
 
-Subtitle: "The link click that led to this customer's install." Empty state: "No install linked to this customer yet."
+Subtitle: "The link click that led to this customer's install. Open install shows why it matched or stayed organic." Empty state: "No install linked to this customer yet."
 
 | Field | Value |
 |---|---|
@@ -79,6 +79,8 @@ Subtitle: "The link click that led to this customer's install." Empty state: "No
 | **Deep link** | The `dec_deeplink` route the click carried. |
 | **Click IP** | The raw IP address of the click, when the deployment stores raw IPs (`STORE_RAW_IP=1`); otherwise `—`. |
 | **Fraud flags** | Amber chips with the rule names the install tripped, such as `emulator` or `click_reuse`. |
+
+Below the fields, **Open install** opens the same [install detail](/dashboard/overview/#recent-installs) as the Overview, with the verdict and its **Why**: the signal that named the click, or the fingerprint's candidates with each signal marked agree, mismatch or missing. That is where an organic customer's near misses show.
 
 What each match method and confidence means is explained in [How attribution works](/start/how-attribution-works/).
 
@@ -108,6 +110,10 @@ Titled **Events ({total})**, where the total counts every event of the customer.
 | **Metadata** | The event's JSON, shortened; hover to see it formatted in full. |
 
 Empty state: "No events for this customer."
+
+### Screens
+
+Subtitle: "App sessions on this customer's devices, newest first, with the screens shown in each: the whole session, so the screens before sign-in too. Screen views count in no total." A session is one run of the app, by the SDK's session id; it belongs to the customer when any of their events was sent in it, so the screens before `identify` show with the rest. Each session shows its date and time (the device's clock at its first screen), the link that opened the app when there was one (**opened by** `/{slug}`), how many screens it had, and the screens in order, each with its time on hover. The 20 newest sessions are listed, with the first 50 screens of each and "and {n} more" beyond. The screens come from the SDK's [`trackScreenView` or its navigator observer](/sdk/events/#screen-views); without them the section says so. The install detail on [Overview](/dashboard/overview/#recent-installs) has the same list for one install.
 
 ### App opens
 

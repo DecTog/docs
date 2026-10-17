@@ -58,7 +58,7 @@ await dectog.trackEvent('level_up', data: {'level': 3});
 await dectog.trackScreenView('product', params: {'id': 42});
 ```
 
-A screen view is an event of type `screen_view`, named by the screen. It counts in no event total: not in Leads, Revenue, the re-open counts or a customer's events. It feeds the links page's **Screens after open**, which lists the screens people reached in the 30 minutes after a link opened the app (see [Links](/dashboard/links/#screens-after-open)). The name is trimmed and cut to 200 characters, and an empty name sends nothing. `params` keeps strings (cut to 256 characters), finite numbers and booleans and drops the rest; the SDK adds the previous screen it reported as `previous_screen`.
+A screen view is an event of type `screen_view`, named by the screen. It counts in no event total: not in Leads, Revenue, the re-open counts or a customer's events. It feeds the links page's **Screens after open**, which lists the screens people reached in the 30 minutes after a link opened the app (see [Links](/dashboard/links/#screens-after-open)), and the **Screens** of a customer and of an install: their app sessions with the screens shown in each, in order (see [Customers](/dashboard/customers/#screens)). Sessions come from the SDK's session id, so screens sent before `identify` show on the customer too. The name is trimmed and cut to 200 characters, and an empty name sends nothing. `params` keeps strings (cut to 256 characters), finite numbers and booleans and drops the rest; the SDK adds the previous screen it reported as `previous_screen`.
 
 To report every page route instead, add the observer to the navigator:
 

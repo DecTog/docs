@@ -200,10 +200,12 @@ of them.
 
 **28. Screen views are their own event type, outside every event total.** A
 `screen_view` names the screen in `event_name`, carries no
-revenue, and is left out of re-open counts, rollups, customer and install views
-and the events list; it stays in exports, erasure and retention activity. Its
-one read-out is per link: the screens reached within 30 minutes of the link
-opening the app. *Rejected:* a `custom` event named `screen_view`, the first
+revenue, and is left out of re-open counts, rollups, the event counts and lists
+of customers and installs, and the events list; it stays in exports, erasure and
+retention activity. It has read-outs of its own: per link, the screens reached
+within 30 minutes of the link opening the app; per customer and per install, the
+app sessions with the screens shown in each, whole sessions, so a customer's
+screens before sign-in show too. *Rejected:* a `custom` event named `screen_view`, the first
 sketch, which would have counted every screen in the totals the dashboard
 sells; and a table of its own, a second copy of the queue, retention and erasure
 paths for one column of difference.
