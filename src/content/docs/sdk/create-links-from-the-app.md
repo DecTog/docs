@@ -85,9 +85,9 @@ await dectog.deleteTempLink(temp.slug);
 
 ```dart
 final res = await dectog.resolveLink('acme', 'spring-sale');
-print(res.type);      // 'permanent' or 'temporary'
-print(res.target);    // null when the link inherits the app's fallback URL
-print(res.deepLinkPathFor('ios'));
+print(res.type);         // 'permanent' or 'temporary'
+print(res.target);       // null when the link inherits the app's fallback URL
+print(res.deepLinkPath); // the in-app route for this platform, else the other's
 ```
 
 `resolveLink` calls the public `GET /api/v1/resolve/{username}/{slug}` endpoint without authentication, so it works for any account's links. The SDK uses it for every link open. Unknown links answer 404 (`Link not found`). The result is a `DectogLinkResolution`; `toDectogLink()` and `toDectogTempLink()` convert it when the type matches.
