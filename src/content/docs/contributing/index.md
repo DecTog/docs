@@ -97,7 +97,7 @@ To run the server locally with the demo account, follow [Local quick start](/sel
 ## Migration rules
 
 - `apps/worker/migrations/` is append-only. A migration that has been applied to a shared or remote database is never edited or deleted; add a new numbered file.
-- Files apply in name order. `0001_schema.sql` creates the whole schema; a change is the next numbered file.
+- Files apply in name order. `0001_schema.sql` is the starting schema; each change after it is the next numbered file.
 - A migration that adds or removes a column must also change the row type in `src/types.ts` and the column registry in `src/db/tables.ts`. `tsc` enforces the type-registry pair and `test/schema.test.ts` compares the registry with `PRAGMA table_info` on the migrated test database.
 - Deploys run `wrangler d1 migrations apply DB --remote --env production` before `wrangler deploy --env production`. Plain `npm run deploy` uses the dev configuration. See [Database and migrations](/self-hosting/database-and-migrations/).
 

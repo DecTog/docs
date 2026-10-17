@@ -117,6 +117,8 @@ evidence of one device. *Rejected:* keeping the tie (the common double tap
 earned no credit and no routing), and reusing one click id per device at
 redirect time (a database read on every redirect for a gain the match-time
 collapse already gives).
+*Note (2026-10-17):* CPU family left the signature together with the CPU
+signal (decision 30).
 
 **18. A same-device reinstall is routed, not credited.** When
 nothing else matches, a reinstall on a device whose earlier install consumed a click
@@ -227,13 +229,43 @@ a native release and a wrapper release (R19), the Dart and TypeScript tests
 would only test bridges, and two of the four implementations would be thrown
 away.
 
+## Settled for attribution signals (2026-10-17)
+
+**30. The fingerprint has no CPU signal.** No phone browser tells the click its
+CPU: iOS Safari sends no client hints, and Android Chrome answers
+`Sec-CH-UA-Arch` with an empty string (both measured on a simulator and an
+emulator). The +5 / −40 check only ever fired on test input, so it is gone,
+and the redirect no longer asks for the hint. The install's `cpu_type` stays
+for the emulator fraud flag. *Rejected:* reading the architecture from the user
+agent, `navigator.platform`, WebGL or floating-point quirks: every phone is
+ARM, so the answer is constant and tells candidates nothing apart.
+
+**31. Device settings are recorded on both sides, unscored until
+calibrated.** Text size, dark mode, Increase Contrast, Reduce Motion and the
+UTC offset are read by the page beacon and by the SDK (inside the device tier,
+on by default), and the iOS minor version comes from Safari's `Version/` token.
+Each is compared on its own and stored as an `unscored` verdict worth 0
+points; on installs that a deterministic signal decided, the verdicts of the
+click known to be right go into `signal_check` and the attribution-quality
+panel, and a signal earns points only once those numbers support it. The
+reason: two phones of the same model behind one carrier network score the
+same today and tie, so nobody is credited. The cost: Apple's rules forbid
+deriving data from a device's configuration to identify it, and accessibility
+settings can suggest a disability, which the EU may treat as health data. An
+app that cannot carry that leaves the device tier out or turns the
+probabilistic match off, which also stops its link pages reading the
+settings. *Rejected:* hashing settings into one identifier
+(R1); canvas, WebGL, audio and installed-font probes (Safari randomises them
+or they are the same on every iPhone of one iOS version, and the app has
+nothing to compare them with); scoring the settings before any calibration.
+
 ## Rejected designs
 
 From the competitor teardown in the server repository (`docs/improvement-plan-2026-10.md`, section 6). Each appears in at least one competitor.
 
 | # | Rejected | Why |
 |---|---|---|
-| R1 | Raw IPs or user agents as matching keys, browser fingerprinting hashes, hardware identifiers | Apple's rules prohibit fingerprinting and the EU audience cannot ship it; salted hashes and a scored, deterministic-first ladder instead |
+| R1 | Raw IPs or user agents as matching keys, browser fingerprinting hashes, hardware identifiers | Apple's rules prohibit fingerprinting and the EU audience cannot ship it; salted hashes and a scored, deterministic-first ladder instead. *Note (2026-10-17):* the ladder now also compares a few device settings one by one (decision 31); nothing is combined into an identifier |
 | R2 | Persistent cookies or third-party tags on link pages | Redirects are cookie-free and stay so |
 | R3 | The client choosing windows, install state or verdicts | Windows, state and verdicts are decided server-side |
 | R4 | "Bring your own auth" and unauthenticated install or event routes | Every write is authenticated and signed; a future ad-network route gets its own token and rate bucket |

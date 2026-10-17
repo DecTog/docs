@@ -16,7 +16,7 @@ A tap on `https://acme.dectog.com/welcome` records a click with a 16-character i
 | Android, to Google Play or an OEM store | The store URL's `referrer` parameter: `dtg_click=<id>&dtg_l=acme/welcome`. The store hands the string back to the app after the install. |
 | iOS, with **iOS tap-to-store** on | The "Get the app" tap copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the pasteboard, then opens the App Store. |
 | iOS, without tap-to-store | Nothing. Apple's `ct` tag is set on the store URL for App Store Connect, but it never reaches DecTog. |
-| Any mobile tap, through the interstitial or tap-to-store page | The page also beacons the screen profile onto the click, which sharpens the fingerprint. |
+| Any mobile tap, through the interstitial or tap-to-store page | The page also beacons the screen profile onto the click, which sharpens the fingerprint, and a few device settings, which are recorded for no points (see [Signals recorded for no points](#signals-recorded-for-no-points)). |
 
 If the app is already installed and the OS opens it directly, there is no install to attribute; the SDK reports an app open instead.
 
@@ -27,7 +27,7 @@ On the first launch the SDK registers the install once (an idempotent `install_a
 - the Google Play install referrer, or the Huawei, Samsung, Xiaomi or vivo one, waiting at most 5 seconds (`installReferrerTimeout`);
 - the pasteboard, on iOS by default (`DectogCollection.pasteboard`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
 - Meta's on-device install referrer on Android, when the app has a Facebook App ID (`DectogConfig.fbAppId`, else the one saved on the Apps page);
-- the device tier (model, OS, language, screen, connectivity, carrier), on by default, which the fingerprint needs;
+- the device tier (model, OS, language, screen, text size and Increase Contrast (iOS only), dark mode, Reduce Motion, connectivity, carrier), on by default, which the fingerprint needs;
 - the Apple Search Ads token when `collect` names `appleSearchAdsToken`.
 
 A signal that arrives later, in the same process or on a later launch, is sent as a claim. See [Late claims](#late-claims) below.
@@ -68,6 +68,12 @@ The dashboard's **Match confidence & referrer health** panel explains each level
 In fingerprint terms: *unique* means the best candidate leads the runner-up by at least 10 points or is the only one; *corroborated* means a device-model match, a screen-profile agreement together with an OS-major agreement, or any score of 15 or more; *medium* is a unique best candidate scoring 0 to 14, for example an OS-major agreement cancelled by a language mismatch; *low* is a tie between candidates that differ, or a negative score. Repeat taps from one phone (identical signals) count as one candidate, so they never tie with each other. A device-model mismatch excludes a candidate outright.
 
 Use `matched` for credit and `routing` for navigation. Routing a new user to the content they tapped is cheap to get wrong; crediting a campaign is not.
+
+## Signals recorded for no points
+
+The fingerprint also compares six values that score 0 points, so none of them changes a verdict: the iOS minor version (compared only when the OS major versions match), text size, dark mode, Increase Contrast, Reduce Motion and the UTC offset. The tap's values come from the interstitial and tap-to-store pages and, for the iOS version, from Safari's user agent; the install's from the SDK. Each candidate in the install's explanation marks them agree (exactly equal), mismatch or missing. On an install a deterministic signal matched, the same comparison against the click that signal named is kept as `signal_check`, and the attribution-quality read-out and the Overview's **Signals on known matches** table count it, to measure how often each value agrees on the right click. A late claim that upgrades the verdict records one too. None is kept when the click was rebuilt from the referrer tag, which has no browser side, or when the app's **Probabilistic match** is off.
+
+Two phones of the same model behind one carrier network score the same today and tie, so nobody is credited; these values are recorded to find out whether they tell such phones apart. They carry privacy costs of their own, described on [Device data and privacy](/sdk/device-data-and-privacy/#device-settings). Why they score nothing yet: [Design decisions](/start/design-decisions/).
 
 ## Matching windows
 
