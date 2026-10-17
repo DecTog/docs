@@ -78,7 +78,7 @@ Settings that apply per registered app live on the `apps` row and are edited und
 | OEM store URLs | `huawei_store_url`, `samsung_store_url`, `xiaomi_store_url`, `vivo_store_url` | Host-checked for Huawei (`appgallery.huawei.com`, `appgallery.cloud.huawei.com`, `url.cloud.huawei.com`), Samsung (`galaxystore.samsung.com`, `apps.samsung.com`, `galaxy.store`) and Xiaomi (`global.app.mi.com`, `app.mi.com`), subdomains included; vivo accepts any http(s) URL. See [App stores and OEM routing](/links/app-stores-and-oem-routing/). |
 | Facebook App ID | `fb_app_id` | Free text; when set, the Android SDK reads Meta's on-device install referrer |
 | Social preview | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
-| Mobile interstitial | `mobile_interstitial` | 0/1. Serves the beacon page on mobile taps so the click row gets a screen profile. |
+| Mobile interstitial | `mobile_interstitial` | 0/1. Serves the beacon page on mobile taps so the click row gets a screen profile and device settings. |
 | iOS tap-to-store | `ios_tap_to_store` | 0/1. One-tap page that copies the link to the pasteboard before opening the App Store. |
 | Strict fraud mode | `strict_fraud_mode` | 0/1. Flagged installs count as organic. |
 | Low-entropy window | `low_entropy_window_hours` | Whole number 1 to 720, or empty for `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS` |
@@ -99,7 +99,7 @@ These are code constants. Changing them means editing the source and redeploying
 | Password reset | Token valid 1 hour, single use | `api_auth.ts` |
 | Google username step | 15 minutes | `api_google.ts` |
 | Temp links | TTL 60 s to 2,592,000 s (30 days), default 900; deleted (softly) 24 h after expiry | `api_links.ts`, `index.ts` |
-| Click screen profile | Nulled after `min(RETENTION_DAYS, 30)` days | `index.ts` |
+| Click screen profile and device settings | Nulled after `min(RETENTION_DAYS, 30)` days | `index.ts` |
 | Beacon binding | Same hashed IP, within 10 minutes of the click | `collect.ts` |
 | Bot threshold | Cloudflare bot score below 30 records no click | `redirect.ts` |
 | Fingerprint candidate pool | Newest 50 web clicks from the same hashed IP | `attribution.ts` |

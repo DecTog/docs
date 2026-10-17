@@ -28,13 +28,13 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 
 | Data | Column | Source | Until |
 |---|---|---|---|
-| Device family, OS label, browser | `device_type`, `os`, `browser`, `os_major` | User-Agent; `Sec-CH-UA-Platform-Version` for the Android version | forever |
+| Device family, OS label, browser | `device_type`, `os`, `browser`, `os_major`, `os_minor` | User-Agent; `Sec-CH-UA-Platform-Version` for the Android version, Safari's `Version/` token for the iOS version | forever |
 | Device model | `device_model` | `Sec-CH-UA-Model` client hint or the WebView `Build/` token, lower-cased; from the SDK on in-app clicks | retention |
-| CPU family | `ua_arch` | `Sec-CH-UA-Arch` | forever |
 | Raw User-Agent | `ua_raw` | header, cut to 512 characters | retention |
 | Language | `accept_language` (128 characters), `lang` (primary tag) | `Accept-Language` | `accept_language` at retention; `lang` forever |
 | Geo and network | `country`; `region`, `city`, `asn`, `as_org` (128 characters) | Cloudflare's `cf` object | `country` forever; the rest at retention |
 | Screen profile | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `connection_type` | the beacon of the pages a phone gets instead of a plain redirect: the mobile interstitial, the iOS tap-to-store page, and the Facebook and Instagram page on Android | screen fields after `min(RETENTION_DAYS, 30)` days; `connection_type` forever |
+| Device settings | `text_size` (iOS and iPadOS only), `dark_mode`, `high_contrast` (Increase Contrast), `reduce_motion` (Reduce Motion), `utc_offset_min` | the same beacon, from the browser's media queries, the system body font and the page's clock | with the screen fields, after `min(RETENTION_DAYS, 30)` days |
 | Traffic source | `referrer` | `Referer` header reduced to its origin; null for the deployment's own hosts | forever |
 | Campaign | `utm_*`, `link_params` (`dec_*` values) | the link URL's query string | forever |
 | Bot score | `bot_score` | Cloudflare bot management, scores of 30 and above | forever |
@@ -48,9 +48,11 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 | Device id | `device_id` | the SDK's device tier: IDFV on iOS (persisted in the Keychain by default) or `ANDROID_ID` | retention |
 | Hardware | `device_model`, `device_manufacturer`, `device_kind`, `cpu_type`, `os_build` | device tier | retention; `cpu_family` (derived) forever |
 | Screen | `screen_width`, `screen_height`, `screen_density` | device tier | retention |
+| Device settings | `text_size` (iOS only), `dark_mode`, `high_contrast` (iOS only), `reduce_motion` | device tier | retention |
 | Network | `connectivity_type`, `carrier_mcc`, `carrier_mnc` | device tier | retention |
 | ASN | `asn` | Cloudflare | forever |
-| OS, locale | `os`, `os_version`, `os_major`, `language`, `lang`, `timezone` | always sent | forever |
+| OS, locale | `os`, `os_version`, `os_major`, `os_minor`, `language`, `lang`, `timezone` | always sent | forever |
+| UTC offset | `utc_offset_min` | always sent, like the time zone | retention, with the device tier |
 | App | `app_platform`, `app_version`, `app_build_number`, `package_name`, `installer_package`, `install_time`, `update_time`, `first_install_ts`, `install_state`, `is_physical_device` | always sent | forever |
 | WebView User-Agent | `web_user_agent` (512 characters) | SDK | retention |
 | Store referrer | `install_referrer` (2048 characters), `referrer_store`, `referrer_status`, the click and install-begin timestamps | Play, Huawei, Samsung, Xiaomi or vivo referrer | forever. The string carries `dtg_click=<id>` and `dtg_l=<username>/<slug>`, plus whatever else the store put in it. |
@@ -66,7 +68,7 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 
 ### What the SDK sends per tier
 
-The device tier (`DectogCollection.deviceTier`) is on by default and `persistDeviceId` is `true` by default. With the device tier on, every install registration and in-app click carries the device id, hardware, screen and network fields above. With it off, those fields are absent: the server then cannot detect reinstalls by device, the fingerprint has no model or screen signal, and `GET /api/v1/attribution` works by `install_id` only. The OS, locale, app and referrer fields are sent regardless. The iOS pasteboard read is on by default (`DectogCollection.pasteboard`; iOS on, Android off unless the dashboard or `collect` says otherwise) and triggers the system paste notice on iOS 16 and later; the Apple Search Ads token is off by default.
+The device tier (`DectogCollection.deviceTier`) is on by default and `persistDeviceId` is `true` by default. With the device tier on, every install registration carries the device id, hardware, screen, settings and network fields above, and every in-app click the device id and model. With it off, those fields are absent: the server then cannot detect reinstalls by device, the fingerprint has no model or screen signal, and `GET /api/v1/attribution` works by `install_id` only. The OS, locale (the UTC offset included), app and referrer fields are sent regardless. The iOS pasteboard read is on by default (`DectogCollection.pasteboard`; iOS on, Android off unless the dashboard or `collect` says otherwise) and triggers the system paste notice on iOS 16 and later; the Apple Search Ads token is off by default.
 
 ## Customers and events
 
@@ -135,9 +137,9 @@ dectog DELETE /api/v1/devices/<device_id>
 
 `/api/v1/customers/<customer_id>/export` and `DELETE /api/v1/customers/<customer_id>` do the same for a customer (URL-encode an id with `/`, spaces or other reserved characters). An SDK key gets `403 account_key_required`.
 
-**The export** is a JSON file: the device's installs (device, OS, app version, screen, network, language, raw IP when `STORE_RAW_IP=1`, the attribution verdict and fraud flags), its taps (link, time, country, region, city, browser, user agent, referrer, UTM; a tap its install was credited to or routed by counts as its own), events, app opens, app starts, advertising ids and the referral that brought it. A customer's export holds the customer record, its events, the referrals it made and received (without the other customers' ids), its referral link, and its devices: each device only they used, exported in full, and each device another customer also used, by id only. Salted IP hashes, matching internals and the Apple Search Ads token are left out.
+**The export** is a JSON file: the device's installs (device, OS, app version, screen, device settings, network, language, raw IP when `STORE_RAW_IP=1`, the attribution verdict and fraud flags), its taps (link, time, country, region, city, browser, user agent, device settings, referrer, UTM; a tap its install was credited to or routed by counts as its own), events, app opens, app starts, advertising ids and the referral that brought it. A customer's export holds the customer record, its events, the referrals it made and received (without the other customers' ids), its referral link, and its devices: each device only they used, exported in full, and each device another customer also used, by id only. Salted IP hashes, matching internals and the Apple Search Ads token are left out.
 
-**Erasing a device** deletes, in one batch, its installs, events (by device id or install id), app opens, app starts, advertising ids, the referrals that name it, and the webhook deliveries that mention the device, one of its installs or one of its taps. Its taps (by device id, and the taps its installs were credited to or routed by) keep their link, time, country, platform and UTM, so link counts stay, and lose the device id and model, IP, user agent, language, region, city, network, referrer, screen profile, session and link parameters. Customers that pointed at its installs keep their record, with the install link cleared. On a device more than one customer used, the device's events include the other customers' events from it, and they go too; erase the customer instead to keep theirs.
+**Erasing a device** deletes, in one batch, its installs, events (by device id or install id), app opens, app starts, advertising ids, the referrals that name it, and the webhook deliveries that mention the device, one of its installs or one of its taps. Its taps (by device id, and the taps its installs were credited to or routed by) keep their link, time, country, platform and UTM, so link counts stay, and lose the device id and model, IP, user agent, language, region, city, network, referrer, screen profile, device settings (text size, dark mode, Increase Contrast, Reduce Motion, UTC offset), session and link parameters. Customers that pointed at its installs keep their record, with the install link cleared. On a device more than one customer used, the device's events include the other customers' events from it, and they go too; erase the customer instead to keep theirs.
 
 **Erasing a customer** deletes the customer record, its events and the referrals it made or received, and the webhook deliveries that name it, clears it from its referral link (which keeps routing taps, since it may be shared, but credits no one), then erases each device only that customer used, as above. A device another customer also used is kept, with that customer's data; only the erased customer's events on it go.
 
@@ -155,16 +157,18 @@ Deleting an install row frees its click for a future fingerprint match (the `NOT
 
 A self-hosted DecTog makes you the controller of this data. Items a policy and the store declarations usually need to cover, with where each comes from:
 
-1. **Link taps:** IP address (hashed and, until retention, raw), country, region and city, ASN, User-Agent and client hints, language, referrer origin, UTM parameters; purpose: routing, install attribution, fraud detection, analytics.
-2. **App installs and opens:** the vendor-scoped device identifier (IDFV persisted in the Keychain, or `ANDROID_ID`), hardware model and manufacturer, OS and version, screen metrics, connectivity and carrier codes (Android), app version and install dates, IP address; purpose: install attribution, reinstall detection, analytics. Declare the persisted identifier in the App Store privacy answers and the Play Data safety form.
+1. **Link taps:** IP address (hashed and, until retention, raw), country, region and city, ASN, User-Agent and client hints, language, referrer origin, UTM parameters; on the interstitial and tap-to-store pages also the screen profile, text size, dark mode, Increase Contrast, Reduce Motion and UTC offset; purpose: routing, install attribution, fraud detection, analytics.
+2. **App installs and opens:** the vendor-scoped device identifier (IDFV persisted in the Keychain, or `ANDROID_ID`), hardware model and manufacturer, OS and version, screen metrics, text size, dark mode, Increase Contrast and Reduce Motion, UTC offset, connectivity and carrier codes (Android), app version and install dates, IP address; purpose: install attribution, reinstall detection, analytics. Declare the persisted identifier in the App Store privacy answers and the Play Data safety form.
 3. **Store install referrers** (Play, Huawei, Samsung, Xiaomi, vivo) and, if you set a Facebook App ID, Meta's on-device install referrer.
 4. **Pasteboard access on iOS** on first launch (system notice on iOS 16 and later), if you leave the pasteboard read at its default.
 5. **Apple Search Ads attribution token**, if `collect` names `appleSearchAdsToken`.
 6. **Advertising identifier** (IDFA after ATT, GAID), only with the `flutter_dectog_adid` package.
 7. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
-8. **Retention:** clicks, installs, events and app opens deleted after `RETENTION_DAYS` (400 by default), keeping only daily per-link counts; other personal columns anonymized then; screen profiles after 30 days, Apple tokens as soon as resolved.
+8. **Retention:** clicks, installs, events and app opens deleted after `RETENTION_DAYS` (400 by default), keeping only daily per-link counts; other personal columns anonymized then; the screen profile and device settings of taps after 30 days, Apple tokens as soon as resolved.
 9. **Your website, with [`dectog.js`](/sdk/web/):** first-party cookies `dtg_click` (the click a visitor landed with, 30 days), `dtg_consent` (their answer, a year) and `dtg_banner`; the leads, purchases and custom events your pages send, with no IP stored. In the EU and EEA, the UK and Switzerland, and for browsers that send Global Privacy Control, nothing is stored before consent.
 10. **Consent in your app:** with `DectogConfig(enabled: false)` the SDK sends nothing and reads no pasteboard until your app calls `setEnabled(true)`; events tracked meanwhile wait on the device (at most 7 days). See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
 11. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
+
+The device settings in items 1 and 2 need particular care. Text size, dark mode, Increase Contrast, Reduce Motion and the UTC offset are device configuration, and Apple's user-privacy rules for developers prohibit deriving data from a device's configuration to identify it; DecTog compares them one by one for 0 points and combines them into no identifier, but the App Store review risk is yours. Increase Contrast, Reduce Motion and a large text size can suggest a disability, which EU data-protection law may treat as health data. An app that cannot carry this leaves the SDK's device tier out or turns **Probabilistic match** off; the link pages still record the settings on the tap. See [Device data and privacy](/sdk/device-data-and-privacy/#device-settings).
 
 Adjust `RETENTION_DAYS` on the [Configuration reference](/self-hosting/configuration-reference/) if 400 days is longer than your policy allows.
