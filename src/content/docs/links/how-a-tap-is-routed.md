@@ -26,17 +26,18 @@ A link such as `https://acme.dectog.com/welcome` is served by the redirect engin
 | 3 | The link is paused | `410` "Link paused" page, for bots as well, **no click recorded** |
 | 4 | The link has expired: a temporary link's `expires_at`, or a permanent link's when it has one, has passed | `302` to the link's expired URL when it has one, else the `410` "Link expired" page; for bots as well, **no click recorded** |
 | 5 | The request is a `HEAD`, the user agent is a bot, or Cloudflare's bot score is below 30 | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
-| 6 | Otherwise | A click row is built. The app is the link's app, or the account's default (oldest) app. |
-| 7 | The user agent is iOS or Android | The mobile chain below |
-| 8 | Anything else, or a mobile visitor with no destination at all | The shared tail below |
+| 6 | Safari's Mac user agent without `_ipad` in the URL, and the link's app (the link's app, or the account's default, oldest one) is set up for iOS: a bundle ID, an App Store URL or an iOS scheme | `200` touch check, **no click recorded**. The page goes straight on to the same URL with `_ipad=1` when the browser reports touch (an iPad asking for desktop sites) or `_ipad=0` (a Mac), plus the referring page's origin as `_ref` and, when the request carried the no-track header, `dtg_nt=1`; that request continues below. |
+| 7 | Otherwise | A click row is built. The app is the link's app, or the account's default (oldest) app. |
+| 8 | The user agent is iOS or Android | The mobile chain below |
+| 9 | Anything else, or a mobile visitor with no destination at all | The shared tail below |
 
 An archived link routes like any other. See [Links: pause, expire, archive and delete](/api/links/#pause-expire-archive-and-delete).
 
-"iOS" means the user agent contains `iPhone`, `iPad` or `iPod`; "Android" means it contains `Android`, tablets included. Everything else is desktop, including iPadOS Safari in its default desktop mode, which reports itself as macOS.
+"iOS" means the user agent contains `iPhone`, `iPad` or `iPod`, or it is an iPad asking for desktop sites, which it does by default: Safari's Mac user agent with `_ipad=1` from the touch check, or a Mac user agent carrying `CriOS`, `FxiOS` or `EdgiOS` (Chrome, Firefox and Edge for iOS). "Android" means it contains `Android`, tablets included. Everything else is desktop, including an iPad's Safari tap on a link whose app is not set up for iOS. An iPhone set to request desktop websites passes the touch check too and is recorded as a tablet.
 
 ## The click row
 
-The click gets a 16-character id (the `dtg_click` value), `source: web`, the link kind, device type, OS (the Android major version comes from the client hint when present), browser, device model (from the `Sec-CH-UA-Model` hint or a WebView `Build/` token), CPU architecture, the user agent (512 characters), `Accept-Language` (128 characters), country, region, city and ASN from Cloudflare, the salted IP hash plus the raw IP, the referring page's origin (null when the referrer is DecTog itself), the `utm_*` values and the `dec_*` tracking values. The interstitial and tap-to-store pages add the screen size, pixel ratio, touch points and connection type later. Permanent links also increment their lifetime click counter; temporary links have none.
+The click gets a 16-character id (the `dtg_click` value), `source: web`, the link kind, device type, OS (the Android major version comes from the client hint when present; the iOS version from Safari's `Version/` token, because Safari 26 and later freeze the OS token at 18.6 or 18.7, and an 18.6 or later OS token without one, as in-app browsers send, is stored without a version), browser, device model (from the `Sec-CH-UA-Model` hint or a WebView `Build/` token), CPU architecture, the user agent (512 characters), `Accept-Language` (128 characters), country, region, city and ASN from Cloudflare, the salted IP hash plus the raw IP, the referring page's origin (null when the referrer is DecTog itself), the `utm_*` values and the `dec_*` tracking values. The interstitial and tap-to-store pages add the screen size, pixel ratio, touch points and connection type later. Permanent links also increment their lifetime click counter; temporary links have none.
 
 ## Which value applies
 

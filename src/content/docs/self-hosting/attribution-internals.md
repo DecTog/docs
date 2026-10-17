@@ -71,7 +71,7 @@ So the pool is the 50 newest web clicks (recorded by the redirect engine or synt
 | Signal | Install side | Click side | Agree | Disagree |
 |---|---|---|---|---|
 | Device model | `device_model` (lower-cased) | `device_model` from `Sec-CH-UA-Model` or the WebView `Build/` token | +40 | Candidate excluded entirely |
-| OS major | `os_major` parsed from `os_version` | `os_major` parsed from `os` (platform-version hint on Android) | +15 | −30 |
+| OS major | `os_major` parsed from `os_version` | `os_major` parsed from `os` (platform-version hint on Android; Safari's `Version/` token on iOS, none for an 18.6 or later OS token without one) | +15 | −30 |
 | Language | `lang` from `language` | `lang` from `Accept-Language` | +10 | −15 |
 | Screen short side | `min(screen_width, screen_height)` in physical px | `min(screen_width, screen_height) × pixel_ratio` from the interstitial beacon | +15 when within 3 % | −40 |
 | CPU family | `cpu_family` from `cpu_type` | `ua_arch` from `Sec-CH-UA-Arch` | +5 | −40 |
@@ -190,6 +190,8 @@ Each row is a golden scenario the worker's test suite runs end to end on every c
 | An app update never runs the fingerprint | tap on android (Pixel 9); install i1 (app update; same network) | i1: `matched: false`, routing none |
 | Two taps from one phone collapse into one candidate; the newest is credited | tap on android (Pixel 9); tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high`, credited to the second tap; `collapsed_from: 2` |
 | Taps from two different phones on one network still tie | tap on android (Pixel 9); tap on android (Pixel 8); install i1 (no signal, no model; same network) | i1: `matched: false`, `match_confidence: low` |
+| Safari on iOS 26 and later reports a frozen OS version; its Version token has the real one | tap on ios (OS token 18.6, `Version/26.0`), no model hint; install i1 (no signal, iOS 26.0; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high` |
+| iPad Safari asks for desktop sites as a Mac; with touch reported, the tap is an iOS tap | tap from Safari's Mac user agent (`Version/27.0`) with `_ipad=1`; install i1 (no signal, iOS 27.0; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high` |
 
 ## Claims
 

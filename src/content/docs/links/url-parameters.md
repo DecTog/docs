@@ -48,9 +48,9 @@ The platform is derived from the user agent:
 
 | Visitor | Platform key |
 |---|---|
-| User agent contains `iPhone`, `iPad` or `iPod` | `ios` |
+| User agent contains `iPhone`, `iPad` or `iPod`, or an iPad asking for desktop sites (see [How a tap is routed](/links/how-a-tap-is-routed/)) | `ios` |
 | User agent contains `Android` | `android` |
-| macOS, including iPadOS Safari in desktop mode | `macos` |
+| macOS | `macos` |
 | Windows | `windows` |
 | Linux | `linux` |
 | Anything else | None: only `dec_redirect` applies |
@@ -100,6 +100,8 @@ To send a route that works on both paths, put it in `dec_deeplink`: `?dec_deepli
 |---|---|---|
 | `dtg_click` | DecTog | The click id, added to store URLs (inside `referrer` or `ct`), to scheme and `intent://` URLs and to the copied link. Do not add it to links you share; a reported click with an unknown id gets a fresh id. |
 | `_ch` | DecTog | The marker of the one-shot client-hints redirect in front of the interstitial. |
+| `_ipad` | DecTog | The answer of the touch check in front of a Mac Safari tap: `1` for an iPad asking for desktop sites, `0` for a Mac. |
+| `_ref` | DecTog | The origin of the page that linked to a Mac Safari tap, carried past the touch check (whose own page would otherwise be the referrer). |
 
 ## Validation and what reaches the destination
 

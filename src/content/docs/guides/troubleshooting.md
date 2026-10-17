@@ -99,7 +99,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 
 - The domain is not verified for the installed build: see the two sections above.
 - The tap came from an in-app browser. Android in-app browsers and WebViews get a plain 302 to the store, never the intent bounce. On iOS the tap-to-store page leads with "Open in app" inside Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X when the app has an iOS scheme; otherwise the visitor gets the store.
-- The visitor is on a desktop user agent, which includes iPadOS Safari in desktop mode. Desktop never redirects to the target; it gets the QR page or a fallback URL. See [How a tap is routed](/links/how-a-tap-is-routed/).
+- The visitor is on a desktop user agent. Desktop never redirects to the target; it gets the QR page or a fallback URL. An iPad asks for desktop sites with a Mac user agent; its Safari tap counts as iOS only when the link's app is set up for iOS (a bundle ID, App Store URL or iOS scheme). See [How a tap is routed](/links/how-a-tap-is-routed/).
 - The SDK reports `Invalid DecTog URL format`: the tapped host does not match `baseUrl` and `linkRootDomain`. On the hosted service leave both unset.
 - The app has no store URL: a phone without the app goes to the app's fallback URL, then the link target, then the QR page. Add the store URLs on the Apps page.
 

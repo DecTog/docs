@@ -70,7 +70,7 @@ The same grouping, using `utm_source` instead of `utm_campaign`, with no top-8 l
 
 ### Devices
 
-A donut of clicks in the window by device type, with a legend reading `{percent} · {count}`. The types are **iOS**, **Android**, **Desktop** and **Other** (a click whose device type is none of those). "Desktop" is any browser that does not identify as iPhone, iPad, iPod or Android, which includes iPadOS Safari in desktop mode.
+A donut of clicks in the window by device type, with a legend reading `{percent} · {count}`. The types are **iOS**, **Android**, **Desktop** and **Other** (a click whose device type is none of those). "Desktop" is any browser that does not identify as iPhone, iPad, iPod or Android. An iPad asking for desktop sites counts as iOS when the link's app is set up for iOS, and as Desktop otherwise.
 
 ### Attribution quality
 
