@@ -56,7 +56,7 @@ The DecTog plugin for Claude Code bundles the same server with five skills: link
 | `resolve_link` | What a link points to, as the public resolve route answers it. |
 | `get_attribution` | The verdict of one install, by `device_id` or `install_id`. |
 | `overview` | The Overview page numbers for the last N days: clicks, visitors, installs, conversion, revenue, leads and opens with their change, plus campaigns, sources, countries, devices and fraud flags. Account key only. |
-| `attribution_quality` | Match sources and confidence per platform, referrer health, click-to-install latency and SDK versions. Account key only. |
+| `attribution_quality` | Match sources and confidence per platform, referrer health, click-to-install latency, SDK versions, and how each fingerprint signal compared on installs a deterministic signal decided (`signal_check`). Account key only. |
 | `retention` | Day 1, 7 and 30 retention and weekly cohorts, optionally of one link, campaign or platform. Account key only. |
 | `analytics` | Clicks, installs, opens, leads and revenue over a window, by day (by hour for `24h`), by one or two dimensions, or as totals, with filters that keep or drop values. The [analytics query](/api/admin-api/#analytics) as a tool. Account key only. |
 | `list_apps` | Your apps with their store and platform identifiers, without secrets. Account key only. |
