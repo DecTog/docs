@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The SDK API reference pages are generated from the SDK repos (P1.8, P5.1):
+// The SDK API reference pages are generated from the SDK repos:
 // each SDK's doc/api-reference.md is the one source, which the package also
 // turns into its llms.txt. This copies each into the site with the page's
 // frontmatter, without the source's comment and H1, and with links to this

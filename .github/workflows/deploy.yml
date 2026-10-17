@@ -36,7 +36,7 @@ jobs:
 
       - run: npm ci
 
-      # P4.6: a static site; its npm packages run only at build time, on our
+      # A static site; its npm packages run only at build time, on our
       # own pages, so only a critical advisory fails the build.
       - run: npm audit --omit=dev --audit-level=critical
 

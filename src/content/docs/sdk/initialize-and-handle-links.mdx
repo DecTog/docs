@@ -175,7 +175,7 @@ if (click == null) {
 }
 ```
 
-`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `DectogLinkClick`. It counts as an app open, not as a click (decision C19): the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not a DecTog link (including a custom domain the SDK does not know) and for an authentication callback.
+`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `DectogLinkClick`. It counts as an app open, not as a click: the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not a DecTog link (including a custom domain the SDK does not know) and for an authentication callback.
 
 ## Complete example
 
