@@ -115,7 +115,7 @@ void _handleLink(DectogLinkClick click) {
   // click.username and click.slug come from the URL itself.
   // click.linkResolution is set when the public resolve call succeeded.
   final route = click.clickParams?.deepLink            // dec_deeplink on the opened URL
-      ?? click.linkResolution?.deepLinkPathFor('ios')  // the link's stored in-app route
+      ?? click.linkResolution?.deepLinkPath            // the link's stored in-app route
       ?? click.linkResolution?.target;                 // the link's web target (may be null)
   _navigate(slug: click.slug, route: route);
 }
@@ -208,7 +208,7 @@ class DectogService {
   void _onLink(DectogLinkClick click) {
     if (click.error != null) return;
     final route = click.clickParams?.deepLink ??
-        click.linkResolution?.deepLinkPathFor('android') ??
+        click.linkResolution?.deepLinkPath ??
         click.slug;
     _openRoute(route);
   }

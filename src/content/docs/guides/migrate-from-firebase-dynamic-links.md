@@ -76,7 +76,7 @@ Every `/api/v1` call except `resolve` is signed with an HMAC of the key it sends
 |---|---|
 | `FirebaseDynamicLinks.instance.getInitialLink()` | `dectog.getInitialLink()` |
 | `FirebaseDynamicLinks.instance.onLink.listen(...)` | `dectog.onLinkClick.listen(...)` |
-| `PendingDynamicLinkData.link` (a `Uri`) | `DectogLinkClick`: `slug`, `username`, `linkResolution?.target`, `linkResolution?.deepLinkPathFor('ios')`, `clickParams` |
+| `PendingDynamicLinkData.link` (a `Uri`) | `DectogLinkClick`: `slug`, `username`, `linkResolution?.target`, `linkResolution?.deepLinkPath`, `clickParams` |
 | `PendingDynamicLinkData.utmParameters` | `click.queryParameters` and `click.queryParameter('utm_source')` on the tapped URL |
 | `getDynamicLink(uri)` | `dectog.resolveLink(username, slug)` |
 | `buildShortLink(DynamicLinkParameters(...))` | `dectog.createLink(slug: ..., target: ..., ...)` and `dectog.createTempLink(...)` |
@@ -90,7 +90,6 @@ FirebaseDynamicLinks.instance.onLink.listen((data) => _open(data.link));
 ```
 
 ```dart title="After: flutter_dectog"
-import 'dart:io' show Platform;
 import 'package:flutter_dectog/flutter_dectog.dart';
 
 final dectog = FlutterDectog();
@@ -113,8 +112,7 @@ Future<void> start() async {
 
 void _open(DectogLinkClick click) {
   if (click.error != null) return;
-  final platform = Platform.isIOS ? 'ios' : 'android';
-  _openRoute(click.linkResolution?.deepLinkPathFor(platform) ?? click.slug);
+  _openRoute(click.linkResolution?.deepLinkPath ?? click.slug);
 }
 ```
 

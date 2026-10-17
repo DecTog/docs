@@ -229,7 +229,7 @@ The public resolve result, for permanent and temporary links. Only a live link r
 | `ttlSeconds` | `int?` | Temporary links only |
 | `metadata` | `Map<String, dynamic>?` | Permanent links only |
 | `iosDeepLinkPath`, `androidDeepLinkPath` | `String?` | Permanent links only |
-| `deepLinkPathFor` | `String? deepLinkPathFor(String platform)` | `'ios'` returns the iOS path, anything else the Android path |
+| `deepLinkPath` | `String? get` | The running platform's path: on iOS the iOS path, elsewhere the Android path, each falling back to the other |
 | `isPermanent`, `isTemporary` | `bool get` | |
 | `timeUntilExpiration` | `Duration? get` | `null` without `expiresAt` |
 | `toDectogLink` | `DectogLink? toDectogLink()` | `null` for temporary links |
