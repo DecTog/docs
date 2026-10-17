@@ -14,35 +14,35 @@ Measured by the worker's test suite (`apps/worker/test/cost.test.ts`), which cal
 | Operation | Requests | D1 rows read | D1 rows written | Storage |
 |---|---|---|---|---|
 | A tap on a link (redirect) | 1 | 5 | 5 | about 670 bytes |
-| First-launch install registration | 1 | 12, plus up to 50 when the fingerprint scans candidates | 7 | about 960 bytes |
-| Event batch (one conversion) | 1 | 3 | 8, or 9 when it names the install | about 570 bytes |
-| Screen views (one events flush of 5) | 1 | 4 | 8 or 9 per screen view, 45 for the flush | about 570 bytes per screen view |
-| App start ping | 1 | 1 | 3 | about 270 bytes |
-| Link opened in the installed app (click plus open) | 2 | 5 | 10 | about 1 KB |
+| First-launch install registration | 1 | 14, plus up to 50 when the fingerprint scans candidates | 7 | about 960 bytes |
+| Event batch (one conversion) | 1 | 4 | 6, or 7 when it names the install | about 570 bytes |
+| Screen views (one events flush, however many screens it holds) | 1 | 3 | 4 for an app session's first flush (its row and indexes), 1 for each later flush of the session | about 60 bytes per screen view, in its session's row; a session keeps 50 |
+| App start ping (the SDKs send one a day per device) | 1 | 2 | 2 for the device's first ping of the UTC day, 0 after | about 150 bytes per device and day |
+| Link opened in the installed app (click plus open) | 2 | 7 | 10 | about 1 KB |
 | Creating a link | 1 | 4 | 4 | small |
 | The daily rollup, per day | none (cron) | about 2 per raw row of that day | one per link and platform active that day | about 100 bytes per written row |
 
-Creating a link includes its [audit log](/dashboard/settings/#audit-log) row: one row read for the entry's number and one written. Every change to an account's configuration (a link, an app, a webhook, a key, a sign-in) pays the same; taps, installs, events, pings and the other SDK traffic write no audit rows.
+The SDK rows are measured with an SDK key. Its lookup reads the key and its account in one statement, counted above, and an isolate keeps the pair for `SDK_AUTH_CACHE_SECONDS` (60 by default), so most calls read nothing for it. Creating a link includes its [audit log](/dashboard/settings/#audit-log) row: one row read for the entry's number and one written. Every change to an account's configuration (a link, an app, a webhook, a key, a sign-in) pays the same; taps, installs, events, pings and the other SDK traffic write no audit rows.
 
 The rate limits on authenticated `/api/v1` calls and on the interstitial beacon are counted by Cloudflare's [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) bindings, which `wrangler.jsonc` and the setup script declare (`RL_TENANT`, `RL_DEVICE`, `RL_IP`, `RL_BEACON`). A deployment without them falls back to counters in D1, which add 2 read and 4 written rows to every v1 call. The sign-in and password-reset limits stay in D1.
 
 ## A month of traffic
 
-Assumptions, per month: one install for every five taps; each install starts the app 8 times and sends 3 event batches; one tap in ten opens an installed app. Prices are Cloudflare's [Workers Paid](https://developers.cloudflare.com/workers/platform/pricing/) and [D1](https://developers.cloudflare.com/d1/platform/pricing/) prices as of October 2026: $5 a month including 10 million requests, 30 million CPU milliseconds, 25 billion rows read, 50 million rows written and 5 GB of storage; then $0.30 per million requests, $0.02 per million CPU ms, $0.001 per million rows read, $1.00 per million rows written and $0.75 per GB-month. CPU time is taken as 5 ms per request: measured in production, taps, pings, events and dashboard calls use 2–5 ms at the median and an install about 10 ms.
+Assumptions, per month: one install for every five taps; each install starts the app 8 times, on 8 days, and sends 3 event batches without screen views; one tap in ten opens an installed app. Prices are Cloudflare's [Workers Paid](https://developers.cloudflare.com/workers/platform/pricing/) and [D1](https://developers.cloudflare.com/d1/platform/pricing/) prices as of October 2026: $5 a month including 10 million requests, 30 million CPU milliseconds, 25 billion rows read, 50 million rows written and 5 GB of storage; then $0.30 per million requests, $0.02 per million CPU ms, $0.001 per million rows read, $1.00 per million rows written and $0.75 per GB-month. CPU time is taken as 5 ms per request: measured in production, taps, pings, events and dashboard calls use 2–5 ms at the median and an install about 10 ms.
 
 | Taps a month | Requests | Rows read | Rows written | Storage added | Monthly bill |
 |---|---|---|---|---|---|
-| 100,000 | 0.4 M | 2.5 M | 1.7 M | 0.17 GB | $5 |
-| 1,000,000 | 3.6 M | 25 M | 17 M | 1.7 GB | $5, plus storage beyond 5 GB |
-| 3,000,000 | 10.8 M | 75 M | 50 M | 5.2 GB | about $6, plus storage beyond 5 GB |
-| 10,000,000 | 36 M | 251 M | 168 M | 17 GB | about $134, plus storage; see the ceiling below |
+| 100,000 | 0.4 M | 2.7 M | 1.5 M | 0.15 GB | $5 |
+| 1,000,000 | 3.6 M | 27 M | 15 M | 1.5 GB | $5, plus storage beyond 5 GB |
+| 3,000,000 | 10.8 M | 81 M | 45 M | 4.6 GB | about $5, plus storage beyond 5 GB |
+| 10,000,000 | 36 M | 270 M | 150 M | 15 GB | about $116, plus storage; see the ceiling below |
 
-Rows read include the fingerprint's candidate scan at its maximum and the daily rollup; they never come near the 25 billion included.
+Rows read include the fingerprint's candidate scan at its maximum and the daily rollup; they never come near the 25 billion included. Screen tracking adds, per app session, 4 written rows for its first flush and 1 for each later one (one flush every 30 seconds while screens change), on top of these.
 
 The Workers Free plan caps each day at 100,000 requests, 5 million rows read and 100,000 rows written for the whole account; past any of them the deployment stops answering until midnight UTC. What fits in one day, if a single kind of traffic had the quota to itself:
 
 - **Taps:** about 20,000 (5 written rows each).
-- **App sessions:** about 1,750 three-minute sessions that track a screen every 30 seconds (57 written rows each), which is about 4 people in the app at any moment on average. Without screen tracking, about 8,300.
+- **App sessions:** about 9,000 three-minute sessions that track a screen every 30 seconds (about 11 written rows each: the day's ping, the session's row and five more flushes), which is about 19 people in the app at any moment on average. Without screen tracking, the day's ping and one event, about 11,000.
 - **Dashboard:** the Overview re-reads the last 7 days of raw clicks and installs every 15 seconds while it is open, about 22 rows per click. At 1,000 clicks a week, one open tab uses the day's 5 million reads in about an hour.
 
 So the Free plan suits trying DecTog out, and the Paid plan suits any real traffic.
@@ -67,10 +67,10 @@ Every request reads or writes the one D1 database, and nothing caches in front o
 | Traffic | D1 round trips per request | Holds comfortably | Past the ceiling |
 |---|---|---|---|
 | Taps on a link | 4 | 50 a second (3,000 a minute) | from about 100 a second, answers take 2 to 3 seconds; every tap is still recorded at 150 a second |
-| SDK calls (pings, events) | 3 to 5 | 100 a second | at 200 a second, 1 call in 6 fails with a 500 |
+| SDK calls (pings, events) | 1 to 3 (3 to 5 when measured, before the key lookup became one read, kept per isolate) | 100 a second measured; about 250 expected now, not yet measured | at 200 a second, with the lookups of the measurement, 1 call in 6 failed with a 500 |
 | Dashboard Overview loads | 36 | 5 a second (about 75 open tabs) | at 20 a second, 3 calls in 10 fail |
 
-An app in use sends at most 2 SDK calls a minute (the SDKs flush events every 30 seconds), so 100 calls a second is about 1,500 to 1,800 people using apps at once, across every app on the deployment. The per-account limit of 3,000 calls a minute is approximate: Cloudflare's Rate Limiting counters let one account through at 4,500 a minute in the test. An install makes about 15 sequential round trips, so it takes about 400 ms even when the database is idle.
+An app in use sends at most 2 SDK calls a minute (the SDKs flush events every 30 seconds), so 100 calls a second was about 1,500 to 1,800 people using apps at once, across every app on the deployment; with a flush at 3 round trips instead of 5, roughly 2,500 is expected. The per-account limit of 3,000 calls a minute is approximate: Cloudflare's Rate Limiting counters let one account through at 4,500 a minute in the test. An install makes about 15 sequential round trips, so it takes about 400 ms even when the database is idle.
 
 ## Compared with a measurement partner
 

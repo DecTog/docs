@@ -62,7 +62,7 @@ Optional signals ride along when enabled: `meta_referrer` (with `fbAppId`), `cli
 Without `deviceTier`:
 
 - none of the fields above is sent, with the install or with in-app clicks (`utc_offset_min` is not in the tier and is still sent, like `timezone`);
-- the device ping (`POST /api/v1/device-ping`, one row per app start, which feeds the Overview's Retention card) is not sent;
+- the device ping (`POST /api/v1/device-ping`, once per UTC day, one row per device and day, which feeds the Overview's Retention card) is not sent;
 - event batches and app-open reports carry the `install_id` only, and `getAttributionData()` re-pulls by `install_id` instead of `device_id`;
 - reinstalls cannot be detected by device id, and the fingerprint has fewer signals to corroborate a candidate, so more installs come back as `routing` only or organic.
 

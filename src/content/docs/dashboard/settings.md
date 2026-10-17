@@ -42,7 +42,7 @@ A new account starts with one SDK key, "App key". The card lists every key with 
 |---|---|
 | **Create SDK key** | Creates a key with the name in the box (default "App key") and, when ticked, the links:write scope. An account can hold 20 active SDK keys. |
 | **Copy** | Copies the full key. |
-| **Revoke** | Asks for confirmation, then refuses the key at once: calls answer `401` with code `revoked_api_key`. Release a build with a new key before you revoke the old one. |
+| **Revoke** | Asks for confirmation, then refuses the key: calls answer `401` with code `revoked_api_key`, at once on the edge location that handled the revoke and within a minute on the others. Release a build with a new key before you revoke the old one. |
 
 ### How the keys are stored
 

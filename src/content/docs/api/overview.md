@@ -59,8 +59,8 @@ There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/se
 | `links:write` | `POST`, `PUT` and `DELETE` on `/api/v1/links` |
 
 - A new account gets its account key and one SDK key, "App key". Create more SDK keys (one per app or per build channel) and revoke them in Settings; an account holds up to 20 active SDK keys.
-- The server stores only each key's SHA-256 and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `invalid_api_key`, a revoked SDK key `revoked_api_key`, before anything else is checked. A key without the route's scope answers `403` with code `insufficient_scope` and the `required_scope`.
-- Revoking an SDK key stops every build that ships it at once; release a build with a new key first. Regenerating the account key affects only servers and scripts.
+- The server stores only each key's SHA-256 and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `invalid_api_key`, a revoked SDK key `revoked_api_key`, before anything else is checked. A key without the route's scope answers `403` with code `insufficient_scope` and the `required_scope`. An edge location keeps an SDK key and its account for a minute after looking them up (`SDK_AUTH_CACHE_SECONDS`, see [Configuration reference](/self-hosting/configuration-reference/)), so a key revoked a moment ago can still be accepted there until the minute is up.
+- Revoking an SDK key stops every build that ships it within a minute; release a build with a new key first. Regenerating the account key affects only servers and scripts.
 - Keep the account and SDK keys out of source control where you can, and only ever send them to your DecTog base URL.
 
 ## Request signing

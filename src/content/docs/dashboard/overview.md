@@ -219,7 +219,7 @@ A table of the SDK builds that reported in the window: the build (`flutter_decto
 
 Below the match-confidence panel, **Retention** answers "did the users stay?" for the installs of the last 90 days, whatever the range selector says. Two boxes filter it: **All links** or one link (installs credited to it), and **All platforms**, **iOS** or **Android**. The card loads on its own and does not take part in the 15-second refresh.
 
-The cohort is the first installs that carry a device id; reinstalls and app updates are left out, and a device counts once, on its first install day. A device is active on a day when the app started (the SDK's device ping), a link opened it, or it sent an event that day. Days are calendar days in UTC: day 1 is the UTC day after the install's, so an install at 23:30 that opens again at 00:30 is retained on day 1, and one that opens again at 23:50 the same day is not.
+The cohort is the first installs that carry a device id; reinstalls and app updates are left out, and a device counts once, on its first install day. A device is active on a day when the app started (the SDK's device ping, sent once a day), a link opened it, or it sent an event that day. Days are calendar days in UTC: day 1 is the UTC day after the install's, so an install at 23:30 that opens again at 00:30 is retained on day 1, and one that opens again at 23:50 the same day is not.
 
 | Part | What it shows |
 |---|---|
