@@ -80,7 +80,7 @@ Subtitle: "The link click that led to this customer's install. Open install show
 | **Click IP** | The raw IP address of the click, when the deployment stores raw IPs (`STORE_RAW_IP=1`); otherwise `—`. |
 | **Fraud flags** | Amber chips with the rule names the install tripped, such as `emulator` or `click_reuse`. |
 
-Below the fields, **Open install** opens the [install detail](/dashboard/overview/#recent-installs) with its attribution parts only: the verdict, its **Why** (the signal that named the click, or the fingerprint's candidates with each signal marked agree, mismatch or missing), the tap and the device's data. That is where an organic customer's near misses show. It leaves out the app opens, events and screens, which this page already lists for the customer.
+Below the fields, **Open install** opens the [install detail](/dashboard/overview/#recent-installs) with its attribution parts only: the verdict, its **Why** (the signal that named the click with the tap it named, signal by signal, or the fingerprint's candidates with each signal marked agree, mismatch or missing), the tap and the device's data. That is where an organic customer's near misses show. It leaves out the app opens, events and screens, which this page already lists for the customer.
 
 What each match method and confidence means is explained in [How attribution works](/start/how-attribution-works/).
 

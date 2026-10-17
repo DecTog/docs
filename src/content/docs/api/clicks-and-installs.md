@@ -60,9 +60,10 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `app_platform` | string, 64 | For example `flutter`. |
 | `app_version`, `app_build_number` | string, 64 | Your app's version and build. |
 | `os` | string, 32 | `android` or `ios`. This decides the device family for fingerprinting; other values disable the family filter. |
-| `os_version` | string, 64 | `17.5.1`, `14`. Its major is stored as `os_major`. |
+| `os_version` | string, 64 | `17.5.1`, `14`. Its major is stored as `os_major`, its minor as `os_minor`. |
 | `language` | string, 64 | `en_US`; the primary tag is stored as `lang`. |
 | `timezone` | string, 64 | IANA name. |
+| `utc_offset_min` | integer −840 to 840 | The device's current offset from UTC in minutes, east positive (UTC+3 is `180`). Sent outside the device tier, like `timezone`. Compared with the tap's offset for 0 points; only an exact match agrees. |
 | `metadata` | JSON | Stored as sent. |
 
 **Device tier** (sent only when the app opted in to device data; see [Device data and privacy](/sdk/device-data-and-privacy/))
@@ -73,9 +74,13 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `device_model` | string | Lowercased. A model present on both the click and the install and different excludes that click. |
 | `device_manufacturer` | string, 64 | |
 | `device_kind` | string, 16 | `phone`, `tablet`, … |
-| `cpu_type` | string, 64 | `arm64-v8a`, `x86_64`; its family (`arm`, `x86`) is compared with the click's architecture hint. |
+| `cpu_type` | string, 64 | `arm64-v8a`, `x86_64`; its family (`arm`, `x86`) is stored as `cpu_family`. An x86 family on an Android install of kind `phone` (or of unknown kind) raises the `emulator` flag. Never compared with a click. |
 | `os_build` | string, 64 | |
 | `screen_width`, `screen_height`, `screen_density` | string, 16 | Physical pixels and density, as strings. |
+| `text_size` | integer | iOS only: the body text size in points for the user's text-size setting: 14, 15, 16, 17 (the default), 19, 21, 23, 28, 33, 40, 47 or 53. |
+| `dark_mode` | boolean | The system appearance is dark. |
+| `high_contrast` | boolean | iOS only: Increase Contrast. |
+| `reduce_motion` | boolean | iOS Reduce Motion; on Android, Remove animations. |
 | `connectivity_type` | string, 16 | `wifi`, `cellular`, … `cellular` shortens the fingerprint window and raises the install-velocity threshold. |
 | `carrier_mcc`, `carrier_mnc` | string, 8 | |
 | `web_user_agent` | string, 512 | The device's WebView User-Agent. |
@@ -83,6 +88,8 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `is_physical_device` | boolean | `false` raises the `emulator` flag. |
 | `installer_package` | string, 256 | |
 | `install_time`, `update_time`, `first_install_ts` | epoch ms | Provenance timestamps from the OS. Never used for matching. |
+
+`text_size`, `dark_mode`, `high_contrast` and `reduce_motion` are compared with the values the link page recorded at the tap, for 0 points; only an exact match agrees. An Android install sends `dark_mode` and `reduce_motion` only. The SDK leaves out a value it cannot read rather than guess one; a value of the wrong type or out of range is stored as `null`.
 
 **Deterministic signals**
 
@@ -131,7 +138,7 @@ Epoch values must fall between 1970 and 2100, otherwise they become `null`.
    - The click is held by another device's install: the ladder **moves on to the next signal** and remembers the reuse.
    - The click id is unknown: when the signal also carries `dtg_l=<your username>/<slug>` for an existing link (a clipboard URL names its slug by construction), a web click with that id is synthesized (`origin: "synthesized_referrer"`, `clicked_at` from the server-side referrer time, else now) and the install matches it. Otherwise the ladder moves on.
    - When no signal matched and at least one was a reuse, the install gets the `click_reuse` flag and the fingerprint does not run. `click_reuse` is therefore only ever the final outcome, never a reason to skip a later signal.
-4. **Fingerprint.** Runs unless `install_state` is `update`, step 3 ended in reuse, the registration carries `recovered_from`, or the install's app turned **Probabilistic match** off. Candidates: your `source: "web"` clicks from iOS and Android, wherever the tap was sent, from the same hashed IP and the same device family (`os`), not yet credited to any install, from the last 24 hours, newest 50. A click keeps the 24 hour window only when both it and the install carry a device model and the install is not on `cellular`; every other click must be inside the low-entropy window (2 hours by default, overridable per app up to 720 hours and never longer than the wide window). Scoring per click: model match +40 (a mismatch excludes the click), OS major +15 or −30, language +10 or −15, screen short side within 3 % +15 or −40, CPU family +5 or −40, same ASN +10; missing signals score 0. Confidence from the ranked list: `low` when the top two are within 10 points or the top score is negative; `high` when the top is unique and has a model match, a screen agreement plus OS major, or a score of at least 15; `medium` for a unique top scoring 0 to 14. Only `high` credits the click (`match_source: "fingerprint"`); `medium` fills `routing` without credit; `low` does nothing. When step 3 already matched, the fingerprint still runs as a shadow and records whether it agrees.
+4. **Fingerprint.** Runs unless `install_state` is `update`, step 3 ended in reuse, the registration carries `recovered_from`, or the install's app turned **Probabilistic match** off. Candidates: your `source: "web"` clicks from iOS and Android, wherever the tap was sent, from the same hashed IP and the same device family (`os`), not yet credited to any install, from the last 24 hours, newest 50. A click keeps the 24 hour window only when both it and the install carry a device model and the install is not on `cellular`; every other click must be inside the low-entropy window (2 hours by default, overridable per app up to 720 hours and never longer than the wide window). Scoring per click: model match +40 (a mismatch excludes the click), OS major +15 or −30, language +10 or −15, screen short side within 3 % +15 or −40, same ASN +10; missing signals score 0. The iOS minor version, `text_size`, `dark_mode`, `high_contrast`, `reduce_motion` and `utc_offset_min` are compared too and recorded in the install's explanation for 0 points (see [Attribution internals](/self-hosting/attribution-internals/)). Confidence from the ranked list: `low` when the top two are within 10 points or the top score is negative; `high` when the top is unique and has a model match, a screen agreement plus OS major, or a score of at least 15; `medium` for a unique top scoring 0 to 14. Only `high` credits the click (`match_source: "fingerprint"`); `medium` fills `routing` without credit; `low` does nothing. When step 3 already matched, the fingerprint still runs as a shadow and records whether it agrees.
 5. **Link check.** A matched click whose link no longer exists makes the install organic.
 6. **Fraud rules.** The flags below are evaluated and stored. When the app the verdict concerns (the credited or routed link's app, else the install's own app, else the oldest) has strict fraud mode on and the list is not empty, `matched` and `match_source` are zeroed; `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` stay as evidence and the click stays consumed.
 7. **Insert.** The row is written together with any synthesized click and the ad identifier. If two retries with the same `install_attempt_id` race, the unique index lets one in and the other receives the winner's verdict with `"replayed": true`.

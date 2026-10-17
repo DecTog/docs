@@ -49,7 +49,7 @@ type DectogConfig = {
 
 | Value | What it sends | Apple privacy | Google Play Data safety |
 |---|---|---|---|
-| `deviceTier` | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, connectivity, carrier; the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
+| `deviceTier` | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, connectivity, carrier; the text size and Increase Contrast settings (iOS only), dark mode and reduce motion (iOS and Android); the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
 | `pasteboard` | A copied DecTog link that names a click, read once at first launch | None (no required-reason API); iOS 16+ shows the paste alert | None; Android 12+ shows the clipboard notice |
 | `oemReferrers` | The Huawei, Samsung, Xiaomi and vivo store referrers (Android) | Not applicable | None of its own |
 | `appleSearchAdsToken` | The AdServices attribution token (iOS 14.3+); no IDFA, no prompt | Advertising Data | Not applicable |

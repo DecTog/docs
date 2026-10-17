@@ -74,10 +74,24 @@ So the pool is the 50 newest web clicks (recorded by the redirect engine or synt
 | OS major | `os_major` parsed from `os_version` | `os_major` parsed from `os` (platform-version hint on Android; Safari's `Version/` token on iOS, none for an 18.6 or later OS token without one) | +15 | −30 |
 | Language | `lang` from `language` | `lang` from `Accept-Language` | +10 | −15 |
 | Screen short side | `min(screen_width, screen_height)` in physical px | `min(screen_width, screen_height) × pixel_ratio` from the interstitial beacon | +15 when within 3 % | −40 |
-| CPU family | `cpu_family` from `cpu_type` | `ua_arch` from `Sec-CH-UA-Arch` | +5 | −40 |
 | Network | `asn` | `asn` | +10 | 0 |
 
-**Repeat taps.** Before ranking, candidates with the same signature collapse into the newest of them: same IP hash and device family (the query already requires both), same device model, OS major, language, screen short side and CPU family. As far as the evidence goes such candidates are one phone tapping twice (a double tap, a pull-to-refresh, the same message tapped again), and without collapsing they would tie with each other and nobody would be credited. Only taps that carry a device model or a screen profile collapse: two taps that agree on nothing more than OS major and language are as likely two people on one network, so they keep competing and can still tie. The install stores `candidate_count` as the number of distinct candidates and `collapsed_from` as the number of click rows merged into the one the verdict used (null when nothing merged). The trade-off: two phones of the same model, OS, language and screen behind one address now look like one phone, and the newer tap is credited instead of nobody. The click rows themselves are kept; only the matching treats them as one.
+There is no CPU signal. No phone browser sends an architecture (iOS Safari sends no client hints; Android Chrome answers `Sec-CH-UA-Arch` with an empty string), so the redirect no longer asks for it. The install's `cpu_type` and `cpu_family` are still stored, for the `emulator` rule.
+
+**Unscored signals.** Six more values are compared per candidate and worth 0 points, so they never change a score, a rank or a confidence. They are recorded to measure how often each agrees on the right click (see `signal_check` below); none earns points until those numbers support it.
+
+| Signal | Install side | Click side |
+|---|---|---|
+| iOS minor version | `os_minor` parsed from `os_version` | `os_minor` from Safari's `Version/` token; compared only when both sides carry the same OS major |
+| Text size | `text_size`: body text points for the text-size setting (iOS only) | `text_size`: the computed px of `font: -apple-system-body`, which the beacon sends only when the browser resolves the iOS system text style |
+| Dark mode | `dark_mode` | `dark_mode` from `prefers-color-scheme` |
+| Increase Contrast | `high_contrast` (iOS only) | `high_contrast` from `prefers-contrast`, in any browser; an Android install has nothing to compare it with |
+| Reduce Motion | `reduce_motion` | `reduce_motion` from `prefers-reduced-motion` |
+| UTC offset | `utc_offset_min` | `utc_offset_min` from the page's clock |
+
+A value present on both sides is `agree` when the two are exactly equal and `mismatch` otherwise, with no tolerance: a UTC offset or a text size that differs by any amount is a mismatch. A value absent on either side is `missing`, and so is `os_minor` unless both sides carry the same OS major. The verdicts are stored under `unscored` in the explanation below. The settings come from the device tier on the install side and from the beacon on the click side; the UTC offset is sent outside the device tier, like `timezone`.
+
+**Repeat taps.** Before ranking, candidates with the same signature collapse into the newest of them: same IP hash and device family (the query already requires both), same device model, OS major, language and screen short side. As far as the evidence goes such candidates are one phone tapping twice (a double tap, a pull-to-refresh, the same message tapped again), and without collapsing they would tie with each other and nobody would be credited. Only taps that carry a device model or a screen profile collapse: two taps that agree on nothing more than OS major and language are as likely two people on one network, so they keep competing and can still tie. The install stores `candidate_count` as the number of distinct candidates and `collapsed_from` as the number of click rows merged into the one the verdict used (null when nothing merged). The trade-off: two phones of the same model, OS, language and screen behind one address now look like one phone, and the newer tap is credited instead of nobody. The click rows themselves are kept; only the matching treats them as one.
 
 Candidates are sorted by score, highest first; the SQL order (newest first) and a stable sort mean recency only breaks ties.
 
@@ -168,8 +182,9 @@ Every install row keeps `match_details`, a JSON object the dashboard's install d
 | `stale` | `stale_clipboard` or `stale_meta` when that signal was older than the window |
 | `fingerprint_skipped` | `no_ip`, `update`, `click_reuse`, `probabilistic_off` or `recovery` when the fingerprint did not run |
 | `candidates`, `collapsed_from`, `window_hours`, `gap`, `confidence` | The fingerprint's pool after collapsing, the merged taps, the window of the best candidate, its lead over the runner-up |
-| `best`, `runner_up` | `{click_id, slug, clicked_at, score, signals, low_entropy}`; `signals` marks `device_model`, `os_major`, `lang`, `screen`, `cpu` and `asn` as `agree`, `mismatch` or `missing` |
+| `best`, `runner_up` | `{click_id, slug, clicked_at, score, signals, unscored, low_entropy}`; `signals` marks `device_model`, `os_major`, `lang`, `screen` and `asn` as `agree`, `mismatch` or `missing`; `unscored` marks `os_minor`, `text_size`, `dark_mode`, `high_contrast`, `reduce_motion` and `utc_offset` the same way, for 0 points |
 | `shadow` | The same fingerprint fields when a deterministic signal decided |
+| `signal_check` | `{click_id, signals, unscored}` when a deterministic signal (store referrer, pasted link, Meta) matched a recorded click: how the click known to be right compares with the install, signal by signal. Not written when the click was synthesized from the referrer tag (there is no browser side to compare), or on a first launch where the fingerprint does not run (the cases under step 2, Probabilistic match off among them). A claim that upgrades the verdict writes its own, unless its click was synthesized or the install's app has Probabilistic match off. `GET /api/admin/attribution-quality` counts these verdicts per signal. |
 | `claim_source`, `before_claim` | After a late claim upgraded the verdict: the claim's source and the explanation it replaced |
 
 ## Worked examples

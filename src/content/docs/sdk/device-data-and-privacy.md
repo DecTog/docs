@@ -26,7 +26,7 @@ const DectogConfig(
 
 | Value | Default (`collect: null`) | What it sends | App Store (App Privacy) | Google Play (Data safety) |
 |---|---|---|---|---|
-| `deviceTier` | on | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, connectivity, carrier; the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
+| `deviceTier` | on | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, text size and Increase Contrast (iOS only), dark mode, Reduce Motion, connectivity, carrier; the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
 | `pasteboard` | the dashboard setting, else on for iOS, off for Android | A copied DecTog link that names a click, read once at first launch | Nothing to declare (no required-reason API); iOS 16 and later shows the paste alert | Nothing to declare; Android 12 and later shows the clipboard notice |
 | `oemReferrers` | the dashboard setting, else on | The Huawei, Samsung, Xiaomi and vivo store referrers (Android) | Not applicable | Nothing of its own: the store's referrer for this install |
 | `appleSearchAdsToken` | off | The AdServices attribution token (iOS 14.3 and later); no IDFA, no prompt | Advertising Data, for developer advertising | Not applicable |
@@ -41,7 +41,7 @@ These rows are a starting point for your answers, not legal advice: declare what
 | Field group | Fields | Source |
 |---|---|---|
 | App | `app_platform` (`flutter`), `app_version`, `app_build_number`, `package_name`, `installer_package`, `install_time`, `update_time`, `first_install_ts`, `install_state` | `package_info_plus`, the package manager (Android), the container and Keychain dates (iOS) |
-| OS | `os`, `os_version`, `language`, `timezone` | `dart:io` and `device_info_plus` |
+| OS | `os`, `os_version`, `language`, `timezone`, `utc_offset_min` (the current offset from UTC in minutes) | `dart:io`, `DateTime` and `device_info_plus` |
 | Referrer | `install_referrer`, `referrer_store`, `referrer_status`, `referrer_attempts`, `referrer_wait_ms`, the device and server timestamps, `install_version`, `google_play_instant` | The native referrer readers (Android) |
 | Reliability | `install_attempt_id`, `attempt`, `created_at_client`, `sent_at_client` | The SDK's sentinel |
 | Metadata | plugin version, Dart version, platform, `build_signature` (the Android signing-key hex, when available), every store's raw referrer read status | The SDK |
@@ -55,12 +55,13 @@ Optional signals ride along when enabled: `meta_referrer` (with `fbAppId`), `cli
 | Device ID | `device_id`: `ANDROID_ID` on Android, the IDFV on iOS (Keychain-persisted by default, see below) | the plugin's platform channel | install dedupe, reinstall detection, the device ping, event batches, attribution re-pulls |
 | Hardware | `device_model`, `device_manufacturer`, `device_kind` (`phone` or `tablet`), `cpu_type`, `os_build`, `is_physical_device` | `device_info_plus` | device breakdowns, fingerprint inputs, the emulator fraud rule |
 | Screen | `screen_width`, `screen_height` (physical pixels of the Flutter view), `screen_density` (device pixel ratio) | `PlatformDispatcher`, no WebView | the fingerprint's screen-profile comparison |
+| Settings | `text_size` (iOS only: the body text size in points for the text-size setting, 17 by default), `dark_mode`, `high_contrast` (iOS only: Increase Contrast), `reduce_motion` (Reduce Motion on iOS, Remove animations on Android) | `PlatformDispatcher` (`textScaleFactor`, `platformBrightness`, `accessibilityFeatures`), no WebView | compared with the tap's settings for 0 points; see [Device settings](#device-settings) |
 | Network | `connectivity_type` (`wifi`, `cellular`, `ethernet`, `vpn`, `bluetooth`, `none`), `carrier_mcc` and `carrier_mnc` (Android only; iOS hides carrier identity) | `connectivity_plus`, `TelephonyManager` | connectivity and carrier breakdowns, the fingerprint windows |
 | Web UA | `web_user_agent` (Android only) | `WebSettings.getDefaultUserAgent` | fingerprint input |
 
 Without `deviceTier`:
 
-- none of the fields above is sent, with the install or with in-app clicks;
+- none of the fields above is sent, with the install or with in-app clicks (`utc_offset_min` is not in the tier and is still sent, like `timezone`);
 - the device ping (`POST /api/v1/device-ping`, one row per app start, which feeds the Overview's Retention card) is not sent;
 - event batches and app-open reports carry the `install_id` only, and `getAttributionData()` re-pulls by `install_id` instead of `device_id`;
 - reinstalls cannot be detected by device id, and the fingerprint has fewer signals to corroborate a candidate, so more installs come back as `routing` only or organic.
@@ -68,6 +69,22 @@ Without `deviceTier`:
 :::caution[Decide before initialize]
 `DectogConfig` is read once. The SDK cannot be initialized twice in one process, so `collect` holds for the life of the process. For an opt-in consent flow, initialize with `enabled: false` and call `setEnabled(true)` once the user agrees; see [Waiting for consent](#waiting-for-consent). A fingerprint match only works inside the server's attribution windows (24 hours, or 2 hours for low-entropy clicks and cellular installs), so a long wait for consent costs fingerprint matches.
 :::
+
+### Device settings
+
+The device tier includes four settings: text size and Increase Contrast on iOS only, dark mode and Reduce Motion (Remove animations on Android) on both platforms. The interstitial and tap-to-store link pages read the same settings from the browser, with the UTC offset, and the server compares each with the install's value; only an exact match counts as agreement. The page reads Increase Contrast in any browser, but an Android install sends none, so on Android it is always missing. Today they score 0 points, so they change no verdict; the server records whether they agree, to measure whether they tell two otherwise identical phones apart. A value the SDK cannot read is left out, and reading them never stops the install from being registered.
+
+What they cost:
+
+- **Apple's rules.** Apple's user-privacy rules for developers prohibit deriving data from a device's configuration to identify it, whatever the user consented to. These settings are device configuration, read to tell one phone from another. Nothing is combined into an identifier and nothing is matched across accounts, but whether this is acceptable for your app is your call, and the App Store review risk is yours.
+- **Health data.** Increase Contrast, Reduce Motion and a large text size can suggest a disability, which EU data-protection law may treat as health data.
+
+An app that cannot carry this has two switches:
+
+- Leave `deviceTier` out of `collect`. The app then sends none of the four settings, and also no device id, model, screen or network fields, so the fingerprint matches fewer installs. It still sends `utc_offset_min`, which is outside the tier like `timezone`.
+- Turn **Probabilistic match** off for the app on the dashboard's Apps page (Advanced). The fingerprint never runs, nothing is compared, only deterministic signals attribute its installs, and the app's interstitial and tap-to-store pages no longer read the settings.
+
+With the probabilistic match on, a tap through the interstitial or tap-to-store page records the settings and the UTC offset on the click whether or not the app sends its device tier. They are cleared from the click after 30 days at most, and from the install with the rest of the device tier at the retention cutoff.
 
 ### Post-install events
 
@@ -127,12 +144,13 @@ The User ID, purchase, name, email and phone entries cover the event tier. The n
 Declare the collection in your privacy policy and in both store forms (Google Play Data safety, App Store privacy labels) with the purpose "analytics / install attribution":
 
 - Device or other IDs: the vendor-scoped device id, persisted across reinstall on iOS when `persistDeviceId` is on.
-- App info and performance / usage data: install and open events, app version, OS, device model, screen, connectivity, carrier (Android).
+- App info and performance / usage data: install and open events, app version, OS, device model, screen, connectivity, carrier (Android), the UTC offset.
+- Display and accessibility settings, with the device tier: text size and Increase Contrast (iOS only), dark mode and Reduce Motion. The accessibility settings can suggest a disability, which EU law may treat as health data; see [Device settings](#device-settings).
 - User IDs, purchase history, contact info: only if you pass them through `identify` and `trackConversion`.
 - Advertising ID: only with `flutter_dectog_adid` (see above).
 - Location: none. The SDK sends no location; the server derives country and ASN from the request's network address.
 
-If your consent regime is opt-in, start with `DectogConfig(enabled: false)` and call `setEnabled(true)` once the user agrees; see [Waiting for consent](#waiting-for-consent). Leaving `deviceTier` out of `collect` only drops the device tier.
+If your consent regime is opt-in, start with `DectogConfig(enabled: false)` and call `setEnabled(true)` once the user agrees; see [Waiting for consent](#waiting-for-consent). Leaving `deviceTier` out of `collect` only drops the device tier, the four device settings with it.
 
 ## Waiting for consent
 
