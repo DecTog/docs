@@ -110,7 +110,7 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 
 - Deterministic signals win in this order: store install referrer, pasteboard, Meta referrer. Then the fingerprint. Then organic. See [How attribution works](/start/how-attribution-works/).
 - One install per click. A click another install already consumed moves the ladder on to the next signal; `click_reuse` is flagged only when nothing later matches.
-- Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that carry a device model and 2 hours for model-less clicks and installs on cellular. The 2-hour window can be set per app (1 to 720 hours) in the app's Advanced settings.
+- Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that share a device model or a screen profile with the install, the probabilistic window Adjust gives a click, and 2 hours for clicks with neither and for installs on cellular. The 2-hour window can be set per app (1 to 720 hours) in the app's Advanced settings.
 - App updates (`install_state: update`) never run the fingerprint. Reinstalls do, and carry `is_reinstall: true`. Late claims never run the fingerprint.
 - Strict fraud mode, the low-entropy window and an install's webhook app are read from the app the install concerns, and an install is only matched against its own app's links.
 - A pasted link or a Meta referrer earns credit for 7 days (per app); an older one routes the user without credit. Store referrers keep 30 days.
