@@ -17,11 +17,11 @@ The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped
 | `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |
-| `clicks` | One row per recorded tap or in-app open: link, device and browser, geo and ASN, hashed IP (raw IP only with `STORE_RAW_IP=1`), UTM, `link_params`, beacon screen profile and device settings, client hints, `origin` (`redirect`, `sdk`, `synthesized_referrer`) |
+| `clicks` | One row per recorded tap or in-app open: link, device and browser, geo and ASN, hashed and raw IP (no raw IP with `STORE_RAW_IP=0`), UTM, `link_params`, beacon screen profile and device settings, client hints, `origin` (`redirect`, `sdk`, `synthesized_referrer`) |
 | `app_installs` | One row per install registration: device tier, referrer telemetry, the attribution verdict, fraud flags, shadow match, Apple Search Ads lifecycle, idempotency key |
 | `ad_identifiers` | Advertising id per install, isolated so it is never joined to the device tier |
 | `customers` | The tenant's own user identities from `identify` events: `customer_id`, name, email, phone, `first_install_id` |
-| `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP only with `STORE_RAW_IP=1` |
+| `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP (none with `STORE_RAW_IP=0`) |
 | `app_sessions` | One row per app session with screen views, keyed by the SDK's `session_id` and written once per flush: the device, install, customer and link open the session is first known by, the device time of its first screen, the screen count and the first 50 screens as JSON. The Screens lists of customers and installs and the links page's Screens after open read it |
 | `device_days` | One row per device and UTC day the app started (device, app version, OS, the first ping's time): with app opens and events, the activity behind the Overview's Retention card |
 | `app_opens` | Warm opens: a link opened an already-installed app (slug, click id, device, hashed IP) |

@@ -12,13 +12,13 @@ This page lists the personal data a self-hosted DecTog handles, table by table, 
 Every request's address is read from `CF-Connecting-IP` (else the first `X-Forwarded-For` entry, else `0.0.0.0`).
 
 - **Hashed:** `sha256("<IP_SALT>:<address>")`. IPv6 addresses are cut to their /64 prefix before hashing, because privacy extensions rotate the interface id between the browser tap and the app's first launch; IPv4-mapped addresses are hashed as the plain IPv4, and addresses whose /64 prefix is all zeros (loopback) are hashed in full. The hash is the join key for fingerprint matching, the beacon, the `install_velocity_ip` and `click_storm_ip` rules, the per-IP rate limits and the Overview's "unique visitors". It is only as private as `IP_SALT`.
-- **Raw:** not stored by default. A deployment that sets `STORE_RAW_IP=1` also keeps the plain address in `clicks.ip_raw`, `app_installs.ip_raw` and `events.ip_raw` until retention, where the Customers detail page and the admin API show it. Matching, fraud rules and rate limits never use it. The hosted service leaves it off.
+- **Raw:** stored by default. The plain address is kept in `clicks.ip_raw`, `app_installs.ip_raw` and `events.ip_raw` until retention, where the Customers detail page and the admin API show it; a request with no address (the `0.0.0.0` fallback) stores none. A deployment that sets `STORE_RAW_IP=0` keeps no raw address. Matching, fraud rules and rate limits never use it. The hosted service keeps it.
 
 | Table | Hashed | Raw | Until |
 |---|---|---|---|
-| `clicks` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | the row is deleted at retention (nulled while the daily rollups catch up) |
-| `app_installs` | `ip_hash` | `ip_raw`, only with `STORE_RAW_IP=1` | the same |
-| `events` | none | `ip_raw`, only with `STORE_RAW_IP=1` | the same |
+| `clicks` | `ip_hash` | `ip_raw`, unless `STORE_RAW_IP=0` | the row is deleted at retention (nulled while the daily rollups catch up) |
+| `app_installs` | `ip_hash` | `ip_raw`, unless `STORE_RAW_IP=0` | the same |
+| `events` | none | `ip_raw`, unless `STORE_RAW_IP=0` (events from the web pixel or a store notification keep none) | the same |
 | `app_opens` | `ip_hash` | none | the same |
 | `rate_limits` | in the key | none | rows deleted after the window passes; with the Rate Limiting bindings (the default config) only the sign-in and reset limits use it |
 
@@ -78,7 +78,7 @@ The device tier (`DectogCollection.deviceTier`) is on by default and `persistDev
 - `app_sessions` rows (one per app session with screen views: the device, install, customer and link open the session is first known by, its first screen's time, the screen count and the first 50 screens with their times) are deleted at retention by the session's start.
 - `app_opens` rows go the same way: deleted at retention once the rollups hold their day; until then they keep the slug and time and have `device_id`, `install_id`, `click_id` and `ip_hash` nulled.
 
-The dashboard masks the email in the Customers list (`e****@domain`) but shows it in full on the detail page, together with the attributed click's geo and network, and its raw IP when the deployment stores one (`STORE_RAW_IP=1`). See [Customers](/dashboard/customers/).
+The dashboard masks the email in the Customers list (`e****@domain`) but shows it in full on the detail page, together with the attributed click's geo and network, and its raw IP unless the deployment sets `STORE_RAW_IP=0`. See [Customers](/dashboard/customers/).
 
 ## Rejected requests
 
@@ -138,7 +138,7 @@ dectog DELETE /api/v1/devices/<device_id>
 
 `/api/v1/customers/<customer_id>/export` and `DELETE /api/v1/customers/<customer_id>` do the same for a customer (URL-encode an id with `/`, spaces or other reserved characters). An SDK key gets `403 account_key_required`.
 
-**The export** is a JSON file: the device's installs (device, OS, app version, screen, device settings, network, language, raw IP when `STORE_RAW_IP=1`, the attribution verdict and fraud flags), its taps (link, time, country, region, city, browser, user agent, device settings, referrer, UTM; a tap its install was credited to or routed by counts as its own), events, app opens, app starts (one per day), its app sessions with their screens, advertising ids and the referral that brought it. A customer's export holds the customer record, its events, the referrals it made and received (without the other customers' ids), its referral link, and its devices: each device only they used, exported in full, and each device another customer also used, by id only. Salted IP hashes, matching internals and the Apple Search Ads token are left out.
+**The export** is a JSON file: the device's installs (device, OS, app version, screen, device settings, network, language, raw IP (none with `STORE_RAW_IP=0`), the attribution verdict and fraud flags), its taps (link, time, country, region, city, browser, user agent, device settings, referrer, UTM; a tap its install was credited to or routed by counts as its own), events, app opens, app starts (one per day), its app sessions with their screens, advertising ids and the referral that brought it. A customer's export holds the customer record, its events, the referrals it made and received (without the other customers' ids), its referral link, and its devices: each device only they used, exported in full, and each device another customer also used, by id only. Salted IP hashes, matching internals and the Apple Search Ads token are left out.
 
 **Erasing a device** deletes, in one batch, its installs, events (by device id or install id), app opens, app starts, app sessions (by device id or install id), advertising ids, the referrals that name it, and the webhook deliveries that mention the device, one of its installs or one of its taps. Its taps (by device id, and the taps its installs were credited to or routed by) keep their link, time, country, platform and UTM, so link counts stay, and lose the device id and model, IP, user agent, language, region, city, network, referrer, screen profile, device settings (text size, dark mode, Increase Contrast, Reduce Motion, UTC offset), session and link parameters. Customers that pointed at its installs keep their record, with the install link cleared. On a device more than one customer used, the device's events include the other customers' events from it, and they go too; erase the customer instead to keep theirs.
 

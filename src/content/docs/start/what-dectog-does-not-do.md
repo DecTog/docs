@@ -35,7 +35,6 @@ DecTog tries deterministic signals first: the store install referrer on Android,
 - **Detail is kept for the retention window only.** Per-link totals survive it in the daily rollups, but raw taps, installs, opens and events older than `RETENTION_DAYS` (400 by default) are deleted once the rollups hold their day, so breakdowns by country, referrer, campaign or device model cover that window. See [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
 - **Revenue is the app's word unless a store confirms it.** A purchase the app reports is stored as sent, unless it carries a StoreKit 2 transaction (`appStoreJws`) or arrives through the App Store's or Google Play's notifications. Google Play renewals are not recorded from Play's notifications, which carry no price. Amounts are converted to the account's base currency with the ECB's daily rates.
 - **Breakdowns take at most two dimensions at a time,** and the raw export leaves out IP addresses and user agents. See [Export](/api/export/).
-- **No raw IP addresses unless you ask.** Matching uses a salted hash. A self-hosted deployment can store raw IPs with `STORE_RAW_IP=1`; the hosted service does not. See [Privacy and data](/self-hosting/privacy-and-data/).
 
 ## Platform and hosting
 
