@@ -93,13 +93,21 @@ The static export has no page per post. `/blog/<slug>` on the dashboard host is 
 | `og:image`, `twitter:image` | The post's featured image, else the site card `WEB_URL/media/og-card.png` with its `og:image:width` (1200), `og:image:height` (630) and `og:image:alt`. |
 | `twitter:card` | `summary_large_image` |
 
+The head also gets a canonical link to the same `og:url` address, and one BlogPosting JSON-LD block with the headline, the excerpt as description (when there is one), the address, the image, `datePublished`, `dateModified` (the post's `updated_at`) and DecTog as author and publisher.
+
 Each added tag carries a `data-post-head` attribute; the page removes them when the visitor moves on to another page of the app. The page is sent without the export's `ETag`.
 
-Drafts, unknown slugs and HEAD requests get the article page unchanged. Once the post fails to load, the page shows "Article Not Found" and titles itself `Article Not Found — DecTog Blog`.
+Search and AI crawlers that run no script would find no article in the page, so the worker also writes the post's title as an `<h1>`, followed by its body, into the page's loading state. The body keeps the editor's markup (headings, paragraphs, lists, links, images, tables, code) and loses scripts, styles, frames, embedded objects, media, SVG, forms, every attribute outside a short list (so every event handler), and any `href` or `src` that is not `http`, `https`, `mailto` or relative. Once the post has loaded in the browser, the page shows it in place of the loading state.
+
+Drafts and unknown slugs get the article page unchanged, with status `404`, so search engines drop the address. The page still loads, fails to find the post, shows "Article Not Found" and titles itself `Article Not Found — DecTog Blog`. A HEAD request gets the status a GET would: `200` with the export's headers for a published post, `404` otherwise. A path under `/blog/` that cannot be a slug, such as `/blog/__next._tree.txt`, one of the files the browser's router fetches, is served from the static export as it is, or answers `404` when the export has no such file.
+
+### The blog index
+
+The exported `/blog` page has its own title and share tags but loads the list of posts in the browser. On a GET, the worker writes the published posts into the page's loading state, newest first and at most 50: each post's title as a link to `/blog/<slug>`, its excerpt when it has one, and its publication date (`Oct 11, 2026`, in UTC). The page is then sent without the export's `ETag`. With nothing published, and for HEAD, the page is served as exported.
 
 ## Host and path routing
 
-Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/readyz`, `/robots.txt` and `/sitemap.xml`. Everything else depends on the host. The port is ignored when matching hosts.
+Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/readyz`, `/openapi.json`, `/robots.txt` and `/sitemap.xml`. `/mcp` and `/dectog.js` belong to the worker on the dashboard host and the apex; on an account's link host they are ordinary slugs. Everything else depends on the host. The port is ignored when matching hosts.
 
 | Host | Path | Result |
 |---|---|---|
@@ -109,7 +117,10 @@ Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/
 | any | `/.well-known/…` | The association files above. |
 | any | `/_/collect` | The link pages' beacon (POST): the screen profile and device settings, and which button the visitor took. |
 | any | `/healthz`, `/readyz`, `/robots.txt`, `/sitemap.xml` | See this page. |
-| `app.dectog.com` | any other path | The dashboard's static export. `/blog/<slug>` serves the export's article page, which reads the slug client-side; for a published post the worker adds the post's head tags first (see [Blog post pages](#blog-post-pages)). `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
+| any | `/openapi.json` | The OpenAPI description of every route. |
+| `app.dectog.com`, `dectog.com` | `/mcp` | The [MCP server](/guides/automation-and-agents/#mcp-server). |
+| `app.dectog.com`, `dectog.com` | `/dectog.js` | The [web pixel](/sdk/web/). |
+| `app.dectog.com` | any other path | The dashboard's static export. `/blog` and `/blog/<slug>` get the worker's additions first, and an unknown slug answers `404` (see [Blog post pages](#blog-post-pages)). `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | `dectog.com` | `/` | `302` to `WEB_URL`. |
 | `dectog.com` | `/SKILL.md`, `/llms.txt` | Served from the dashboard's static assets, so `curl https://dectog.com/SKILL.md` works without a redirect. Without an assets binding (local development) these redirect like any other path. |
 | `dectog.com` | any other path | `301` to `WEB_URL` plus the path and the query string: `https://dectog.com/contact?ref=x` goes to `https://app.dectog.com/contact?ref=x`. |
