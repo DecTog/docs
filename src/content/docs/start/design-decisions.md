@@ -79,6 +79,10 @@ strict-mode install, which invited consumers to credit it.
 **12. Raw IP addresses are opt-in.** Matching, fraud rules and rate limits use
 only the salted hash; `STORE_RAW_IP=1` also keeps the raw address for the
 Customers page. *Rejected:* storing raw IPs by default for a debugging view.
+*Note (2026-10-19):* reversed by the owner. Raw IPs are now stored by default,
+so the Customers page shows the install and click IP on every deployment, and
+`STORE_RAW_IP=0` turns that off. Matching, fraud rules and rate limits still
+use only the salted hash, and the retention sweep still clears the raw address.
 
 **13. `healthz` and `readyz` are reserved slugs,** because the Worker answers
 those paths on every host.

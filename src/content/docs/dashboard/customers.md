@@ -77,7 +77,7 @@ Subtitle: "The link click that led to this customer's install. Open install show
 | **UTM** | The click's `utm_*` parameters, as `source=… · medium=… · campaign=…`. |
 | **Link params** | The tracking values stored on the click, as `label=… · campaign=… · adgroup=… · creative=… · tracker=…`, from the link's Tracking fields or `dec_*` overrides. |
 | **Deep link** | The `dec_deeplink` route the click carried. |
-| **Click IP** | The raw IP address of the click, when the deployment stores raw IPs (`STORE_RAW_IP=1`); otherwise `—`. |
+| **Click IP** | The raw IP address of the click; `—` when the deployment sets `STORE_RAW_IP=0`. |
 | **Fraud flags** | Amber chips with the rule names the install tripped, such as `emulator` or `click_reuse`. |
 
 Below the fields, **Open install** opens the [install detail](/dashboard/overview/#recent-installs) with its attribution parts only: the verdict, its **Why** (the signal that named the click with the tap it named, signal by signal, or the fingerprint's candidates with each signal marked agree, mismatch or missing), the tap and the device's data. That is where an organic customer's near misses show. It leaves out the app opens, events and screens, which this page already lists for the customer.
@@ -92,7 +92,7 @@ Shown only when other customers share a device. Subtitle: "Other customers ident
 
 Subtitle: "Reported by the SDK at install." Shown when the customer has an install; empty values are hidden.
 
-**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report, when the deployment stores raw IPs with `STORE_RAW_IP=1`; otherwise `—`), **Device ID** and **Install ID**.
+**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report; `—` when the deployment sets `STORE_RAW_IP=0`), **Device ID** and **Install ID**.
 
 Which of these the SDK sends depends on its data tier; see [Device data and privacy](/sdk/device-data-and-privacy/).
 
