@@ -99,7 +99,7 @@ Empty state: "No events yet — call `identify` / `trackConversion` in the SDK."
 
 ### Top devices
 
-The top 8 device models among installs in the window that reported a model, with an install count. A model DecTog knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra SM-S918B`, `iPhone 15 Pro Max iPhone16,2`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in DecTog for the iPhone 8 to the iPhone 16e. The count includes reinstalls; when some of them are reinstalls the row adds `(+{n} re)`.
+The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model DecTog knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in DecTog for the iPhone 8 to the iPhone 18 Pro Max. The count includes reinstalls; when some of them are reinstalls the row adds `(+{n} re)`.
 
 Empty state: "No device data yet — enable the device tier in the SDK (`DectogCollection.deviceTier`)." See [Device data and privacy](/sdk/device-data-and-privacy/).
 
