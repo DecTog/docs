@@ -99,7 +99,7 @@ Each added tag carries a `data-post-head` attribute; the page removes them when 
 
 Search and AI crawlers that run no script would find no article in the page, so the worker also writes the post's title as an `<h1>`, followed by its body, into the page's loading state. The body keeps the editor's markup (headings, paragraphs, lists, links, images, tables, code) and loses scripts, styles, frames, embedded objects, media, SVG, forms, every attribute outside a short list (so every event handler), and any `href` or `src` that is not `http`, `https`, `mailto` or relative. Once the post has loaded in the browser, the page shows it in place of the loading state.
 
-Drafts, unknown slugs and paths that are not a slug get the article page unchanged, with status `404`, so search engines drop the address. The page still loads, fails to find the post, shows "Article Not Found" and titles itself `Article Not Found — DecTog Blog`. A HEAD request gets the status a GET would: `200` with the export's headers for a published post, `404` otherwise.
+Drafts and unknown slugs get the article page unchanged, with status `404`, so search engines drop the address. The page still loads, fails to find the post, shows "Article Not Found" and titles itself `Article Not Found — DecTog Blog`. A HEAD request gets the status a GET would: `200` with the export's headers for a published post, `404` otherwise. A path under `/blog/` that cannot be a slug, such as `/blog/__next._tree.txt`, one of the files the browser's router fetches, is served from the static export as it is, or answers `404` when the export has no such file.
 
 ### The blog index
 
