@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. The Worker talks to it with raw, parameterized SQL; there is no ORM. The rules are in `docs/DATA-LAYER.md` in the server repository and summarized below.
+DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. The Worker talks to it with raw, parameterized SQL; there is no ORM. The rules are summarized below.
 
 ## Tables
 
@@ -53,9 +53,9 @@ There are no foreign-key constraints. Cascades (deleting a link, deleting an app
 
 ## Migrations
 
-`apps/worker/migrations/` holds the schema file plus the migrations after it, which together create the 36 tables above and their 54 indexes. `wrangler d1 migrations apply` runs the files in the folder that are not yet recorded in the database's `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. A schema change is the next numbered file.
+`apps/worker/migrations/` holds `0001_schema.sql`, which creates the 36 tables above and their 54 indexes, plus any migrations after it. `wrangler d1 migrations apply` runs the files in the folder that are not yet recorded in the database's `d1_migrations` table, in filename order, and the test setup (`test/setup.ts`) applies them the same way with `localeCompare`. A schema change is the next numbered file.
 
-The 63 migrations written before the first release were combined into `0001_schema.sql` on 2026-10-16; the server repository's git history keeps those files. A local database made before then has the old files recorded, so `migrations apply` stops at the first table it creates (`table users already exists`): delete `apps/worker/.wrangler/state/v3/d1` and apply again.
+The 63 migrations written before the first release were combined into `0001_schema.sql` on 2026-10-16, and the two after them on 2026-10-20; the server repository's git history keeps those files. A local database made before then has the old files recorded, so `migrations apply` stops at the first table it creates (`table users already exists`): delete `apps/worker/.wrangler/state/v3/d1` and apply again.
 
 ### Commands
 
