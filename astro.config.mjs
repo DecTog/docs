@@ -41,7 +41,7 @@ export default defineConfig({
 				PageTitle: './src/components/PageTitle.astro',
 				SiteTitle: './src/components/SiteTitle.astro',
 			},
-			head: [{ tag: 'meta', attrs: { name: 'theme-color', content: '#1E40AF' } }],
+			head: [{ tag: 'meta', attrs: { name: 'theme-color', content: '#141414' } }],
 			// Each group lists the pages found in its directory. Order inside a group comes
 			// from the `sidebar.order` frontmatter field of each page. Groups start collapsed;
 			// Starlight opens the one that holds the current page.
