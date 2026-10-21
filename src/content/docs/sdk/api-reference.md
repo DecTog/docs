@@ -34,7 +34,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | Member | Signature | Endpoint |
 |---|---|---|
 | `createLink` | `Future<DectogLink> createLink({required String slug, String? target, Map<String, dynamic>? metadata, String? appId, String? iosDeepLinkPath, String? androidDeepLinkPath, String? redirectUrl, String? fallbackUrl, String? ogTitle, String? ogDescription, String? ogImageUrl, String? label, String? campaign, String? adgroup, String? creative})` | `POST /api/v1/links`, expects 201 |
-| `createReferralLink` | `Future<DectogLink> createReferralLink({required String customerId, String? campaign})` | `POST /api/v1/referral-links`; 201 the first time, 200 with the same link afterwards. Works with a plain SDK key. A new user who installs through it and signs up is recorded as the customer's referral. See [Referral programs](/guides/referral-programs/). |
+| `createReferralLink` | `Future<DectogLink> createReferralLink({required String customerId, String? campaign})` | `POST /api/v1/referral-links`; 201 the first time, 200 with the same link afterwards. Works with a plain SDK key. A new user who installs through it and signs up is recorded as the customer's referral. On that user's device, `install.link?.referrerCustomerId` (in `onAppInstalled` and `getAttributionData()`) names the customer; a reinstall (`install.isReinstall`) never records a referral. See [Referral programs](/guides/referral-programs/). |
 | `updateLink` | `Future<DectogLink> updateLink(String slug, {String? target, Map<String, dynamic>? metadata, String? iosDeepLinkPath, String? androidDeepLinkPath, String? redirectUrl, String? fallbackUrl, String? ogTitle, String? ogDescription, String? ogImageUrl, String? label, String? campaign, String? adgroup, String? creative})` | `PUT /api/v1/links/{slug}`. `null` keeps, `''` clears. |
 | `getLinks` | `Future<DectogLinkPage> getLinks({int? limit, String? cursor})` | `GET /api/v1/links`; one page, newest first. `DectogLinkPage` has `links`, `nextCursor` (pass it back as `cursor`) and `hasMore`. |
 | `getLink` | `Future<DectogLink> getLink(String slug)` | `GET /api/v1/links/{slug}` |
@@ -67,7 +67,7 @@ Everything below is exported by `package:flutter_dectog/flutter_dectog.dart`. Nu
 | `diagnostics` | `Future<DectogDiagnostics> diagnostics()` | Compares this build with the dashboard's record of the app (`GET /api/v1/sdk-config`): bundle ID or package, the iOS URL scheme in `CFBundleURLTypes`, and on Android 12+ the App Links verification of each link host. Returns the warnings and logs them with `enableDebugLogging`; never blocks the SDK. |
 | `isEnabled` | `Future<bool> isEnabled()` | The stored choice, else `DectogConfig.enabled`. |
 
-Background calls the SDK makes on its own, none of them while collection is off: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on the first initialize of each UTC day with the device tier on, `POST /api/v1/events` for the queue, `GET /api/v1/sdk-config` for the dashboard's settings, and `GET /api/v1/resolve/…` for a link's details.
+Background calls the SDK makes on its own, none of them while collection is off: `POST /api/v1/clicks` and `POST /api/v1/app-opens` for every recognized link open, `POST /api/v1/app-installs` on the first launch, `POST /api/v1/app-installs/{id}/claim` for late signals, `POST /api/v1/device-ping` on the first initialize of each UTC day with the device tier on (the server keeps one row per device per day), `POST /api/v1/events` for the queue, `GET /api/v1/sdk-config` for the dashboard's settings, and `GET /api/v1/resolve/…` for a link's details.
 
 ## DectogConfig
 
@@ -315,6 +315,7 @@ The verdict on `onAppInstalled`, `currentAppInstall`, `getAttributionData()` and
 | `target` | `String?` |
 | `createdAt` | `DateTime` |
 | `metadata` | `Map<String, dynamic>?` |
+| `referrerCustomerId` | `String?`: the customer whose referral link brought the install, else null. Set by the server from the link, never from the tapped URL |
 
 ### DectogAppOpen
 
