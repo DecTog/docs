@@ -52,7 +52,7 @@
 	--dt-raised-shadow: 0 1px 4px rgba(12, 12, 13, 0.1), 0 1px 4px rgba(12, 12, 13, 0.05);
 	--dt-well: #f7f8f7;
 	--dt-feature: #1f2420;
-	--dt-logo: #22232b;
+	--dt-logo: #141414;
 }
 
 /* Starlight's own tokens, pointed at the palette above. They follow the theme through it. */
