@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- The docs' share card (og:image, astro.config.mjs head): the site card of
+     apps/web/src/brand/og-card.html in the web repo, with the docs' own words.
+     public/og-card.png is rendered from it at 1200 x 630 with Quick Look and
+     the brand kit's Outfit file (brand/source/social.py shows the recipe). -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1200px; height: 630px; overflow: hidden; }
+      body { font-family: 'Outfit', system-ui, sans-serif; background: #ffffff; position: relative; }
+      .glow { position: absolute; width: 950px; height: 950px; right: -380px; top: -380px; border-radius: 50%;
+              background: radial-gradient(circle, rgba(255,82,10,.09) 0%, rgba(255,82,10,0) 65%); }
+      .glow2 { position: absolute; width: 720px; height: 720px; left: -320px; bottom: -400px; border-radius: 50%;
+              background: radial-gradient(circle, rgba(20,20,20,.05) 0%, rgba(20,20,20,0) 65%); }
+      .wrap { position: relative; padding: 60px 72px; height: 100%; display: flex; flex-direction: column; }
+      .brand { display: block; height: 82px; width: auto; align-self: flex-start; }
+      .eyebrow { margin-top: 44px; font-size: 24px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #FF520A; }
+      h1 { margin-top: 10px; font-size: 82px; line-height: 1.05; font-weight: 600; color: #141414; letter-spacing: -0.025em; }
+      h1 .accent { color: #FF520A; }
+      p.sub { margin-top: 24px; font-size: 28px; line-height: 1.45; color: #5b6472; max-width: 640px; }
+      .pill { margin-top: auto; align-self: flex-start; border: 2px solid #e5e7eb; color: #141414;
+              border-radius: 999px; padding: 12px 28px; font-size: 25px; font-weight: 500; }
+      .mark { position: absolute; right: 116px; bottom: 86px; width: 250px; height: auto; }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="glow2"></div>
+    <div class="wrap">
+      <svg class="brand" viewBox="0 28 740 216" role="img" aria-label="DecTog">
+        <path fill="#141414" d="M0 196 V28 H52 A84 84 0 0 1 52 196 H57 V174 H52 A59 62 0 0 0 52 50 H24 V196 Z M277.02 147 A62 62 0 1 0 263.49 175.85 L245.11 160.43 A38 38 0 1 1 252.37 147 Z M172 125 V147 H254.37 V125 Z M399.84 92.16 A62 62 0 1 0 399.84 179.84 L382.87 162.87 A38 38 0 1 1 382.87 109.13 Z M390 28 H502 V50 H390 Z M434 28 H458 V196 H434 Z M600 136 A62 62 0 1 1 476 136 A62 62 0 1 1 600 136 Z M576 136 A38 38 0 1 0 500 136 A38 38 0 1 0 576 136 Z M740 136 A62 62 0 1 1 616 136 A62 62 0 1 1 740 136 Z M716 136 A38 38 0 1 0 640 136 A38 38 0 1 0 716 136 Z M716 76 H740 V197 H716 Z M740 196 A62 48 0 0 1 624.31 220 L645.09 208 A38 24 0 0 0 716 196 Z"/>
+        <path fill="#FF520A" d="M78 185 A21 21 0 1 1 36 185 A21 21 0 1 1 78 185 Z"/>
+      </svg>
+      <p class="eyebrow">Documentation</p>
+      <h1>How deep links<br /><span class="accent">land in the app.</span></h1>
+      <p class="sub">Flutter and React Native SDKs, the REST API, the dashboard and self-hosting.</p>
+      <div class="pill">docs.dectog.com</div>
+    </div>
+    <svg class="mark" viewBox="38 25 180 205" aria-hidden="true">
+      <g><path fill="#141414" d="M38 217 V25 H122 A96 96 0 0 1 122 217 H114 V187 H122 A63 66 0 0 0 122 55 H70 V217 Z"/><path fill="#FF520A" d="M142 202 A28 28 0 1 1 86 202 A28 28 0 1 1 142 202 Z"/></g>
+    </svg>
+  </body>
+</html>

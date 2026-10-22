@@ -41,7 +41,19 @@ export default defineConfig({
 				PageTitle: './src/components/PageTitle.astro',
 				SiteTitle: './src/components/SiteTitle.astro',
 			},
-			head: [{ tag: 'meta', attrs: { name: 'theme-color', content: '#141414' } }],
+			head: [
+				{ tag: 'meta', attrs: { name: 'theme-color', content: '#141414' } },
+				// The share card every page previews with (WhatsApp, iMessage, Slack, X,
+				// LinkedIn): public/og-card.png, rendered from src/brand/og-card.html.
+				// Absolute URL and the size: WhatsApp and Facebook read neither relative
+				// URLs nor unsized images reliably.
+				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://docs.dectog.com/og-card.png' } },
+				{ tag: 'meta', attrs: { property: 'og:image:type', content: 'image/png' } },
+				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'DecTog documentation: how deep links land in the app' } },
+				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://docs.dectog.com/og-card.png' } },
+			],
 			// Each group lists the pages found in its directory. Order inside a group comes
 			// from the `sidebar.order` frontmatter field of each page. Groups start collapsed;
 			// Starlight opens the one that holds the current page.
