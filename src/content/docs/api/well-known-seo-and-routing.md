@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-The DecTog worker answers every host in the zone: the apex (`dectog.com`), the dashboard host (`app.dectog.com`, `APP_HOST`) and every account host (`<username>.dectog.com`). This page lists what each host and path does. Self-hosted deployments substitute their own `ROOT_DOMAIN`, `APP_HOST`, `WEB_URL` and `PUBLIC_BASE_URL`; see [Configuration reference](/self-hosting/configuration-reference/).
+The DecTog worker answers every host in the zone: the site host (`dectog.com`, the apex, `SITE_URL`), the dashboard host (`app.dectog.com`, `APP_HOST`) and every account host (`<username>.dectog.com`). This page lists what each host and path does. Self-hosted deployments substitute their own `ROOT_DOMAIN`, `SITE_URL`, `APP_HOST`, `WEB_URL` and `PUBLIC_BASE_URL`; see [Configuration reference](/self-hosting/configuration-reference/).
 
 ## Association files
 
@@ -74,23 +74,23 @@ Allow: /
 Disallow: /dashboard
 Disallow: /api
 
-Sitemap: https://app.dectog.com/sitemap.xml
+Sitemap: https://dectog.com/sitemap.xml
 ```
 
-`GET /sitemap.xml` (`application/xml`) lists `WEB_URL` plus `/`, `/about`, `/blog` and `/contact`, then `/blog/<slug>` for every published post, newest first, with `<lastmod>` set to the post's `updated_at` date (`YYYY-MM-DD`). Drafts are never listed. The origin is `WEB_URL` (`https://app.dectog.com` on the hosted service) because the apex only redirects.
+`GET /sitemap.xml` (`application/xml`) lists `SITE_URL` plus `/`, `/about`, `/blog` and `/contact`, then `/blog/<slug>` for every published post, newest first, with `<lastmod>` set to the post's `updated_at` date (`YYYY-MM-DD`). Drafts are never listed. The origin is `SITE_URL` (`https://dectog.com` on the hosted service), the host that serves those pages; the dashboard host sends them there with a permanent redirect.
 
 ## Blog post pages
 
-The static export has no page per post. `/blog/<slug>` on the dashboard host is answered with the export's article page, `/blog/article`, which loads the post in the browser; `/blog/` is the blog itself. The article page's head has no title, description or share tags of its own. Link unfurlers never run the page's script, so for a published post the worker adds them to the head before sending the page:
+The static export has no page per post. `/blog/<slug>` on the site host is answered with the export's article page, `/blog/article`, which loads the post in the browser; `/blog/` is the blog itself. The article page's head has no title, description or share tags of its own. Link unfurlers never run the page's script, so for a published post the worker adds them to the head before sending the page:
 
 | Tag | Value |
 |---|---|
 | `<title>` | `<post title> — DecTog Blog` |
 | `description`, `og:description`, `twitter:description` | The post's excerpt. Left out when the excerpt is empty. |
 | `og:title`, `twitter:title` | The post's title. |
-| `og:url` | `WEB_URL` plus `/blog/<slug>`, the address the sitemap lists. |
+| `og:url` | `SITE_URL` plus `/blog/<slug>`, the address the sitemap lists. |
 | `og:site_name`, `og:type` | `DecTog`, `article` |
-| `og:image`, `twitter:image` | The post's featured image, else the site card `WEB_URL/media/og-card.png` with its `og:image:width` (1200), `og:image:height` (630) and `og:image:alt`. |
+| `og:image`, `twitter:image` | The post's featured image, else the site card `SITE_URL/media/og-card.png` with its `og:image:width` (1200), `og:image:height` (630) and `og:image:alt`. |
 | `twitter:card` | `summary_large_image` |
 
 The head also gets a canonical link to the same `og:url` address, and one BlogPosting JSON-LD block with the headline, the excerpt as description (when there is one), the address, the image, `datePublished`, `dateModified` (the post's `updated_at`) and DecTog as author and publisher.
@@ -107,7 +107,9 @@ The exported `/blog` page has its own title and share tags but loads the list of
 
 ## Host and path routing
 
-Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/readyz`, `/openapi.json`, `/robots.txt` and `/sitemap.xml`. `/mcp` and `/dectog.js` belong to the worker on the dashboard host and the apex; on an account's link host they are ordinary slugs. Everything else depends on the host. The port is ignored when matching hosts.
+Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/readyz`, `/openapi.json`, `/robots.txt` and `/sitemap.xml`. `/mcp` and `/dectog.js` belong to the worker on the site and dashboard hosts; on an account's link host they are ordinary slugs. Everything else depends on the host. The port is ignored when matching hosts.
+
+The site host and the dashboard host both serve the dashboard's static export (its `/_next`, `/media` and `/fonts` files are shared), each owning some of its pages: the site pages (`/`, `/about`, `/blog`, `/blog/<slug>`, `/contact`) belong to the site host, the dashboard pages (`/login`, `/dashboard`, `/invite`, `/reset-password`) to the dashboard host. A page asked of the other host answers `301` to the same path and query string on its own host. When `SITE_URL` and `WEB_URL` name the same host, that host serves every page and nothing redirects.
 
 | Host | Path | Result |
 |---|---|---|
@@ -120,15 +122,18 @@ Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/
 | any | `/openapi.json` | The OpenAPI description of every route. |
 | `app.dectog.com`, `dectog.com` | `/mcp` | The [MCP server](/guides/automation-and-agents/#mcp-server). |
 | `app.dectog.com`, `dectog.com` | `/dectog.js` | The [web pixel](/sdk/web/). |
-| `app.dectog.com` | any other path | The dashboard's static export. `/blog` and `/blog/<slug>` get the worker's additions first, and an unknown slug answers `404` (see [Blog post pages](#blog-post-pages)). `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
-| `dectog.com` | `/` | `302` to `WEB_URL`. |
-| `dectog.com` | `/SKILL.md`, `/llms.txt` | Served from the dashboard's static assets, so `curl https://dectog.com/SKILL.md` works without a redirect. Without an assets binding (local development) these redirect like any other path. |
-| `dectog.com` | any other path | `301` to `WEB_URL` plus the path and the query string: `https://dectog.com/contact?ref=x` goes to `https://app.dectog.com/contact?ref=x`. |
+| `dectog.com` | `/`, `/about`, `/contact`, `/SKILL.md`, `/llms.txt`, the export's files | The static export: the landing page, the site pages and the agent docs, so `curl https://dectog.com/SKILL.md` works without a redirect. |
+| `dectog.com` | `/blog`, `/blog/<slug>` | The export's blog pages with the worker's additions; an unknown slug answers `404` (see [Blog post pages](#blog-post-pages)). |
+| `dectog.com` | `/login`, `/dashboard…`, `/invite`, `/reset-password` | `301` to `WEB_URL` plus the path and the query string: `https://dectog.com/login?tab=signup` goes to `https://app.dectog.com/login?tab=signup`. |
+| `app.dectog.com` | `/` | `302` to `/dashboard` with a valid session cookie, else to `/login`, with `cache-control: private, no-store`. |
+| `app.dectog.com` | `/about`, `/contact`, `/blog`, `/blog/…` | `301` to `SITE_URL` plus the path and the query string: `https://app.dectog.com/contact?ref=x` goes to `https://dectog.com/contact?ref=x`. |
+| `app.dectog.com` | any other path | The dashboard's static export. `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
+| the apex without an assets binding (local development) | any path but `/` | `301` to `SITE_URL` plus the path and the query string; `/` answers `302` to `SITE_URL`. |
 | `<username>.dectog.com` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or `404 {"error": {"code": "not_found", "message": "Not found"}}` when it is unset. `www` is a reserved username, so `www.dectog.com` follows the unknown-host rule. |
 | `<username>.dectog.com` | `/<slug>` | The redirect engine. An unknown username here also follows `UNKNOWN_HOST_REDIRECT`; an unknown slug gets the 404 page and an expired temporary link the 410 page. See [How a tap is routed](/links/how-a-tap-is-routed/). |
 | `<username>.dectog.com` | two or more path segments | `404 {"error": {"code": "not_found", "message": "Not found"}}`. |
 
-In the hosted deployment `WEB_URL` and `PUBLIC_BASE_URL` are both `https://app.dectog.com`, so the apex and account roots send visitors to the dashboard host.
+In the hosted deployment `WEB_URL` and `PUBLIC_BASE_URL` are both `https://app.dectog.com` and `SITE_URL` is `https://dectog.com`, so account roots send visitors to the dashboard host and unknown hosts to the site.
 
 ### HEAD requests
 

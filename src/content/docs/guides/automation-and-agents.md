@@ -16,7 +16,7 @@ Everything the Flutter SDK does with links, a script or an AI agent can do too. 
 Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only to `https://app.dectog.com` or your own deployment.
 
 :::note[Self-hosting]
-Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLIC_BASE_URL>/r/{username}/{slug}`. `SKILL.md` and `llms.txt` are served from your `WEB_URL`.
+Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLIC_BASE_URL>/r/{username}/{slug}`. `SKILL.md` and `llms.txt` are served from your `SITE_URL` and your `WEB_URL`.
 :::
 
 ## MCP server

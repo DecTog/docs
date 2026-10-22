@@ -12,7 +12,7 @@ Production is the `production` environment in `apps/worker/wrangler.jsonc`: one 
 ## Cloudflare prerequisites
 
 - A zone on Cloudflare (the reference configuration uses `dectog.com`). Replace it with your own domain everywhere below.
-- DNS, both proxied (orange cloud): a record for the apex, and a wildcard record `*` pointing at the apex. Worker routes only see traffic that passes through Cloudflare's proxy, so an unproxied record never reaches the Worker. Tenant links live on `<username>.<ROOT_DOMAIN>` and the dashboard on `APP_HOST` (`app.<ROOT_DOMAIN>`), and the wildcard covers both.
+- DNS, both proxied (orange cloud): a record for the apex, and a wildcard record `*` pointing at the apex. Worker routes only see traffic that passes through Cloudflare's proxy, so an unproxied record never reaches the Worker. Tenant links live on `<username>.<ROOT_DOMAIN>`, the public site on the apex (`SITE_URL`) and the dashboard on `APP_HOST` (`app.<ROOT_DOMAIN>`), and the two records cover all three.
 - Two routes with `zone_name` set: `<root>/*` and `*.<root>/*`. A more specific route in the same zone (for example a separate docs site on `docs.<root>/*`) takes precedence over the wildcard without any change here.
 - Usernames `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help` and `support`, and every name starting with `t-` (the prefix of test environments), are reserved (`apps/worker/src/bootstrap.ts`), so no signup can claim those hosts. Any other subdomain you use for something else can be claimed by a signup unless you add it to that list or close signups with `OPEN_SIGNUPS="0"`.
 - Node 22.12 or newer and a `wrangler login` session on the account that owns the zone (`npx wrangler whoami`).
@@ -33,6 +33,7 @@ Edit `env.production` in `apps/worker/wrangler.jsonc`. The file as shipped carri
     "LINK_URL_MODE": "subdomain",
     "PUBLIC_BASE_URL": "https://app.example.com",
     "WEB_URL": "https://app.example.com",
+    "SITE_URL": "https://example.com",
     "APP_HOST": "app.example.com",
     "UNKNOWN_HOST_REDIRECT": "https://example.com/",
     "RETENTION_DAYS": "400",
@@ -158,8 +159,9 @@ Run these in order from `apps/worker`:
 | `curl -s https://app.example.com/healthz` | `{"ok":true,"service":"dectog","version":"v1","host":"app.example.com"}` |
 | `curl -s https://app.example.com/readyz` | `200 {"ok":true,"database":true,"migrations":{…,"missing":[]}}`. A `503` names the migrations still to apply: run `npx wrangler d1 migrations apply DB --remote --env production`. |
 | `curl -s https://app.example.com/api/v1/links` | `401 {"error":{"code":"missing_api_key","message":"Missing API key",…}}` |
-| `curl -sI https://app.example.com/` | `200`, `text/html` (the dashboard's static export) |
-| `curl -sI https://example.com/` | `302` to `WEB_URL` |
+| `curl -sI https://example.com/` | `200`, `text/html` (the landing page from the static export) |
+| `curl -sI https://app.example.com/login` | `200`, `text/html` (the dashboard's login page) |
+| `curl -sI https://app.example.com/` | `302` to `/login` |
 | `curl -sI https://no-such-user.example.com/` | `302` to `UNKNOWN_HOST_REDIRECT` (or `404` when it is unset) |
 | `curl -sI https://<username>.example.com/<slug>` with a desktop User-Agent | `200` QR page, or `302` to a desktop redirect or fallback URL if the link has one |
 | `curl -s https://<username>.example.com/.well-known/apple-app-site-association` | The AASA JSON once an app with bundle id and Team ID exists, otherwise `404 {"error":{"code":"not_found","message":"Configuration not found"}}` |
