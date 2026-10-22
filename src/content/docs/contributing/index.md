@@ -25,6 +25,7 @@ DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog)
 | `apps/worker/migrations/` | `0001_schema.sql` (the whole schema), then one numbered file per later change |
 | `apps/worker/test/` | Vitest suites on the Workers pool with an isolated D1 |
 | `apps/worker/wrangler.jsonc` | Dev defaults and the `production` environment |
+| `wrangler.jsonc`, `package.json` (root) | The Deploy to Cloudflare button's deployment on workers.dev and its build and deploy commands. See [One click on workers.dev](/self-hosting/deploy/#one-click-on-workersdev) |
 | `apps/web/src/app/` | The Next.js app: `(site)` marketing pages, `login`, `reset-password`, `dashboard/**` |
 | `apps/web/public/SKILL.md`, `llms.txt` | The agent guide and index, served at `https://dectog.com/SKILL.md` and `/llms.txt` |
 | `docs/API_CONTRACT.md` | The SDK-to-worker contract, route by route |

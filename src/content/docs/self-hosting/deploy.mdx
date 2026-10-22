@@ -7,7 +7,43 @@ sidebar:
 
 import { Steps, Aside } from '@astrojs/starlight/components';
 
-Production is the `production` environment in `apps/worker/wrangler.jsonc`: one Worker bound to two routes on your zone, one D1 database, two cron triggers and a static-assets binding that serves the dashboard. The same Worker answers the API, the admin API, the link redirects, the well-known files and the dashboard host.
+Production is the `production` environment in `apps/worker/wrangler.jsonc`: one Worker bound to two routes on your zone, one D1 database, two cron triggers and a static-assets binding that serves the dashboard. The same Worker answers the API, the admin API, the link redirects, the well-known files and the dashboard host. No domain yet? [One click on workers.dev](#one-click-on-workersdev) deploys the same Worker on your workers.dev subdomain.
+
+## One click on workers.dev
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/DecTog/dectog)
+
+The button runs DecTog on your Cloudflare account without a zone: Cloudflare clones the server repository into your GitHub account, creates a D1 database, builds the dashboard, deploys the Worker to `https://<worker name>.<your subdomain>.workers.dev` and connects the copy to Workers Builds, which redeploys it on every push to `main`. The deployment is the `wrangler.jsonc` at the root of the repository (the hosted service and `npm run setup` use `apps/worker/wrangler.jsonc`), and the root `package.json` holds its build and deploy commands: the build installs both apps and exports the dashboard, the deploy applies the pending migrations and then deploys.
+
+<Steps>
+
+1. Click the button and sign in to Cloudflare. Choose the repository name, the Worker name (`dectog` unless you change it) and the database name.
+
+2. Fill in the secrets: `JWT_SECRET` and `IP_SALT`, each from `openssl rand -hex 32`. `IP_SALT` salts every stored IP hash, so never change it afterwards; the Worker refuses to run without it.
+
+3. Fill in the variables with the Worker's own URL. Your workers.dev subdomain is on **Workers & Pages > Overview**; with the Worker named `dectog` the URL is `https://dectog.<subdomain>.workers.dev`.
+
+   | Variable | Value |
+   |---|---|
+   | `PUBLIC_BASE_URL`, `WEB_URL`, `SITE_URL` | `https://dectog.<subdomain>.workers.dev` |
+   | `APP_HOST`, `ROOT_DOMAIN` | `dectog.<subdomain>.workers.dev` |
+
+   A wrong value is corrected later under the Worker's **Settings > Variables and Secrets**; the Worker reads them on every request.
+
+4. Deploy. The first build takes a few minutes (two `npm ci` runs and the Next.js export). `https://dectog.<subdomain>.workers.dev/readyz` then answers `200` with no missing migrations.
+
+5. Create your account at `https://dectog.<subdomain>.workers.dev/login?tab=signup`: the bootstrap route is closed (`ENVIRONMENT=production`, no `BOOTSTRAP_TOKEN`) and signups are open. Then add `OPEN_SIGNUPS` = `0` to the Worker's variables so nobody else can sign up, and continue with [Apps](/dashboard/apps/).
+
+</Steps>
+
+What is different from a deployment on your own domain:
+
+- Links are path mode, `https://dectog.<subdomain>.workers.dev/r/<username>/<slug>`, because tenant subdomains need a zone with a wildcard record. The SDK is configured with `baseUrl` and no `linkRootDomain`; the AASA and Asset Links files are served from that same host, so Universal Links and App Links work on it.
+- The one host serves the public site, the dashboard and the API; the export's links between them are relative.
+- There is no `BOOTSTRAP_TOKEN` and no demo seed.
+- The R2 exports bucket and customers' custom link domains are not bound. Add them to your copy's `wrangler.jsonc` as `apps/worker/wrangler.jsonc` describes.
+
+To move to your own domain later, edit the root `wrangler.jsonc` of your copy: add the two `routes` from the production environment of `apps/worker/wrangler.jsonc` with your zone, set `LINK_URL_MODE` to `subdomain`, `ROOT_DOMAIN` to the apex, `APP_HOST` to `app.<domain>` and the three URLs accordingly, add the proxied `A` records for the apex and `*`, and push. Workers Builds redeploys; the database, the secrets and your account stay.
 
 ## Cloudflare prerequisites
 
