@@ -5,7 +5,7 @@ sidebar:
   order: 7
 ---
 
-**Blog** and **Messages** are the site operator's screens: they manage the public blog at https://app.dectog.com/blog and the inbox of the public contact form. They appear in the sidebar only for the account with the `owner` role. Other accounts that open `/dashboard/blog` or `/dashboard/messages` are redirected to the Overview, and the API answers `403 Owner access required`. Who the owner is, and why signup never creates one, is explained in [Account and sign-in](/dashboard/account-and-sign-in/).
+**Blog** and **Messages** are the site operator's screens: they manage the public blog at https://dectog.com/blog and the inbox of the public contact form. They appear in the sidebar only for the account with the `owner` role. Other accounts that open `/dashboard/blog` or `/dashboard/messages` are redirected to the Overview, and the API answers `403 Owner access required`. Who the owner is, and why signup never creates one, is explained in [Account and sign-in](/dashboard/account-and-sign-in/).
 
 Unlike every other screen, these are not scoped to an account: there is one blog and one inbox per deployment.
 
@@ -60,7 +60,7 @@ The trash icon asks **Delete message**: "Are you sure you want to delete this me
 
 ### The public contact form
 
-Messages come from https://app.dectog.com/contact ("Get in Touch"). The form is checked in the browser and again by the server:
+Messages come from https://dectog.com/contact ("Get in Touch"). The form is checked in the browser and again by the server:
 
 | Field | Rules |
 |---|---|
@@ -73,12 +73,12 @@ The server accepts at most 5 submissions per hour per IP address. Submissions ar
 
 ## Where the public blog lives
 
-- The blog is served by the dashboard host: `https://app.dectog.com/blog` and `https://app.dectog.com/blog/{slug}`.
-- `https://dectog.com/blog` and `https://dectog.com/blog/{slug}` answer with a permanent redirect (301) to the same path and query string on the dashboard host, like every other page path on the apex.
+- The blog is served by the site host: `https://dectog.com/blog` and `https://dectog.com/blog/{slug}`.
+- `https://app.dectog.com/blog` and `https://app.dectog.com/blog/{slug}` answer with a permanent redirect (301) to the same path and query string on the site host, like the other site pages asked of the dashboard host.
 - Only published posts are public; a draft's URL returns a "not found" response. The public blog page loads up to 50 posts, with a search box and a category filter.
 - A shared link to a published post previews as that post: its title, its excerpt and, when set, its featured image. See [Blog post pages](/api/well-known-seo-and-routing/#blog-post-pages).
-- `https://app.dectog.com/sitemap.xml` lists the site pages and every published post, newest first; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).
+- `https://dectog.com/sitemap.xml` lists the site pages and every published post, newest first; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).
 
 :::note[Self-hosting]
-The blog and the contact form are served on the worker's `WEB_URL`, and the apex of `ROOT_DOMAIN` redirects its page paths there. The screens exist on every deployment; whether you use them is up to you.
+The blog and the contact form are served on the worker's `SITE_URL` host, and the dashboard host (`WEB_URL`) redirects their paths there. The screens exist on every deployment; whether you use them is up to you.
 :::
