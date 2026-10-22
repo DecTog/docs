@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-Why DecTog works the way it does, including the designs it chose not to adopt. Each entry states the decision, the reason and what was rejected. The source of this page is `docs/DECISIONS.md` in the server repository; the limits these decisions produce are listed in [What DecTog does not do](/start/what-dectog-does-not-do/).
+Why DecTog works the way it does, including the designs it chose not to adopt. Each entry states the decision, the reason and what was rejected. The limits these decisions produce are listed in [What DecTog does not do](/start/what-dectog-does-not-do/).
 
 ## Kept as they are
 
@@ -306,7 +306,7 @@ no cache, which held the measured D1 ceiling at about 130 pings a second.
 
 ## Rejected designs
 
-From the competitor teardown in the server repository (`docs/improvement-plan-2026-10.md`, section 6). Each appears in at least one competitor.
+Each of these appears in at least one competing project.
 
 | # | Rejected | Why |
 |---|---|---|
@@ -321,7 +321,7 @@ From the competitor teardown in the server repository (`docs/improvement-plan-20
 | R9 | Opening `myapp://` automatically on page load | iOS shows "Cannot open page" to everyone without the app; schemes open from a tap only |
 | R10 | Push messaging, affiliate programs, domain sales, LLM link scanning | Outside the product's scope; each adds credentials and moving parts |
 | R11 | Row-per-impression storage and recomputed attribution views | D1's size cap and read billing; verdicts are computed at write time |
-| R12 | Documenting ahead of code | Docs state what the code does; gaps are tracked in `docs/FOLLOW-UPS.md` |
+| R12 | Documenting ahead of code | Docs state what the code does |
 | R13 | A CLA on the AGPL server | Inbound = outbound is the simpler story (still an open question) |
 | R14 | Silent dedupe of events | Batch answers say what was accepted, duplicated and rejected |
 | R15 | Fingerprint first, deterministic signal as the fallback | A deterministic signal never waits behind a guess |

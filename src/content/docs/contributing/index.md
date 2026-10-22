@@ -28,8 +28,6 @@ DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog)
 | `apps/web/src/app/` | The Next.js app: `(site)` marketing pages, `login`, `reset-password`, `dashboard/**` |
 | `apps/web/public/SKILL.md`, `llms.txt` | The agent guide and index, served at `https://dectog.com/SKILL.md` and `/llms.txt` |
 | `docs/API_CONTRACT.md` | The SDK-to-worker contract, route by route |
-| `docs/ATTRIBUTION-RELIABILITY-PLAN.md` | How attribution works and the status of each follow-up |
-| `docs/DATA-LAYER.md` | The data-layer rules summarized below |
 | `deploy/terraform/` | A Terraform module for the Cloudflare resources of a self-hosted deployment: the zone, DNS records, the D1 database, the optional exports bucket and custom-domain fallback origin. See [Deploy to Cloudflare](/self-hosting/deploy/#infrastructure-as-code-with-terraform) |
 
 ### `flutter_dectog` (SDK)
@@ -103,7 +101,7 @@ To run the server locally with the demo account, follow [Local quick start](/sel
 
 ## Data-layer rules
 
-The worker talks to D1 with raw, parameterized SQL and no ORM. From `docs/DATA-LAYER.md`:
+The worker talks to D1 with raw, parameterized SQL and no ORM. The rules:
 
 1. Every value is bound with `?`. Request input never reaches SQL text.
 2. Reads carry a row type from `src/types.ts` (`.first<LinkRow>()`, `.all<AppRow>()`) or an inline shape for aggregates. No `any`.
