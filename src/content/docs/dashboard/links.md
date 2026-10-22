@@ -16,7 +16,7 @@ The **New link** panel has four fields. Submit with **Create link**, or **Create
 | Field | What to enter | Rules |
 |---|---|---|
 | **Fallback URL** | Either **App fallback URL (default)**, which inherits the Fallback URL of the selected app, or **Custom URL** with an address (placeholder `https://destination.com`). For temporary links the first option reads **Default app fallback**. Hint: "Where this link points when the app can't serve it (desktop continue button, last mobile fallback). The default inherits the app's Fallback URL from the Apps page." | The app option is disabled, with the tooltip "Set a Fallback URL on the Apps page to enable", while the app has no Fallback URL; **Custom URL** is then the only choice. A custom URL must be http(s), otherwise the server replies `Invalid target: must be a valid http(s) URL`. |
-| **Link URL** | The slug after your link domain (placeholder `launch`, or `auto` for temporary links). The prefix shows the host of your existing links, or `/` until you have one. | Letters, digits, `_` and `-` only, up to 128 characters. Required for permanent links (`Invalid or missing slug`). Optional for temporary links: leave it blank for a generated slug of the form `t_` plus 10 hex characters; the hint reads "Optional — leave blank for an auto-generated slug. Temporary links use your default app's routing and fallback." A slug must be unique across your permanent **and** temporary links, otherwise `Slug already exists`. |
+| **Link URL** | The slug after your link domain (placeholder `launch`, or `auto` for temporary links). The prefix shows the host of your existing links, or `/` until you have one. | Letters, digits, `_` and `-` only, up to 128 characters. Required for permanent links (`Invalid or missing slug`). Slugs starting with `r-` are kept for referral links (`Slugs starting with 'r-' are reserved for referral links`). Optional for temporary links: leave it blank for a generated slug of the form `t_` plus 10 hex characters; the hint reads "Optional — leave blank for an auto-generated slug. Temporary links use your default app's routing and fallback." A slug must be unique across your permanent **and** temporary links, otherwise `Slug already exists`. |
 | **App** | **Default app** or one of your apps. Tooltip: "App used for platform routing". Hidden for temporary links and when you have no apps. | **Default app** means your oldest app. The app decides store URLs, schemes, interstitial pages and the social preview for this link. |
 | **Expires** | **Never** (default), **5 min**, **1 hour**, **1 day** or **7 days**. | Anything other than **Never** creates a temporary link. The dashboard offers only these four durations; the API accepts 60 seconds to 30 days. |
 
@@ -64,7 +64,7 @@ The complete decision order for a tap is in [How a tap is routed](/links/how-a-t
 
 ## The list
 
-Two tabs, **Permanent {n}** and **Temporary {n}**, sit above a table. Next to them, **Active**, **Archived** and **Deleted** pick which links the tabs show: active links (paused and expired ones included), archived links, or deleted links, with a count once there is one. The **Search links** box filters the current tab in the browser, case-insensitively: slug, destination, campaign and label on the Permanent tab; slug and destination on the Temporary tab. There is no pagination; the screen loads every link.
+Three tabs, **Permanent {n}**, **Temporary {n}** and **Referrals {n}**, sit above a table. Next to them, **Active**, **Archived** and **Deleted** pick which links the tabs show: active links (paused and expired ones included), archived links, or deleted links, with a count once there is one. The **Search links** box filters the current tab in the browser, case-insensitively: slug, destination, campaign and label on the Permanent tab; slug and destination on the Temporary tab; slug, customer and campaign on the Referrals tab. There is no pagination; the screen loads every permanent and temporary link, and the referral links when their tab opens.
 
 ### Permanent links
 
@@ -97,6 +97,21 @@ The numbered-list icon opens a side panel with the screens people reached in you
 Temporary links show no click, install or revenue numbers.
 
 **Delete expired** appears on the Temporary tab of the Active view once at least one link has expired. It asks "Delete all expired temporary links? They leave this list. Their clicks, installs and revenue stay in your stats, and you can restore them from Deleted." and deletes every temporary link whose expiry has passed, as the trash icon does: they move to the **Deleted** view with their clicks and installs, and keep their slugs until you restore them or delete them permanently. The server's daily job does the same automatically 24 hours after a link expires, except for links with an expired URL, which keep sending taps there.
+
+### Referral links
+
+Your app makes one referral link per customer with [`createReferralLink`](/guides/referral-programs/); they are listed here rather than among the permanent links.
+
+| Column | What it shows | Period |
+|---|---|---|
+| **Customer** | The customer the link belongs to, which opens their page. Viewers see `—`. | |
+| **Link** | `/slug`, the copy icon, a chip for the campaign when it is not `referral`, and the **Paused**, **Expired** or **Archived** chips. | |
+| **Clicks** | The click counter, with `+{n} 7d` underneath. | Lifetime |
+| **Installs** | Installs credited to the link, excluding reinstalls. Click the number to list them. | Lifetime |
+| **Referrals** | New customers who signed up after installing through the link: the referrals recorded for the customer. | Lifetime |
+| **Created** | The creation date. | |
+
+A referral link has no **Edit**: the server made it for one customer. Each row offers **Screens after open**, **Pause** or **Resume**, **Archive** or **Unarchive**, and **Delete**; pause or delete the link of a customer who abuses the program. A deleted referral link stays the customer's: `createReferralLink` answers `410 link_deleted` for them until you restore it.
 
 Empty states: "No permanent links yet.", "No temporary links. Pick an expiry when creating a link to make one." and "No links match your search."
 

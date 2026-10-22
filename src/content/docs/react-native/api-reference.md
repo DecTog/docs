@@ -49,7 +49,7 @@ type DectogConfig = {
 
 | Value | What it sends | Apple privacy | Google Play Data safety |
 |---|---|---|---|
-| `deviceTier` | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, connectivity, carrier; the text size and Increase Contrast settings (iOS only), dark mode and reduce motion (iOS and Android); the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
+| `deviceTier` | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, connectivity, carrier; the text size and Increase Contrast settings (iOS only), dark mode and reduce motion (iOS and Android); a device ping on the first start of each day (the server keeps one row per device per day) | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
 | `pasteboard` | A copied DecTog link that names a click, read once at first launch | None (no required-reason API); iOS 16+ shows the paste alert | None; Android 12+ shows the clipboard notice |
 | `oemReferrers` | The Huawei, Samsung, Xiaomi and vivo store referrers (Android) | Not applicable | None of its own |
 | `appleSearchAdsToken` | The AdServices attribution token (iOS 14.3+); no IDFA, no prompt | Advertising Data | Not applicable |
@@ -97,7 +97,7 @@ Link URLs the SDK recognises: `https://{username}.{root}/{slug}`, `{baseHost}/r/
 | `getTempLink` | `getTempLink(slug: string): Promise<DectogTempLink>` | |
 | `deleteTempLink` | `deleteTempLink(slug: string, options?: { permanently?: boolean }): Promise<void>` | |
 | `resolveLink` | `resolveLink(username: string, slug: string): Promise<DectogLinkResolution>` | Public, unsigned. A paused or expired link rejects with `link_paused` / `link_expired`. |
-| `createReferralLink` | `createReferralLink(input: { customerId: string; campaign?: string }): Promise<DectogLink>` | The customer's referral link, created on first use. |
+| `createReferralLink` | `createReferralLink(input: { customerId: string; campaign?: string }): Promise<DectogLink>` | The customer's referral link, created on first use. On the invited user's device, `install.link?.referrerCustomerId` (in `onAppInstalled` and `getAttributionData()`) names the customer; a reinstall (`install.isReinstall`) never records a referral. |
 
 `DectogLinkFields`: `target`, `metadata`, `iosDeepLinkPath`, `androidDeepLinkPath`, `redirectUrl`, `fallbackUrl`, `ogTitle`, `ogDescription`, `ogImageUrl`, `label`, `campaign`, `adgroup`, `creative` (all optional).
 
@@ -162,7 +162,7 @@ The SDK queues events durably (at most 1000, batches of 100, an event over 32 KB
 | `username`, `slug` | `string \| null` | The credited link. |
 | `installId` | `string \| null` | The install's id. |
 | `clickedAt` | `Date \| null` | When the credited link was tapped. |
-| `link` | `DectogAppInstallLink \| null` | `slug`, `target`, `url`, `createdAt`, `metadata` of a credited permanent link. |
+| `link` | `DectogAppInstallLink \| null` | `slug`, `target`, `url`, `createdAt`, `metadata` of a credited permanent link, and `referrerCustomerId`: the customer whose referral link brought the install, else null (set by the server from the link, never from the tapped URL). |
 | `customParameters` | `object \| null` | The permanent link's metadata. |
 | `clickParams` | `DectogClickParams \| null` | The credited click's `dec_*` values. |
 | `deepLink` | `string \| null` | The route to open. |

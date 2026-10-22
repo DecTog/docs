@@ -1,6 +1,6 @@
 ---
 title: Referral programs
-description: Give each user a referral link, learn on the server when a friend installed through it and signed up, and reward the referrer from your webhook.
+description: Give each user a referral link, show the invited friend who invited them, learn on the server when they signed up, and reward the referrer from your webhook.
 sidebar:
   order: 4
 ---
@@ -14,7 +14,7 @@ final link = await dectog.createReferralLink(customerId: currentUser.id);
 share(link.url); // e.g. https://acme.dectog.com/r-3fa94c1b2e
 ```
 
-`createReferralLink` returns the user's referral link, creating it on the first call and returning the same link afterwards. It works with the app's ordinary SDK key, which cannot create other links. The link has no destination of its own: it opens the app, or sends the visitor to the store and your app's fallback URL, like any link bound to your app. `customerId` is the id you pass to `identify`. The link's campaign is `referral` unless you pass `campaign`.
+`createReferralLink` returns the user's referral link, creating it on the first call and returning the same link afterwards. It works with the app's ordinary SDK key, which cannot create other links. The link has no destination of its own: it opens the app, or sends the visitor to the store and your app's fallback URL, like any link bound to your app. `customerId` is the id you pass to `identify`. The link's campaign is `referral` unless you pass `campaign`. Slugs starting with `r-` belong to referral links: no other link or temporary link can take one.
 
 From a server, the same call is `POST /api/v1/referral-links` with `{"customer_id": "…"}`; it answers 201 with the new link, or 200 with the existing one.
 
@@ -31,7 +31,25 @@ Nothing extra in the app: the friend taps the link, installs, opens the app, and
 
 An install records at most one referral. A user who identifies with the referrer's own id records none. An existing customer who identifies on the new install records none.
 
-## 3. Reward from the webhook
+## 3. Show who invited them
+
+The install result names the referrer. `install.link?.referrerCustomerId` is the customer whose referral link brought the install, and null for any other link. It arrives in `onAppInstalled` on the first launch, and `getAttributionData()` returns it on every later launch:
+
+```dart
+final install = await dectog.getAttributionData();
+final referrer = install?.link?.referrerCustomerId; // "u_1042", or null
+if (referrer != null && !install!.isReinstall) {
+  showInvitedBy(referrer); // look the name up in your own backend
+}
+```
+
+React Native reads the same field: `(await dectog.getAttributionData())?.link?.referrerCustomerId`.
+
+The server sets it from the link the install was credited to, so nothing in the tapped URL can change it: a `dec_label` or any other parameter added to the link does not. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
+
+Use it for the screen, not the reward: a modified app can show anything, so grant rewards from the webhook below.
+
+## 4. Reward from the webhook
 
 Webhooks subscribed to `referral.converted` that take the referral link's app (or every app) receive:
 
@@ -62,4 +80,4 @@ It is signed like every delivery and retried until delivered, with the same `eve
 
 ## In the dashboard
 
-The Overview shows a **Referrals** card once there is one. A customer's page shows who referred them and whom they referred.
+The Overview shows a **Referrals** card once there is one. A customer's page shows who referred them and whom they referred. The **Links** page lists referral links on their own **Referrals** tab, one row per customer with its clicks, installs and recorded referrals; see [Links](/dashboard/links/#referral-links).
