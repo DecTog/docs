@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="https://dectog.com"><img src=".github/dectog-readme.png" alt="DecTog: Documentation" width="800"></a>
+</p>
+
 # DecTog documentation
 
 Source of <https://docs.dectog.com>, the canonical documentation for
