@@ -95,6 +95,8 @@ A value present on both sides is `agree` when the two are exactly equal and `mis
 
 Candidates are sorted by score, highest first; the SQL order (newest first) and a stable sort mean recency only breaks ties.
 
+**Ties on one link.** After sorting, candidates less than 10 points behind the best one that carry the same link, the same `dec_*` params (deep link, campaign and the rest), the same UTM tags, and the same referrer, routing rule, browser and place merge into the best one and add to its `collapsed_from`. Whichever of them were credited, the install would report the same link, campaign and route, so their tie is no ambiguity. This covers what the signature collapse cannot: an iPhone that tapped a link twice in Safari carries neither a device model nor a screen profile, so its two taps never collapse, and before this they tied with each other and the install ended organic, while a single tap was credited. The cost: when two people on one network tapped the same link and both install, each install may hold the other person's click row; the link, campaign and route they report are the same either way. A tie between different links, or between clicks of one link that carry different params, still credits nobody.
+
 **Confidence.** `confidenceOf`, verbatim:
 
 ```ts
@@ -120,7 +122,8 @@ In words: no candidates gives null; a top candidate that is not unique (gap unde
 | one candidate, OS +15 | high | An OS-major agreement alone clears 15 |
 | one candidate, model +40 | high | Model match |
 | 55 and 40 | high | Unique (gap 15) |
-| 15 and 10 | low | Tie at the top (gap 5) |
+| 15 and 10, different links | low | Tie at the top (gap 5) |
+| 15 and 15, same link and click | high | The tie merges into one candidate scoring 15 |
 | one candidate, −30 | low | Contradiction outweighed the agreements |
 
 **Outcome.** `candidate_count` is stored whenever the fingerprint ran; `match_score` and `match_confidence` from the fingerprint are stored only when it was the deciding step.
@@ -204,7 +207,9 @@ Each row is a golden scenario the worker's test suite runs end to end on every c
 | A referrer delivered on a later launch upgrades an organic install | tap on android (Pixel 9); install i1 (no signal; other network); later claim on i1 (late_referrer) | i1: `matched: false`<br>claim i1: `claim: upgraded`, `matched: true`, `match_source: referrer` |
 | An app update never runs the fingerprint | tap on android (Pixel 9); install i1 (app update; same network) | i1: `matched: false`, routing none |
 | Two taps from one phone collapse into one candidate; the newest is credited | tap on android (Pixel 9); tap on android (Pixel 9); install i1 (no signal; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high`, credited to the second tap; `collapsed_from: 2` |
-| Taps from two different phones on one network still tie | tap on android (Pixel 9); tap on android (Pixel 8); install i1 (no signal, no model; same network) | i1: `matched: false`, `match_confidence: low` |
+| Taps from two different phones on one network with different campaigns still tie | tap on android (Pixel 9, `dec_campaign=spring`); tap on android (Pixel 8, `dec_campaign=summer`); install i1 (no signal, no model; same network) | i1: `matched: false`, `match_confidence: low`, routing none; `candidate_count: 2` |
+| Taps on one link from two phones on one network give the same verdict either way, so they merge | tap on android (Pixel 9); tap on android (Pixel 8); install i1 (no signal, no model; same network) | i1: `matched: false`, `match_confidence: medium`, routing routes to promo; `candidate_count: 1`, `collapsed_from: 2` |
+| Two taps on one link from an iPhone with neither a model nor a screen profile merge; the newest is credited | tap on ios, no model hint, no beacon; the same again; install i1 (no signal, iOS 18.0; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high`, credited to the second tap; `collapsed_from: 2` |
 | Safari on iOS 26 and later reports a frozen OS version; its Version token has the real one | tap on ios (OS token 18.6, `Version/26.0`), no model hint; install i1 (no signal, iOS 26.0; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high` |
 | iPad Safari asks for desktop sites as a Mac; with touch reported, the tap is an iOS tap | tap from Safari's Mac user agent (`Version/27.0`) with `_ipad=1`; install i1 (no signal, iOS 27.0; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high` |
 | Settings are recorded, not scored: two taps that differ only in their settings still merge, and the newer is credited (known defect: settings not scored yet) | tap on ios with the beacon (text size 23, dark); tap on ios with the beacon (text size 17, light); install i1 (no signal, text size 23, dark; same network) | i1: `matched: true`, `match_source: fingerprint`, `match_confidence: high`, credited to the second tap; `collapsed_from: 2` |

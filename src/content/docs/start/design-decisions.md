@@ -123,6 +123,12 @@ redirect time (a database read on every redirect for a gain the match-time
 collapse already gives).
 *Note (2026-10-17):* CPU family left the signature together with the CPU
 signal (decision 30).
+*Note (2026-10-23):* tied taps on one link now merge too, whatever their
+signals, when they carry the same click params, UTM tags, referrer, routing
+rule, browser and place: either one gives the install the same verdict. A
+Safari double tap carries no model or screen profile, so it never collapsed
+and ended organic. The cost: two people on one network who tapped the same
+link and both install may each hold the other's click row.
 
 **18. A same-device reinstall is routed, not credited.** When
 nothing else matches, a reinstall on a device whose earlier install consumed a click
@@ -255,7 +261,7 @@ points; on installs that a deterministic signal decided, the verdicts of the
 click known to be right go into `signal_check` and the attribution-quality
 panel, and a signal earns points only once those numbers support it. The
 reason: two phones of the same model behind one carrier network score the
-same today and tie, so nobody is credited. The cost: Apple's rules forbid
+same today, so when their taps lead to different links nobody is credited. The cost: Apple's rules forbid
 deriving data from a device's configuration to identify it, and accessibility
 settings can suggest a disability, which the EU may treat as health data. An
 app that cannot carry that leaves the device tier out or turns the
