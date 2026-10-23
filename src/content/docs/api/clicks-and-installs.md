@@ -61,7 +61,7 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `app_version`, `app_build_number` | string, 64 | Your app's version and build. |
 | `os` | string, 32 | `android` or `ios`. This decides the device family for fingerprinting; other values disable the family filter. |
 | `os_version` | string, 64 | `17.5.1`, `14`. Its major is stored as `os_major`, its minor as `os_minor`. |
-| `language` | string, 64 | `en_US`; the primary tag is stored as `lang`. |
+| `language` | string, 64 | `en_US`; the primary tag is stored as `lang`. With a region, language and region are compared, for 0 points, with the tap's `Accept-Language`. |
 | `timezone` | string, 64 | IANA name. |
 | `utc_offset_min` | integer −840 to 840 | The device's current offset from UTC in minutes, east positive (UTC+3 is `180`). Sent outside the device tier, like `timezone`. Compared with the tap's offset for 0 points; only an exact match agrees. |
 | `metadata` | JSON | Stored as sent. |
@@ -83,7 +83,7 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `reduce_motion` | boolean | iOS Reduce Motion; on Android, Remove animations. |
 | `connectivity_type` | string, 16 | `wifi`, `cellular`, … `cellular` shortens the fingerprint window and raises the install-velocity threshold. |
 | `carrier_mcc`, `carrier_mnc` | string, 8 | |
-| `web_user_agent` | string, 512 | The device's WebView User-Agent. |
+| `web_user_agent` | string, 512 | The device's WebView User-Agent. Its `Build/` id and full `Chrome/` version are compared, for 0 points, with those of a tap from an Android in-app browser. |
 | `package_name` | string, 256 | |
 | `is_physical_device` | boolean | `false` raises the `emulator` flag. |
 | `installer_package` | string, 256 | |

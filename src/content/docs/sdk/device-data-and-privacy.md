@@ -57,7 +57,7 @@ Optional signals ride along when enabled: `meta_referrer` (with `fbAppId`), `cli
 | Screen | `screen_width`, `screen_height` (physical pixels of the Flutter view), `screen_density` (device pixel ratio) | `PlatformDispatcher`, no WebView | the fingerprint's screen-profile comparison |
 | Settings | `text_size` (iOS only: the body text size in points for the text-size setting, 17 by default), `dark_mode`, `high_contrast` (iOS only: Increase Contrast), `reduce_motion` (Reduce Motion on iOS, Remove animations on Android) | `PlatformDispatcher` (`textScaleFactor`, `platformBrightness`, `accessibilityFeatures`), no WebView | compared with the tap's settings for 0 points; see [Device settings](#device-settings) |
 | Network | `connectivity_type` (`wifi`, `cellular`, `ethernet`, `vpn`, `bluetooth`, `none`), `carrier_mcc` and `carrier_mnc` (Android only; iOS hides carrier identity) | `connectivity_plus`, `TelephonyManager` | connectivity and carrier breakdowns, the fingerprint windows |
-| Web UA | `web_user_agent` (Android only) | `WebSettings.getDefaultUserAgent` | fingerprint input |
+| Web UA | `web_user_agent` (Android only) | `WebSettings.getDefaultUserAgent` | compared, for 0 points, with the OS build and WebView version of a tap from an Android in-app browser |
 
 Without `deviceTier`:
 
