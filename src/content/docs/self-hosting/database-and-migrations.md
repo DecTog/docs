@@ -13,7 +13,7 @@ The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped
 
 | Table | One line |
 |---|---|
-| `users` | Accounts: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix` (the account key is never stored readable), `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`), `test_of` (on a test environment: its live account), `session_epoch` (raised to end every session) |
+| `users` | Accounts and sign-ins: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix` (the account key is never stored readable; the three are all `NULL` for someone who joined from an invite and has no account of their own, and a CHECK keeps them together), `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`), `test_of` (on a test environment: its live account), `session_epoch` (raised to end every session) |
 | `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |

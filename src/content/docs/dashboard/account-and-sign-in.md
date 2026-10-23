@@ -1,6 +1,6 @@
 ---
 title: Account and sign-in
-description: Creating an account, signing in with a password or with Google, resetting a password, the owner role, and the account changes the dashboard does not offer.
+description: Creating an account, joining a team from an invite, signing in with a password or with Google, resetting a password, the owner role, and the account changes the dashboard does not offer.
 sidebar:
   order: 6
 ---
@@ -12,7 +12,7 @@ Sign-in lives at https://app.dectog.com/login. The page is titled **Dashboard Ac
 | Field | Rules |
 |---|---|
 | **Email** | A valid address. Stored trimmed and lower-cased. |
-| **Username** | Suggested from the part of your email before `@` until you edit it. 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-`, the prefix of [test environments](/dashboard/settings/#test-environment). The hint reads "Your links live on {username}.{root domain}" (`dectog.com` on the hosted service): the username is your link subdomain and cannot be changed later. |
+| **Username** | Suggested from the part of your email before `@` until you edit it (with the domain's first label added when that part is under 3 characters: `me@example.com` suggests `me-example`). 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-`, the prefix of [test environments](/dashboard/settings/#test-environment). The hint reads "Your links live on {username}.{root domain}" (`dectog.com` on the hosted service): the username is your link subdomain and cannot be changed later. |
 | **Password** | 8 to 72 characters with at least one lowercase letter, one uppercase letter and one digit. Hint: "At least 8 characters, with upper and lowercase letters and a number". |
 
 **Create Account** submits. Errors, verbatim from the server: `Please enter a valid email address`; the password rule that failed, such as `Password must include an uppercase letter`; `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`; `Username '{name}' is reserved`; `An account with this email or username already exists`; and `Signup is currently closed` when the deployment has closed signups, in which case the Sign up tab is hidden as well.
@@ -73,7 +73,7 @@ The reset page ("Choose a new password for your account") has **New password** a
 
 ## Teams
 
-Several people can work in one account. Each person signs in as themselves, to their own account, and the account's owners invite others from Settings → [Team](/dashboard/settings/#team), each with a role:
+Several people can work in one account. Each person signs in as themselves, and the account's owners invite others from Settings → [Team](/dashboard/settings/#team), each with a role:
 
 | Role | Can |
 |---|---|
@@ -85,9 +85,26 @@ The person who owns an account is always its owner, and cannot be removed or dem
 
 ### Joining by invite
 
-An invite email links to `{WEB_URL}/invite?token=…`. The link works for 7 days, once, and only for the invited address: sign in, or create an account, with that email, and select **Join**. A person signed in with another address is told so. Every person has an account of their own, with its own username and keys, whether they use it or not.
+An invite email links to `{WEB_URL}/invite?token=…`. The link works for 7 days, once, and only for the invited address. The **Join a team** page names the account, your role and the address, then offers what fits:
 
-After joining, an **Account** menu at the top of the sidebar lists your own account and every account you belong to, each with your role there; choosing one reloads the dashboard on it, on its live data. **Leave** at the bottom of the Team card leaves the account shown; an owner has to invite you again. When an owner removes you, your next request lands on your own account.
+| Situation | The page shows |
+|---|---|
+| The address has no DecTog sign-in yet. | **Choose a password** (the [sign-up password rules](#sign-up)) and **Join {account}**, and **Join with Google** when the deployment has Google sign-in. No username: you sign in as that address and work in the account that invited you. |
+| The address already signs in. | **Sign in to join** (the login page, with the address filled in), and **Sign in with Google**. Back on the invite, select **Join {account}**. |
+| You are signed in with that address. | **Join {account}**. |
+| You are signed in with another address. | "You are signed in as {address}. Sign out, then open this link again to join with {invited address}." |
+
+Joining with a password or with Google signs you in and opens the dashboard on the account you joined. **Join with Google** only accepts the Google account whose verified email is the invited address; another one returns to the invite with "That Google account is not {address}. Choose the Google account for {address}, or join with a password." If the address already signs in with a password, it returns with "{address} already signs in with a password: sign in with it to join."
+
+Joining from an invite works even when the deployment has closed sign-ups: the invite is an owner letting you in.
+
+#### No account of your own
+
+Someone who joins from an invite has no account of their own: no username, no link subdomain, no keys. They work only in the accounts they joined. The sidebar shows the **Account** menu with the account they are in, and an **Open your own account** link to `/dashboard/own-account`: choose a username (the [sign-up rules](#sign-up), suggested from your email), select **Open my account**, and copy the two keys it shows once, as after sign-up. **Go to {username}** opens the dashboard on the new account; the accounts you joined stay in the **Account** menu. Opening an account follows the deployment's sign-up setting: it is refused while sign-ups are closed.
+
+Signing up on the login page, with a password or with Google, always creates an account of your own; only joining from an invite skips it.
+
+After joining, an **Account** menu at the top of the sidebar lists your own account (if you have one) and every account you belong to, each with your role there; choosing one reloads the dashboard on it, on its live data. **Leave** at the bottom of the Team card leaves the account shown; an owner has to invite you again. When an owner removes you, your next request lands on your own account, or on the next account you joined. Someone left in no account at all sees **No account yet**, with the same **Open my account** form and **Log out**; opening another invite link joins that account.
 
 ## Roles
 
