@@ -70,7 +70,7 @@ Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and sel
 
 ## Team
 
-The people who work in this account: the account itself (always an owner), then each member with their role. Owners change a role with its menu, **Remove** someone, and invite by email: enter the address, choose **member**, **viewer** or **owner**, and select **Invite**. The invite email's link works 7 days, once, for that address only; pending invites are listed with **Revoke** (at most 20 at a time). Someone who belongs to the account but does not own it sees **Leave {account}** at the bottom. What each role can do is in [Teams](/dashboard/account-and-sign-in/#teams).
+The people who work in this account: the account itself (always an owner), then each member with their role. Owners change a role with its menu, **Remove** someone, and invite by email: enter the address, choose **member**, **viewer** or **owner**, and select **Invite**. The invite email's link works 7 days, once, for that address only; someone new joins from it with a password or Google and no username (see [Joining by invite](/dashboard/account-and-sign-in/#joining-by-invite)). Pending invites are listed with **Revoke** (at most 20 at a time). Someone who belongs to the account but does not own it sees **Leave {account}** at the bottom. What each role can do is in [Teams](/dashboard/account-and-sign-in/#teams).
 
 ## Test environment
 
