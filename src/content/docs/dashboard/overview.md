@@ -169,7 +169,7 @@ Each bar is split into segments by the confidence the server assigned. Hover a s
 | **Guaranteed** | dark green | `install referrer, copied link or paste` | A deterministic signal named the click. Credited. |
 | **High** | light green | `fingerprint, corroborated and unique — credited` | The fingerprint found one clearly best click. Credited. |
 | **Medium** | amber | `routed to the link, not credited` | The fingerprint found a plausible click. The app receives the deep-link route, but the install does not count as attributed. |
-| **Low** | light gray | `ambiguous or contradicted — nothing` | A tie or a contradiction. No route, no credit. |
+| **Low** | light gray | `two devices tied on different links, or contradicted — nothing` | A tie between taps on different links, or a contradiction. No route, no credit. |
 | **No candidate** | near white | `no click from this network in the window` | Installs the server assigned no confidence to: no click from the same network within the window, or an install that skipped matching (app updates, replayed signals). |
 
 The legend under the bars repeats the five labels, each with its hint on hover. What the levels mean, and the windows involved, are explained in [How attribution works](/start/how-attribution-works/).

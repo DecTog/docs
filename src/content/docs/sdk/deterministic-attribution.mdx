@@ -74,7 +74,7 @@ The pasteboard read defaults to off on Android, where the Play referrer is alrea
 
 iOS has no install referrer, so DecTog uses the pasteboard. The web side seeds it: with **iOS tap-to-store** enabled in the app's Advanced settings, an iPhone tap sees a one-button page whose "Get the app" button copies the link with its click id (`https://{username}.dectog.com/{slug}?dtg_click={id}`) and then opens the App Store. The mobile interstitial's "Open app" button copies the same value before trying your scheme.
 
-On the first launch the SDK, with the pasteboard read at its default (on for iOS):
+On the first launch the SDK, with the pasteboard read at its default (on for iOS while the tap-to-store page or the interstitial is on for the app or one of the account's links; without one, nothing on the pasteboard can name a click, so the server's SDK config turns the read off; a first launch whose config does not arrive within its 1.5 s budget falls back to on):
 
 1. Asks `UIPasteboard.general.hasURLs` whether a URL is there. This is a metadata check and shows no alert.
 2. Only when a URL is present, reads it (`pasteboard.url`, else `pasteboard.string`, at most 2048 characters). On iOS 16 and newer this read is what shows Apple's "Allow paste from …?" alert. iOS 15 shows the passive "pasted from" banner instead.
