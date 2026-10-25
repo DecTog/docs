@@ -2,7 +2,7 @@
 title: Account and sign-in
 description: Creating an account, joining a team from an invite, signing in with a password or with Google, resetting a password, the owner role, and the account changes the dashboard does not offer.
 sidebar:
-  order: 6
+  order: 7
 ---
 
 Sign-in lives at https://app.dectog.com/login. The page is titled **Dashboard Access** ("Sign in — or create an account — to manage your deep links") and has two tabs, **Log in** and **Sign up**. `https://app.dectog.com/login?tab=signup` opens the Sign up tab directly. A browser that already holds a valid session is sent straight to the dashboard.
