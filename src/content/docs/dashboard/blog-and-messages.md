@@ -2,7 +2,7 @@
 title: Blog and messages
 description: The owner-only Blog, Categories and Messages screens, the limits of the public contact form, and where the public blog is served.
 sidebar:
-  order: 7
+  order: 8
 ---
 
 **Blog** and **Messages** are the site operator's screens: they manage the public blog at https://dectog.com/blog and the inbox of the public contact form. They appear in the sidebar only for the account with the `owner` role. Other accounts that open `/dashboard/blog` or `/dashboard/messages` are redirected to the Overview, and the API answers `403 Owner access required`. Who the owner is, and why signup never creates one, is explained in [Account and sign-in](/dashboard/account-and-sign-in/).

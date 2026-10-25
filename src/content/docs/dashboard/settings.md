@@ -2,7 +2,7 @@
 title: Settings
 description: Your account details, the account key for servers and the SDK keys for apps, how to view, copy, create, revoke and regenerate them, the link configuration of the deployment, and the audit log of every change.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 The Settings screen, at https://app.dectog.com/dashboard/settings, has up to ten cards: **Account**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.

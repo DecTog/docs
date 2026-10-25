@@ -178,7 +178,7 @@ The row and, when `ad_id` was sent, an `ad_identifiers` row are written in one b
 
 ## The stored explanation
 
-Every install row keeps `match_details`, a JSON object the dashboard's install detail shows (`GET /api/admin/installs/:id`):
+Every install row keeps `match_details`, a JSON object the dashboard's install detail shows (`GET /api/admin/installs/:id`, which adds `signal_values`: what the app and each named tap reported for every signal):
 
 | Field | Meaning |
 |---|---|

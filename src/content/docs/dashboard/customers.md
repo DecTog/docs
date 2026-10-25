@@ -2,7 +2,7 @@
 title: Customers
 description: The Customers screen lists the users your app identified with the SDK and shows, for each one, the click and install that brought them in, their devices, events and app opens.
 sidebar:
-  order: 4
+  order: 5
 ---
 
 The Customers screen, at https://app.dectog.com/dashboard/customers, lists every customer your app has identified by calling `identify` in the SDK, together with the link that brought each one in. Its header reads "Users your app identified with the SDK's `identify` — and the link that brought them in." The screen is read-only: there is no edit and no delete.
