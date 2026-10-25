@@ -41,7 +41,13 @@ To run the same test again on the same phone, open the install, choose **Erase t
 
 Erasing clears the server's data, not the phone's. On Android that is enough for the next install to count as new. An iPhone keeps the SDK's first-install date and saved device id in the Keychain, which survives deleting the app, so its next install still arrives as a reinstall. For a fresh install:
 
-- **iOS simulator**: delete the app and run `xcrun simctl keychain booted reset`, which clears the Keychain of every app on that simulator. Then tap the link in the simulator's Safari and build and run the app again.
+- **iOS simulator**: delete the app, then run this in Terminal on your Mac. It clears the Keychain of every app on the running simulator.
+
+  ```sh
+  xcrun simctl keychain booted reset
+  ```
+
+  Then tap the link in the simulator's Safari and build and run the app again.
 - **iPhone**: one app's Keychain cannot be cleared, so use a phone that never had the app.
 
 ## The install detail
