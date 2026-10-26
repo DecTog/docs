@@ -1,5 +1,5 @@
 ---
-// The home page's one dark panel: what the three steps lead to, with a link to the page about it.
+// The home page's one dark panel: the fourth step, where the three cards above lead, with a link to the page about it.
 import { Icon } from '@astrojs/starlight/components';
 
 interface Props {
@@ -14,7 +14,7 @@ const { title, text, href, link } = Astro.props;
 ---
 
 <div class="live-band not-content">
-	<span class="dot" aria-hidden="true"></span>
+	<span class="number" aria-hidden="true">4</span>
 	<h3>{title}</h3>
 	<p>{text}</p>
 	<a href={href}>{link}<Icon name="right-arrow" /></a>
@@ -35,12 +35,21 @@ const { title, text, href, link } = Astro.props;
 	:global([data-theme='dark']) .live-band {
 		box-shadow: 0 0 0 1px var(--dt-hairline);
 	}
-	.dot {
+	/* The step cards' number disc, reversed onto the dark panel. */
+	.number {
+		display: flex;
 		flex-shrink: 0;
-		width: 0.5rem;
-		height: 0.5rem;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
 		border-radius: 50%;
-		background-color: var(--dt-accent);
+		background-color: var(--dt-on-feature);
+		color: var(--dt-feature);
+		font-family: var(--dt-font-display);
+		font-size: var(--sl-text-sm);
+		font-weight: 600;
+		line-height: 1;
 	}
 	h3 {
 		font-family: var(--dt-font-display);

@@ -9,7 +9,23 @@ const { stacked = false } = Astro.props;
 ---
 
 <a class:list={['login', { stacked }]} href="https://app.dectog.com/login">Log in</a>
-<a class:list={['cta', { stacked }]} href="https://app.dectog.com/login?tab=signup">Get started</a>
+<a class:list={['cta', { stacked }]} href="https://app.dectog.com/login?tab=signup">
+	Get started
+	<svg
+		viewBox="0 0 24 24"
+		width="16"
+		height="16"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		aria-hidden="true"
+	>
+		<path d="M7 7h10v10" />
+		<path d="M7 17 17 7" />
+	</svg>
+</a>
 
 <style>
 	a {
@@ -26,24 +42,23 @@ const { stacked = false } = Astro.props;
 	.login:hover {
 		color: var(--dt-ink);
 	}
-	/* The one tangerine fill on the page. */
+	/* The page's main action: dectog.com's Ink pill, which turns white on the dark page. */
 	.cta {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
+		gap: 0.375rem;
 		height: 2.5rem;
 		border-radius: var(--dt-radius-pill);
-		padding-inline: 1.5rem;
-		background-color: var(--dt-accent);
-		color: #ffffff;
+		padding-inline: 1.25rem 1rem;
+		background-color: var(--dt-ink);
+		color: var(--dt-page);
 		font-family: var(--dt-font-display);
-		font-size: var(--sl-text-sm);
+		font-size: 0.9375rem;
 		font-weight: 500;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
 	}
 	.cta:hover {
-		background-color: color-mix(in srgb, var(--dt-accent) 90%, transparent);
+		background-color: color-mix(in srgb, var(--dt-ink) 88%, var(--dt-page));
 	}
 
 	.stacked {

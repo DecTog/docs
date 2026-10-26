@@ -1,32 +1,32 @@
-/* dectog.com identity on top of Starlight: white page, near-black ink, one rationed tangerine.
-   Light values are dectog.com's own; the dark column is derived from them.
+/* dectog.com identity on top of Starlight: white page, Ink text, neutral grays, one rationed orange.
+   Light values are dectog.com's own; the dark column is derived from them with the same neutral grays.
    This file holds the tokens. chrome.css styles the frame around the content, content.css the content. */
 
 :root {
 	--dt-page: #141414;
-	--dt-surface: #1f2420;
-	--dt-surface-strong: #2a2f2b;
-	--dt-hairline: #2e332f;
+	--dt-surface: #232323;
+	--dt-surface-strong: #2e2e2e;
+	--dt-hairline: #323232;
 	--dt-ink: #ffffff;
-	--dt-body: #e8ecea;
-	--dt-secondary: #a7b0a9;
-	--dt-meta: #8a918c;
-	/* Tangerine: the fill is for the one call to action, the light tone for small markers. */
-	--dt-accent: #fb510e;
+	--dt-body: #ebebeb;
+	--dt-secondary: #aeaeae;
+	--dt-meta: #8f8f8f;
+	/* DecTog Orange, the logo's dot: dots and markers. The light tone is for small orange text. */
+	--dt-accent: #ff520a;
 	--dt-accent-light: #ff7732;
 	--dt-link: #ff7732;
 	--dt-accent-tint: #3b1a08;
 	--dt-danger: #fca5a5;
 	--dt-danger-tint: #3a1516;
 	/* Raised cards lift with a shadow on white and with a hairline ring on the dark page. */
-	--dt-raised: #1f2420;
+	--dt-raised: #232323;
 	--dt-raised-shadow: 0 0 0 1px var(--dt-hairline);
 	/* Code set into a raised card: one step away from the card's own tone. */
 	--dt-well: #141414;
 	/* The one dark panel a page may carry. */
-	--dt-feature: #0c0d0c;
-	--dt-on-feature: #f7f8f7;
-	--dt-on-feature-dim: #a7b0a9;
+	--dt-feature: #0d0d0d;
+	--dt-on-feature: #f8f8f8;
+	--dt-on-feature-dim: #aeaeae;
 	--dt-logo: #ffffff;
 
 	--dt-font-display: 'Outfit Variable', Outfit, var(--__sl-font);
@@ -36,22 +36,22 @@
 
 :root[data-theme='light'] {
 	--dt-page: #ffffff;
-	--dt-surface: #f7f8f7;
-	--dt-surface-strong: #eff1ef;
-	--dt-hairline: #e8e8e8;
+	--dt-surface: #f5f5f5;
+	--dt-surface-strong: #ededed;
+	--dt-hairline: #e6e6e6;
 	--dt-ink: #141414;
-	--dt-body: #1f2420;
-	--dt-secondary: #5a6b5d;
-	--dt-meta: #737373;
-	/* #fb510e is 3.3:1 on white, so text links use a darker tone that passes AA. */
+	--dt-body: #1f1f1f;
+	--dt-secondary: #5e5e5e;
+	--dt-meta: #6b6b6b;
+	/* #ff520a is 3.3:1 on white, so text links use a darker tone that passes AA. */
 	--dt-link: #c2410c;
 	--dt-accent-tint: #fff3ec;
 	--dt-danger: #b91c1c;
 	--dt-danger-tint: #fef2f2;
 	--dt-raised: #ffffff;
 	--dt-raised-shadow: 0 1px 4px rgba(12, 12, 13, 0.1), 0 1px 4px rgba(12, 12, 13, 0.05);
-	--dt-well: #f7f8f7;
-	--dt-feature: #1f2420;
+	--dt-well: #f5f5f5;
+	--dt-feature: #141414;
 	--dt-logo: #141414;
 }
 
@@ -120,20 +120,27 @@ body {
 	outline: 2px solid var(--dt-accent-light);
 }
 
-/* Small uppercase label above a title: the section name on a page, the kicker on the home page. */
+/* Small uppercase label above a title: the section name on a page, the kicker on the home page.
+   dectog.com's eyebrow: an orange dot, then the label in Fira Code capitals. */
 .dt-eyebrow {
 	display: inline-flex;
 	align-items: center;
-	height: 1.5rem;
-	border-radius: var(--dt-radius-pill);
-	padding-inline: 0.75rem;
-	background-color: var(--dt-surface);
-	color: var(--dt-secondary);
-	font-size: var(--sl-text-2xs);
-	font-weight: 500;
+	gap: 0.625rem;
+	color: var(--dt-meta);
+	font-family: var(--sl-font-mono);
+	font-size: 0.75rem;
+	font-weight: 400;
 	line-height: 1;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
+}
+.dt-eyebrow::before {
+	content: '';
+	flex-shrink: 0;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: var(--dt-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
