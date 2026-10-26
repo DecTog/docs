@@ -26,7 +26,8 @@ Your account's plan on hosted DecTog: its name, price and the monthly active use
 | Action | What happens |
 |---|---|
 | **Choose Starter**, **Choose Growth**, **Choose Scale** | Shown to owners on the Free plan. Opens Creem's checkout for that plan, with your email filled in. After paying you come back to Settings, which says "Payment received" until Creem confirms it, usually within a minute; the card then shows the plan. The **Choose** buttons on the [pricing page](https://dectog.com/pricing) open this card with that plan picked, through sign-in if you are signed out. |
-| **Manage billing** | Shown to owners once the account has had a subscription. Opens Creem's customer portal, where you change plan, update your card, download invoices or cancel. Creem reports each change back within moments, and the card shows it the next time Settings loads. |
+| **Switch to Starter**, **Switch to Growth**, **Switch to Scale** | Shown to owners on a paid plan that is running, for the other two plans. Asks for confirmation, then switches at once: moving up charges the difference for the rest of the month to your card now, moving down refunds the unused part of the month. The card says "Switching to …" until Creem confirms, usually within seconds. Not offered while a payment is failing or after you cancel. |
+| **Manage billing** | Shown to owners once the account has had a subscription. Opens Creem's customer portal, where you update your card, download invoices or cancel. Creem reports each change back within moments, and the card shows it the next time Settings loads. |
 
 When you cancel in the portal, Creem ends the subscription at once and charges nothing more, but the plan stays until the end of the month you paid for; the card says "Cancelled: the Starter plan ends on …, then the account is on Free." You can choose a plan again once it has ended. A payment that fails keeps the plan while Creem retries it; update your card in **Manage billing**. Refunds within 14 days of your first payment are by email to support@dectog.com; see the [Terms](https://dectog.com/terms).
 
@@ -100,7 +101,7 @@ Once it exists, a **Live** / **Test** switch sits at the top of the sidebar. In 
 Every change to the account, newest first, 25 at a time (**Show older** loads more):
 
 - links, temporary links, link templates, apps, webhooks, SDK keys, site keys, the account key, the custom domain and the revenue currency, whether changed in the dashboard or through the API;
-- a plan checkout started, and every change to the subscription that follows (bought, plan changed, payment failing, cancelled, ended);
+- a plan checkout or plan switch started, and every change to the subscription that follows (bought, plan changed, payment failing, cancelled, ended);
 - every sign-in, wrong password, sign-out and password reset;
 - every CSV export.
 
