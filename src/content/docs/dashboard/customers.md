@@ -23,7 +23,7 @@ A customer exists as soon as the SDK sends an `identify` event with a customer I
 |---|---|
 | **First seen** | The date and time of the customer's first `identify`. |
 | **Customer** | The name, or the customer ID when there is no name. Under it: the email masked as `e****@domain.com` (the detail page shows it in full), or the ID in monospace when there is a name but no email. An amber **Shared device · {n}** chip appears when other customers sent events from one of this customer's devices; its tooltip reads "Shares a device with {n} other customer(s)". |
-| **Attributed link** | `/{slug}` of the link whose click was matched to the customer's install, or **Organic**. |
+| **Attributed link** | `/{slug}` of the link credited with the customer's install, or **Organic** (also when a blocked [fraud rule](/start/fraud-rules/) withheld the credit). |
 | **Country** | A flag and the country name of the matched click. **Unknown** for organic customers and for clicks without a country. |
 
 Empty states: "No customers yet — call `DecTog.identify(customerId: …)` in your app after sign-in." and "No customers match your search."
@@ -67,8 +67,8 @@ Subtitle: "The link click that led to this customer's install. Open install show
 
 | Field | Value |
 |---|---|
-| **Attributed link** | `/{slug}` as a link to the live URL for a permanent link; the slug in plain monospace when the link was temporary; **Organic** otherwise. |
-| **Match** | **Install referrer (deterministic)**, **Copied link (deterministic)**, **Device fingerprint (probabilistic)** or **Organic**. |
+| **Attributed link** | `/{slug}` as a link to the live URL for a permanent link; the slug in plain monospace when the link was temporary; the slug with a **credit withheld** chip when a blocked [fraud rule](/start/fraud-rules/) withheld the credit; **Organic** otherwise. |
+| **Match** | **Install referrer (deterministic)**, **Copied link (deterministic)**, **Device fingerprint (probabilistic)** or **Organic**; `· credit withheld` follows the match when a blocked fraud rule withheld the credit. |
 | **Referrer source** | Which store or SDK handed over the referrer: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo` or `meta`. |
 | **Clicked at**, **Installed at** | The server-side times of the matched click and of the install report. |
 | **Country**, **Region**, **Network** | From the click: the country and city, the region, and the network provider with its AS number. |
