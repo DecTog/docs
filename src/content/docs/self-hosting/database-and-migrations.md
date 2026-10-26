@@ -14,11 +14,11 @@ The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped
 | Table | One line |
 |---|---|
 | `users` | Accounts and sign-ins: email, PBKDF2 password hash, username (the link subdomain), `api_key_hash` + `key_prefix` (the account key is never stored readable; the three are all `NULL` for someone who joined from an invite and has no account of their own, and a CHECK keeps them together), `role` (`owner` or `user`), `google_sub`, `retention_days` (the account's own window, or `NULL`), `test_of` (on a test environment: its live account), `session_epoch` (raised to end every session) |
-| `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, interstitial, tap-to-store, strict fraud mode, Facebook App ID, OEM store URLs, low-entropy window |
+| `apps` | Registered apps: store identifiers and URLs, schemes, fallback URL, social preview, interstitial, tap-to-store, the blocked fraud rules (`fraud_block_rules`), Facebook App ID, OEM store URLs, low-entropy window |
 | `links` | Permanent short links: slug (unique per tenant together with `temp_links`), optional target, metadata JSON, `click_count`, social preview, deep-link paths, redirect and fallback URLs, tracking defaults (`label`, `campaign`, `adgroup`, `creative`) |
 | `temp_links` | Temporary links: slug, target, `ttl_seconds`, `expires_at`, social preview; no counters |
 | `clicks` | One row per recorded tap or in-app open: link, device and browser, geo and ASN, hashed and raw IP (no raw IP with `STORE_RAW_IP=0`), UTM, `link_params`, beacon screen profile and device settings, client hints, `origin` (`redirect`, `sdk`, `synthesized_referrer`) |
-| `app_installs` | One row per install registration: device tier, referrer telemetry, the attribution verdict, fraud flags, shadow match, Apple Search Ads lifecycle, idempotency key |
+| `app_installs` | One row per install registration: device tier, referrer telemetry, the attribution verdict, fraud flags and the blocked rules that acted, shadow match, Apple Search Ads lifecycle, idempotency key |
 | `ad_identifiers` | Advertising id per install, isolated so it is never joined to the device tier |
 | `customers` | The tenant's own user identities from `identify` events: `customer_id`, name, email, phone, `first_install_id` |
 | `events` | `identify`, `lead`, `conversion` and `custom` events with revenue, `matched_slug` denormalized at insert, metadata JSON, raw IP (none with `STORE_RAW_IP=0`) |
@@ -32,12 +32,12 @@ The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped
 | `password_resets` | Single-use reset tokens, stored as SHA-256 hashes with expiry and `used_at` |
 | `api_keys` | SDK keys (`dtg_pub_…`) and site keys (`dtg_site_…`, with their allowed `origins`): name, kind, scopes, SHA-256 of the key, prefix, the encrypted viewable key, `last_used_at`, `revoked_at` |
 | `link_templates` | Named defaults a link can take (`links.template_id`), as JSON |
-| `referrals` | One row per referred install: the referring and the referred customer, the link, the match source |
+| `referrals` | One row per referred install: the referring and the referred customer, the link, the match source, the fraud flags and the status (`converted` or `rejected`) |
 | `rejected_requests` | SDK calls refused with 400 or 422, for the debugging view: route, reason, the body's hash and size, never the body; 30 days |
 | `app_store_endpoints` | Per app, the secret token in its Apple and Google store-notification URLs, and the Pub/Sub service account Google signs with |
 | `store_notifications` | The store notifications received, with their outcome; 90 days |
 | `fx_rates` | The ECB's daily euro reference rates, for revenue in the account's currency |
-| `link_daily` | The daily rollups: per account, link, UTC day and platform, the clicks, first installs, reinstalls, opens, leads and net revenue |
+| `link_daily` | The daily rollups: per account, link, UTC day and platform, the clicks, first installs, reinstalls, flagged first installs, opens, leads and net revenue |
 | `rollup_state` | Per account, the last day the rollups hold (`through_day`) and the last day whose raw rows are gone (`frozen_through`) |
 | `webhooks` | Webhook endpoints: URL, optional app, events, encrypted signing secret, failure count and why one turned off |
 | `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |

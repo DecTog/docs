@@ -59,7 +59,8 @@ Bots (User-Agent list, or a Cloudflare bot score below 30) never produce a click
 | Meta referrer | `meta_referrer` (512 characters), `meta_referrer_ts`, `meta_referrer_is_ct` | Meta's on-device provider, only when the app has a Facebook App ID | `meta_referrer` at retention; the rest forever |
 | Copied link | `clipboard_slug` | the pasteboard; only the slug and click id are extracted, the clipboard text itself is never stored | forever |
 | Apple Search Ads | `asa_token`; `asa_attribution` (campaign, ad group, keyword and ad ids, dates, country) | AdServices, only with `DectogCollection.appleSearchAdsToken` | the token is nulled as soon as the status settles, or at retention; the record forever |
-| Verdict and fraud | `matched*`, `match_*`, `referrer_source`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `fraud_flags` | the Worker | forever |
+| Verdict and fraud | `matched*`, `match_*`, `referrer_source`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `fraud_flags`, `blocked_by` | the Worker | forever |
+| Signing certificate | `signing_cert_sha256`: the SHA-256 of the certificate the app is signed with (Android). It identifies your build, not the person | `metadata.build_signature` from the SDK | forever |
 | Free-form | `metadata` | whatever the app put in the request's `metadata` | forever |
 
 ### Advertising identifiers

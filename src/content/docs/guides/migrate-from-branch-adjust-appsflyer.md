@@ -89,7 +89,7 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | `af_sig` | The request signature on every SDK call |
 | Push API | Webhooks: installs, conversions, leads, opens and referrals |
 | Pull API, Master API | The [raw export](/api/export/) of clicks, installs, opens and events, and the MCP [`analytics` tool](/guides/automation-and-agents/#mcp-server) for totals by link, campaign, country and other dimensions, both with the account key; `GET /api/v1/links` (lifetime `click_count`); the dashboard |
-| Protect360 | Eight rules: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. Strict fraud mode makes flagged installs count as organic. |
+| Protect360 | [Fraud rules](/start/fraud-rules/) on every install (emulator, impossible speed, click injection, a non-Play installer, an unknown signing key, install velocity and tap floods per network, stale and replayed signals) and every referral (the referrer's own device or network). Each app picks the rules that withhold credit or reject a referral; the others only flag. No device attestation yet. |
 | Apple Search Ads | `appleSearchAds` on the verdict |
 | SKAdNetwork, Conversion Studio, ad-network integrations | None |
 
@@ -113,7 +113,7 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 - One install per click. A click another install already consumed moves the ladder on to the next signal; `click_reuse` is flagged only when nothing later matches.
 - Fingerprint candidates are web clicks from a phone with the same hashed IP and OS family. The window is 24 hours for clicks that share a device model or a screen profile with the install, the probabilistic window Adjust gives a click, and 2 hours for clicks with neither and for installs on cellular. The 2-hour window can be set per app (1 to 720 hours) in the app's Advanced settings.
 - App updates (`install_state: update`) never run the fingerprint. Reinstalls do, and carry `is_reinstall: true`. Late claims never run the fingerprint.
-- Strict fraud mode, the low-entropy window and an install's webhook app are read from the app the install concerns, and an install is only matched against its own app's links.
+- The blocked fraud rules, the low-entropy window and an install's webhook app are read from the app the install concerns, and an install is only matched against its own app's links.
 - A pasted link or a Meta referrer earns credit for 7 days (per app); an older one routes the user without credit. Store referrers keep 30 days.
 - Apple Search Ads is resolved server-side and arrives later: `pending`, then `resolved`, `no_attribution`, `invalid` or `expired`. Only `resolved` and `no_attribution` are final.
 

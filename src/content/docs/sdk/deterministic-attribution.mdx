@@ -157,7 +157,7 @@ Apple Search Ads attribution is provenance only. It never changes `matched`, whi
 
 ## How long a pasted link counts
 
-A pasted link, whether read on the first launch or through `DectogPasteButton`, earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page (1 to 720 hours). A link copied weeks ago, or re-shared as text, still opens its content in the app through `routing`, but the install counts as organic with the flag `stale_clipboard`; with strict fraud mode on it does neither. A late paste of such a link answers `claim: rejected`, `claimReason: stale_click`. Store referrers are not limited this way.
+A pasted link, whether read on the first launch or through `DectogPasteButton`, earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page (1 to 720 hours). A link copied weeks ago, or re-shared as text, still opens its content in the app through `routing`, but the install counts as organic with the flag `stale_clipboard`; when the app blocks that rule it does not route either. A late paste of such a link answers `claim: rejected`, `claimReason: stale_click`. Store referrers are not limited this way.
 
 
 <Aside type="note" title="Which signal wins">

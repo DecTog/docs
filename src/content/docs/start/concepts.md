@@ -25,7 +25,7 @@ The **default app** is the oldest app of the account, the first one you register
 |---|---|
 | A permanent link created without an app, or whose app was deleted | The link routes through the default app's store URLs, schemes and fallback URL. |
 | Every temporary link | Temporary links have no app of their own and always use the default app. |
-| Strict fraud mode, the low-entropy attribution window and the webhooks of an app | Only as the last resort. These are read from the app the install concerns: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. |
+| The blocked fraud rules, the low-entropy attribution window and the webhooks of an app | Only as the last resort. These are read from the app the install concerns: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. |
 | Deleting an app | Its links are re-pointed to the default app. Clicks and installs are untouched. |
 
 The well-known files are account-wide: `apple-app-site-association` lists every app with a bundle ID and Team ID, `assetlinks.json` every app with a package.
@@ -86,7 +86,7 @@ An install is the first launch of the app on a device, registered once by the SD
 | `routing` | A route the app may open even without credit: present whenever the install is matched, and at `medium` confidence with `matched: false`. |
 | `username`, `slug`, `link`, `click_params`, `deep_link`, `clicked_at` | The matched link and the click's `dec_*` values. `link` is only present for permanent links. |
 | `is_reinstall`, `install_state` | Reinstall detection (same device seen before, or the SDK's own classification) and the client's `install` / `reinstall` / `update` classification. |
-| `fraud_flags` | Rule hits such as `emulator` or `click_reuse`. |
+| `fraud_flags` | [Fraud rule](/start/fraud-rules/) hits such as `emulator` or `click_reuse`. |
 | `apple_search_ads` | Always present; `null` until the SDK ever sent an AdServices token. |
 
 A claim is a deterministic signal that arrives after the first launch: a Play referrer the store delivered late, a link pasted through `DectogPasteButton`, a late Meta read. The SDK sends it to `POST /api/v1/app-installs/{id}/claim`; the verdict changes at most once, from organic or fingerprint to deterministic, and the SDK re-emits it with `claim: 'upgraded'`. [How attribution works](/start/how-attribution-works/) explains the signals and the confidence levels.

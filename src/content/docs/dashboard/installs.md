@@ -9,7 +9,7 @@ The Installs screen, at https://app.dectog.com/dashboard/installs, lists every i
 
 ## The list
 
-Each row shows when the app was installed, the verdict (`referrer`, `clipboard` or `fingerprint` with the confidence, or `organic`), the link it was credited to, the OS with its version and the device model, the app version, and chips for a reinstall and for each fraud flag (for example `emulator` for a simulator build). 25 rows load at a time; **Load more** adds the next 25.
+Each row shows when the app was installed, the verdict (`referrer`, `clipboard` or `fingerprint` with the confidence, `organic`, or `credit withheld` when a fraud rule the app blocks withheld it), the link it was credited to (or, for a withheld one, the link that was tapped), the OS with its version and the device model, the app version, and chips for a reinstall and for each fraud flag, labelled by rule (for example **Emulator** for a simulator build). A flag chip is amber when the rule only flags and red when a blocked rule acted on it; hovering it explains the rule. See [Fraud rules](/start/fraud-rules/). 25 rows load at a time; **Load more** adds the next 25.
 
 **reinstall** means one of two things: the app reported that it was installed on this device before, or the server already has an install with the same device id in this account. On an iPhone the SDK knows from a first-install date it keeps in the Keychain, which survives deleting the app; Android cannot tell on the phone, so there only the server's check applies. A reinstall is credited like any install and counted under the Overview's Reinstalls and each link's `+{n} reinstalls`, not under Installs.
 
@@ -17,8 +17,8 @@ Above the list:
 
 - **Search** finds one install id, one device id or one link. A viewer searches install ids and links only, because viewers never see device ids.
 - **iOS and Android** narrows to one platform.
-- **Every verdict** narrows to credited or organic installs, or to one signal: **Store referrer**, **Pasted link** or **Fingerprint**.
-- **Flagged only** keeps installs with at least one fraud flag.
+- **Every verdict** narrows to credited or organic installs, to one signal (**Store referrer**, **Pasted link** or **Fingerprint**), or to **Blocked by a fraud rule**: installs a blocked rule acted on.
+- **With or without fraud flags** narrows to **Any fraud flag** or to one rule. The Overview's fraud chips open the screen with this filter set (`?flag=<rule>`).
 
 Clicking a row opens the install detail, described below.
 
@@ -54,7 +54,8 @@ Erasing clears the server's data, not the phone's. On Android that is enough for
 
 The detail opens from this screen, from the Overview's Recent installs and from a link's installs. It shows:
 
-- **Verdict**: credited link or organic, match source, confidence, reinstall, fraud flags.
+- **Verdict**: credited link, organic, or `credit to /{slug} withheld`, match source, confidence, reinstall, fraud flags. When a blocked rule acted, a line says what it did.
+- **Fraud checks**: every install rule with its label, what it means and **Flagged**, **Flagged · acted**, **Clear** or **Not checked** with the reason (for example no Google Play install-begin time on iOS), and the values it compared: physical device, model and CPU; the tap time and the gap to the first launch or to the download's start; the installer; the signing certificate and how many fingerprints the app lists; other installs from the network in 24 hours and the line; taps from the network in the hour before; the tap's age. Installs recorded before these checks existed show none.
 - **Why**: the signal that named the click (store referrer, pasted link, Meta referrer, a late claim), or the fingerprint's best and runner-up candidates with each signal marked agree, mismatch or missing, their scores, the gap between them, the window that applied and how many repeat taps were merged. The full list of signals is under [Recent installs](/dashboard/overview/#recent-installs).
 - **Show values**: a checkbox above the signals. With it on, each signal also shows what the app and the tap reported, as `app 1206×2622 · tap 402×874 @3 = 1206×2622`. The screen compares the app's physical pixels with the tap's screen times its pixel ratio; the time zone reads `UTC+3`; the network reads `AS36935`; the IP version reads `IPv4` or `IPv6`. A dash means that side reported nothing, which is why the signal reads missing. No IP address is ever shown. A viewer sees no network values.
 - **Tap**, **App opens**, **Events** and **Screens**, as on the [Overview](/dashboard/overview/#recent-installs).

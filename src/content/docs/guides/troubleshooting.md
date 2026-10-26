@@ -52,9 +52,11 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 - One install per click. A click another install already consumed moves the ladder on; `click_reuse` is flagged only when nothing later matches.
 - App updates (`install_state: update`) never run the fingerprint; the panel's "kept out of matching" line counts them. Reinstalls (`is_reinstall`) run the full ladder and the fingerprint. They are left out of the Installs KPI and the per-link counts, not out of matching, so a reinstall can hold a click that the install you are looking for needed.
 
-### Strict fraud mode made it organic
+### A blocked fraud rule made it organic
 
-With strict fraud mode on (Apps, Advanced), an install that trips any rule (`emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`) is stored with `matched: false` and `match_source: null`. It keeps `match_confidence`, `referrer_source` and `matched_slug` on the record; the verdict and the webhook send the first two but never the slug. The click stays consumed. Strict mode is read from the app the install concerns: the credited link's app, else the app whose package the SDK reports. The fraud box on the Overview and the chips on a customer's detail page show the rules that fired.
+When the app blocks a [fraud rule](/start/fraud-rules/) (Apps, **Fraud rules**, **Withhold credit**) and an install trips it, the install counts as organic: the verdict and the webhook say `matched: false` and `match_source: null`, and send `match_confidence` and `referrer_source` but never the link. The record keeps the match as evidence and the click stays consumed. The Installs list shows **credit withheld** with the rule's chip in red, and the install detail's **Fraud checks** show what the rule compared. The blocked rules are read from the app the install concerns: the credited link's app, else the app whose package the SDK reports.
+
+Testing on an emulator or a debug build? **Emulator** flags every simulator install, and **Unknown signing key** flags a build signed with a key the app's SHA-256 fingerprints do not list. Untick the rule while you test, or list your debug key.
 
 ### iOS specifics
 

@@ -66,6 +66,7 @@ The `data` of `app.installed` and `app.install_updated`:
   "install_state": "install",
   "is_reinstall": false,
   "fraud_flags": [],
+  "blocked_by": [],
   "username": "acme",
   "slug": "spring-sale",
   "link": {
@@ -98,15 +99,16 @@ The `data` of `app.installed` and `app.install_updated`:
 | `install_id` | string | The install row's id. |
 | `matched` | boolean | Credited to a click. |
 | `type` | string | `non-organic` when matched, else `organic`. |
-| `match_source` | string or null | `referrer`, `clipboard`, `fingerprint`, or `null`. |
+| `match_source` | string or null | `referrer`, `clipboard`, `fingerprint`, or `null` (organic, or credit withheld by a blocked fraud rule). |
 | `referrer_source` | string or null | `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo`, `meta`, or `null`. |
 | `match_confidence` | string or null | `guaranteed`, `high`, `medium`, `low`, or `null`. |
 | `install_state` | string or null | `install`, `reinstall`, `update`, or `null`. |
 | `is_reinstall` | boolean | |
-| `fraud_flags` | string array | Rule names from [Clicks and installs](/api/clicks-and-installs/); empty when clean. |
+| `fraud_flags` | string array | [Fraud rule](/start/fraud-rules/) names; empty when clean. |
+| `blocked_by` | string array | The flags a rule the app blocks acted on: the credit was withheld (`matched` is false) or a stale link was not routed. Empty when none. |
 | `username` | string | Your username. |
-| `slug` | string or null | The matched link's slug; `null` whenever `matched` is false, including a strict-mode install that was zeroed (its `fraud_flags`, `referrer_source` and `match_confidence` still show what was found). |
-| `link` | object or null | `slug`, `target`, `url`, `created_at` of the matched **permanent** link. `null` for organic installs, temporary-link matches and strict-mode zeroed installs. There is no `metadata` here, unlike the install verdict. |
+| `slug` | string or null | The matched link's slug; `null` whenever `matched` is false, including an install whose credit a blocked fraud rule withheld (its `fraud_flags`, `blocked_by`, `referrer_source` and `match_confidence` still show what was found). |
+| `link` | object or null | `slug`, `target`, `url`, `created_at` of the matched **permanent** link. `null` for organic installs, temporary-link matches and installs whose credit was withheld. There is no `metadata` here, unlike the install verdict. |
 | `device` | object | `device_id`, `device_model`, `device_manufacturer`, `os`, `os_version`, `connectivity_type`, `carrier_mcc`, `carrier_mnc`; each `null` when the SDK did not send it. |
 | `ip_hash` | string or null | The salted SHA-256 of the install request's IP (IPv6 cut to /64). |
 | `clicked_at` | string or null | The matched click's time; `null` when `matched` is false. |

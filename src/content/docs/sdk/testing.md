@@ -99,7 +99,7 @@ Things that look like failures and are not:
 - The verdict is `matched: false` with `installState: 'update'`: the device already had the app before this build. Updates are never fingerprint-matched. Uninstall first.
 - `isReinstall: true`: the server has seen this device id on an earlier install of your account. Reinstalls still attribute; the dashboard counts them under Reinstalls, next to Installs, which counts first installs.
 - `appleSearchAds.status` stays `pending` in the first-launch process. Call `getAttributionData()` on a later launch.
-- `fraudFlags` contains `install_velocity_ip` after many test installs from one network. With strict fraud mode on, those installs count as organic.
+- `fraudFlags` contains `install_velocity_ip` after many test installs from one network, `emulator` on a simulator or emulator, and `signing_cert_mismatch` on a debug build whose key the app's SHA-256 fingerprints do not list. When the app blocks one of those rules (Apps, **Fraud rules**), those installs count as organic: untick the rule while you test. See [Fraud rules](/start/fraud-rules/).
 
 ## Ship checklist
 

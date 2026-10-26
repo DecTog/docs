@@ -1,6 +1,6 @@
 ---
 title: Attribution internals
-description: How the Worker decides which click an install belongs to, the fingerprint scoring and confidence rules as implemented, claims, fraud rules, strict mode and the SDK state that feeds it.
+description: How the Worker decides which click an install belongs to, the fingerprint scoring and confidence rules as implemented, claims, fraud rules, the rules an app blocks and the SDK state that feeds it.
 sidebar:
   order: 5
 ---
@@ -36,7 +36,7 @@ When every signal is exhausted, the ladder's outcome is `reuse` if any signal po
 
 A win sets `match_source` to `referrer` (store and Meta) or `clipboard`, `referrer_source` to the store name or `meta` (null for the clipboard) and `match_confidence` to `guaranteed`. A store referrer has no time window: a very old click still matches, and `stale_referrer` flags it when it is older than 30 days.
 
-**Deterministic window.** A pasted link and Meta's referrer are bounded by `deterministicWindowHours`: the app's `deterministic_window_hours`, else `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` (default 168, 7 days), never more than 30 days. The app is the clicked link's app, else the install's own. The age is measured from Meta's `meta_referrer_ts` when present, else the click row's `clicked_at`; a click synthesized from the tag carries the install time and is never stale. An older win is demoted (`staleSignalFlag`): it earns the flag `stale_clipboard` or `stale_meta`, consumes nothing, and the fingerprint decides as if no signal had matched. When the fingerprint neither credits nor routes, the stale click becomes `routing_click_id` with `match_confidence = 'medium'`, so the app still opens the link's content. With strict fraud mode the stale click does not route either. A claim carrying a stale signal is `rejected` with `claim_reason: "stale_click"`.
+**Deterministic window.** A pasted link and Meta's referrer are bounded by `deterministicWindowHours`: the app's `deterministic_window_hours`, else `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` (default 168, 7 days), never more than 30 days. The app is the clicked link's app, else the install's own. The age is measured from Meta's `meta_referrer_ts` when present, else the click row's `clicked_at`; a click synthesized from the tag carries the install time and is never stale. An older win is demoted (`staleSignalFlag`): it earns the flag `stale_clipboard` or `stale_meta`, consumes nothing, and the fingerprint decides as if no signal had matched. When the fingerprint neither credits nor routes, the stale click becomes `routing_click_id` with `match_confidence = 'medium'`, so the app still opens the link's content. When the app blocks the rule (`fraud_block_rules`), the stale click does not route either. A claim carrying a stale signal is `rejected` with `claim_reason: "stale_click"`.
 
 ### 2. The scored fingerprint
 
@@ -143,30 +143,33 @@ Credited or not, a matched click's link must still exist; if the link was delete
 
 When a deterministic signal decided, the fingerprint still runs and writes what it would have picked: `fp_shadow_click_id` and `fp_shadow_agree` (`1` only when the fingerprint reached `high` on the same click, else `0`). The dashboard's "fingerprint accuracy" figure is the share of `fp_shadow_agree = 1` over these labelled rows. See [Overview](/dashboard/overview/).
 
-### 4. Fraud rules and strict mode
+### 4. Fraud rules and blocked rules
 
-`evaluateFraudFlags` runs after the match and before the insert. Flags are stored as a JSON array in `fraud_flags` (null when clean), returned on the verdict and sent to the webhook. Flags are only ever merged; a later claim never removes one.
+`evaluateFraudRules` (`apps/worker/src/fraud.ts`) runs after the match and before the insert; the rule list itself, with labels, summaries, strengths and what blocking does, is `apps/worker/src/fraudrules.ts`, served at `GET /api/admin/fraud-rules`. Flags are stored as a JSON array in `fraud_flags` (null when clean, never `[]`), in rule-list order, returned on the verdict and sent to the webhook. Every check, hit or not, is stored in `match_details.fraud_checks` with the values it compared, or `skipped` and why.
+
+Every rule is measured to the install's first launch (`created_at`), so a claim days later judges the install as the first launch would have. The matched tap's time is `referrer_click_server_ts` for a store-referrer match, `meta_referrer_ts` for a Meta match, and the click row's `clicked_at` otherwise or as the fallback; a referrer that did not decide the match never times it, and device-clock fields are never used.
 
 | Flag | Fires when |
 |---|---|
 | `emulator` | `is_physical_device` is `false`; or `device_model` matches `sdk`, `emulator`, `simulator`, `genymotion`, `virtual`, `gphone`, `pdv` or `avd` as a word; or an Android install with `device_kind` null or `phone` reports an x86 CPU |
-| `impossible_speed` | The winning signal's click time is less than 10 seconds before the install request. The click time is `referrer_click_server_ts` (Google's clock), else `meta_referrer_ts`, else the click row's `clicked_at`; device-clock fields are never used. |
-| `install_velocity_ip` | At least 5 installs (25 when the install reports `cellular`) from the same hashed IP in the last 24 hours. The count runs before the row is inserted, so on first launch it fires on the 6th (or 26th) install; on a claim the row already exists, so on the 5th (or 25th). Skipped when the install has no IP hash. |
+| `impossible_speed` | The matched tap is less than 10 seconds before the first launch |
+| `click_injection` | `install_begin_server_ts` is set and the matched tap is more than 5 seconds after it (Google's whole-second timestamps and two server clocks) |
+| `installer_mismatch` | `referrer_store` is `google_play`, `install_referrer` carries `dtg_click`, `installer_package` is set and is neither `com.android.vending` nor `com.google.android.feedback`, and `google_play_instant` is not `1`. An unknown installer is skipped (`installer_unknown`). |
+| `signing_cert_mismatch` | Android; `signing_cert_sha256` (normalized from `metadata.build_signature`, either SDK's spelling) is set; the install's own app (`appOfInstall`) lists `android_sha256_fingerprints`; `package_name` equals that app's `android_package` exactly; the caller is not a test environment; and the certificate is none of the fingerprints |
+| `install_velocity_ip` | At least 5 other installs (25 when the install reports `cellular`) from the same hashed IP in the 24 hours up to the first launch, the install itself excluded: the 6th (or 26th) install, on a first launch and on a claim alike. Skipped when the install has no IP hash. |
 | `click_storm_ip` | The matched click's hashed IP produced more than 100 clicks in the hour up to that click |
-| `stale_referrer` | `match_source` is `referrer` or `clipboard` and the click is older than 30 days |
+| `stale_referrer` | `match_source` is `referrer` or `clipboard` and the matched tap is more than 30 days before the first launch |
 | `stale_clipboard` | A pasted link's click is older than the deterministic window (7 days by default, per app). The install is routed to the link but not credited. |
 | `stale_meta` | The same for Meta's install referrer, timed by Meta's own click timestamp |
 | `click_reuse` | A deterministic signal named a click that another device's install already holds |
 
-With `strict_fraud_mode = 1` on the app the verdict concerns (the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app), any flag makes the stored row `matched = 0` and `match_source = NULL` while `matched_click_id`, `matched_slug`, `referrer_source` and `match_confidence` are kept as evidence. Consequences:
+`apps.fraud_block_rules` (a JSON array, `[]` by default) on the app the verdict concerns (the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app) lists the rules that act. `blockingRules` sorts the hits it names by effect:
 
-- The click stays consumed, so a replayed signal cannot free it for the next install.
-- The API verdict says `matched: false`, `type: "organic"`, `match_source: null`, but still `referrer_source` and `match_confidence` (for example `guaranteed`); `username`, `slug` and `link` are absent and `routing` is null.
-- The webhook payload carries `matched: false` with `slug`, `link`, `clicked_at`, `click_params` and `deep_link` all `null`, so a consumer cannot credit it by accident.
-- A later claim finds `matched_click_id` set with `match_source` not `fingerprint` and answers `claim: "unchanged"`, `claim_reason: "already_deterministic"`: a strict-zeroed verdict is final.
-- Overview counts the install as organic.
+- **Withhold credit** (the install and click rules), on a credited install: the stored row gets `matched = 0`, and `matched_click_id`, `matched_slug`, `match_source`, `referrer_source` and `match_confidence` are kept as evidence. The click stays consumed, so a replayed signal cannot free it for the next install. The API verdict says `matched: false`, `type: "organic"`, `match_source: null`, but still `referrer_source` and `match_confidence`; `username`, `slug` and `link` are absent and `routing` is null. The webhook carries `matched: false`, `match_source: null` and `slug`, `link`, `clicked_at`, `click_params` and `deep_link` all `null`, so a consumer cannot credit it by accident. The Overview counts the install as organic.
+- **Don't route** (`stale_clipboard`, `stale_meta`): the stale click's routing is dropped.
+- **Reject** (the referral rules): see [Referral programs](/guides/referral-programs/).
 
-With strict mode off (the default) flags are annotations and the attribution stands.
+The rules that acted are stored in `blocked_by` (null when none), sent on the webhook and shown in the dashboard. With nothing blocked (the default) flags are annotations and the attribution stands.
 
 ### Same-device reinstall routing
 
@@ -224,13 +227,13 @@ Each row is a golden scenario the worker's test suite runs end to end on every c
 
 Then, in order:
 
-1. Already deterministic (`matched_click_id` set and `match_source` not `fingerprint`, which includes strict-zeroed rows): `claim: "unchanged"`, `claim_reason: "already_deterministic"`.
+1. Already deterministic (`matched_click_id` set and `match_source` `referrer` or `clipboard`, which includes rows whose credit a blocked rule withheld): `claim: "unchanged"`, `claim_reason: "already_deterministic"`. A fingerprint match, credited or withheld, goes on.
 2. The ladder runs again with the row's own id excluded as a holder. The fingerprint **never** runs on a claim.
 3. `replay` (another row of the same device holds the click): the holder's verdict with `replayed: true`, `claim: "unchanged"`; the SDK adopts that install id.
 4. `reuse`: `click_reuse` is merged into the flags, `claim: "rejected"`, `claim_reason: "click_reuse"`.
 5. `not_found` / `none`: `claim: "rejected"` with `click_not_found` / `no_signal`.
 6. A pasted link or Meta referrer older than the deterministic window: its flag (`stale_clipboard` / `stale_meta`) is merged, `claim: "rejected"`, `claim_reason: "stale_click"`.
-7. Otherwise the deterministic click wins over whatever the fingerprint had guessed (the old click is released by no longer being referenced) and over organic: `matched = 1`, `match_source`, `referrer_source`, `match_confidence = 'guaranteed'`, `routing_click_id = NULL`, `claimed_at = now`. Fraud rules are re-evaluated and merged, strict mode applies as above, and the webhook fires with `app.install_updated`. Response: `claim: "upgraded"`.
+7. Otherwise the deterministic click wins over whatever the fingerprint had guessed (the old click is released by no longer being referenced) and over organic: `matched = 1`, `match_source`, `referrer_source`, `match_confidence = 'guaranteed'`, `routing_click_id = NULL`, `claimed_at = now`. The install is judged again against the new tap: the install and click rules run afresh (flags about the released tap go), the ladder's own flags (`stale_*`, `click_reuse`) stay, `match_details.fraud_checks` is rewritten and `blocked_by` recomputed; a blocked rule that hits again withholds the credit as above. The webhook fires with `app.install_updated`. Response: `claim: "upgraded"`.
 
 An `asa_token` on a claim restarts the Apple round-trip unless the row is already `resolved` or `no_attribution`; `invalid` and `expired` rows accept a new token.
 

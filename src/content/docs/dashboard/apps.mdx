@@ -12,7 +12,7 @@ The Apps screen, at https://app.dectog.com/dashboard/apps, holds the identifiers
 An **Add app** button opens the editor. While the editor is closed, a status line shows "Saved ✓", "Deleted ✓" or the last error.
 
 <Aside type="caution" title="Which app's settings apply">
-Most settings belong to the app a link is bound to: the link's **App**, or your oldest app when a link has none. **Strict fraud mode** and the **Low-entropy attribution window** belong to the app an install concerns, and so does an install's webhook event: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The app's identifiers matter here: an install whose package name matches none of your apps falls back to the oldest app on an account with several.
+Most settings belong to the app a link is bound to: the link's **App**, or your oldest app when a link has none. **Fraud rules** and the **Low-entropy attribution window** belong to the app an install concerns, and so does an install's webhook event: the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The app's identifiers matter here: an install whose package name matches none of your apps falls back to the oldest app on an account with several.
 </Aside>
 
 ## App cards
@@ -31,7 +31,7 @@ The oldest app is the account's default app. It serves links created with **Defa
 
 ## The editor
 
-The editor is titled `Edit <name>`, **Register your first app** or **Register an app**, with the subtitle "Only the name is required — fill in each platform as you set it up." On wide screens a side menu jumps to the six sections below. The editor is always open while the account has no app.
+The editor is titled `Edit <name>`, **Register your first app** or **Register an app**, with the subtitle "Only the name is required — fill in each platform as you set it up." On wide screens a side menu jumps to the sections below. The editor is always open while the account has no app.
 
 ### Are we live yet?
 
@@ -137,13 +137,26 @@ Shown for a saved app. **Turn on store notifications** creates the app's two URL
 
 Below the buttons, the last 20 notifications: time received, store, notification type (with subtype and a non-production environment), transaction id, and the result (`recorded`, `updated`, `duplicate`, `ignored`, `unmatched`, `test`, `rejected`). What each notification records is on [Revenue](/sdk/revenue/#store-notifications).
 
+### Fraud rules
+
+Section text: "Every install is checked against these rules, and a hit is always flagged on the install, its webhook and the Installs page. Tick a rule to make it act as well: withhold the install's credit (the tap stays used, as evidence), stop routing a stale link, or reject a referral."
+
+The section lists every rule, install rules first and then referral rules, each with its label, a one-line explanation and its strength (`strong`, `moderate` or `weak`), and a checkbox named after what it does:
+
+| Checkbox | Rules | When a ticked rule hits |
+|---|---|---|
+| **Withhold credit** | Emulator, Too fast, Tap after download, Not installed by Play, Unknown signing key, Many installs, one network, Tap flood, Old store referrer | A credited install counts as organic. The server keeps the matched link, match source, referrer source and confidence on the record as evidence and the tap stays used; neither the app's verdict nor the webhook names the link. |
+| **Don't route** | Old pasted link, Old Meta referrer | The stale link no longer routes the user. |
+| **Reject referral** | Referrer's own device, Referrer's network | The referral is stored as rejected: no `referral.converted`, and it is not counted. |
+
+**Reused tap** shows "never credited" instead of a checkbox: its signal never earns credit. Nothing is ticked on a new app. What each rule checks is on [Fraud rules](/start/fraud-rules/). **Unknown signing key** compares against this app's **SHA-256 fingerprints** (Android), so list the Play App Signing key there.
+
 ### Advanced
 
 Section text: "Attribution behaviour. Everything here is off by default."
 
 | Setting | Control | What it does, as the screen describes it |
 |---|---|---|
-| **Strict fraud mode** | Switch | "Off: installs that trip a fraud rule (emulator, impossible click-to-install timing, install velocity per IP, click storm, stale referrer) keep their attribution and carry the flags. On: flagged installs count as organic — the click they claimed stays consumed either way." With the switch on, a flagged install is stored as unmatched, but the server keeps the referrer source, the confidence and the matched slug on the record as evidence. Neither the app's verdict nor the webhook names the slug of an uncredited install. |
 | **Probabilistic match** | Switch, on by default | "On: when no store referrer, copied link or Meta referrer names the click, the server compares the install with recent taps from the same network and credits a unique, corroborated match. Off: installs of this app are matched by those deterministic signals only, the comparison never runs, and its link pages stop reading the device settings. Apple's rules prohibit fingerprinting; turn this off if your App Store review requires it." The switch is read from the app the install belongs to (its package name or bundle ID). |
 | **OEM store referrers** | Switch, on by default | "The SDK also reads the Huawei, Samsung, Xiaomi and vivo store referrers on Android. It picks this up at start-up; a value set in DectogConfig in the app takes precedence." |
 | **Pasteboard read at first launch** | Select: Platform default, On, Off | "Default: on for iOS while a page of yours copies the link (tap-to-store or the interstitial, on the app or on a link), since only those taps leave a link to read; off otherwise, and always off on Android. The read shows Apple's paste alert on iOS 16+. The SDK picks this up at start-up; a value set in DectogConfig in the app takes precedence." |
@@ -151,10 +164,10 @@ Section text: "Attribution behaviour. Everything here is off by default."
 | **iOS tap-to-store** | Switch | "Off: iPhone taps go straight to the App Store. On: taps see a one-button page whose “Get the app” tap copies the link to the clipboard before opening the App Store. The SDK reads it on first launch, so iOS installs attribute deterministically instead of by IP. Inside Instagram and Facebook the page offers “Open in app” first. There is no automatic redirect: Safari only lets the page copy from a tap. On iPhone this replaces the beacon interstitial." The page is used only when the tap's destination is the App Store. |
 | **Low-entropy attribution window** | Number box, 1 to 720, placeholder `2`, suffix "hours" | "Hours an IP-only click (no device model or screen profile to compare, or an install on mobile data) stays matchable. Shorter is safer on shared carrier networks. Empty uses the deployment default (2 hours); clicks whose device model or screen profile can be compared with the install keep the full 24-hour window." The server accepts a whole number from 1 to 720 or an empty box; anything else gets `low_entropy_window_hours must be a whole number of hours between 1 and 720`. The effective value never exceeds the wide window of 24 hours. |
 | **MMP click handoff** | Switch, and a **Media source (pid)** box (optional, letters, digits, `.`, `-`, `_`, up to 100) shown when on | "For a migration from AppsFlyer, Singular or Adjust: when a link sends visitors to one of their tracking links (onelink.me, sng.link, app.adjust.com, adj.st), add DecTog's click id as clickid, so both tools report the same tap and their verdicts can be compared. A clickid or pid already in the link wins." See [Running both for a while](/guides/migrate-from-branch-adjust-appsflyer/#running-both-for-a-while). |
-| **Pasted-link and Meta window** | Number box, 1 to 720, placeholder `168`, suffix "hours" | "Hours a copied link (iOS tap-to-store, paste button) or a Meta install referrer still earns credit. An older click sends the user to the link but counts the install as organic, flagged stale_clipboard or stale_meta; with strict fraud mode on it does not even route. Empty uses the deployment default (168 hours, 7 days). Store referrers keep 30 days." The server accepts a whole number from 1 to 720 or an empty box. |
+| **Pasted-link and Meta window** | Number box, 1 to 720, placeholder `168`, suffix "hours" | "Hours a copied link (iOS tap-to-store, paste button) or a Meta install referrer still earns credit. An older click sends the user to the link but counts the install as organic, flagged Old pasted link or Old Meta referrer; an app that blocks those rules (Fraud rules) does not even route it. Empty uses the deployment default (168 hours, 7 days). Store referrers keep 30 days." The server accepts a whole number from 1 to 720 or an empty box. |
 | **Re-engagement window** | Number box, 1 to 720, placeholder `168`, suffix "hours" | "Hours after one of this app's links re-opened the installed app during which purchases and other events count for that link instead of the link that brought the install. Empty uses the deployment default (168 hours, 7 days)." Applied when the dashboard reads the numbers, so a change also moves past credit. |
 
-Strict fraud mode and both windows are read from the app the install concerns (see the note at the top of this page). The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules, windows and confidence levels are explained in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
+The fraud rules and both windows are read from the app the install concerns (see the note at the top of this page). The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules are explained in [Fraud rules](/start/fraud-rules/); the windows and confidence levels in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
 
 ## Saving
 

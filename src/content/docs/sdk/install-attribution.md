@@ -47,9 +47,9 @@ dectog.onAppInstalled.listen((install) {
 
 `type` is `'non-organic'` when `matched` is `true`, else `'organic'`.
 
-### Fraud flags and strict mode
+### Fraud flags
 
-`fraudFlags` lists the rules the install tripped: `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. `stale_clipboard` and `stale_meta` mark a pasted link or Meta referrer older than the app's window: the verdict routes (`routing`) but is not credited. By default the attribution stands and the flags are informational. With the app's strict fraud mode on, a flagged install comes back with `matched: false` and `matchSource: null`, while `referrerSource` and `matchConfidence` keep their values as evidence; `slug`, `link` and the other attribution fields are absent from the verdict (the server keeps the matched slug on its record). Strict mode is read from the app the install concerns (see [Apps](/dashboard/apps/)).
+`fraudFlags` lists the [fraud rules](/start/fraud-rules/) the install tripped: `emulator`, `impossible_speed`, `click_injection`, `installer_mismatch`, `signing_cert_mismatch`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta`, `click_reuse`. `stale_clipboard` and `stale_meta` mark a pasted link or Meta referrer older than the app's window: the verdict routes (`routing`) but is not credited. By default the attribution stands and the flags are informational. When the app blocks a rule that hit (Apps, **Fraud rules**), the install comes back with `matched: false` and `matchSource: null`, while `referrerSource` and `matchConfidence` keep their values as evidence; `slug`, `link` and the other attribution fields are absent from the verdict (the server keeps the match on its record). The blocked rules are read from the app the install concerns (see [Apps](/dashboard/apps/)). Do not decide rewards in the app from these fields: a modified app can show anything. Read them from the webhook.
 
 ### Other fields
 
@@ -76,7 +76,7 @@ Outcomes, as `claim` and `claimReason` on the returned verdict:
 | `claim` | `claimReason` | Meaning |
 |---|---|---|
 | `upgraded` | | The signal named a click; the verdict is now `guaranteed` and is re-emitted. A fingerprint guess, if any, is released. |
-| `unchanged` | `already_deterministic` | The install was already credited by a deterministic signal (a replay of the same signal, or a strict-mode zeroed verdict that kept the click as evidence). |
+| `unchanged` | `already_deterministic` | A deterministic signal already decided the install (a replay of the same signal, or a verdict whose credit a blocked fraud rule withheld, which keeps the click as evidence). A fingerprint match whose credit was withheld can still be upgraded. |
 | `rejected` | `click_reuse` | The click is already credited to another device's install. The flag `click_reuse` is added. |
 | `rejected` | `click_not_found` | The click id is unknown and the signal carried no usable `dtg_l` tag to synthesize it. |
 | `rejected` | `no_signal` | The body carried no `dtg_click` at all. |
