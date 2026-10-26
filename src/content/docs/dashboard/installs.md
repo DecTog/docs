@@ -11,7 +11,7 @@ The Installs screen, at https://app.dectog.com/dashboard/installs, lists every i
 
 Each row shows when the app was installed, the verdict (`referrer`, `clipboard` or `fingerprint` with the confidence, or `organic`), the link it was credited to, the OS with its version and the device model, the app version, and chips for a reinstall and for each fraud flag (for example `emulator` for a simulator build). 25 rows load at a time; **Load more** adds the next 25.
 
-**reinstall** means one of two things: the app reported that it was installed on this device before, or the server already has an install with the same device id in this account. On an iPhone the SDK knows from a first-install date it keeps in the Keychain, which survives deleting the app; Android cannot tell on the phone, so there only the server's check applies. A reinstall is credited like any install but left out of the Overview's Installs number and the per-link install counts.
+**reinstall** means one of two things: the app reported that it was installed on this device before, or the server already has an install with the same device id in this account. On an iPhone the SDK knows from a first-install date it keeps in the Keychain, which survives deleting the app; Android cannot tell on the phone, so there only the server's check applies. A reinstall is credited like any install and counted under the Overview's Reinstalls and each link's `+{n} reinstalls`, not under Installs.
 
 Above the list:
 

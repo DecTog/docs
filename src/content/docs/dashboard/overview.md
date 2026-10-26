@@ -32,14 +32,15 @@ Each KPI card carries a chip that compares the current window with the previous 
 
 ## KPI cards
 
-All seven cards always render. Counts use the server's own timestamps, so an install counts in the window in which the SDK reported it, not when the device installed the app.
+All eight cards always render. Counts use the server's own timestamps, so an install counts in the window in which the SDK reported it, not when the device installed the app.
 
 | Card | Caption | What the number is |
 |---|---|---|
 | **Clicks** | | Every click in the window: web taps on your links plus clicks reported by the SDK. Requests from bots never create a click. |
 | **Unique visitors** | | The number of distinct hashed IP addresses among those clicks. It counts IP addresses, not devices or people: two phones on one Wi-Fi network are one visitor, and one phone that moves from Wi-Fi to cellular is two. |
-| **Installs** | `{n} attributed · {n} reinstalls excluded` | Installs reported in the window, excluding reinstalls. "Attributed" is the subset the server matched to a click. Reinstalls go through the same matching as any other install but are left out of this count; the second number says how many were left out. |
-| **Conversion** | `installs ÷ clicks` | Non-reinstall installs, organic ones included, divided by clicks, as a percentage with one decimal. Because organic installs count, the rate can exceed 100%, for example when the app gets installs that never came through a link. |
+| **Installs** | `first installs · {n} attributed` | First installs reported in the window: installs on a device the server had not seen install the app before. "Attributed" is the subset the server matched to a click. |
+| **Reinstalls** | `on a device that had the app before` | Reinstalls reported in the window: the server had seen the device install the app before, or the SDK found its own first-install date on the device. They go through the same matching as any other install and are counted here instead of under Installs. |
+| **Conversion** | `first installs ÷ clicks` | First installs, organic ones included, divided by clicks, as a percentage with one decimal. Because organic installs count, the rate can exceed 100%, for example when the app gets installs that never came through a link. |
 | **Revenue** | `tracked conversions` | Net revenue of the window: purchases minus refunds, each converted into your revenue currency (Settings) with the ECB rate of its day. Amounts whose rate is not known yet count as 0 until the daily conversion run. |
 | **Leads** | `signup events` | Events whose type is `lead`. |
 | **Opens** | `link re-opened the installed app` | App opens in the window: times a link opened an already installed app, as reported by the SDK. |
@@ -54,13 +55,13 @@ The chart buckets the last N calendar days. For **30d** and **90d** that is exac
 
 ### Installs by campaign
 
-Bars are installs. The label above each bar is that bucket's conversion rate; it is blank for buckets with no clicks.
+Each bar stacks first installs and, lighter on top, reinstalls. The label above each bar is that bucket's conversion rate (first installs ÷ clicks); it is blank for buckets with no clicks.
 
-- Each attributed, non-reinstall install is grouped by the `utm_campaign` query parameter of the click it was matched to. `(direct)` collects matched clicks that carried no `utm_campaign`.
+- Each attributed install is grouped by the `utm_campaign` query parameter of the click it was matched to. `(direct)` collects matched clicks that carried no `utm_campaign`. A reinstall counts under a campaign only when a new tap won it; one routed to its first install's click is `Organic`.
 - `Organic` collects installs that were not matched to any click. It has 0 clicks, so it never shows a conversion label.
 - Clicks are grouped by their own `utm_campaign`, so a campaign with clicks but no installs still appears, with a bar of 0.
-- Conversion per bucket is installs ÷ clicks, one decimal.
-- The chart shows the top 8 buckets, sorted by installs, then clicks.
+- Conversion per bucket is first installs ÷ clicks, one decimal.
+- The chart shows the top 8 buckets, sorted by first installs, then reinstalls.
 
 This chart reads the `utm_campaign` parameter on the URL people tapped. It does not read the **Campaign** field in a link's Tracking section, nor `dec_campaign`. Those values are stored on the click and returned to the app, but they do not feed this chart. See [URL parameters](/links/url-parameters/).
 
@@ -99,7 +100,7 @@ Empty state: "No events yet — call `identify` / `trackConversion` in the SDK."
 
 ### Top devices
 
-The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model DecTog knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in DecTog for the iPhone 8 to the iPhone 18 Pro Max. The count includes reinstalls; when some of them are reinstalls the row adds `(+{n} re)`.
+The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model DecTog knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in DecTog for the iPhone 8 to the iPhone 18 Pro Max. The count is first installs; when the model also had reinstalls the row adds `+{n} reinstalls`.
 
 Empty state: "No device data yet — enable the device tier in the SDK (`DectogCollection.deviceTier`)." See [Device data and privacy](/sdk/device-data-and-privacy/).
 
@@ -127,7 +128,7 @@ The top 10 countries by clicks in the window, shown as a flag plus the two-lette
 
 ## Breakdown
 
-Below the charts, **Breakdown** puts every metric side by side for one dimension: clicks, installs, conversion, opens, leads, revenue and LTV (the net revenue to date of the window's installs, per install: what an install from that source has been worth so far; app revenue only, since a website purchase has no install), per link, campaign, country, platform, OS, language, referrer, UTM value, app version, match source, routing rule (to compare A/B variants), page button (the button a visitor took on a link page) or event source (the app, the website through `dectog.js`, or a store) (the **By** menu). It covers the range selector's window, cut into days in your browser's time zone, and loads on its own rather than on the 15-second refresh.
+Below the charts, **Breakdown** puts every metric side by side for one dimension: clicks, installs (first installs), reinstalls, conversion, opens, leads, revenue and LTV (the net revenue to date of the window's first installs, per install: what an install from that source has been worth so far; app revenue only, since a website purchase has no install), per link, campaign, country, platform, OS, language, referrer, UTM value, app version, match source, routing rule (to compare A/B variants), page button (the button a visitor took on a link page) or event source (the app, the website through `dectog.js`, or a store) (the **By** menu). It covers the range selector's window, cut into days in your browser's time zone, and loads on its own rather than on the 15-second refresh.
 
 - Click a value to keep only it. A chip appears above the table, "Country is GB"; click another value to add it to the chip.
 - Hover a row and click **−** to leave that value out instead: "Country is not US". A chip keeps values or leaves them out, not both; picking the other way for the same dimension replaces it.
@@ -135,7 +136,7 @@ Below the charts, **Breakdown** puts every metric side by side for one dimension
 - `(organic)` is what no link brought, such as installs no tap won; `(none)` is a link that carried no value for the dimension, such as a tap without a `utm_source`. A metric the dimension does not apply to shows `—`: taps have no app version, and only installs have a match source.
 - An install counts under its winning tap's values, an event under the link it is credited to (the re-opening link inside its window, else the install's), the same rules as the [link stats](/dashboard/links/).
 
-The table shows the 50 largest values by clicks. **Export CSV** downloads it with up to 1,000; **Raw rows…** downloads the clicks, installs, app opens or events of the window that pass the chips; the installs file also has the reinstalls and app updates the Installs column leaves out, and a chip the rows cannot have (clicks by match source) stops the download with a message. A file over 50,000 rows is written in the background when the deployment has an exports bucket: the card says so and turns into a download link, good for 7 days. See [Export raw data](/api/export/).
+The table shows the 50 largest values by clicks. **Export CSV** downloads it with up to 1,000; **Raw rows…** downloads the clicks, installs, app opens or events of the window that pass the chips; the installs file has every install report, reinstalls and app updates included, and a chip the rows cannot have (clicks by match source) stops the download with a message. A file over 50,000 rows is written in the background when the deployment has an exports bucket: the card says so and turns into a download link, good for 7 days. See [Export raw data](/api/export/).
 
 The numbers read the raw rows, so they reach back as far as the retention window keeps them. They can differ from the KPI cards at the window's edges: for 30 and 90 days the cards cut days in UTC and Breakdown in your time zone, and for 7 days the cards count the last 168 hours and Breakdown seven calendar days, today included. In a browser set to UTC the 30- and 90-day totals agree. The same query is in the [Admin API](/api/admin-api/#the-analytics-query) and in the MCP `analytics` tool.
 
@@ -144,7 +145,7 @@ The numbers read the raw rows, so they reach back as far as the retention window
 This panel reads a separate endpoint and answers a different question from the cards above: not how many installs, but how reliably they were matched. Its intro text: "How reliably installs were matched in the last {N} days: the confidence the server assigned, how often the store handed back the install referrer, and whether the fingerprint agreed with the referrer when both existed."
 
 :::caution[Different totals]
-The panel counts every install in the window, including reinstalls and app updates. Its totals are higher than the Installs KPI, which excludes reinstalls.
+The panel counts every install in the window, including reinstalls and app updates. Its totals are higher than the Installs KPI, which counts first installs only.
 :::
 
 ### Tiles
@@ -259,7 +260,7 @@ Installs recorded before match explanations existed show the verdict without the
 
 These differences are by design. Knowing them saves you from chasing phantom discrepancies.
 
-- **Installs vs the quality panel.** Reinstalls are matched like any other install; only app updates and replayed signals skip the fingerprint. They are excluded from the Installs KPI, the campaign, source and attribution-quality charts and the per-link install counts, but the Match confidence panel, Top devices, Carriers, Connectivity and Apple Search Ads include them.
+- **Installs vs the quality panel.** Reinstalls are matched like any other install; only app updates and replayed signals skip the fingerprint. The Installs KPI, the attribution-quality chart and the per-link install counts leave them out; the Reinstalls KPI, the campaign and source charts, Breakdown and the Links screen show them next to the first installs; the Match confidence panel, Carriers, Connectivity and Apple Search Ads count them in.
 - **Conversion above 100%.** Organic installs count in the numerator.
 - **Revenue.** Net of refunds and converted into one currency, here and on the Links and Customers screens. A purchase in a currency whose rate has not arrived yet counts as 0 until the next daily run.
 - **Campaign and source charts.** They read `utm_campaign` and `utm_source` from the tapped URL, never the link's Tracking fields.

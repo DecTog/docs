@@ -131,7 +131,7 @@ Epoch values must fall between 1970 and 2100, otherwise they become `null`.
 ### What the server does, in order
 
 1. **Replay.** When `install_attempt_id` matches a row of your account, the stored verdict comes back with `"replayed": true`. Nothing is written and nothing is re-matched.
-2. **Reinstall flag.** `is_reinstall` is `true` when `install_state` is `reinstall`, or when the same `device_id` already has a non-reinstall install in your account. The flag does not stop matching; the dashboard excludes reinstalls from install counts.
+2. **Reinstall flag.** `is_reinstall` is `true` when `install_state` is `reinstall`, or when the same `device_id` already has a non-reinstall install in your account. The flag does not stop matching; the dashboard counts reinstalls apart from first installs.
 3. **Deterministic ladder.** Signals are tried in order: store referrer, clipboard URL, Meta referrer. Each signal that carries `dtg_click=<id>` is resolved:
    - The click exists and no install holds it: match. `match_source` is `referrer` (store or Meta) or `clipboard`, `referrer_source` is the store name, `meta`, or `null` for clipboard, and `match_confidence` is `guaranteed`.
    - The click is held by an install with the same `device_id`: that install's verdict is replayed (`"replayed": true`), nothing is written.
