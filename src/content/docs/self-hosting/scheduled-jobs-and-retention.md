@@ -40,7 +40,7 @@ Each account has a `rollup_state` row: `through_day`, the last built day, and `f
 
 A change to a raw row of a built day moves `through_day` back to the day before it, and the next run rebuilds from there: a late claim that credits an older install, a store notification that changes an amount or reverses a refund, an exchange rate that arrives late, a new re-engagement window on an app (every unfrozen day), a deleted app, a new account currency, and a permanent link delete, which also removes the link's rollup rows.
 
-What reads the rollups: the Overview's clicks, installs, opens, leads and revenue, its clicks per day and per device, for windows over 7 days (which are whole UTC days, today included), and the lifetime installs, opens, leads and revenue of every link on the Links screen.
+What reads the rollups: the Overview's clicks, installs, reinstalls, opens, leads and revenue, its clicks per day and per device, for windows over 7 days (which are whole UTC days, today included), and the lifetime installs, reinstalls, opens, leads and revenue of every link on the Links screen.
 
 ## Webhook retries (both triggers)
 

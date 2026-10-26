@@ -72,7 +72,7 @@ Three tabs, **Permanent {n}**, **Temporary {n}** and **Referrals {n}**, sit abov
 |---|---|---|
 | **Link** | `/slug`, which opens the live link in a new tab; a copy icon that turns into a check mark for 1.5 seconds; chips for the campaign and the label when set, and **Paused** (amber; hover for your reason), **Expired** (red; hover for where taps go) or **Archived**; underneath, the destination host and path, or `App fallback` when the link inherits the app's Fallback URL, then `· expires in 3d 4h` when an expiry is set. | |
 | **Clicks** | The link's click counter. It increases on every web tap, every click reported by the SDK and every click the server reconstructs from an install referrer, and it never decreases. A green `+{n} 7d` underneath counts the clicks of the last 7 days. | Lifetime; the `7d` line covers a rolling 7 days |
-| **Installs** | Installs matched to one of this link's clicks, excluding reinstalls. Underneath, `{n}% conv.` is installs ÷ the click counter, rounded to a whole percent, shown only when both are above 0. | Lifetime Click the number to list those installs; each opens the install detail described on [Overview](/dashboard/overview/#recent-installs), and **Open in Installs, to filter or watch →** opens the [Installs](/dashboard/installs/) screen searched for the link. |
+| **Installs** | First installs matched to one of this link's clicks. Underneath, `+{n} reinstalls` counts the reinstalls a new tap on this link won (a reinstall routed back to its first install's click stays organic), and `{n}% conv.` is first installs ÷ the click counter, rounded to a whole percent, shown only when both are above 0. | Lifetime Click the number to list those installs; each opens the install detail described on [Overview](/dashboard/overview/#recent-installs), and **Open in Installs, to filter or watch →** opens the [Installs](/dashboard/installs/) screen searched for the link. |
 | **Opens** | Times this link opened the already installed app. | Lifetime |
 | **Leads** | Events of type `lead` credited to this link: those from installs it brought, plus those within the re-engagement window after it re-opened the app. | Lifetime |
 | **Revenue** | Net revenue (purchases minus refunds) credited to this link, in your revenue currency; `—` when 0. A second line, `… after re-open`, shows the part credited because the link re-opened the installed app within the app's re-engagement window. | Lifetime |
@@ -107,7 +107,7 @@ Your app makes one referral link per customer with [`createReferralLink`](/guide
 | **Customer** | The customer the link belongs to, which opens their page. Viewers see `—`. | |
 | **Link** | `/slug`, the copy icon, a chip for the campaign when it is not `referral`, and the **Paused**, **Expired** or **Archived** chips. | |
 | **Clicks** | The click counter, with `+{n} 7d` underneath. | Lifetime |
-| **Installs** | Installs credited to the link, excluding reinstalls. Click the number to list them. | Lifetime |
+| **Installs** | First installs credited to the link, with `+{n} reinstalls` underneath when a new tap on it won any. Click the number to list them. | Lifetime |
 | **Referrals** | New customers who signed up after installing through the link: the referrals recorded for the customer. | Lifetime |
 | **Created** | The creation date. | |
 

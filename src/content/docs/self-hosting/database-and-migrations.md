@@ -37,7 +37,7 @@ The schema has 35 tables (`apps/worker/src/db/tables.ts`). Every table is scoped
 | `app_store_endpoints` | Per app, the secret token in its Apple and Google store-notification URLs, and the Pub/Sub service account Google signs with |
 | `store_notifications` | The store notifications received, with their outcome; 90 days |
 | `fx_rates` | The ECB's daily euro reference rates, for revenue in the account's currency |
-| `link_daily` | The daily rollups: per account, link, UTC day and platform, the clicks, installs, opens, leads and net revenue |
+| `link_daily` | The daily rollups: per account, link, UTC day and platform, the clicks, first installs, reinstalls, opens, leads and net revenue |
 | `rollup_state` | Per account, the last day the rollups hold (`through_day`) and the last day whose raw rows are gone (`frozen_through`) |
 | `webhooks` | Webhook endpoints: URL, optional app, events, encrypted signing secret, failure count and why one turned off |
 | `webhook_deliveries` | One row per event and webhook: the envelope's data, attempts, the last response; 30 days |

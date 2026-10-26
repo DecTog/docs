@@ -11,7 +11,7 @@ Why DecTog works the way it does, including the designs it chose not to adopt. E
 
 **1. Reinstalls go through matching.** A reinstall runs the attribution ladder
 like a first install and is credited when a signal matches; it carries
-`is_reinstall: true` and is excluded from the Installs KPI and per-link counts.
+`is_reinstall: true` and is counted under Reinstalls, apart from the first installs.
 Only `install_state: 'update'` and a reused click skip the fingerprint.
 *Rejected:* skipping matching for reinstalls, which would lose re-acquisition
 campaigns. *Revisit* if re-attribution windows become a feature. (2026-10-13)
