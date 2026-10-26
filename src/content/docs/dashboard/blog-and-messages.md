@@ -1,13 +1,13 @@
 ---
-title: Blog and messages
-description: The owner-only Blog, Categories and Messages screens, the limits of the public contact form, and where the public blog is served.
+title: Blog, messages and plans
+description: The owner-only Blog, Categories, Messages and Plans screens, the limits of the public contact form, where the public blog is served, and which accounts are over their plan's limit.
 sidebar:
   order: 8
 ---
 
-**Blog** and **Messages** are the site operator's screens: they manage the public blog at https://dectog.com/blog and the inbox of the public contact form. They appear in the sidebar only for the account with the `owner` role. Other accounts that open `/dashboard/blog` or `/dashboard/messages` are redirected to the Overview, and the API answers `403 Owner access required`. Who the owner is, and why signup never creates one, is explained in [Account and sign-in](/dashboard/account-and-sign-in/).
+**Blog**, **Messages** and **Plans** are the site operator's screens: they manage the public blog at https://dectog.com/blog and the inbox of the public contact form, and show every account's plan usage. They appear in the sidebar only for the account with the `owner` role. Other accounts that open `/dashboard/blog`, `/dashboard/messages` or `/dashboard/plans` are redirected to the Overview, and the API answers `403 Owner access required`. Who the owner is, and why signup never creates one, is explained in [Account and sign-in](/dashboard/account-and-sign-in/).
 
-Unlike every other screen, these are not scoped to an account: there is one blog and one inbox per deployment.
+Unlike every other screen, these are not scoped to an account: there is one blog and one inbox per deployment, and Plans covers every account.
 
 ## Blog posts
 
@@ -70,6 +70,12 @@ Messages come from https://dectog.com/contact ("Get in Touch"). The form is chec
 | **Message** | 10 to 2,000 characters. |
 
 The server accepts at most 5 submissions per hour per IP address. Submissions are counted before validation, so rejected ones use up the allowance; the sixth gets `Too many messages — try again later`. A message is only stored; no email is sent to anyone. The sender sees "Message sent!" with "Thank you for contacting us. We'll get back to you soon.", or "Message not sent" with the error.
+
+## Plans
+
+Every account's plan and [monthly active users](/dashboard/settings/#plan), for hosted DecTog's paid plans. The daily job at 03:17 UTC counts every account, including ones that never open Settings. Each account shows its username, its plan, its email (select it to write to them), its count against the plan's limit with a bar, and the last day counted; **Not counted yet** means the daily job has not run since it signed up. Accounts at or over their limit come first, marked **Over the limit**, then the rest by how close they are; the line above the list says how many are over.
+
+Nothing happens on its own when an account is over: its links and apps keep working. The [Terms](https://dectog.com/terms) promise to contact the account first, so write to it about moving to a plan that fits. On a deployment without Creem billing the screen says billing is not enabled.
 
 ## Where the public blog lives
 
