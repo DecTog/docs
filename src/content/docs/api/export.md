@@ -50,12 +50,12 @@ Raw rows live for the retention window (`RETENTION_DAYS`, 400 days by default); 
 
 ### Columns
 
-JSON columns (`link_params`, `fraud_flags`, `metadata`) arrive parsed; `is_reinstall`, `matched` and `via_open` are booleans. A CSV has the same columns in the same order, JSON columns as JSON text.
+JSON columns (`link_params`, `fraud_flags`, `blocked_by`, `metadata`) arrive parsed; `is_reinstall`, `matched` and `via_open` are booleans. A CSV has the same columns in the same order, JSON columns as JSON text.
 
 | Rows | Columns |
 |---|---|
 | Clicks | `id`, `clicked_at`, `link_slug`, `link_kind`, `source`, `origin`, `device_type`, `os`, `os_major`, `browser`, `device_model`, `device_id`, `country`, `region`, `city`, `lang`, `referrer`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `link_params`, `routing_rule`, `cta`, `cta_at`, `bot_score`, `sdk_name`, `sdk_version`, `metadata` |
-| Installs | `id`, `created_at`, `os`, `os_version`, `app_version`, `app_build_number`, `package_name`, `lang`, `timezone`, `device_id`, `device_model`, `device_manufacturer`, `is_reinstall`, `matched`, `matched_slug`, `matched_click_id`, `match_source`, `match_confidence`, `install_state`, `fraud_flags`, `asa_status`, `claimed_at`, `claim_source`, `sdk_name`, `sdk_version`, `metadata` |
+| Installs | `id`, `created_at`, `os`, `os_version`, `app_version`, `app_build_number`, `package_name`, `lang`, `timezone`, `device_id`, `device_model`, `device_manufacturer`, `is_reinstall`, `matched`, `matched_slug`, `matched_click_id`, `match_source`, `match_confidence`, `install_state`, `fraud_flags`, `blocked_by`, `asa_status`, `claimed_at`, `claim_source`, `sdk_name`, `sdk_version`, `metadata` |
 | App opens | `id`, `created_at`, `slug`, `click_id`, `device_id`, `install_id`, `app_version`, `os` |
 | Events | `id`, `created_at`, `type`, `event_name`, `revenue`, `currency`, `revenue_base`, `transaction_type`, `purchase_type`, `store`, `product_id`, `transaction_id`, `original_transaction_id`, `quantity`, `install_id`, `device_id`, `customer_id`, `matched_slug`, `source`, `web_click_id`, `credited_slug`, `via_open`, `client_event_id`, `client_timestamp`, `metadata` |
 

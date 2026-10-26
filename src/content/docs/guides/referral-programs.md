@@ -28,6 +28,8 @@ Nothing extra in the app: the friend taps the link, installs, opens the app, and
 | `referee_customer_id` | The new user |
 | `install_id`, `link_slug` | The install and the referral link |
 | `match_source`, `match_confidence` | How the install was attributed (`referrer`, `clipboard`, `fingerprint`; `guaranteed` or `high`) |
+| `fraud_flags` | The install's fraud flags and the referral rules that hit (see step 5); empty when clean |
+| `status` | `converted`, or `rejected` when the app blocks a referral rule that hit |
 
 An install records at most one referral. A user who identifies with the referrer's own id records none. An existing customer who identifies on the new install records none.
 
@@ -68,6 +70,7 @@ Webhooks subscribed to `referral.converted` that take the referral link's app (o
     "install_id": "3d2b6c1e-…",
     "match_source": "referrer",
     "match_confidence": "guaranteed",
+    "fraud_flags": [],
     "created_at": "2026-10-14T13:20:11.000Z",
     "link": { "slug": "r-3fa94c1b2e", "url": "https://acme.dectog.com/r-3fa94c1b2e" }
   },
@@ -78,6 +81,15 @@ Webhooks subscribed to `referral.converted` that take the referral link's app (o
 
 It is signed like every delivery and retried until delivered, with the same `event_id` each time (see [Webhooks](/api/webhooks/)). Grant the reward there, keyed on `referral.id`. If `match_confidence` matters to your policy, for example rewarding only `guaranteed` matches, decide it there too.
 
+## 5. Watch for self-referrals
+
+Every referral is checked against two [fraud rules](/start/fraud-rules/#referral-rules) of its own, on top of the install's:
+
+- `referral_same_device`: the new customer signed up on a device the referrer used. The usual case is someone installing through their own link, signing in, then making a second account.
+- `referral_same_network`: the install came from a network one of the referrer's other devices used in the 30 days before. Never on cellular data. A household trips it too, so it is weak evidence on its own.
+
+`referral.fraud_flags` lists what hit, together with the install's own flags (an emulator, a re-signed build). Decide in your webhook what a flag costs, or let DecTog decide: on the [Apps](/dashboard/apps/#fraud-rules) page, tick **Reject referral** for either rule. A rejected referral is still recorded, as `rejected`, but sends no `referral.converted` and is not counted, so your reward code never sees it.
+
 ## In the dashboard
 
-The Overview shows a **Referrals** card once there is one. A customer's page shows who referred them and whom they referred. The **Links** page lists referral links on their own **Referrals** tab, one row per customer with its clicks, installs and recorded referrals; see [Links](/dashboard/links/#referral-links).
+The Overview shows a **Referrals** card once there is one; it counts converted referrals only. A customer's page shows who referred them and whom they referred, with a **rejected** chip and each referral's flags. The **Links** page lists referral links on their own **Referrals** tab, one row per customer with its clicks, installs and recorded referrals, and how many referrals were flagged or rejected; see [Links](/dashboard/links/#referral-links).

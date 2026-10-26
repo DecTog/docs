@@ -84,7 +84,7 @@ Only mobile web clicks of your account, from the same hashed IP (IPv6 at /64) an
 | The click carries a device model, the install carries one too, and the install is not on cellular data | 24 hours (`ATTRIBUTION_WINDOW_HOURS`) |
 | Everything else: a click without a model (iOS Safari sends none), or an install on cellular data | 2 hours (`ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS`), or the app's **Low-entropy attribution window** (1 to 720 hours), never longer than the 24-hour window |
 
-The per-app window is the install's own app's: the app whose package or bundle ID the SDK reports, or the only app of a one-app account. An install is also only matched against clicks on its own app's links, and on links bound to no app. A store referrer has no window: one older than 30 days still matches, with the fraud flag `stale_referrer`. An app can turn the probabilistic match off (Apps, Advanced, **Probabilistic match**); its installs then use the deterministic signals only. A pasted link and Meta's referrer count for 7 days (the app's **Pasted-link and Meta window**, 1 to 720 hours). An older one opens the link's content in the app (routing) but earns no credit and carries `stale_clipboard` or `stale_meta`; with strict fraud mode on it does nothing.
+The per-app window is the install's own app's: the app whose package or bundle ID the SDK reports, or the only app of a one-app account. An install is also only matched against clicks on its own app's links, and on links bound to no app. A store referrer has no window: one older than 30 days still matches, with the fraud flag `stale_referrer`. An app can turn the probabilistic match off (Apps, Advanced, **Probabilistic match**); its installs then use the deterministic signals only. A pasted link and Meta's referrer count for 7 days (the app's **Pasted-link and Meta window**, 1 to 720 hours). An older one opens the link's content in the app (routing) but earns no credit and carries `stale_clipboard` or `stale_meta`; an app that blocks those rules does not route it either.
 
 ## Reinstalls and app updates
 
@@ -103,24 +103,11 @@ The verdict can change once, from organic or fingerprint to deterministic:
 - A link pasted through `DectogPasteButton` (iOS 16 and later, no system alert) is sent as a claim.
 - A late Meta read is sent as a claim.
 
-Claims never run the fingerprint and never downgrade: a deterministic verdict is final, including a strict-mode verdict that was zeroed. The response carries `claim: upgraded | unchanged | rejected` with a `claim_reason` (`click_reuse`, `click_not_found`, `no_signal`, `already_deterministic`, `stale_click`), and the SDK re-emits an upgraded verdict on `onAppInstalled`.
+Claims never run the fingerprint and never downgrade: a deterministic verdict is final, including one whose credit a blocked fraud rule withheld. A fingerprint match whose credit was withheld can still be upgraded. The response carries `claim: upgraded | unchanged | rejected` with a `claim_reason` (`click_reuse`, `click_not_found`, `no_signal`, `already_deterministic`, `stale_click`), and the SDK re-emits an upgraded verdict on `onAppInstalled`.
 
-## Fraud flags and strict mode
+## Fraud flags
 
-Every install is checked against explainable rules. The hits ride on the verdict as `fraud_flags`, on the webhook and in the dashboard:
-
-| Flag | Fires when |
-|---|---|
-| `emulator` | The SDK reports a non-physical device, the model name looks like an emulator, or an Android phone reports an x86 CPU |
-| `impossible_speed` | The deterministic click happened less than 10 seconds before the install report |
-| `install_velocity_ip` | The same hashed IP already produced 5 installs in 24 hours (25 on cellular data) |
-| `click_storm_ip` | The matched click's IP produced more than 100 clicks in the hour before it |
-| `stale_referrer` | The referrer or clipboard click is older than 30 days |
-| `stale_clipboard` | A pasted link's click is older than the pasted-link window (7 days by default); the install is routed, not credited |
-| `stale_meta` | The same for Meta's install referrer |
-| `click_reuse` | A deterministic signal named a click another device's install already consumed |
-
-With **Strict fraud mode** off (the default) attribution stands and the flags are evidence. With it on, a flagged install is stored with `matched: false` and `match_source: null` and counts as organic; the record keeps `referrer_source`, `match_confidence` and the matched slug (the app's verdict and the `app.installed` webhook show the first two but never the slug), and the click stays consumed so nobody else can claim it. Strict mode is read from the app the verdict concerns: the credited or routed link's app, else the install's own app, else the oldest app.
+Every install is checked against explainable fraud rules: an emulator, a tap too close to the first launch, a tap made after Google Play began the download, an app not installed by Play, a build signed with an unknown key, many installs from one network, a flood of taps, a stale or replayed signal. The hits ride on the verdict as `fraud_flags`, on the webhook and in the dashboard, and by default attribution stands. Each app can choose rules that act instead: a blocked rule withholds a flagged install's credit, so it counts as organic while its tap stays used. [Fraud rules](/start/fraud-rules/) lists every rule and what blocking it does.
 
 ## Apple Search Ads
 

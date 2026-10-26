@@ -73,8 +73,9 @@ from it. *Rejected:* reading username and slug from the URI's shape, which turne
 an app route like `myapp://products/42` into user `products`, slug `42`.
 
 **11. The webhook hides link fields unless the install is credited,** exactly
-like the SDK verdict. *Rejected:* sending `slug` next to `matched: false` on a
-strict-mode install, which invited consumers to credit it.
+like the SDK verdict. *Rejected:* sending `slug` next to `matched: false` on an
+install whose credit a blocked fraud rule withheld, which invited consumers to
+credit it.
 
 **12. Raw IP addresses are opt-in.** Matching, fraud rules and rate limits use
 only the salted hash; `STORE_RAW_IP=1` also keeps the raw address for the

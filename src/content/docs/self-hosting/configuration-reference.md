@@ -84,12 +84,12 @@ Settings that apply per registered app live on the `apps` row and are edited und
 | Social preview | `og_title`, `og_description`, `og_image_url` | 150 characters, 150 characters, http(s) URL |
 | Mobile interstitial | `mobile_interstitial` | 0/1. Serves the beacon page on mobile taps so the click row gets a screen profile and device settings. |
 | iOS tap-to-store | `ios_tap_to_store` | 0/1. One-tap page that copies the link to the pasteboard before opening the App Store. |
-| Strict fraud mode | `strict_fraud_mode` | 0/1. Flagged installs count as organic. |
+| Fraud rules | `fraud_block_rules` | JSON array of the [fraud rules](/start/fraud-rules/) that act instead of only flagging, default `[]`. The API refuses an unknown rule and `click_reuse`. |
 | Low-entropy window | `low_entropy_window_hours` | Whole number 1 to 720, or empty for `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS` |
 | Pasted-link and Meta window | `deterministic_window_hours` | Whole number 1 to 720, or empty for `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` |
 | Re-engagement window | `reengagement_window_hours` | Whole number 1 to 720, or empty for `REENGAGEMENT_WINDOW_HOURS` |
 
-`strict_fraud_mode`, `low_entropy_window_hours`, `deterministic_window_hours` and an install's webhook app are read from the app an install concerns (`apps/worker/src/appscope.ts`): the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The redirect engine uses the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
+`fraud_block_rules`, `low_entropy_window_hours`, `deterministic_window_hours` and an install's webhook app are read from the app an install concerns (`apps/worker/src/appscope.ts`): the app of the credited or routed link; else the install's own app, the one whose Android package or iOS bundle ID equals the `package_name` the SDK sends (on an account with one app, that app); else the oldest app. The redirect engine uses the link's own app for routing, store URLs, schemes, interstitial and tap-to-store.
 
 ## Fixed constants
 
@@ -107,7 +107,7 @@ These are code constants. Changing them means editing the source and redeploying
 | Beacon binding | Same hashed IP, within 10 minutes of the click | `collect.ts` |
 | Bot threshold | Cloudflare bot score below 30 records no click | `redirect.ts` |
 | Fingerprint candidate pool | Newest 50 web clicks from the same hashed IP | `attribution.ts` |
-| Fraud thresholds | Velocity 5 (Wi-Fi/unknown) or 25 (cellular) installs per hashed IP in 24 h; click storm over 100 clicks per hashed IP in the hour before the click; impossible speed under 10 s; stale referrer over 30 days | `fraud.ts` |
+| Fraud thresholds | Velocity 5 (Wi-Fi/unknown) or 25 (cellular) other installs per hashed IP in the 24 h before the first launch; click storm over 100 clicks per hashed IP in the hour before the click; impossible speed under 10 s; click injection a tap over 5 s after Google's install-begin time; stale referrer over 30 days; referral network lookback 30 days | `fraud.ts`, `referrals.ts` |
 | Apple Search Ads | 3 inline attempts, 24 h token TTL, 100 tokens per cron pass | `asa.ts` |
 | Reserved usernames | `app www api links dashboard admin mail static cdn` | `bootstrap.ts` |
 | Brand name | `DecTog` | `brand.ts` |

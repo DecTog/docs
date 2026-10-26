@@ -38,7 +38,7 @@ All eight cards always render. Counts use the server's own timestamps, so an ins
 |---|---|---|
 | **Clicks** | | Every click in the window: web taps on your links plus clicks reported by the SDK. Requests from bots never create a click. |
 | **Unique visitors** | | The number of distinct hashed IP addresses among those clicks. It counts IP addresses, not devices or people: two phones on one Wi-Fi network are one visitor, and one phone that moves from Wi-Fi to cellular is two. |
-| **Installs** | `first installs · {n} attributed` | First installs reported in the window: installs on a device the server had not seen install the app before. "Attributed" is the subset the server matched to a click. |
+| **Installs** | `first installs · {n} attributed · {n} flagged` | First installs reported in the window: installs on a device the server had not seen install the app before. "Attributed" is the subset the server matched to a click; "flagged" (shown when any) the ones that tripped a [fraud rule](/start/fraud-rules/). |
 | **Reinstalls** | `on a device that had the app before` | Reinstalls reported in the window: the server had seen the device install the app before, or the SDK found its own first-install date on the device. They go through the same matching as any other install and are counted here instead of under Installs. |
 | **Conversion** | `first installs ÷ clicks` | First installs, organic ones included, divided by clicks, as a percentage with one decimal. Because organic installs count, the rate can exceed 100%, for example when the app gets installs that never came through a link. |
 | **Revenue** | `tracked conversions` | Net revenue of the window: purchases minus refunds, each converted into your revenue currency (Settings) with the ECB rate of its day. Amounts whose rate is not known yet count as 0 until the daily conversion run. |
@@ -62,6 +62,7 @@ Each bar stacks first installs and, lighter on top, reinstalls. The label above 
 - Clicks are grouped by their own `utm_campaign`, so a campaign with clicks but no installs still appears, with a bar of 0.
 - Conversion per bucket is first installs ÷ clicks, one decimal.
 - The chart shows the top 8 buckets, sorted by first installs, then reinstalls.
+- The tooltip adds **Flagged for fraud** when any: first installs from a tap on that campaign that tripped a [fraud rule](/start/fraud-rules/), whether credited or not. An install whose credit a blocked rule withheld is counted under `Organic` for installs but under its tap's campaign here, so a campaign that only draws fraud still shows it.
 
 This chart reads the `utm_campaign` parameter on the URL people tapped. It does not read the **Campaign** field in a link's Tracking section, nor `dec_campaign`. Those values are stored on the click and returned to the app, but they do not feed this chart. See [URL parameters](/links/url-parameters/).
 
@@ -84,11 +85,11 @@ Non-reinstall installs in the window, grouped by how they were matched, as bars 
 | **Install referrer (deterministic)** | Matched through an install referrer handed over by a store (Google Play, Huawei, Samsung, Xiaomi, vivo) or by Meta's on-device referrer. |
 | **Copied link (deterministic)** | Matched through a link found on the device's clipboard: the iOS tap-to-store page copies it, or the user pasted it. |
 | **Device fingerprint (probabilistic)** | Every other matched install, including rows that record no match source. |
-| **Organic** | Installs not matched to a click. With strict fraud mode on, flagged installs are stored as unmatched and land here. |
+| **Organic** | Installs not matched to a click, including those whose credit a blocked [fraud rule](/start/fraud-rules/) withheld. |
 
 Empty state: "No installs in this window."
 
-Inside the card, an amber box appears when at least one non-reinstall install carries fraud flags: `{n} install(s) flagged for fraud signals`, followed by up to six chips reading `{reason} · {count}`. The reasons are the rule names `emulator`, `impossible_speed`, `install_velocity_ip`, `click_storm_ip`, `stale_referrer`, `stale_clipboard`, `stale_meta` and `click_reuse`. The headline count excludes reinstalls; the per-reason counts include them.
+Inside the card, an amber box appears when at least one first install in the window carries fraud flags: `{n} first install(s) flagged for fraud`, then `· {n} acted on by a blocked rule` when an app's blocked rules acted on some, followed by a chip per rule reading `{label} · {count}` (and `({n} acted on)`). Hovering a chip explains the rule; clicking it opens [Installs](/dashboard/installs/) filtered to that rule. The total and the chips count the same first installs; one install can trip several rules. See [Fraud rules](/start/fraud-rules/).
 
 ### Recent events
 
@@ -248,7 +249,8 @@ These counts include reinstalls. The lookup lifecycle (three inline attempts, ho
 
 The 12 newest installs, whatever the range: a chip with how each was matched (`referrer`, `clipboard`, `fingerprint`, or `organic`), the link it was credited to, the OS and device model, a fraud chip when rules fired, and the time. **View all** opens the [Installs](/dashboard/installs/) screen, which lists every install with filters and a Watch mode for testing. Clicking one opens the **install detail**:
 
-- **Verdict**: credited link or organic, match source, confidence, reinstall, fraud flags.
+- **Verdict**: credited link, organic, or `credit to /{slug} withheld`, match source, confidence, reinstall, fraud flags.
+- **Fraud checks**: every install rule with what it compared, flagged, clear or not checked (see [Installs](/dashboard/installs/#the-install-detail)).
 - **Why**: the signal that named the click (store referrer, pasted link, Meta referrer, a late claim), or the fingerprint's best and runner-up candidates with each signal marked agree, mismatch or missing (device model, OS version, language, screen, network), their scores, the gap between them, the window that applied and how many repeat taps were merged. Under each candidate, **Recorded, not scored** marks the signals worth 0 points the same way: OS minor version, text size, dark mode, Increase Contrast, Reduce Motion, time zone (the UTC offset), language and region, and Android WebView build. **Show values** adds what the app and the tap each reported next to every signal (see [Installs](/dashboard/installs/#the-install-detail)). When a deterministic signal decided, a block **The tap the signal named, signal by signal** shows how that tap compares with the install, scored and unscored signals alike, and under **Network** whether it came from the install's address and IP version, when one was recorded (see [Attribution internals](/self-hosting/attribution-internals/#the-stored-explanation)), and the fingerprint's own pick is shown as well. When the fingerprint did not run, the reason is given.
 - **Tap**: the credited (or routed) tap with its time, device and country, and any late claim that upgraded the verdict.
 - **App opens** and **Events** of that install, then its **Screens**: the install's app sessions with the screens shown in each, as on a [customer](/dashboard/customers/#screens).
@@ -266,8 +268,8 @@ These differences are by design. Knowing them saves you from chasing phantom dis
 - **Campaign and source charts.** They read `utm_campaign` and `utm_source` from the tapped URL, never the link's Tracking fields.
 - **Recent events.** Always the latest 12, whatever the range.
 - **Per-link numbers.** The [Links](/dashboard/links/) screen shows lifetime totals, so its columns do not match a 7-, 30- or 90-day Overview.
-- **Fraud counts.** The headline excludes reinstalls; the per-reason chips include them.
-- **Match sources under strict mode.** A flagged install appears as Organic here even though the server still records which link it came from. See [Apps](/dashboard/apps/).
+- **Fraud counts.** First installs only, in the total and in each rule's chip.
+- **Withheld installs.** An install whose credit a blocked fraud rule withheld appears as Organic in the match sources and installs, even though the server still records which link it came from; the flagged counts place it under that link and campaign. See [Fraud rules](/start/fraud-rules/).
 
 :::note[Self-hosting]
 The screen is identical on a self-hosted deployment. The **Set up with your agent** prompt always points at `https://dectog.com/SKILL.md`.

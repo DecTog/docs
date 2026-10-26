@@ -78,7 +78,7 @@ Subtitle: "The link click that led to this customer's install. Open install show
 | **Link params** | The tracking values stored on the click, as `label=… · campaign=… · adgroup=… · creative=… · tracker=…`, from the link's Tracking fields or `dec_*` overrides. |
 | **Deep link** | The `dec_deeplink` route the click carried. |
 | **Click IP** | The raw IP address of the click; `—` when the deployment sets `STORE_RAW_IP=0`. |
-| **Fraud flags** | Amber chips with the rule names the install tripped, such as `emulator` or `click_reuse`. |
+| **Fraud flags** | A chip per [fraud rule](/start/fraud-rules/) the install tripped, such as **Emulator** or **Reused tap**: amber when the rule only flags, red when a rule the app blocks acted on it. Hovering a chip explains the rule. |
 
 Below the fields, **Open install** opens the [install detail](/dashboard/overview/#recent-installs) with its attribution parts only: the verdict, its **Why** (the signal that named the click with the tap it named, signal by signal, or the fingerprint's candidates with each signal marked agree, mismatch or missing), the tap and the device's data. That is where an organic customer's near misses show. It leaves out the app opens, events and screens, which this page already lists for the customer.
 

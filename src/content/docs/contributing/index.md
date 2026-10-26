@@ -89,7 +89,7 @@ cd react-native-dectog && npm ci && npm test && npm run typecheck && npm run syn
 cd docs && npm ci && npm run build            # fails on broken internal links
 ```
 
-The worker suite covers the attribution ladder end to end (referrer, clipboard, Meta, scored fingerprint and confidence, late claims, idempotent replays, one install per click, synthesized clicks), the fraud rules and strict mode, Apple Search Ads against a stand-in API, OEM store routing and the tap-to-store page, request signing and rate limits, the events pipeline and customers, link and app CRUD, the redirect engine, retention and the schema registry.
+The worker suite covers the attribution ladder end to end (referrer, clipboard, Meta, scored fingerprint and confidence, late claims, idempotent replays, one install per click, synthesized clicks), the fraud rules, the rules an app blocks and referral fraud, Apple Search Ads against a stand-in API, OEM store routing and the tap-to-store page, request signing and rate limits, the events pipeline and customers, link and app CRUD, the redirect engine, retention and the schema registry.
 
 To run the server locally with the demo account, follow [Local quick start](/self-hosting/local-quick-start/). To test an SDK change against it, run the worker with `npm run dev:android` and the example app with `flutter run --dart-define-from-file=env/dev.json`. See [Testing](/sdk/testing/).
 
