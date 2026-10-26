@@ -131,7 +131,7 @@ starlight-theme-select label:hover {
 	background-color: var(--dt-surface);
 	color: var(--dt-ink);
 }
-/* Current page: a surface pill with a tangerine dot. */
+/* Current page: a surface pill with an orange dot. */
 .sidebar-content .top-level a[aria-current='page'],
 .sidebar-content .top-level a[aria-current='page']:hover,
 .sidebar-content .top-level a[aria-current='page']:focus {
@@ -207,7 +207,7 @@ starlight-theme-select label:hover {
 	line-height: 1.6;
 	color: var(--dt-ink);
 }
-/* A hairline rail; the section being read carries a tangerine bar on it. */
+/* A hairline rail; the section being read carries an orange bar on it. */
 .right-sidebar-panel nav > ul {
 	border-inline-start: 1px solid var(--dt-hairline);
 }
