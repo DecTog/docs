@@ -1,11 +1,11 @@
 ---
 title: Settings
-description: Your account details, the account key for servers and the SDK keys for apps, how to view, copy, create, revoke and regenerate them, the link configuration of the deployment, and the audit log of every change.
+description: Your account details, your hosted plan, the account key for servers and the SDK keys for apps, how to view, copy, create, revoke and regenerate them, the link configuration of the deployment, and the audit log of every change.
 sidebar:
   order: 6
 ---
 
-The Settings screen, at https://app.dectog.com/dashboard/settings, has up to ten cards: **Account**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
+The Settings screen, at https://app.dectog.com/dashboard/settings, has up to eleven cards: **Account**, **Plan**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
@@ -18,6 +18,23 @@ The Settings screen, at https://app.dectog.com/dashboard/settings, has up to ten
 | **Data retention** | How many days the account keeps raw taps, installs, events and app starts, 1 to the deployment's maximum (400 on the hosted service). Empty keeps the maximum. **Save** applies it from the next daily run (03:17 UTC): older rows lose their personal columns, or go once the daily totals hold their day; totals stay. See [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/#anonymization-sweep-daily). |
 
 Apart from the revenue currency, the retention window and connecting Google nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
+
+## Plan
+
+Your account's plan on hosted DecTog: its name, price and the monthly active users it covers (see [Pricing](https://dectog.com/pricing)), and a line on where the subscription stands: when it renews, that a failed payment is being retried, or when a cancelled plan ends. Payments, invoices and tax are handled by [Creem](https://www.creem.io), DecTog's merchant of record. The plan is the live account's: the test environment shows the same one. Every role sees the card; only owners act on it, and others read "An owner of this account chooses and manages the plan."
+
+| Action | What happens |
+|---|---|
+| **Choose Starter**, **Choose Growth**, **Choose Scale** | Shown to owners on the Free plan. Opens Creem's checkout for that plan, with your email filled in. After paying you come back to Settings, which says "Payment received" until Creem confirms it, usually within a minute; the card then shows the plan. The **Choose** buttons on the [pricing page](https://dectog.com/pricing) open this card with that plan picked, through sign-in if you are signed out. |
+| **Manage billing** | Shown to owners once the account has had a subscription. Opens Creem's customer portal, where you change plan, update your card, download invoices or cancel. Creem reports each change back within moments, and the card shows it the next time Settings loads. |
+
+When you cancel in the portal, Creem ends the subscription at once and charges nothing more, but the plan stays until the end of the month you paid for; the card says "Cancelled: the Starter plan ends on …, then the account is on Free." You can choose a plan again once it has ended. A payment that fails keeps the plan while Creem retries it; update your card in **Manage billing**. Refunds within 14 days of your first payment are by email to support@dectog.com; see the [Terms](https://dectog.com/terms).
+
+Plan changes are recorded in the [audit log](#audit-log), by **DecTog**.
+
+:::note[Self-hosting]
+The card appears only on a deployment with Creem billing configured, which is hosted DecTog's. A self-hosted deployment has no plans and no card; see [Configuration reference](/self-hosting/configuration-reference/#secrets).
+:::
 
 ## Account key
 
@@ -83,10 +100,11 @@ Once it exists, a **Live** / **Test** switch sits at the top of the sidebar. In 
 Every change to the account, newest first, 25 at a time (**Show older** loads more):
 
 - links, temporary links, link templates, apps, webhooks, SDK keys, site keys, the account key, the custom domain and the revenue currency, whether changed in the dashboard or through the API;
+- a plan checkout started, and every change to the subscription that follows (bought, plan changed, payment failing, cancelled, ended);
 - every sign-in, wrong password, sign-out and password reset;
 - every CSV export.
 
-Each entry has its number, when it happened, what happened and to what (the link, app, key or webhook), who did it, and the fields that changed, before and after. Who is the email of the person signed in, the account key (by its prefix), an SDK key (by name and prefix), **DecTog** for changes DecTog made itself, or **Someone not signed in** for a wrong password or a reset request. DecTog's own changes are a webhook turned off after 20 failed deliveries, a custom domain's status moving (for example to **Active**), and a removed domain deleted at the end of its grace.
+Each entry has its number, when it happened, what happened and to what (the link, app, key or webhook), who did it, and the fields that changed, before and after. Who is the email of the person signed in, the account key (by its prefix), an SDK key (by name and prefix), **DecTog** for changes DecTog made itself, or **Someone not signed in** for a wrong password or a reset request. DecTog's own changes are a webhook turned off after 20 failed deliveries, a custom domain's status moving (for example to **Active**), a removed domain deleted at the end of its grace, and the subscription changes Creem reports.
 
 What is never recorded:
 

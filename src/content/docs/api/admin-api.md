@@ -91,6 +91,19 @@ Every session route needs a team role in the account it acts on, and the role is
 
 `GET /api/admin/me` also returns `role` (yours in the account shown), `live_account` (`{id, username}`, the account selected even while its test environment is shown) and `accounts` (`[{id, username, role}]`, your own first if you have one).
 
+## Plans
+
+Hosted DecTog only: on a deployment without Creem billing (`CREEM_*` unset, see [Configuration reference](/self-hosting/configuration-reference/#secrets)) `GET /api/admin/billing` answers `{enabled: false, plan: null, subscription: null}` and the other routes `404 billing_disabled`. The plan is the live account's, whichever environment the dashboard shows.
+
+| Method and path | Role | Purpose | Response |
+|---|---|---|---|
+| `GET /api/admin/billing` | viewer | The account's plan and its Creem subscription. `plan` is `free`, or the plan of a subscription that is active, on trial, retrying a failed payment, scheduled to cancel, or cancelled before the end of its paid period. | `200 {enabled, plan, subscription}`; `subscription` is `{id, plan, status, current_period_end, canceled_at}` (that one, else the latest) or `null` |
+| `POST /api/admin/billing/checkout` | owner | `{plan}`: `starter`, `growth` or `scale`. A Creem checkout for the plan's product; you return to `{WEB_URL}/dashboard/settings/?billing=done`. | `200 {checkout_url}`; `400` for another plan; `409 already_subscribed` while a plan is held; `502 billing_unavailable` when Creem fails |
+| `POST /api/admin/billing/portal` | owner | A link to Creem's customer portal for the account's Creem customer. | `200 {url}`; `404 no_billing_customer` before any purchase; `502 billing_unavailable` |
+| `POST /api/billing/creem` | Creem's signature | Creem's webhooks. `creem-signature` must be the hex HMAC-SHA256 of the raw body with `CREEM_WEBHOOK_SECRET`. A completed checkout and every `subscription.*` event update the subscription; an event older than the last one applied changes nothing. | `200 {received: true}`, also for events it does not use; `401 invalid_signature`; `400` for a body that is not an event |
+
+See [Settings: Plan](/dashboard/settings/#plan).
+
 ## Test environment
 
 An account's test environment is a second account, `t-<username>`, with the same apps and link templates; see [Settings: Test environment](/dashboard/settings/#test-environment).
