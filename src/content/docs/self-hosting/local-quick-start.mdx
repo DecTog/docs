@@ -9,6 +9,10 @@ import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 A local DecTog is two processes. The Cloudflare Worker runs on port 8787 with a local D1 database under `apps/worker/.wrangler/state`: it serves the REST API, the admin API, the redirect engine and the well-known files. The Next.js app runs on port 3000 and proxies every `/api/*`, `/r/*` and `/.well-known/*` request to the worker (`apps/web/next.config.ts`), so the dashboard's session cookie stays same-origin. You do not need a Cloudflare account; `wrangler dev` runs everything locally.
 
+:::caution[Pre-release]
+The server repository is not public yet; it opens with the first release. Until then `git clone` does not work, and the hosted service at [app.dectog.com](https://app.dectog.com) is the way to run DecTog.
+:::
+
 ## Prerequisites
 
 - Node 22.12 or newer, and npm.

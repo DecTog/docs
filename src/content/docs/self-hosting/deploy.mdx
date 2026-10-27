@@ -9,6 +9,10 @@ import { Steps, Aside } from '@astrojs/starlight/components';
 
 Production is the `production` environment in `apps/worker/wrangler.jsonc`: one Worker bound to two routes on your zone, one D1 database, two cron triggers and a static-assets binding that serves the dashboard. The same Worker answers the API, the admin API, the link redirects, the well-known files and the dashboard host. No domain yet? [One click on workers.dev](#one-click-on-workersdev) deploys the same Worker on your workers.dev subdomain.
 
+:::caution[Pre-release]
+The server repository is not public yet; it opens with the first release. Until then the Deploy to Cloudflare button and `git clone` do not work, and the hosted service at [app.dectog.com](https://app.dectog.com) is the way to run DecTog.
+:::
+
 ## One click on workers.dev
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/DecTog/dectog)
