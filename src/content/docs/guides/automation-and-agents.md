@@ -16,7 +16,7 @@ Everything the Flutter SDK does with links, a script or an AI agent can do too. 
 Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only to `https://app.dectog.com` or your own deployment.
 
 :::note[Self-hosting]
-Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLIC_BASE_URL>/r/{username}/{slug}`. `SKILL.md` and `llms.txt` are served from your `SITE_URL` and your `WEB_URL`.
+Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLIC_BASE_URL>/r/{username}/{slug}`. `SKILL.md`, `llms.txt` and the agent catalog (`/.well-known/ard.json`) are served from your `SITE_URL` and your `WEB_URL`.
 :::
 
 ## MCP server
@@ -245,6 +245,7 @@ A 429 returns `{"error":{"code":"rate_limited","message":"Rate limit exceeded"}}
 |---|---|
 | `https://dectog.com/SKILL.md` | The agent guide: concepts, API, SDK, webhook and self-hosting in one file, with a `version` in its frontmatter. Also served at `https://app.dectog.com/SKILL.md`. |
 | `https://dectog.com/llms.txt` | A short index of agent-readable references. Also at `https://app.dectog.com/llms.txt`. |
+| `https://dectog.com/.well-known/ard.json` | The agent catalog, for registries and agents that discover resources by domain ([Agentic Resource Discovery](https://agenticresourcediscovery.org/)). It lists the MCP server, with its URL, protocol versions and `Authorization` header inline as an MCP Server Card, and `SKILL.md`. The same document answers at `/.well-known/ai-catalog.json`, the name MCP server-card discovery reads, and on `https://app.dectog.com`. |
 | `https://docs.dectog.com/llms.txt` | An index of every page on this site with its description, generated at build time |
 | `https://docs.dectog.com/llms-full.txt` | Every page of this site in one Markdown file |
 
