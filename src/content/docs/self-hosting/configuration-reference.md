@@ -22,7 +22,7 @@ A one-off override for a single run uses `wrangler dev --var NAME:value` (this i
 
 | Variable | Dev | Production | Effect |
 |---|---|---|---|
-| `ROOT_DOMAIN` | `localhost:8787` | `dectog.com` | Tenant hosts are `<username>.<ROOT_DOMAIN>`; the port is ignored and `*.localhost` qualifies, so `demo.localhost:8787` works locally. Also: without an assets binding, the apex 301 of every page path to `SITE_URL`; recognizing the deployment's own hosts as self-referrers and as valid clipboard URLs, and subdomain resolution of the well-known files (skipped while the value starts with `localhost`). |
+| `ROOT_DOMAIN` | `localhost:8787` | `dectog.com` | Tenant hosts are `<username>.<ROOT_DOMAIN>`; the port is ignored and `*.localhost` qualifies, so `demo.localhost:8787` works locally. Also: without an assets binding, the apex 301 of every page path to `SITE_URL`; the 301 of every page path on `www.<ROOT_DOMAIN>` to `SITE_URL`; recognizing the deployment's own hosts as self-referrers and as valid clipboard URLs, and subdomain resolution of the well-known files (skipped while the value starts with `localhost`). |
 | `LINK_URL_MODE` | `path` | `subdomain` | `subdomain` builds `https://<username>.<ROOT_DOMAIN>/<slug>`, and only when `ROOT_DOMAIN` does not start with `localhost`. Any other value, or a localhost root, builds `<PUBLIC_BASE_URL>/r/<username>/<slug>`. Both URL forms are always served regardless of the mode; this only changes the URLs the API and dashboard print. |
 | `PUBLIC_BASE_URL` | `http://localhost:8787` | `https://app.dectog.com` | Base of path-mode link URLs (`http://localhost:8787` when unset). Its host counts as the deployment's own for clipboard-URL validation and self-referrer suppression. Shown in Settings. |
 | `WEB_URL` | `http://localhost:3000` | `https://app.dectog.com` | The dashboard origin: the only allowed CORS origin for `/api/admin/*` (with credentials); where a known tenant's root 302s; where the site host sends the dashboard pages (301); the base of password-reset and invite links and of the Google redirect URI `<WEB_URL>/api/auth/google/callback`. |
@@ -111,5 +111,5 @@ These are code constants. Changing them means editing the source and redeploying
 | Fingerprint candidate pool | Newest 50 web clicks from the same hashed IP | `attribution.ts` |
 | Fraud thresholds | Velocity 5 (Wi-Fi/unknown) or 25 (cellular) other installs per hashed IP in the 24 h before the first launch; click storm over 100 clicks per hashed IP in the hour before the click; impossible speed under 10 s; click injection a tap over 5 s after Google's install-begin time; stale referrer over 30 days; referral network lookback 30 days | `fraud.ts`, `referrals.ts` |
 | Apple Search Ads | 3 inline attempts, 24 h token TTL, 100 tokens per cron pass | `asa.ts` |
-| Reserved usernames | `app www api links dashboard admin mail static cdn` | `bootstrap.ts` |
+| Reserved usernames | `app www api links dashboard admin mail static cdn docs status help support pay posog domains`, and any name starting with `t-` | `bootstrap.ts` |
 | Brand name | `DecTog` | `brand.ts` |
