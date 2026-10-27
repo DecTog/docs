@@ -295,6 +295,8 @@ Owner-only CMS routes under `/api/admin/blog` and the public site routes under `
 | `GET /api/blog/categories` | public | Categories with at least one published post. | `200 {categories}` |
 | `POST /api/contact` | public | `{name (1-100), email (valid, ≤200), subject (1-150), message (10-2000)}`. Stored only; no email is sent. | `201 {ok: true}`; `400 Name must be 1-100 characters`, `A valid email is required`, `Subject must be 1-150 characters`, `Message must be 10-2000 characters`; `429 Too many messages — try again later` |
 
+The three public `GET /api/blog/…` routes answer with `X-Robots-Tag: noindex`: `robots.txt` lets crawlers fetch them, since the blog pages load their posts from them, but the JSON is not a page to index. See [robots.txt and sitemap.xml](/api/well-known-seo-and-routing/#robotstxt-and-sitemapxml).
+
 ## Rate limits
 
 | Route | Limit |
