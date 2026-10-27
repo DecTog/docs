@@ -7,6 +7,8 @@ sidebar:
 
 Google shut down Firebase Dynamic Links on August 25, 2025. This guide maps what you had in Firebase Dynamic Links (FDL) onto DecTog and ends with a migration checklist. It assumes the hosted service: the API at `https://app.dectog.com` and links at `https://{username}.dectog.com/{slug}`.
 
+Still deciding whether DecTog fits? The [Firebase Dynamic Links alternative](https://dectog.com/firebase-dynamic-links-alternative) page compares the two job by job and says when another tool fits better.
+
 :::note[Self-hosting]
 On your own deployment the API base is `PUBLIC_BASE_URL` and links use your `ROOT_DOMAIN`. Set `baseUrl` and `linkRootDomain` in `DectogConfig`. See [Configuration reference](/self-hosting/configuration-reference/).
 :::
@@ -174,7 +176,7 @@ The **DecTog columns** preset takes headers named like the [create fields](/api/
 2. Register the app on the Apps page: package and SHA-256 fingerprints (include the Play App Signing key), bundle ID and Team ID, both store URLs, your custom scheme. Use the Verify buttons.
 3. Add `applinks:{username}.dectog.com` to Associated Domains and an `autoVerify` intent filter for `{username}.dectog.com`. Reinstall the app. See [Platform setup](/sdk/platform-setup/).
 4. Replace `firebase_dynamic_links` with `flutter_dectog` using the table above. Inject the SDK key (`dtg_pub_…`) at build time with `--dart-define`.
-5. Recreate your links. The quickest way is the Firebase console's export: on the Links page, **Import CSV**, choose **Firebase Dynamic Links export** and pick the file (see [Importing an FDL export](#importing-an-fdl-export)). From a script, send up to 100 links per call to `POST /api/v1/links/bulk`. Either way the old suffixes become the slugs, the former `link` destination the `target`, and its path the in-app route.
+5. Recreate your links. If you exported them before the shutdown (Firebase's export came from [Google Takeout](https://firebase.google.com/support/guides/export-dynamic-links), one CSV per domain), the quickest way is to import that file: on the Links page, **Import CSV**, choose **Firebase Dynamic Links export** and pick it (see [Importing an FDL export](#importing-an-fdl-export)). From a script, send up to 100 links per call to `POST /api/v1/links/bulk`. Either way the old suffixes become the slugs, the former `link` destination the `target`, and its path the in-app route.
 6. Replace the old `page.link` URLs wherever they are published: those domains belong to Google and cannot be pointed at DecTog. A subdomain of your own that served FDL links, such as `links.yourbrand.com`, can move to DecTog as a [custom domain](/links/custom-domains/), where the deployment offers it.
 7. Test on a physical device: tap a link, install from the store, open the app, and check Overview and `onAppInstalled`. See [Testing](/sdk/testing/).
 8. Update your privacy declarations for the device data the SDK collects by default. See [Device data and privacy](/sdk/device-data-and-privacy/).
