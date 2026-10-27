@@ -7,6 +7,8 @@ sidebar:
 
 Google shut down Firebase Dynamic Links on August 25, 2025. This guide maps what you had in Firebase Dynamic Links (FDL) onto DecTog and ends with a migration checklist. It assumes the hosted service: the API at `https://app.dectog.com` and links at `https://{username}.dectog.com/{slug}`.
 
+Still deciding whether DecTog fits? The [Firebase Dynamic Links alternative](https://dectog.com/firebase-dynamic-links-alternative) page compares the two job by job and says when another tool fits better.
+
 :::note[Self-hosting]
 On your own deployment the API base is `PUBLIC_BASE_URL` and links use your `ROOT_DOMAIN`. Set `baseUrl` and `linkRootDomain` in `DectogConfig`. See [Configuration reference](/self-hosting/configuration-reference/).
 :::
