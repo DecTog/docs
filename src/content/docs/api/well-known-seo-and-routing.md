@@ -77,7 +77,7 @@ Disallow: /api
 Sitemap: https://dectog.com/sitemap.xml
 ```
 
-`GET /sitemap.xml` (`application/xml`) lists `SITE_URL` plus `/`, `/about`, `/blog` and `/contact`, then `/blog/<slug>` for every published post, newest first, with `<lastmod>` set to the post's `updated_at` date (`YYYY-MM-DD`). Drafts are never listed. The origin is `SITE_URL` (`https://dectog.com` on the hosted service), the host that serves those pages; the dashboard host sends them there with a permanent redirect.
+`GET /sitemap.xml` (`application/xml`) lists `SITE_URL` plus `/`, `/about`, `/blog`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy` and `/terms`, then `/blog/<slug>` for every published post, newest first, with `<lastmod>` set to the post's `updated_at` date (`YYYY-MM-DD`). Drafts are never listed. The origin is `SITE_URL` (`https://dectog.com` on the hosted service), the host that serves those pages; the dashboard host sends them there with a permanent redirect.
 
 ## Blog post pages
 
@@ -109,7 +109,7 @@ The exported `/blog` page has its own title and share tags but loads the list of
 
 Some paths belong to the worker on every host: anything under `/api/`, `/r/`, `/.well-known/` and `/_/`, plus exactly `/healthz`, `/readyz`, `/openapi.json`, `/robots.txt` and `/sitemap.xml`. `/mcp` and `/dectog.js` belong to the worker on the site and dashboard hosts; on an account's link host they are ordinary slugs. Everything else depends on the host. The port is ignored when matching hosts.
 
-The site host and the dashboard host both serve the dashboard's static export (its `/_next`, `/media` and `/fonts` files are shared), each owning some of its pages: the site pages (`/`, `/about`, `/blog`, `/blog/<slug>`, `/contact`) belong to the site host, the dashboard pages (`/login`, `/dashboard`, `/invite`, `/reset-password`) to the dashboard host. A page asked of the other host answers `301` to the same path and query string on its own host. When `SITE_URL` and `WEB_URL` name the same host, that host serves every page and nothing redirects.
+The site host and the dashboard host both serve the dashboard's static export (its `/_next`, `/media` and `/fonts` files are shared), each owning some of its pages: the site pages (`/`, `/about`, `/blog`, `/blog/<slug>`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms`) belong to the site host, the dashboard pages (`/login`, `/dashboard`, `/invite`, `/reset-password`) to the dashboard host. A page asked of the other host answers `301` to the same path and query string on its own host. When `SITE_URL` and `WEB_URL` name the same host, that host serves every page and nothing redirects.
 
 | Host | Path | Result |
 |---|---|---|
@@ -122,11 +122,11 @@ The site host and the dashboard host both serve the dashboard's static export (i
 | any | `/openapi.json` | The OpenAPI description of every route. |
 | `app.dectog.com`, `dectog.com` | `/mcp` | The [MCP server](/guides/automation-and-agents/#mcp-server). |
 | `app.dectog.com`, `dectog.com` | `/dectog.js` | The [web pixel](/sdk/web/). |
-| `dectog.com` | `/`, `/about`, `/contact`, `/SKILL.md`, `/llms.txt`, the export's files | The static export: the landing page, the site pages and the agent docs, so `curl https://dectog.com/SKILL.md` works without a redirect. |
+| `dectog.com` | `/`, `/about`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms`, `/SKILL.md`, `/llms.txt`, the export's files | The static export: the landing page, the site pages and the agent docs, so `curl https://dectog.com/SKILL.md` works without a redirect. |
 | `dectog.com` | `/blog`, `/blog/<slug>` | The export's blog pages with the worker's additions; an unknown slug answers `404` (see [Blog post pages](#blog-post-pages)). |
 | `dectog.com` | `/login`, `/dashboard…`, `/invite`, `/reset-password` | `301` to `WEB_URL` plus the path and the query string: `https://dectog.com/login?tab=signup` goes to `https://app.dectog.com/login?tab=signup`. |
 | `app.dectog.com` | `/` | `302` to `/dashboard` with a valid session cookie, else to `/login`, with `cache-control: private, no-store`. |
-| `app.dectog.com` | `/about`, `/contact`, `/blog`, `/blog/…` | `301` to `SITE_URL` plus the path and the query string: `https://app.dectog.com/contact?ref=x` goes to `https://dectog.com/contact?ref=x`. |
+| `app.dectog.com` | `/about`, `/blog…`, `/contact`, `/customers…`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms` | `301` to `SITE_URL` plus the path and the query string: `https://app.dectog.com/contact?ref=x` goes to `https://dectog.com/contact?ref=x`. |
 | `app.dectog.com` | any other path | The dashboard's static export. `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | the apex without an assets binding (local development) | any path but `/` | `301` to `SITE_URL` plus the path and the query string; `/` answers `302` to `SITE_URL`. |
 | `<username>.dectog.com` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or `404 {"error": {"code": "not_found", "message": "Not found"}}` when it is unset. `www` is a reserved username, so `www.dectog.com` follows the unknown-host rule. |
