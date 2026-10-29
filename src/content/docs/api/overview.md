@@ -237,6 +237,7 @@ Every error, on every route, is one JSON shape:
 | 400 | `sdk_too_old` | The calling SDK build is older than the deployment's `MIN_SDK_VERSION`; the error carries `min_version`. |
 | 401 | `missing_api_key`, `invalid_api_key`, `signature_required`, `stale_timestamp`, `invalid_signature` | Authentication or signature failed; see above. |
 | 401 | `not_authenticated`, `invalid_session` | Admin API only: no session cookie, or a bad or expired one. |
+| 402 | `plan_limit` | Hosted DecTog only: the account has been over its plan's limit for 14 days, so installs, in-app clicks, events, opens and the attribution pull are refused until a plan that fits is chosen; see [Settings](/dashboard/settings/#plan). |
 | 403 | `forbidden` | Admin API only: the route needs the owner role, or bootstrap is not permitted. |
 | 404 | `not_found` | The resource is not in your account (`Link not found`, `Temporary link not found`, `Install not found`, `No install found for this device`), or no route matches. |
 | 409 | `conflict` | The slug is taken (`Slug already exists`, with the `slug`), or the instance is already bootstrapped. |
