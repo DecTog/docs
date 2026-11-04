@@ -71,6 +71,16 @@ Five free-form values are stored on the click and handed back to the app after a
 
 Each value is trimmed; an empty value or one with control characters is dropped; longer values are truncated to 255 characters. The link's defaults are the Tracking fields of a permanent link (temporary links have none). The six stored values (`deep_link` plus the five above) live in the click's `link_params` and come back as `click_params` on the verdict and on the webhook, and as `DectogClickParams` in the SDK, with `deepLink`, `label`, `campaign`, `adgroup`, `creative` and `tracker`.
 
+## `dec_referrer`: who shared the link
+
+`dec_referrer` names the customer who shared this link, by the id your app passes to `identify`:
+
+```
+https://acme.dectog.com/invite?dec_referrer=1042&dec_label=spring
+```
+
+It is stored on the click, not in `click_params`. An install credited to the tap gets it as `install.link?.referrerCustomerId`, and the new user's first `identify` records a referral and sends `referral.converted`, exactly as a [referral link](/guides/referral-programs/) does. On a referral link the link's own customer wins and `dec_referrer` is ignored. The value is trimmed; one longer than 200 characters or with control characters is dropped, never cut. Anyone can edit the URL to name another customer, so when that matters, give each customer a referral link instead.
+
 :::caution[Tracking values do not feed the Overview charts]
 The Overview's **Installs by campaign** and **Installs by source** charts group installs by the `utm_campaign` and `utm_source` of the matched click, not by `dec_campaign` or the link's Tracking fields. Use `utm_*` for dashboard charts and `dec_*` for values your app needs at runtime.
 :::
