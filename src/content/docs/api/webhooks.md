@@ -85,6 +85,7 @@ The `data` of `app.installed` and `app.install_updated`:
     "carrier_mcc": "262",
     "carrier_mnc": "01"
   },
+  "country": "DE",
   "ip_hash": "9c1185a5c5e9fc54612808977ee8f548b2258d31f3f7a2b5a4e2f7c3d1b0a9e8",
   "clicked_at": "2026-10-12T08:59:12.000Z",
   "click_params": { "deep_link": "sale/42", "label": null, "campaign": "spring", "adgroup": null, "creative": null, "tracker": null },
@@ -110,6 +111,7 @@ The `data` of `app.installed` and `app.install_updated`:
 | `slug` | string or null | The matched link's slug; `null` whenever `matched` is false, including an install whose credit a blocked fraud rule withheld (its `fraud_flags`, `blocked_by`, `referrer_source` and `match_confidence` still show what was found). |
 | `link` | object or null | `slug`, `target`, `url`, `created_at` of the matched **permanent** link. `null` for organic installs, temporary-link matches and installs whose credit was withheld. There is no `metadata` here, unlike the install verdict. |
 | `device` | object | `device_id`, `device_model`, `device_manufacturer`, `os`, `os_version`, `connectivity_type`, `carrier_mcc`, `carrier_mnc`; each `null` when the SDK did not send it. |
+| `country` | string or null | Where the install request came from: Cloudflare's two-letter country code (`XX` unknown, `T1` Tor), for organic and credited installs alike. `null` when the deployment has no geolocation. |
 | `ip_hash` | string or null | The salted SHA-256 of the install request's IP (IPv6 cut to /64). |
 | `clicked_at` | string or null | The matched click's time; `null` when `matched` is false. |
 | `click_params` | object or null | `deep_link`, `label`, `campaign`, `adgroup`, `creative`, `tracker` from the matched click; `null` when `matched` is false or when the click carried none. |

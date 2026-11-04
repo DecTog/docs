@@ -52,7 +52,7 @@ Erasing clears the server's data, not the phone's. On Android that is enough for
 
 ## The install detail
 
-The detail opens from this screen, from the Overview's Recent installs and from a link's installs. It shows:
+The detail opens from this screen, from the Overview's Recent installs and from a link's installs. Under its title are the install's time, OS and device model, and the country the install request came from. It shows:
 
 - **Verdict**: credited link, organic, or `credit to /{slug} withheld`, match source, confidence, reinstall, fraud flags. When a blocked rule acted, a line says what it did.
 - **Fraud checks**: every install rule with its label, what it means and **Flagged**, **Flagged · acted**, **Clear** or **Not checked** with the reason (for example no Google Play install-begin time on iOS), and the values it compared: physical device, model and CPU; the tap time and the gap to the first launch or to the download's start; the installer; the signing certificate and how many fingerprints the app lists; other installs from the network in 24 hours and the line; taps from the network in the hour before; the tap's age. Installs recorded before these checks existed show none.

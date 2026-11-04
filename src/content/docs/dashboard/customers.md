@@ -24,7 +24,7 @@ A customer exists as soon as the SDK sends an `identify` event with a customer I
 | **First seen** | The date and time of the customer's first `identify`. |
 | **Customer** | The name, or the customer ID when there is no name. Under it: the email masked as `e****@domain.com` (the detail page shows it in full), or the ID in monospace when there is a name but no email. An amber **Shared device · {n}** chip appears when other customers sent events from one of this customer's devices; its tooltip reads "Shares a device with {n} other customer(s)". |
 | **Attributed link** | `/{slug}` of the link credited with the customer's install, or **Organic** (also when a blocked [fraud rule](/start/fraud-rules/) withheld the credit). |
-| **Country** | A flag and the country name of the matched click. **Unknown** for organic customers and for clicks without a country. |
+| **Country** | A flag and the name of the country the customer's install request came from, by Cloudflare's geolocation of its network address, for attributed and organic customers alike. **Unknown** when no install is linked yet or its request had no country. |
 
 Empty states: "No customers yet — call `DecTog.identify(customerId: …)` in your app after sign-in." and "No customers match your search."
 
@@ -71,7 +71,7 @@ Subtitle: "The link click that led to this customer's install. Open install show
 | **Match** | **Install referrer (deterministic)**, **Copied link (deterministic)**, **Device fingerprint (probabilistic)** or **Organic**; `· credit withheld` follows the match when a blocked fraud rule withheld the credit. |
 | **Referrer source** | Which store or SDK handed over the referrer: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo` or `meta`. |
 | **Clicked at**, **Installed at** | The server-side times of the matched click and of the install report. |
-| **Country**, **Region**, **Network** | From the click: the country and city, the region, and the network provider with its AS number. |
+| **Country**, **Region**, **Network** | From the click, so where the link was tapped: the country and city, the region, and the network provider with its AS number. The install's own country is under **App & device**; the two can differ. |
 | **Click device** | The click's device type, OS and browser, such as `android · Android 14 · Chrome`. |
 | **Referrer** | The origin of the page that sent the click. |
 | **UTM** | The click's `utm_*` parameters, as `source=… · medium=… · campaign=…`. |
@@ -90,9 +90,9 @@ Shown only when other customers share a device. Subtitle: "Other customers ident
 
 ### App & device
 
-Subtitle: "Reported by the SDK at install." Shown when the customer has an install; empty values are hidden.
+Subtitle: "Reported by the SDK at install; the country and IP are the install request's." Shown when the customer has an install; empty values are hidden.
 
-**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report; `—` when the deployment sets `STORE_RAW_IP=0`), **Device ID** and **Install ID**.
+**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Country** (where the install request came from, with its flag), **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report; `—` when the deployment sets `STORE_RAW_IP=0`), **Device ID** and **Install ID**.
 
 Which of these the SDK sends depends on its data tier; see [Device data and privacy](/sdk/device-data-and-privacy/).
 
