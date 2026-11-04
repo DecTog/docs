@@ -53,7 +53,7 @@ Rules:
 | `fbAppId` | `String?` | `null` → the Facebook App ID saved in the dashboard | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
 | `persistDeviceId` | `bool` | `true` | Keep the first iOS IDFV in the Keychain so the device id survives reinstall. |
 | `enabled` | `bool` | `true` | Whether collection is on before the app calls `setEnabled`. `false` waits for consent; see [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent). |
-| `environment` | `DectogEnvironment?` | `null` | The environment this build's key should belong to, `live` or `test`. `diagnostics()` warns when the key belongs to the other one. See [Testing](/sdk/testing/). |
+| `environment` | `DectogEnvironment?` | `null` | A check, not a switch: the key alone decides the account, and this changes nothing at runtime. The environment this build's key should belong to, `live` or `test`; when the app calls `diagnostics()`, it warns if the key belongs to the other one. See [Testing](/sdk/testing/). |
 
 The config also exposes `DectogConfig.defaultBaseUrl` (`https://app.dectog.com`), `DectogConfig.defaultLinkRootDomain` (`dectog.com`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
 
