@@ -43,7 +43,7 @@ type DectogConfig = {
 | `fbAppId` | the dashboard's | Facebook App ID for Meta's on-device install referrer (Android). |
 | `persistDeviceId` | `true` | iOS: keep the IDFV in the Keychain so a reinstall keeps its device id. |
 | `enabled` | `true` | Whether collection is on before the app calls `setEnabled`. `false` waits for consent (see `setEnabled`). |
-| `environment` | none | `'live'` or `'test'`: the environment this build's key should belong to; `diagnostics()` warns about the other. |
+| `environment` | none | A check, not a switch: the key alone decides the account, and this changes nothing at runtime. `'live'` or `'test'`, the environment this build's key should belong to; when the app calls `diagnostics()`, it warns if the key belongs to the other one. Without it, `diagnostics()` still warns about a test key in a release build. |
 
 `type DectogCollection = 'deviceTier' | 'pasteboard' | 'oemReferrers' | 'appleSearchAdsToken' | 'adId'`
 

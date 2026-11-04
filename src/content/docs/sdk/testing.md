@@ -62,11 +62,10 @@ Create a test environment in the dashboard (Settings → [Test environment](/das
 ```dart
 await dectog.initialize(DectogConfig(
   apiKey: kReleaseMode ? liveSdkKey : testSdkKey,
-  environment: kReleaseMode ? DectogEnvironment.live : DectogEnvironment.test,
 ));
 ```
 
-`environment` is a check, not a switch: the key decides the account. `diagnostics()` warns when the key belongs to the other environment, and, without `environment`, when a release build carries a test key. In the dashboard, the **Live** / **Test** switch at the top of the sidebar shows either account.
+The key alone decides which account gets the data: there is nothing else to set. `DectogConfig(environment:)` (`live` or `test`) is an optional check, not a switch, and changes nothing at runtime: when the app calls `diagnostics()`, it warns if the key belongs to the other environment. Without it, `diagnostics()` still warns when a release build carries a test key. In the dashboard, the **Live** / **Test** switch at the top of the sidebar shows either account.
 
 ## Testing link handling
 
