@@ -18,6 +18,16 @@ share(link.url); // e.g. https://acme.dectog.com/r-3fa94c1b2e
 
 From a server, the same call is `POST /api/v1/referral-links` with `{"customer_id": "…"}`; it answers 201 with the new link, or 200 with the existing one.
 
+### Or: one link with the referrer in the URL
+
+If your backend already builds share links, Adjust-style, skip the call: add the user's id to any permanent link as `dec_referrer`, with whatever else the tap needs.
+
+```
+https://acme.dectog.com/invite?dec_referrer=1042&dec_label=eyJpIjoxMDQyfQ%3D%3D&dec_fallback=https%3A%2F%2Facme.com%2F
+```
+
+Everything below works the same: the install gets `referrerCustomerId` `"1042"` (and the label as `install.clickParams?.label`), and the signup records the referral and sends `referral.converted`. The difference is trust. A referral link's customer is fixed on the server; a `dec_referrer` is whatever the URL says, so anyone can edit it to name someone else. The referral [fraud rules](#5-watch-for-self-referrals) still apply.
+
 ## 2. The friend installs and signs up
 
 Nothing extra in the app: the friend taps the link, installs, opens the app, and your signup code calls `identify(customerId: newUser.id)`. When that identify is the first one of a **new** customer on an install that is at most 30 days old, not a reinstall, and credited to a referral link, the server records a referral:
@@ -47,7 +57,7 @@ if (referrer != null && !install!.isReinstall) {
 
 React Native reads the same field: `(await dectog.getAttributionData())?.link?.referrerCustomerId`.
 
-The server sets it from the link the install was credited to, so nothing in the tapped URL can change it: a `dec_label` or any other parameter added to the link does not. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
+On a referral link the server sets it from the link, so nothing in the tapped URL can change it: a `dec_label`, a `dec_referrer` or any other parameter added to the link does not. On any other link it is the tap's `dec_referrer`, or null. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
 
 Use it for the screen, not the reward: a modified app can show anything, so grant rewards from the webhook below.
 
