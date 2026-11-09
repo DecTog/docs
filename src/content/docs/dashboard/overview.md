@@ -38,11 +38,11 @@ All eight cards always render. Counts use the server's own timestamps, so an ins
 |---|---|---|
 | **Clicks** | | Every click in the window: web taps on your links plus clicks reported by the SDK. Requests from bots never create a click. |
 | **Unique visitors** | | The number of distinct hashed IP addresses among those clicks. It counts IP addresses, not devices or people: two phones on one Wi-Fi network are one visitor, and one phone that moves from Wi-Fi to cellular is two. |
-| **Installs** | `first installs · {n} attributed · {n} flagged` | First installs reported in the window: installs on a device the server had not seen install the app before. "Attributed" is the subset the server matched to a click; "flagged" (shown when any) the ones that tripped a [fraud rule](/start/fraud-rules/). |
+| **Installs** | `first installs · {n} attributed · {n} flagged` | First installs reported in the window: installs on a device the server had not seen install the app before. "Attributed" is the subset the server matched to a click; "flagged" (shown when any) the ones that tripped a [fraud rule](/start/fraud-rules/). App updates are not installs: when an existing user updates into your first build with DecTog, the SDK reports the install as an app update. When the window has any, a second line reads `{n} app updates by existing users, not counted`. |
 | **Reinstalls** | `on a device that had the app before` | Reinstalls reported in the window: the server had seen the device install the app before, or the SDK found its own first-install date on the device. They go through the same matching as any other install and are counted here instead of under Installs. |
-| **Conversion** | `first installs ÷ clicks` | First installs, organic ones included, divided by clicks, as a percentage with one decimal. Because organic installs count, the rate can exceed 100%, for example when the app gets installs that never came through a link. |
+| **Conversion** | `attributed installs ÷ clicks` | Attributed first installs divided by clicks, as a percentage with one decimal. Organic installs had no tap to convert, so they are left out. |
 | **Revenue** | `tracked conversions` | Net revenue of the window: purchases minus refunds, each converted into your revenue currency (Settings) with the ECB rate of its day. Amounts whose rate is not known yet count as 0 until the daily conversion run. |
-| **Leads** | `signup events` | Events whose type is `lead`. |
+| **Leads** | `signup events` | Events whose type is `lead`. The automatic signup lead is recorded only on a first install, never on a reinstall or an app update, so existing users signing in after an update do not count. |
 | **Opens** | `link re-opened the installed app` | App opens in the window: times a link opened an already installed app, as reported by the SDK. |
 
 ## Charts and cards
@@ -101,19 +101,19 @@ Empty state: "No events yet — call `identify` / `trackConversion` in the SDK."
 
 ### Top devices
 
-The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model DecTog knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in DecTog for the iPhone 8 to the iPhone 18 Pro Max. The count is first installs; when the model also had reinstalls the row adds `+{n} reinstalls`.
+The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model DecTog knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in DecTog for the iPhone 8 to the iPhone 18 Pro Max. The count is first installs; when the model also had reinstalls the row adds `+{n} reinstalls`. App updates are left out.
 
 Empty state: "No device data yet — enable the device tier in the SDK (`DectogCollection.deviceTier`)." See [Device data and privacy](/sdk/device-data-and-privacy/).
 
 ### Carriers (MCC/MNC)
 
-The top 8 mobile carriers among installs that reported one, as `{mcc}/{mnc}` with an install count, reinstalls included. Only the Android SDK reports carrier codes.
+The top 8 mobile carriers among installs that reported one, as `{mcc}/{mnc}` with an install count, reinstalls included and app updates left out. Only the Android SDK reports carrier codes.
 
 Empty state: "No carrier data (Android only)."
 
 ### Connectivity at install
 
-The top 6 connection types reported at install, such as `wifi` or `mobile`, with install counts, reinstalls included.
+The top 6 connection types reported at install, such as `wifi` or `mobile`, with install counts, reinstalls included and app updates left out.
 
 Empty state: "No connectivity data yet."
 

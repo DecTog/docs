@@ -9,9 +9,11 @@ The Installs screen, at https://app.dectog.com/dashboard/installs, lists every i
 
 ## The list
 
-Each row shows when the app was installed, the verdict (`referrer`, `clipboard` or `fingerprint` with the confidence, `organic`, or `credit withheld` when a fraud rule the app blocks withheld it), the link it was credited to (or, for a withheld one, the link that was tapped), the OS with its version and the device model, the app version, and chips for a reinstall and for each fraud flag, labelled by rule (for example **Emulator** for a simulator build). A flag chip is amber when the rule only flags and red when a blocked rule acted on it; hovering it explains the rule. See [Fraud rules](/start/fraud-rules/). 25 rows load at a time; **Load more** adds the next 25.
+Each row shows when the app was installed, the verdict (`referrer`, `clipboard` or `fingerprint` with the confidence, `organic`, or `credit withheld` when a fraud rule the app blocks withheld it), the link it was credited to (or, for a withheld one, the link that was tapped), the OS with its version and the device model, the app version, and chips for a reinstall, an app update and each fraud flag, labelled by rule (for example **Emulator** for a simulator build). A flag chip is amber when the rule only flags and red when a blocked rule acted on it; hovering it explains the rule. See [Fraud rules](/start/fraud-rules/). 25 rows load at a time; **Load more** adds the next 25.
 
 **reinstall** means one of two things: the app reported that it was installed on this device before, or the server already has an install with the same device id in this account. On an iPhone the SDK knows from a first-install date it keeps in the Keychain, which survives deleting the app; Android cannot tell on the phone, so there only the server's check applies. A reinstall is credited like any install and counted under the Overview's Reinstalls and each link's `+{n} reinstalls`, not under Installs.
+
+**app update** means an existing user updated into your first build with DecTog: the app was on the device before the SDK was, so the SDK reports the install as an update. It is never matched to a tap and counts as neither an install nor a reinstall; the Overview's Installs card counts app updates on a line of their own. Its first identify records no signup lead and no referral.
 
 Above the list:
 
