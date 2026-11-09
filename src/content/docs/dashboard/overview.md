@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The Overview is the first screen after you sign in, at https://app.dectog.com/dashboard. It shows clicks, installs, conversion, revenue and attribution quality for your whole account, over one of three time ranges, and refreshes itself every 15 seconds. The header reads "Clicks, installs and conversion for your links — live."
+The Overview is the first screen after you sign in, at https://app.dectog.com/dashboard. It shows clicks, installs, conversion, revenue and attribution quality for your whole account, over one of three time ranges, and refreshes itself every minute while it is on screen. The header reads "Clicks, installs and conversion for your links — live."
 
 Every number on this page is defined below exactly as the server computes it. Several of them do not reconcile with each other by design; the last section lists those cases.
 
@@ -13,11 +13,11 @@ Every number on this page is defined below exactly as the server computes it. Se
 
 | Control | What it does |
 |---|---|
-| **7d**, **30d**, **90d** | Selects the time range. The default is **7d**. **7d** ends now and starts exactly 7 times 24 hours earlier. **30d** and **90d** are whole calendar days in UTC, today included: they start at midnight UTC 29 or 89 days ago, and their totals come from the daily rollups (see [Scheduled jobs](/self-hosting/scheduled-jobs-and-retention/#daily-rollups-both-triggers)). |
-| Live refresh | Every 15 seconds the page reloads the overview, the recent events and the attribution-quality panel. The timer restarts when you change the range. |
+| **7d**, **30d**, **90d** | Selects the time range. The default is **7d**. Every range is whole calendar days in UTC, today included: **7d** starts at midnight UTC 6 days ago, **30d** 29 days ago and **90d** 89 days ago. The totals come from the daily rollups, so only today's rows are read row by row (see [Scheduled jobs](/self-hosting/scheduled-jobs-and-retention/#daily-rollups-both-triggers)). |
+| Live refresh | Every minute the page reloads the overview and the recent events, but only while its tab is on screen. A hidden tab does not refresh; coming back to it refreshes at once when the last refresh is a minute old. The attribution-quality panel loads with the page and when you change the range. |
 | **Set up with your agent** | Copies the prompt `Read https://dectog.com/SKILL.md and help me get started with DecTog` to the clipboard. The label reads "Prompt copied — paste it into your agent" for two seconds. If the clipboard is blocked, a browser prompt shows the text instead. See [Automation and agents](/guides/automation-and-agents/). |
 
-Under the title, the line "Live · refreshes every 15s · comparing against the previous {N}-day window" names the comparison window used by every delta chip.
+Under the title, the line "Live · refreshes every minute · the last {N} days (UTC), today included, against the {N} before" names the window and the comparison window used by every delta chip.
 
 The page shows "Loading analytics…" on first load. If the overview request fails, the whole page is replaced by a red alert with the server's error message. If only the attribution-quality request fails, that panel says so and the rest of the page still renders. If the recent-events request fails, the Recent events card shows its empty state.
 

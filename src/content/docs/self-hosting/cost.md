@@ -43,7 +43,7 @@ The Workers Free plan caps each day at 100,000 requests, 5 million rows read and
 
 - **Taps:** about 20,000 (5 written rows each).
 - **App sessions:** about 9,000 three-minute sessions that track a screen every 30 seconds (about 11 written rows each: the day's ping, the session's row and five more flushes), which is about 19 people in the app at any moment on average. Without screen tracking, the day's ping and one event, about 11,000.
-- **Dashboard:** the Overview re-reads the last 7 days of raw clicks and installs every 15 seconds while it is open, about 22 rows per click. At 1,000 clicks a week, one open tab uses the day's 5 million reads in about an hour.
+- **Dashboard:** the Overview refreshes once a minute while its tab is on screen. Its totals come from the daily rollups plus today's raw rows, but its breakdowns (campaigns, sources, devices, carriers, fraud) still read the window's raw rows on each refresh: about ten rows per install plus a few per click. At 1,000 installs a week, one tab kept on screen all day on the 7-day view reads about 15 million rows: three days of the Free plan's quota. A hidden tab reads nothing.
 
 So the Free plan suits trying DecTog out, and the Paid plan suits any real traffic.
 
