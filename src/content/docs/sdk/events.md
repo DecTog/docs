@@ -27,7 +27,7 @@ await dectog.identify(
 
 ### Signup leads
 
-There is no lead call. The server records a `lead` event named `signup` automatically on the first identify of a **new** customer whose install is at most 30 days old and not a reinstall (a lead per customer at most). Users identified for the first time on an older install, for example right after you integrated the SDK, are existing users and are not counted. The Overview's Leads number and the per-link leads come from these events.
+There is no lead call. The server records a `lead` event named `signup` automatically on the first identify of a **new** customer whose install is at most 30 days old and is neither a reinstall nor an app update (a lead per customer at most). Users identified for the first time on an older install are existing users and are not counted. Neither are existing users who update into your first build with the SDK: the SDK reports that install as an app update (`install_state: "update"`), which the Overview counts on its own, outside Installs. The Overview's Leads number and the per-link leads come from these events.
 
 ## Conversions
 

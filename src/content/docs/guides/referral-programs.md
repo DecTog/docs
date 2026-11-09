@@ -30,7 +30,7 @@ Everything below works the same: the install gets `referrerCustomerId` `"1042"` 
 
 ## 2. The friend installs and signs up
 
-Nothing extra in the app: the friend taps the link, installs, opens the app, and your signup code calls `identify(customerId: newUser.id)`. When that identify is the first one of a **new** customer on an install that is at most 30 days old, not a reinstall, and credited to a referral link, the server records a referral:
+Nothing extra in the app: the friend taps the link, installs, opens the app, and your signup code calls `identify(customerId: newUser.id)`. When that identify is the first one of a **new** customer on an install that is at most 30 days old, not a reinstall or an app update, and credited to a referral link, the server records a referral:
 
 | Field | Value |
 |---|---|
