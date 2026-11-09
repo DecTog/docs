@@ -41,7 +41,7 @@ Nothing extra in the app: the friend taps the link, installs, opens the app, and
 | `fraud_flags` | The install's fraud flags and the referral rules that hit (see step 5); empty when clean |
 | `status` | `converted`, or `rejected` when the app blocks a referral rule that hit |
 
-An install records at most one referral. A user who identifies with the referrer's own id records none. An existing customer who identifies on the new install records none.
+An install records at most one referral. A user who identifies with the referrer's own id records none. An existing customer who identifies on the new install records none. When a link or tap named a referrer and no referral was recorded, the customer's page in the dashboard says which of these was the reason under **Referred by** ([Customers](/dashboard/customers/#profile)). A reinstall is the usual one in testing: on iOS the SDK keeps its device id in the Keychain, which survives deleting the app, so a test phone that had the app before reinstalls.
 
 ## 3. Show who invited them
 

@@ -57,6 +57,8 @@ Subtitle: "Set by identify(). A later call replaces each field it sends; fields 
 | **First seen** | When the customer record was created. |
 | **Last identified** | The last time an `identify` touched the record. |
 | **First event**, **Last event** | From the customer's events. |
+| **Referred by** | The customer whose referral this customer's signup recorded, and the link, such as `1042 via /invite`. The id opens that customer's page; it is plain text when the app has never identified that id (a `dec_referrer` can name anyone); a **rejected** chip when a referral rule the app blocks hit, and the referral's fraud flags. When the install's link or tap named a referrer but the signup recorded no referral, the referrer shows muted with a **not credited** chip and the reason under it: the device had the app before (a reinstall), the customer existed before the install, they signed up more than 30 days after it, a blocked fraud rule withheld the install's credit, the link named the customer themself, or another customer signed up on the install first (an install credits one referral). See [Referral programs](/guides/referral-programs/#2-the-friend-installs-and-signs-up). |
+| **Referred** | The customers this customer referred, up to 50, newest first, each with its **rejected** chip and fraud flags. Each id opens that customer's page. |
 | **Devices** | Up to 20 distinct device IDs seen on the customer's events, plus the install's device. |
 
 Empty fields are hidden. Name, email and phone are stored in plain text; see [Privacy and data](/self-hosting/privacy-and-data/).
