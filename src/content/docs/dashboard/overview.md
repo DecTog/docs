@@ -125,7 +125,7 @@ Empty state: "No clicks in this window."
 
 ### Top countries by clicks
 
-The top 10 countries by clicks in the window, shown as a flag plus the two-letter code from Cloudflare's geolocation of the click. An unknown country shows as `??` without a flag. The card has no empty-state text.
+The top 10 countries by clicks in the window, shown as a flag plus the two-letter code from the geolocation of the click. An unknown country shows as `??` without a flag. The card has no empty-state text.
 
 ## Breakdown
 

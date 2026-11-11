@@ -9,7 +9,7 @@ Two kinds of visitors never go through the normal routing: link unfurlers, which
 
 ## Who gets the preview page
 
-A request is treated as a bot when it is a `HEAD` request, when its user agent matches the bot list, or when Cloudflare's bot management reports a score below 30. The list is case-insensitive: the word `bot` on its own (so a Cubot phone does not match), `crawler`, `spider`, `facebookexternalhit`, `twitterbot`, `slackbot`, `whatsapp`, `telegrambot`, `linkedinbot`, `discordbot`, `googlebot`, `bingbot`, `applebot` (iMessage previews), `redditbot`, `pinterestbot`, `cardyb` (Bluesky), `mastodon/`, `embedly`, `iframely`, `skypeuripreview` (Teams and Skype), `preview`, `fetcher`, `monitor` and `headless`. The Pinterest in-app browser, which real people use, says `Pinterest/` without `bot` and is not matched.
+A request is treated as a bot when it is a `HEAD` request or when its user agent matches the bot list. The list is case-insensitive: the word `bot` on its own (so a Cubot phone does not match), `crawler`, `spider`, `facebookexternalhit`, `twitterbot`, `slackbot`, `whatsapp`, `telegrambot`, `linkedinbot`, `discordbot`, `googlebot`, `bingbot`, `applebot` (iMessage previews), `redditbot`, `pinterestbot`, `cardyb` (Bluesky), `mastodon/`, `embedly`, `iframely`, `skypeuripreview` (Teams and Skype), `preview`, `fetcher`, `monitor` and `headless`. The Pinterest in-app browser, which real people use, says `Pinterest/` without `bot` and is not matched.
 
 Bots receive a `200` page with Open Graph tags and no redirect, and **no click is recorded**. A `HEAD` request gets the same status and headers with no body. The page is served for permanent and temporary links alike; an expired temporary link answers `410` even to bots, and an unknown slug `404`.
 
@@ -63,8 +63,6 @@ The link is rendered through the redirect engine itself with each user agent, so
 | The image is … MB | X and LinkedIn skip images over 5 MB, Facebook over 8 MB. |
 | The image address answers … rather than an image | The URL is a page, not a picture. |
 | X shows the picture as a small square | `twitter:card` is not `summary_large_image`. The link page sets it whenever there is an image. |
-
-What the check cannot see: a firewall or Bot Fight Mode rule on your own Cloudflare zone that blocks a crawler before the Worker runs, because a Worker cannot request its own zone. If a platform shows no preview although the check is clean, look there first.
 
 ## Auto-fill from a web page
 

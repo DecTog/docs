@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-AdTo does deep linking and install attribution for your own links, on your own infrastructure. It is not a mobile measurement partner. This page lists what it does not do, so nobody finds out after integrating.
+AdTo does deep linking and install attribution for your own links. It is not a mobile measurement partner. This page lists what it does not do, so nobody finds out after integrating.
 
 ## Ad networks and Apple's frameworks
 
@@ -39,7 +39,7 @@ AdTo tries deterministic signals first: the store install referrer on Android, t
 ## Platform and hosting
 
 - **No native iOS (Swift) or Android (Kotlin) SDK.** The SDKs are for [Flutter](/sdk/installation/) and [React Native and Expo](/react-native/), plus `dectog.js` for your own web pages ([Web pixel](/sdk/web/)); an app written in Swift or Kotlin calls the [REST API](/api/overview/) itself. The Flutter SDK is on [pub.dev](https://pub.dev/packages/flutter_dectog); the React Native SDK is not on npm yet.
-- **Custom link domains need the deployment's support,** one per account: Cloudflare for SaaS on its zone and three settings. Until then the Settings card says it is not set up. See [Custom domains](/links/custom-domains/).
+- **Custom link domains are not available on AdTo at the moment.** Your links are on `{username}.adto.app`. See [Custom domains](/links/custom-domains/).
 - **Three roles, no single sign-on.** A team has owners, members and viewers; everyone signs in with their own email and password or Google. There is no SAML, SCIM or per-app permission.
 
 The design choices behind several of these limits, and the alternatives that were rejected, are in [Design decisions](/start/design-decisions/).

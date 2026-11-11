@@ -25,7 +25,7 @@ A link such as `https://acme.adto.app/welcome` is served by the redirect engine.
 | 2 | No permanent or temporary link has this slug, or the link is deleted | `404` page |
 | 3 | The link is paused | `410` "Link paused" page, for bots as well, **no click recorded** |
 | 4 | The link has expired: a temporary link's `expires_at`, or a permanent link's when it has one, has passed | `302` to the link's expired URL when it has one, else the `410` "Link expired" page; for bots as well, **no click recorded** |
-| 5 | The request is a `HEAD`, the user agent is a bot, or Cloudflare's bot score is below 30 | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
+| 5 | The request is a `HEAD`, or the user agent is a bot | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
 | 6 | Safari's Mac user agent without `_ipad` in the URL, and the link's app (the link's app, or the account's default, oldest one) is set up for iOS: a bundle ID, an App Store URL or an iOS scheme | `200` touch check, **no click recorded**. The page goes straight on to the same URL with `_ipad=1` when the browser reports touch (an iPad asking for desktop sites) or `_ipad=0` (a Mac), plus the referring page's origin as `_ref` and, when the request carried the no-track header, `dtg_nt=1`; that request continues below. |
 | 7 | Otherwise | A click row is built. The app is the link's app, or the account's default (oldest) app. |
 | 8 | The user agent is iOS or Android | The mobile chain below |
@@ -159,7 +159,7 @@ The QR page, the interstitial, the tap-to-store page and the error pages share t
 
 | Path | Click |
 |---|---|
-| `HEAD`, bot user agent, or Cloudflare bot score below 30 | None |
+| `HEAD` or bot user agent | None |
 | 404, 410, unknown username | None |
 | `x-dectog-no-track: 1` header or `?dtg_nt=1` on the link | None. Routing is exactly that of a real tap; use it for QA taps and uptime monitors. The parameter never reaches the destination. |
 | Tap-to-store page, interstitial page (also the Facebook and Instagram one), intent bounce | Written before the response is sent |

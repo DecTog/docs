@@ -49,7 +49,7 @@ SDK clicks are never fingerprint candidates: only `source: "web"` clicks from th
 
 The first-launch report. Every field is optional; a malformed optional field is stored as `null`, never rejected. The only client error is `400 {"error": {"code": "invalid_request", "message": "Invalid JSON body"}}`. The response is the verdict described below.
 
-From the request itself, the install also stores its hashed IP and raw IP (the raw one unless the deployment sets `STORE_RAW_IP=0`), ASN and country: Cloudflare's two-letter code for the request's network address (`XX` unknown, `T1` Tor), for organic and credited installs alike. That country is the customer's in the dashboard; a click keeps its own.
+From the request itself, the install also stores its hashed IP and raw IP, ASN and country: the two-letter code for the request's network address (`XX` unknown), for organic and credited installs alike. That country is the customer's in the dashboard; a click keeps its own.
 
 ### Request body
 

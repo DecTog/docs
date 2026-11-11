@@ -36,7 +36,7 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 
 ### The click was never recorded
 
-- Bots and link unfurlers get the preview page and no click: any user agent containing `bot` (as a word), `crawler`, `spider`, `preview`, `fetcher`, `monitor`, `headless`, `whatsapp` or the named social crawlers, and any request Cloudflare scores below 30. A plain `curl` is not on the list; unless Cloudflare scores it below 30, it records a click.
+- Bots and link unfurlers get the preview page and no click: any user agent containing `bot` (as a word), `crawler`, `spider`, `preview`, `fetcher`, `monitor`, `headless`, `whatsapp` or the named social crawlers. A plain `curl` is not on the list: it records a click.
 - Hint-less Chromium: the first request from a mobile Chromium browser that sends `Sec-CH-UA-Mobile: ?1` without a `Sec-CH-UA-Model` header, has no `Build/` token in its user agent and no in-app marker, gets a 302 with `Critical-CH` and records nothing. Chrome retries with the hint and the retry records the click. A client that never retries leaves no click row. The install can still be matched: the Play and OEM store referrers carry `dtg_l=<username>/<slug>`, and the server synthesizes the click from it. With the mobile interstitial on, the same happens through a one-shot self-redirect carrying `?_ch=1`.
 - In-app browsers (Facebook, Instagram and WebViews on Android) never take the hint path and never get the intent bounce. They get a plain 302 to the tagged store URL, so referrer attribution still works for them.
 - The demo seed's installs carry no IP hash and never fingerprint-match. Its attributed installs are all Android referrer matches and its organic ones all iOS. Do not judge the fingerprint with the demo account.

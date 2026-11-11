@@ -61,7 +61,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `id` | string | UUID, assigned by the server. |
 | `slug` | string | The path segment of the link. |
 | `target` | string or null | The web destination. `null` means "inherit the app's fallback URL at tap time". |
-| `url` | string | The public link URL in this deployment's URL mode (subdomain on the hosted service, `<PUBLIC_BASE_URL>/r/<username>/<slug>` in path mode). |
+| `url` | string | The public link URL, `https://<username>.adto.app/<slug>`. |
 | `app_id` | string or null | The app whose store URLs, schemes and fallback apply to this link. `null` means the account's default app (its oldest app). |
 | `click_count` | number | Lifetime counter. It grows on web taps, on SDK-reported clicks and on clicks synthesized from a store referrer. It never goes down. |
 | `created_at`, `updated_at` | string or null | ISO 8601 UTC. `updated_at` stays `null` until the first `PUT`. |
