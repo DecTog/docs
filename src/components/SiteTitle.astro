@@ -1,14 +1,14 @@
 ---
 // The adto.app logo leads to the marketing site; the "Docs" pill beside it is the way back to
-// the docs home. The logo is inline so its ink follows the theme (currentColor); the dot stays orange.
+// the docs home. The logo is inline so its "Ad" follows the theme (currentColor); the symbol stays orange.
 const { siteTitleHref } = Astro.locals.starlightRoute;
 ---
 
 <div class="site-title">
 	<a class="logo" href="https://adto.app" aria-label="AdTo">
-		<svg viewBox="0 28 740 216" height="38" aria-hidden="true">
-			<path fill="currentColor" d="M0 196 V28 H52 A84 84 0 0 1 52 196 H57 V174 H52 A59 62 0 0 0 52 50 H24 V196 Z M277.02 147 A62 62 0 1 0 263.49 175.85 L245.11 160.43 A38 38 0 1 1 252.37 147 Z M172 125 V147 H254.37 V125 Z M399.84 92.16 A62 62 0 1 0 399.84 179.84 L382.87 162.87 A38 38 0 1 1 382.87 109.13 Z M390 28 H502 V50 H390 Z M434 28 H458 V196 H434 Z M600 136 A62 62 0 1 1 476 136 A62 62 0 1 1 600 136 Z M576 136 A38 38 0 1 0 500 136 A38 38 0 1 0 576 136 Z M740 136 A62 62 0 1 1 616 136 A62 62 0 1 1 740 136 Z M716 136 A38 38 0 1 0 640 136 A38 38 0 1 0 716 136 Z M716 76 H740 V197 H716 Z M740 196 A62 48 0 0 1 624.31 220 L645.09 208 A38 24 0 0 0 716 196 Z"></path>
-			<path fill="#ff520a" d="M78 185 A21 21 0 1 1 36 185 A21 21 0 1 1 78 185 Z"></path>
+		<svg viewBox="0 24 480 174" height="30" aria-hidden="true">
+			<path fill="currentColor" d="M0 196 L78 24 L156 196 L129.65 196 L106.97 146 L49.03 146 L26.35 196 Z M78 82.11 L59 124 L97 124 Z M286 136 A62 62 0 1 1 162 136 A62 62 0 1 1 286 136 Z M262 136 A38 38 0 1 0 186 136 A38 38 0 1 0 262 136 Z M262 28 H286 V197 H262 Z"></path>
+			<path fill="#ff520a" d="M339.24 45.69 A86 86 0 0 1 474.58 81.95 Z M390.77 80.86 L323.45 62.82 A86 86 0 0 0 361.13 191.47 Z M412.37 86.65 L382.73 197.26 A86 86 0 0 0 479.69 104.69 Z"></path>
 		</svg>
 	</a>
 	<a class="docs" href={siteTitleHref}>Docs</a>

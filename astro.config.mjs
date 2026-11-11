@@ -5,15 +5,20 @@ import starlightLlmsTxt from 'starlight-llms-txt';
 import starlightLinksValidator from 'starlight-links-validator';
 
 const description =
-	'Deep links, install attribution and real-time analytics for mobile apps: the Flutter SDK, the REST API, the dashboard and self-hosting.';
+	'Deep links, install attribution and real-time analytics for mobile apps: the Flutter and React Native SDKs, the REST API and the dashboard.';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://docs.adto.app',
 	trailingSlash: 'always',
-	// Pages that moved; published copies of SKILL.md and the plugin still link the old URLs.
+	// Pages that moved; published copies of SKILL.md, the plugin and the server's API
+	// descriptions may still link the old URLs.
 	redirects: {
 		'/api/install-webhook/': '/api/webhooks/',
+		'/start/what-dectog-does-not-do/': '/start/what-adto-does-not-do/',
+		'/self-hosting/privacy-and-data/': '/guides/privacy-and-data/',
+		'/self-hosting/scheduled-jobs-and-retention/': '/guides/scheduled-jobs-and-retention/',
+		'/self-hosting/attribution-internals/': '/start/attribution-internals/',
 	},
 	integrations: [
 		starlight({
@@ -25,7 +30,7 @@ export default defineConfig({
 			editLink: { baseUrl: 'https://github.com/ad-to/docs/edit/main/' },
 			lastUpdated: true,
 			customCss: [
-				// Self-hosted variable fonts: Outfit for headings, Inter for text, Fira Code for code.
+				// Variable fonts served with the site: Outfit for headings, Inter for text, Fira Code for code.
 				'@fontsource-variable/outfit/wght.css',
 				'@fontsource-variable/inter/wght.css',
 				'@fontsource-variable/fira-code/wght.css',
@@ -64,7 +69,6 @@ export default defineConfig({
 				{ label: 'React Native SDK', collapsed: true, items: [{ autogenerate: { directory: 'react-native' } }] },
 				{ label: 'Dashboard', collapsed: true, items: [{ autogenerate: { directory: 'dashboard' } }] },
 				{ label: 'REST API', collapsed: true, items: [{ autogenerate: { directory: 'api' } }] },
-				{ label: 'Self-hosting', collapsed: true, items: [{ autogenerate: { directory: 'self-hosting' } }] },
 				{ label: 'Guides', collapsed: true, items: [{ autogenerate: { directory: 'guides' } }] },
 				{ label: 'Contributing', collapsed: true, items: [{ autogenerate: { directory: 'contributing' } }] },
 			],
@@ -73,9 +77,9 @@ export default defineConfig({
 					projectName: 'AdTo',
 					description,
 					details: [
-						'AdTo is a self-hostable deep-linking and install-attribution service: short links that open an installed app or route visitors through the app stores, deferred deep linking for new installs, post-install events and a real-time dashboard.',
-						'The hosted service lives at https://adto.app (API at https://app.adto.app, links on `{username}.adto.app`). The server (Cloudflare Worker + D1 + Next.js dashboard) is AGPL-3.0; the Flutter SDK `flutter_dectog` and the React Native SDK `react-native-dectog` are MIT.',
-						'These pages describe the behaviour of flutter_dectog 1.0.x, react-native-dectog 1.0.x and the server on its current database migrations.',
+						'AdTo is a hosted deep-linking and install-attribution service: short links that open an installed app or route visitors through the app stores, deferred deep linking for new installs, post-install events and a real-time dashboard.',
+						'The site lives at https://adto.app (API at https://app.adto.app, links on `{username}.adto.app`). The Flutter SDK `flutter_dectog` and the React Native SDK `react-native-dectog` are MIT; their 1.0.x defaults are the old DecTog service, so AdTo apps set `baseUrl: https://app.adto.app` and `linkRootDomain: adto.app`.',
+						'These pages describe the behaviour of flutter_dectog 1.0.x, react-native-dectog 1.0.x and the AdTo service.',
 					].join('\n\n'),
 					optionalLinks: [
 						{
@@ -94,16 +98,15 @@ export default defineConfig({
 							description: 'llms.txt shipped inside the react-native-dectog package: types, link URLs, setup and init.',
 						},
 						{
-							label: 'Source code',
+							label: 'SDKs on GitHub',
 							url: 'https://github.com/ad-to',
-							description: 'Server, SDKs and these docs on GitHub.',
+							description: 'The SDKs and these docs on GitHub.',
 						},
 					],
 					customSets: [
 						{ label: 'Flutter SDK', paths: ['sdk/**'], description: 'Installing and using the Flutter SDK.' },
 						{ label: 'React Native SDK', paths: ['react-native/**'], description: 'Installing and using the React Native and Expo SDK.' },
 						{ label: 'REST API', paths: ['api/**'], description: 'The REST API: links, attribution, events, raw export and webhooks.' },
-						{ label: 'Self-hosting', paths: ['self-hosting/**'], description: 'Running your own AdTo server.' },
 					],
 				}),
 				// Also check the links passed to the home page components.

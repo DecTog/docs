@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://adto.app"><img src=".github/dectog-readme.png" alt="AdTo: Documentation" width="800"></a>
+  <a href="https://adto.app"><img src=".github/adto-readme.png" alt="AdTo: Documentation" width="800"></a>
 </p>
 
 <div align="center">
@@ -11,24 +11,23 @@
 [![Site code: MIT](https://img.shields.io/badge/Site%20code-MIT-blue?style=flat-square)](LICENSE)
 [![Content: CC BY 4.0](https://img.shields.io/badge/Content-CC%20BY%204.0-lightgrey?style=flat-square)](LICENSE-CONTENT)
 [![Astro Starlight](https://img.shields.io/badge/Astro-Starlight-BC52EE?style=flat-square&logo=astro&logoColor=white)](https://starlight.astro.build)
-[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020?style=flat-square&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/workers/)
+[![Render](https://img.shields.io/badge/Render-static%20site-141414?style=flat-square&logo=render&logoColor=white)](https://render.com/docs/static-sites)
 
 [Working on the docs](#working-on-the-docs) • [Adding a page](#adding-a-page) • [Look and layout](#look-and-layout) • [Conventions](#conventions) • [Deployment](#deployment)
 
 </div>
 
-This repository holds the canonical documentation for [AdTo](https://adto.app), the
-self-hosted deep linking and install attribution service: quickstart, link routing, the Flutter
-and React Native SDKs, the dashboard, the REST API and self-hosting. It is built with
-[Astro Starlight](https://starlight.astro.build) and served from a Cloudflare Worker as static
-assets.
+This repository holds the canonical documentation for [AdTo](https://adto.app), the hosted
+deep linking and install attribution service: quickstart, link routing, the Flutter and React
+Native SDKs, the dashboard and the REST API. It is built with
+[Astro Starlight](https://starlight.astro.build) and served as a static site on Render.
 
 Every page describes what the code does today. Where the product's own wording and the code
 disagree, the docs follow the code and say so.
 
 | Repository | Contents |
 |---|---|
-| [`ad-to/adto`](https://github.com/ad-to/adto) | The server: Cloudflare Worker, D1 database, Next.js dashboard and marketing site |
+| `ad-to/adto` | The server, dashboard and website (private) |
 | [`ad-to/flutter_adto`](https://github.com/ad-to/flutter_adto) | The Flutter SDK |
 | [`ad-to/react-native-adto`](https://github.com/ad-to/react-native-adto) | The React Native and Expo SDK |
 | `ad-to/docs` | This site |
@@ -59,7 +58,7 @@ npm run preview    # serves dist/ on http://localhost:4321 (production-like)
    ```
 
 3. The sidebar groups are fixed in `astro.config.mjs` (`start`, `links`, `sdk`, `react-native`,
-   `dashboard`, `api`, `self-hosting`, `guides`, `contributing`); pages inside a group are
+   `dashboard`, `api`, `guides`, `contributing`); pages inside a group are
    picked up automatically and ordered by `sidebar.order`.
 4. Link to other pages with absolute paths and a trailing slash: `/api/links/`. Broken internal
    links fail the build.
@@ -79,7 +78,7 @@ The site wears the adto.app identity on top of Starlight:
   menu footer and footer (registered under `components` in `astro.config.mjs`).
   `src/components/home/` holds the sections of the home page, used from
   `src/content/docs/index.mdx`.
-- Outfit, Inter and Fira Code are self-hosted through the `@fontsource-variable` packages.
+- Outfit, Inter and Fira Code are served with the site through the `@fontsource-variable` packages.
 
 ### Conventions
 

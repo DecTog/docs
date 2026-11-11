@@ -1,0 +1,23 @@
+# docs.adto.app: the AdTo documentation, a static site on Render (free plan,
+# global CDN). Create it once from this file (New > Blueprint), or by hand with
+# the same settings. Node comes from .nvmrc.
+services:
+  - type: web
+    runtime: static
+    name: adto-docs
+    # Starlight's "Last updated" dates read the git history; a shallow clone
+    # would give every page the last commit's date, so fetch all of it first.
+    buildCommand: (git fetch --unshallow --quiet || true) && npm ci && npm run build
+    staticPublishPath: ./dist
+    # Every merge to main publishes the docs, as the old CI deploy did; the
+    # build itself fails on a broken internal link, so a bad build never goes live.
+    autoDeployTrigger: commit
+    previews:
+      generation: "off"
+    domains:
+      - docs.adto.app
+    headers:
+      # Astro fingerprints these files: their names change with their content.
+      - path: /_astro/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
