@@ -41,7 +41,7 @@ Node 22.12 or newer (`.nvmrc` says 24).
 npm ci
 npm run dev        # http://localhost:4321, live reload
 npm run build      # validates internal links, builds the search index, writes dist/
-npm run serve:cf   # serves dist/ through wrangler on http://localhost:8788 (production-like)
+npm run preview    # serves dist/ on http://localhost:4321 (production-like)
 ```
 
 ### Adding a page
@@ -97,21 +97,10 @@ The site wears the dectog.com identity on top of Starlight:
 
 ## Deployment
 
-Pushes to `main` build and deploy through `.github/workflows/deploy.yml`
-(`cloudflare/wrangler-action`). The workflow needs two repository secrets:
+docs.adto.app is a [Render](https://render.com) static site built from `main`: `render.yaml`
+holds its settings (build command, publish directory `dist/`, the domain). CI
+(`.github/workflows/build.yml`) builds every push and pull request and deploys nothing.
 
-| Secret | Value |
-|---|---|
-| `CLOUDFLARE_API_TOKEN` | API token from the "Edit Cloudflare Workers" template, scoped to the account and zone |
-| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account id |
-
-Manual deploy from a machine logged in with `wrangler login`:
-
-```bash
-npm run deploy     # astro build && wrangler deploy
-```
-
-> [!NOTE]
-> `wrangler.jsonc` binds the route `docs.dectog.com/*` in the `dectog.com` zone. That route is
-> more specific than the main worker's `*.dectog.com/*`, so no change to the main worker is
-> needed. Deleting this worker (`npx wrangler delete`) hands the host back to the main worker.
+docs.dectog.com, the old DecTog docs, stays frozen on Cloudflare at the tag
+`docs-dectog-com-final`. Nothing on `main` deploys it; a fix for it is made on a branch from
+that tag and deployed from there by hand.
