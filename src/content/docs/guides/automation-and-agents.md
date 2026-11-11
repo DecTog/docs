@@ -13,15 +13,12 @@ Everything the Flutter SDK does with links, a script or an AI agent can do too. 
 - Every `/api/v1` call except `GET /api/v1/resolve/{username}/{slug}` needs `Authorization: Bearer <key>` and a request signature.
 - `curl` 7.76 or newer (for `--fail-with-body`), `openssl` and `jq`.
 
-Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only to `https://app.adto.app` or your own deployment.
+Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only to `https://app.adto.app`.
 
-:::note[Self-hosting]
-Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLIC_BASE_URL>/r/{username}/{slug}`. `SKILL.md`, `llms.txt` and the agent catalog (`/.well-known/ard.json`) are served from your `SITE_URL` and your `WEB_URL`.
-:::
 
 ## MCP server
 
-AdTo runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://app.adto.app/mcp`. A self-hosted deployment serves it at `https://app.<your domain>/mcp`. Agents such as Claude Code, Claude Desktop, Cursor and VS Code connect to it and call AdTo tools directly, with no request signing.
+AdTo runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://app.adto.app/mcp`. Agents such as Claude Code, Claude Desktop, Cursor and VS Code connect to it and call AdTo tools directly, with no request signing.
 
 - **Transport:** Streamable HTTP. Every answer is plain JSON. There is no session and no event stream, so `GET /mcp` answers 405.
 - **Key:** send `Authorization: Bearer <account key>`. An SDK key also works, but only within its scopes and without the account tools marked below.
@@ -36,7 +33,7 @@ claude mcp add --transport http dectog https://app.adto.app/mcp \
 
 Other clients take the same two values, the URL and the `Authorization` header, in their MCP settings.
 
-The AdTo plugin for Claude Code bundles the same server with five skills: links and the API, the Flutter SDK, the React Native SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
+The AdTo plugin for Claude Code bundles the same server with four skills: links and the API, the Flutter SDK, the React Native SDK, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
 
 ```text
 /plugin install dectog --marketplace ad-to/adto
@@ -243,7 +240,7 @@ A 429 returns `{"error":{"code":"rate_limited","message":"Rate limit exceeded"}}
 
 | File | What it is |
 |---|---|
-| `https://adto.app/SKILL.md` | The agent guide: concepts, API, SDK, webhook and self-hosting in one file, with a `version` in its frontmatter. Also served at `https://app.adto.app/SKILL.md`. |
+| `https://adto.app/SKILL.md` | The agent guide: concepts, API, SDKs and webhooks in one file, with a `version` in its frontmatter. Also served at `https://app.adto.app/SKILL.md`. |
 | `https://adto.app/llms.txt` | A short index of agent-readable references. Also at `https://app.adto.app/llms.txt`. |
 | `https://adto.app/.well-known/ard.json` | The agent catalog, for registries and agents that discover resources by domain ([Agentic Resource Discovery](https://agenticresourcediscovery.org/)). It lists the MCP server, with its URL, protocol versions and `Authorization` header inline as an MCP Server Card, and `SKILL.md`. The same document answers at `/.well-known/ai-catalog.json`, the name MCP server-card discovery reads, and on `https://app.adto.app`. |
 | `https://docs.adto.app/llms.txt` | An index of every page on this site with its description, generated at build time |

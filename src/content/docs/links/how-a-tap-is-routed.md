@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-A link such as `https://acme.adto.app/welcome` is served by the redirect engine. This page lists its decisions in the order the server takes them. The examples use the hosted service; on a self-hosted path-mode deployment the same link is `{PUBLIC_BASE_URL}/r/acme/welcome`.
+A link such as `https://acme.adto.app/welcome` is served by the redirect engine. This page lists its decisions in the order the server takes them.
 
 ## Entry points
 

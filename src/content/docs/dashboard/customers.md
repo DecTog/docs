@@ -61,7 +61,7 @@ Subtitle: "Set by identify(). A later call replaces each field it sends; fields 
 | **Referred** | The customers this customer referred, up to 50, newest first, each with its **rejected** chip and fraud flags. Each id opens that customer's page. |
 | **Devices** | Up to 20 distinct device IDs seen on the customer's events, plus the install's device. |
 
-Empty fields are hidden. Name, email and phone are stored in plain text; see [Privacy and data](/self-hosting/privacy-and-data/).
+Empty fields are hidden. Name, email and phone are stored in plain text; see [Privacy and data](/guides/privacy-and-data/).
 
 ### Attribution
 
@@ -121,10 +121,7 @@ Subtitle: "App sessions on this customer's devices, newest first, with the scree
 
 Shown only when there are any. Subtitle: "Times an AdTo link re-opened the installed app on this customer's devices." Each row is `/{slug}` with the date and time; the latest 50 across the customer's devices.
 
-:::note[Self-hosting]
-The screen behaves the same on a self-hosted deployment. The daily retention job blanks a customer's name, email and phone after the configured retention period; see [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
-:::
 
 ### Personal data
 
-At the bottom of the page: **Download everything stored (JSON)** saves what AdTo holds about the customer (the record, its events, its referrals and its devices), and **Erase this customer** deletes it after a confirmation, together with each device only this customer used. A device another customer also used keeps that customer's data. The page then shows what went, for example "Customer erased: 1 customer record, 1 device, 1 install, 5 events". Both are recorded in the [audit log](/dashboard/settings/#audit-log) without the customer id. What each covers is in [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person).
+At the bottom of the page: **Download everything stored (JSON)** saves what AdTo holds about the customer (the record, its events, its referrals and its devices), and **Erase this customer** deletes it after a confirmation, together with each device only this customer used. A device another customer also used keeps that customer's data. The page then shows what went, for example "Customer erased: 1 customer record, 1 device, 1 install, 5 events". Both are recorded in the [audit log](/dashboard/settings/#audit-log) without the customer id. What each covers is in [A request from one person](/guides/privacy-and-data/#a-request-from-one-person).

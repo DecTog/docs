@@ -206,6 +206,3 @@ The Overview, the Customers screen and the per-link totals drop those rows immed
 
 The slug is free again as soon as the link is gone, for permanent and temporary links alike.
 
-:::note[Self-hosting]
-Link URLs follow the deployment's URL mode: `https://{username}.{root-domain}/{slug}` in subdomain mode, `{base-url}/r/{username}/{slug}` in path mode. The [Settings](/dashboard/settings/) screen shows which one applies.
-:::

@@ -48,12 +48,7 @@ A link's target is a fallback, not a redirect for everyone: on a phone the store
 
 ## Link URLs and URL modes
 
-The server builds link URLs in one of two modes, set by `LINK_URL_MODE` and `ROOT_DOMAIN`:
-
-| Mode | URL | Used when |
-|---|---|---|
-| `subdomain` | `https://{username}.{ROOT_DOMAIN}/{slug}` | Hosted service (`ROOT_DOMAIN=adto.app`) and production self-hosts with a wildcard DNS record |
-| `path` | `{PUBLIC_BASE_URL}/r/{username}/{slug}` | Local development, `workers.dev` deployments. Forced whenever `ROOT_DOMAIN` starts with `localhost`, whatever the mode says. |
+Every AdTo account's links are `https://{username}.adto.app/{slug}`. The SDKs also read the path form `{api host}/r/{username}/{slug}`.
 
 An account with an active [custom domain](/links/custom-domains/) gets `https://{custom domain}/{slug}` in either mode; its subdomain or path URLs keep working.
 

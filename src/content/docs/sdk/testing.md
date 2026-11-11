@@ -5,54 +5,6 @@ sidebar:
   order: 9
 ---
 
-## Local loop with a self-hosted worker
-
-The quickest way to exercise every SDK path is the local worker plus the bundled example app. The worker's local quick start (demo seed, bootstrap, URLs) is on [Local quick start](/self-hosting/local-quick-start/).
-
-1. Start the worker so that link URLs are reachable from the Android emulator:
-
-   ```bash
-   cd dectog/apps/worker
-   npm run dev:android   # wrangler dev on :8787 with PUBLIC_BASE_URL=http://10.0.2.2:8787
-   ```
-
-   `10.0.2.2` is the emulator's alias for the host machine. The iOS simulator shares the host's network and uses `http://localhost:8787`. The local worker runs in path mode, so links look like `http://10.0.2.2:8787/r/demo/welcome`.
-
-2. Configure the example app. It reads three `dart-define` values from a JSON file:
-
-   ```json title="example/env/dev.json"
-   {
-     "DECTOG_API_KEY": "dtg_paste_your_key_here",
-     "DECTOG_BASE_URL": "https://app.adto.app",
-     "DECTOG_LINK_ROOT_DOMAIN": "adto.app"
-   }
-   ```
-
-   `env/dev.json` is gitignored; copy `env/dev.json.example` and paste an SDK key of your [test environment](#test-environment).
-
-   ```bash
-   cd flutter_dectog/example
-   flutter pub get
-   flutter run --dart-define-from-file=env/dev.json
-   ```
-
-   The example is Trails, a small app: a link opens it on a trail, a new install lands on the shared trail after signing up, invites go through the referral link, a demo purchase goes through `trackConversion`, and every screen is reported. Its `README.md` lists how to try each flow; its Debug screen runs `diagnostics()`, `getAttributionData()` and the consent switch.
-
-3. Fire links at the running app. The example app's manifest carries intent filters for `dectog://`, `http://10.0.2.2` and `https://localhost`; its `Info.plist` registers the `dectog` scheme.
-
-   ```bash
-   # Android emulator
-   adb shell am start -a android.intent.action.VIEW -d "dectog://demo/welcome"
-   adb shell am start -a android.intent.action.VIEW -d "http://10.0.2.2:8787/r/demo/welcome?utm_source=test"
-
-   # iOS simulator
-   xcrun simctl openurl booted "dectog://demo/welcome"
-   ```
-
-   The custom scheme shows iOS's "Open in app?" prompt. Universal Links need a real HTTPS domain that serves the association file, so they cannot be tested against a local worker. On Android the `http://10.0.2.2` and `https://localhost` filters never pass App Links verification, so on Android 12 and newer they only open the app from explicit intents like the ones above.
-
-With `enableDebugLogging: true` the SDK prints what it does: `Processing AdTo link: username=demo, slug=welcome`, `Mobile click logged successfully`, `First app launch detected - tracking app install`, `Install referrer: …`, and either `App install matched to deferred click: …` or `App install tracked as organic`.
-
 ## A test environment for debug builds
 
 Create a test environment in the dashboard (Settings → [Test environment](/dashboard/settings/#test-environment)): a second account, `t-<username>`, with the same apps. Give debug builds its SDK key, and its link host in their associated domains (`applinks:t-acme.adto.app` and the Android intent filter), so nothing you test reaches your live numbers:

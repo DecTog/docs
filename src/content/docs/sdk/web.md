@@ -18,7 +18,7 @@ Your links also send people to your website: the desktop QR page's website link,
 <script src="https://app.adto.app/dectog.js" data-site-key="dtg_site_0123456789abcdef0123456789abcdef" async></script>
 ```
 
-A self-hosted deployment serves it from its own `PUBLIC_BASE_URL`; the snippet in Settings has the right host. The script is about 2 KB gzipped and has no dependencies. A site with a Content-Security-Policy needs that host in `script-src` and `connect-src`.
+The snippet in Settings has the right host. The script is about 2 KB gzipped and has no dependencies. A site with a Content-Security-Policy needs that host in `script-src` and `connect-src`.
 
 ## Track what happens
 

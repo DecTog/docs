@@ -7,7 +7,7 @@ sidebar:
 
 Your links can live on a subdomain of your own: `https://go.yourbrand.com/sale` instead of `https://yourname.adto.app/sale`. One custom domain per account. Links on your AdTo subdomain keep working either way, so links already shared never break.
 
-The deployment has to offer it: it needs Cloudflare for SaaS and three settings, described in [Self-hosting: custom domains](/self-hosting/custom-domains/). Until then the Settings card says it is not set up.
+Custom link domains are not available on AdTo at the moment; the Settings card says so. Your links are on `{username}.adto.app`.
 
 ## Add the domain
 

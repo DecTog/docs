@@ -43,7 +43,7 @@ Both association files are built for the whole account: every app with the requi
    </plist>
    ```
 
-   Replace `{username}` with your AdTo username (self-hosted: `applinks:{username}.{root}`). Use the explicit host, not a wildcard: for `applinks:*.adto.app` iOS fetches the association file from the parent domain, and the apex serves none (it answers 400 because no username can be read from the host), so the wildcard form never verifies. Enable the Associated Domains capability on the App ID in your Apple Developer account. With a [custom link domain](/links/custom-domains/), add `applinks:go.yourbrand.com` as a second entry: it serves the same file.
+   Replace `{username}` with your AdTo username. Use the explicit host, not a wildcard: for `applinks:*.adto.app` iOS fetches the association file from the parent domain, and the apex serves none (it answers 400 because no username can be read from the host), so the wildcard form never verifies. Enable the Associated Domains capability on the App ID in your Apple Developer account. With a [custom link domain](/links/custom-domains/), add `applinks:go.yourbrand.com` as a second entry: it serves the same file.
 
 3. Rebuild and reinstall the app. iOS downloads and verifies the association file at install or update time, so an already-installed app only picks it up after a reinstall or an update.
 
@@ -174,11 +174,3 @@ Each platform section of the app editor has a **Verify** button next to the file
 
 Both report `Endpoint replied <status>: …` or `Fetch failed: …` when the fetch fails. The check reads what is saved, not what you typed into the form, so save first.
 
-## Self-hosted and local deployments
-
-The association files resolve the account from the request host (`{username}.{root}`) or from an explicit `?u={username}` query, which always wins. Two consequences:
-
-- In path mode (a root domain that starts with `localhost`, the local development default) the host carries no username, so the files are only reachable as `http://localhost:8787/.well-known/apple-app-site-association?u={username}` and `…/assetlinks.json?u={username}`. Without `?u=` the response is `400 {"error":{"code":"invalid_request","message":"Subdomain not found in host"}}`.
-- Universal Links and App Links require a real HTTPS domain that the OS can fetch. Local hosts such as `http://10.0.2.2` or `https://localhost` never pass verification; on Android 12 and newer they open the app only from explicit intents (`adb`) or after the user enables the link in system settings. Use custom schemes and `adb` or `simctl` during development, as described in [Testing](/sdk/testing/).
-
-Every response carries `x-hostname` and `x-subdomain` headers naming the host and the resolved username. Self-hosted deployments serve the files from their own root domain; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).

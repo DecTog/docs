@@ -73,7 +73,7 @@ An incoming URL is an AdTo link when it matches one of these forms. `baseHost` i
 
 | Form | Example | Used for |
 |---|---|---|
-| `https://{username}.{root}/{slug}` | `https://acme.adto.app/launch` | Hosted and self-hosted subdomain links. The username must contain no dot, and the host must differ from `baseHost`. |
+| `https://{username}.{root}/{slug}` | `https://acme.adto.app/launch` | AdTo links. The username must contain no dot, and the host must differ from `baseHost`. |
 | `https://{domain}/{slug}`, for a host in `linkDomains` or the custom domain the server names | `https://go.yourbrand.com/launch` | Your [custom link domain](/links/custom-domains/). The link belongs to the key's own account, which the SDK reads from the server. `{domain}/r/{username}/{slug}` works too. A host equal to `baseHost` or under `root` is never a custom domain. |
 | `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
 | any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |

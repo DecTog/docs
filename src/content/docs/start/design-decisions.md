@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-Why AdTo works the way it does, including the designs it chose not to adopt. Each entry states the decision, the reason and what was rejected. The limits these decisions produce are listed in [What AdTo does not do](/start/what-dectog-does-not-do/).
+Why AdTo works the way it does, including the designs it chose not to adopt. Each entry states the decision, the reason and what was rejected. The limits these decisions produce are listed in [What AdTo does not do](/start/what-adto-does-not-do/).
 
 ## Kept as they are
 
@@ -323,7 +323,6 @@ Each of these appears in at least one competing project.
 | R2 | Persistent cookies or third-party tags on link pages | Redirects are cookie-free and stay so |
 | R3 | The client choosing windows, install state or verdicts | Windows, state and verdicts are decided server-side |
 | R4 | "Bring your own auth" and unauthenticated install or event routes | Every write is authenticated and signed; a future ad-network route gets its own token and rate bucket |
-| R5 | An `ee/` paywall or plan gating in the engine | The whole product is AGPL; limits are deployment config, never data model |
 | R6 | A multi-service analytics stack (queues, ClickHouse, Tinybird) | Rollup tables in D1 give the read speed with one service |
 | R7 | Reporting an install on every launch, or "organic" on a network failure | A sentinel, an `install_attempt_id` and retry on the next launch |
 | R8 | Targeting rules that 404 on non-match | Geo, language, schedule and A/B rules route a visitor; they never gate a link |
@@ -331,7 +330,6 @@ Each of these appears in at least one competing project.
 | R10 | Push messaging, affiliate programs, domain sales, LLM link scanning | Outside the product's scope; each adds credentials and moving parts |
 | R11 | Row-per-impression storage and recomputed attribution views | D1's size cap and read billing; verdicts are computed at write time |
 | R12 | Documenting ahead of code | Docs state what the code does |
-| R13 | A CLA on the AGPL server | Inbound = outbound is the simpler story (still an open question) |
 | R14 | Silent dedupe of events | Batch answers say what was accepted, duplicated and rejected |
 | R15 | Fingerprint first, deterministic signal as the fallback | A deterministic signal never waits behind a guess |
 | R16 | Holding the app's own events until attribution resolves | Events are independent of the verdict; the server stamps `matched_slug` |

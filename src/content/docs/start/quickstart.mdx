@@ -7,7 +7,7 @@ sidebar:
 
 import { Steps, Tabs, TabItem, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
 
-This page uses the hosted service: the dashboard and API live at `https://app.adto.app`, links at `https://{username}.adto.app/{slug}`. Self-hosting changes a few values; the steps call them out. The examples use the username `acme` and the slug `welcome`.
+This page uses the hosted service: the dashboard and API live at `https://app.adto.app`, links at `https://{username}.adto.app/{slug}`. The examples use the username `acme` and the slug `welcome`.
 
 <Steps>
 
@@ -128,17 +128,6 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
 
    `onAppInstalled` can emit more than once: a Play referrer that was not ready at first launch, or a pasted link, upgrades the verdict later (`claim == 'upgraded'`). `currentAppInstall` always holds the latest one.
 
-   <Aside type="note" title="Self-hosting">
-   Point the SDK at your worker with `baseUrl` (the worker's `PUBLIC_BASE_URL`). Add `linkRootDomain` when your links live on a different host than the API, for example API at `app.example.com` and links at `{username}.example.com`:
-
-   ```dart
-   DectogConfig(
-     apiKey: 'dtg_pub_your_sdk_key',
-     baseUrl: 'https://app.example.com',
-     linkRootDomain: 'example.com',
-   )
-   ```
-   </Aside>
 
    Installation details, the dependency ranges and the Android build notes are in [Installation](/sdk/installation/).
 

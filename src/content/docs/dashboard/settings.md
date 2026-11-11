@@ -15,7 +15,7 @@ The Settings screen, at https://app.adto.app/dashboard/settings, has up to eleve
 | **Username / subdomain** | Your username, which is also the host of your links: `https://{username}.adto.app/{slug}`. |
 | **Sign in with Google** | Shown when the deployment has Google sign-in configured: **Connect Google** links a Google account to your sign-in (yours, in every account you work in), and the row then reads **Connected**. Connecting signs out your other sessions. See [Connect Google](/dashboard/account-and-sign-in/#connect-google). |
 | **Revenue currency** | The currency every revenue total is in, EUR by default; one of the about 30 currencies the European Central Bank publishes reference rates for. Changing it converts every stored amount again. See [Revenue](/sdk/revenue/). |
-| **Data retention** | How many days the account keeps raw taps, installs, events and app starts, 1 to the deployment's maximum (400 on the hosted service). Empty keeps the maximum. **Save** applies it from the next daily run (03:17 UTC): older rows lose their personal columns, or go once the daily totals hold their day; totals stay. See [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/#anonymization-sweep-daily). |
+| **Data retention** | How many days the account keeps raw taps, installs, events and app starts, 1 to the deployment's maximum (400 on the hosted service). Empty keeps the maximum. **Save** applies it from the next daily run (03:17 UTC): older rows lose their personal columns, or go once the daily totals hold their day; totals stay. See [Scheduled jobs and retention](/guides/scheduled-jobs-and-retention/#anonymization-sweep-daily). |
 
 Apart from the revenue currency, the retention window and connecting Google nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
 
@@ -37,9 +37,6 @@ When you cancel in the portal, Creem ends the subscription at once and charges n
 
 Plan changes are recorded in the [audit log](#audit-log), by **AdTo**.
 
-:::note[Self-hosting]
-The card appears only on a deployment with Creem billing configured, which is hosted AdTo's. A self-hosted deployment has no plans and no card; see [Configuration reference](/self-hosting/configuration-reference/#secrets).
-:::
 
 ## Account key
 
@@ -76,7 +73,7 @@ Read-only facts about the deployment that serves your links.
 
 | Field | Value |
 |---|---|
-| **URL mode** | **Wildcard subdomain** on the hosted service: links are `https://{username}.adto.app/{slug}`. **Path-based (workers.dev / dev)** on deployments without a wildcard domain: links are `{base-url}/r/{username}/{slug}`. |
+| **URL mode** | **Wildcard subdomain**: links are `https://{username}.adto.app/{slug}`. |
 | **Root domain** | The domain under which link hosts live: `adto.app` on the hosted service. |
 | **Example link** | Your link URL for the slug `welcome`, in the mode above, or on your custom domain once it is active. |
 
@@ -88,7 +85,7 @@ Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name
 
 ## Custom domain
 
-Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. On a deployment without Cloudflare for SaaS the card says custom domains are not set up. The whole flow is in [Custom domains](/links/custom-domains/).
+Not available on AdTo at the moment: the card says so, and your links stay on `{username}.adto.app`. Where it is offered, it puts your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. The whole flow is in [Custom domains](/links/custom-domains/).
 
 ## Team
 

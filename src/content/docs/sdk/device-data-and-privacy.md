@@ -213,4 +213,4 @@ Every authenticated call carries the API key as a Bearer token plus an HMAC-SHA2
 
 ## Retention on the server
 
-After the retention window (400 days by default on the hosted service, shorter if the account sets its own), the server deletes the raw clicks, installs, events and app opens once its daily per-link counts hold their day, blanking their device fields, IPs and user agents until then, and blanks customers' contact details. What is kept and when it is removed is listed under [Privacy and data](/self-hosting/privacy-and-data/).
+After the retention window (400 days by default on the hosted service, shorter if the account sets its own), the server deletes the raw clicks, installs, events and app opens once its daily per-link counts hold their day, blanking their device fields, IPs and user agents until then, and blanks customers' contact details. What is kept and when it is removed is listed under [Privacy and data](/guides/privacy-and-data/).

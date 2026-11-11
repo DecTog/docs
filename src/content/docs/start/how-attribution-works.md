@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-Install attribution answers one question: which link tap, if any, led to this first launch? AdTo answers it with a ladder of signals. Deterministic signals, which carry the click id itself, come first. A scored fingerprint comes last, and it only credits an install when it is sure. This page describes the behavior in user terms; the scoring details are in [Attribution internals](/self-hosting/attribution-internals/).
+Install attribution answers one question: which link tap, if any, led to this first launch? AdTo answers it with a ladder of signals. Deterministic signals, which carry the click id itself, come first. A scored fingerprint comes last, and it only credits an install when it is sure. This page describes the behavior in user terms; the scoring details are in [Attribution internals](/start/attribution-internals/).
 
 ## What happens at the tap
 

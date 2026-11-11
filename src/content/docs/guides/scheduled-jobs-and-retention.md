@@ -1,20 +1,18 @@
 ---
 title: Scheduled jobs and retention
-description: The two cron triggers, what each one runs, how the daily rollups are built, and exactly which rows and columns the daily retention sweep deletes, nulls or keeps.
+description: AdTo's two scheduled jobs, what each one runs, how the daily rollups are built, and exactly which rows and columns the daily retention sweep deletes, nulls or keeps.
 sidebar:
   order: 4
 ---
 
-The Worker has two cron triggers, declared identically at the top level and in `env.production` of `apps/worker/wrangler.jsonc`. Cloudflare evaluates cron expressions in UTC. The handler is `scheduled` in `apps/worker/src/index.ts`.
+AdTo runs two scheduled jobs, on UTC time:
 
 | Expression | Fires | Runs |
 |---|---|---|
-| `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups, webhook retries, unfinished CSV exports and custom domain checks |
-| `17 3 * * *` | Daily at 03:17 UTC | The same, then the expired temporary links' delete, the deleted-link anonymization, the webhook delivery-log purge, the export-file purge, the exchange rates and, once the rollups are done, the retention sweep |
+| `7 * * * *` | Every hour at :07 | Apple Search Ads retry, the daily rollups and webhook retries |
+| `17 3 * * *` | Daily at 03:17 UTC | The same, then the expired temporary links' delete, the deleted-link anonymization, the webhook delivery-log purge, the exchange rates and, once the rollups are done, the retention sweep |
 
 The code branches on the expression: `7 * * * *` returns after the Apple Search Ads pass and the rollups; any other expression runs everything. The jobs run inside `waitUntil`, so a failure in one does not stop the others, except that the retention sweep waits for the rollup build. There is no job-level logging beyond console warnings.
-
-`wrangler dev` does not fire crons. Start it with `--test-scheduled` and call `http://localhost:8787/__scheduled?cron=17+3+*+*+*` (or `7+*+*+*+*`) to run a trigger by hand; see the [Local quick start](/self-hosting/local-quick-start/).
 
 ## Apple Search Ads retry (both triggers)
 
@@ -30,13 +28,13 @@ The code branches on the expression: `7 * * * *` returns after the Apple Search 
    - `5xx`, a network error or a malformed body: stays `pending`.
 4. Whenever a status is settled, `asa_resolved_at` is set and `asa_token` is nulled: the token is a one-time credential and is never kept.
 
-More than 100 pending tokens are spread over successive passes. The three inline attempts the install request itself makes, five seconds apart, are described on [Attribution internals](/self-hosting/attribution-internals/).
+More than 100 pending tokens are spread over successive passes. The three inline attempts the install request itself makes, five seconds apart, are described on [Attribution internals](/start/attribution-internals/).
 
 ## Daily rollups (both triggers)
 
 `buildRollups` (`apps/worker/src/rollups.ts`) fills `link_daily`: per account, link, UTC day and platform (`ios`, `android`, `desktop`, `other`), the clicks, first installs and the credited ones, app opens, leads, net revenue in the account's currency, and the events credited to a link because it re-opened the app. Installs and events no link earned sit under the slug `''`. The rows are rebuilt from the raw rows, a whole day at a time and never on the request path, so a tap costs no extra write.
 
-Each account has a `rollup_state` row: `through_day`, the last built day, and `frozen_through` (below). A run takes the accounts furthest behind and builds up to 40 steps of 31 days across them, so a new deployment, or an account with years of data, backfills itself over the next runs; nothing needs to be run by hand. Reads take every day after `through_day` from the raw rows, so the dashboard is exact while the rollups catch up.
+Each account has a `rollup_state` row: `through_day`, the last built day, and `frozen_through` (below). A run takes the accounts furthest behind and builds up to 40 steps of 31 days across them, so an account with years of data backfills itself over the next runs; nothing needs to be run by hand. Reads take every day after `through_day` from the raw rows, so the dashboard is exact while the rollups catch up.
 
 A change to a raw row of a built day moves `through_day` back to the day before it, and the next run rebuilds from there: a late claim that credits an older install, a store notification that changes an amount or reverses a refund, an exchange rate that arrives late, a new re-engagement window on an app (every unfrozen day), a deleted app, a new account currency, and a permanent link delete, which also removes the link's rollup rows.
 
@@ -45,16 +43,6 @@ What reads the rollups: the Overview's clicks, installs, reinstalls, opens, lead
 ## Webhook retries (both triggers)
 
 `retryDueDeliveries` (`apps/worker/src/webhooks.ts`) sends again every pending delivery whose `next_attempt_at` has passed and whose webhook is on, oldest first, up to 300 per run, ten at a time with a 10-second timeout each. A failure schedules the next attempt 5 minutes, 30 minutes, 2 hours, 6 hours and 24 hours after the previous one (six attempts in all), then marks the delivery failed. Because the job runs hourly, the 5- and 30-minute retries happen at the next :07. A larger backlog waits for the next run. See [Webhooks](/api/webhooks/#delivery-and-retries).
-
-## CSV exports (both triggers)
-
-`resumeExportJobs` (`apps/worker/src/exports.ts`) writes up to three large CSV exports that the request which asked for them did not finish: queued ones, and ones whose run held them for 15 minutes without finishing. Each starts the file over, at most three attempts in all. Only with an `EXPORTS` bucket. See [Export raw data](/api/export/#larger-exports).
-
-The daily trigger also runs `purgeExportJobs`: a file is deleted from the bucket seven days after it was written (its job turns `expired`), and the job row a week after that.
-
-## Custom domains (both triggers)
-
-`sweepCustomDomains` (`apps/worker/src/customdomains.ts`) asks Cloudflare (and DNS, for a domain waiting for its CNAME) about the custom domains not checked for ten minutes while pending and for a day once active, and deletes the hostnames of removed or moved domains whose 7-day grace has ended, 50 of each per run. A domain that failed and was never removed gets the same grace a week later. Only when custom domains are configured. See [Custom domains](/self-hosting/custom-domains/).
 
 ## Device names (daily)
 
@@ -81,9 +69,9 @@ Downloads the ECB's daily euro reference rates into `fx_rates` (`date`, `currenc
 
 ## Anonymization sweep (daily)
 
-The cutoff is `now minus RETENTION_DAYS` (default 400; `0`, blank or non-numeric also means 400). An account with a shorter window of its own (Settings → **Data retention**, 1 to 400 days; `PUT /api/admin/settings/retention`) is then swept again with its own cutoff, in the same order; a longer one has no effect.
+The cutoff is now minus 400 days. An account with a shorter window of its own (Settings → **Data retention**, 1 to 400 days; `PUT /api/admin/settings/retention`) is then swept again with its own cutoff, in the same order; a longer one has no effect.
 
-First, for every account whose rollups are built through the cutoff's day, the clicks, installs, events and app opens older than the cutoff are deleted, except events with a `transaction_id` (purchases, renewals, refunds), which stay and are nulled as below, so a restored purchase still counts once and a refund finds its purchase. `frozen_through` becomes the cutoff's day: those days' totals now live only in `link_daily` and are never rebuilt (a later change of account currency converts them with each day's exchange rates instead). This is what keeps storage at about the retention window's worth of rows; see [What it costs to run](/self-hosting/cost/).
+First, for every account whose rollups are built through the cutoff's day, the clicks, installs, events and app opens older than the cutoff are deleted, except events with a `transaction_id` (purchases, renewals, refunds), which stay and are nulled as below, so a restored purchase still counts once and a refund finds its purchase. `frozen_through` becomes the cutoff's day: those days' totals now live only in `link_daily` and are never rebuilt (a later change of account currency converts them with each day's exchange rates instead). This is what keeps storage at about the retention window's worth of rows.
 
 Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. Each account's pass is on its own: one that fails is logged (`[dectog] retention: sweep failed`) and runs again the next day, and the others, and the purges in the table, still run. The sweep also runs when the day's rollup build failed, since it deletes only the days the rollups hold. Rows of accounts whose rollups are not that far yet are kept for aggregate analytics with their personal columns set to `NULL`, as below.
 
@@ -100,18 +88,18 @@ Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commit
 | `app_installs` | SET NULL | `created_at < cutoff` | `device_id`, `device_model`, `device_manufacturer`, `device_kind`, `cpu_type`, `os_build`, `screen_width`, `screen_height`, `screen_density`, `text_size`, `dark_mode`, `high_contrast`, `reduce_motion`, `utc_offset_min`, `connectivity_type`, `carrier_mcc`, `carrier_mnc`, `ip_raw`, `ip_hash`, `web_user_agent`, `meta_referrer`, `asa_token` |
 | `app_opens` | SET NULL | `created_at < cutoff` | `device_id`, `install_id`, `click_id`, `ip_hash` |
 | `clicks` | SET NULL | `clicked_at < cutoff` | `device_id`, `device_model`, `ip_raw`, `ip_hash`, `ua_raw`, `accept_language`, `region`, `city`, `asn`, `as_org`, `launch_referrer` |
-| `clicks` (screen profile and device settings) | SET NULL | `clicked_at` older than `min(RETENTION_DAYS, 30)` days, only rows that still carry a value | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `text_size`, `dark_mode`, `high_contrast`, `reduce_motion`, `utc_offset_min` |
+| `clicks` (screen profile and device settings) | SET NULL | `clicked_at` older than 30 days, only rows that still carry a value | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `text_size`, `dark_mode`, `high_contrast`, `reduce_motion`, `utc_offset_min` |
 | `rate_limits` | DELETE rows | `window_start` older than the current 60 s window minus 2 | whole row |
 | `erasures` | DELETE rows | `expires_at` passed: 8 days after a device or customer was erased | whole row |
 | `webhook_deliveries` | DELETE rows | an account whose own window is under 30 days: older than its cutoff (otherwise the 30-day job below) | whole row |
 
-The sweep also deletes what an erasure missed: for every tombstone still standing, an event of the erased device or customer stored in the minute after the erasure (the life of an edge location's copy of the account, `SDK_AUTH_CACHE_SECONDS`) with a client time from before it; see [Privacy and data](/self-hosting/privacy-and-data/#a-request-from-one-person).
+The sweep also deletes what an erasure missed: for every tombstone still standing, an event of the erased device or customer stored in the minute after the erasure (the life of an edge location's copy of the account, `SDK_AUTH_CACHE_SECONDS`) with a client time from before it; see [Privacy and data](/guides/privacy-and-data/#a-request-from-one-person).
 
 The screen profile and the device settings are dropped early because the fingerprint reads them only inside its window, which never exceeds 30 days (720 hours). `enriched_at` is kept on purpose: it is the "first beacon wins" gate, and a null would let a late beacon rewrite the row.
 
 ### Deleted links (daily)
 
-`anonymiseDeletedLinks` gives the clicks and app opens of a link deleted more than 30 days ago (`links.deleted_at` or `temp_links.deleted_at`) the same treatment as above, whatever their age: the `clicks` personal columns, screen profile and device settings, and the `app_opens` columns, are set to `NULL`, only on rows that still carry a value. Thirty days is the cap of the attribution window, so an install from a tap made before the delete can still match its click until then. The link's installs and events belong to your app's users rather than to the link, and keep the `RETENTION_DAYS` schedule. A deleted link's counts stay; a permanent delete removes the rows instead.
+`anonymiseDeletedLinks` gives the clicks and app opens of a link deleted more than 30 days ago (`links.deleted_at` or `temp_links.deleted_at`) the same treatment as above, whatever their age: the `clicks` personal columns, screen profile and device settings, and the `app_opens` columns, are set to `NULL`, only on rows that still carry a value. Thirty days is the cap of the attribution window, so an install from a tap made before the delete can still match its click until then. The link's installs and events belong to your app's users rather than to the link, and keep the retention schedule. A deleted link's counts stay; a permanent delete removes the rows instead.
 
 ### What stays after the cutoff
 
@@ -123,28 +111,10 @@ The screen profile and the device settings are dropped early because the fingerp
 
 ### Tables the sweep never touches
 
-`users`, `apps`, `links`, `temp_links` (the expiry delete only sets `deleted_at`), `audit_events` (kept as long as the account), `blog_categories`, `blog_posts`, `contact_messages` and `password_resets`. Contact-form messages and used or expired reset tokens (hashes only) therefore accumulate until someone deletes them: owners can delete messages in the dashboard; `password_resets` rows can only be removed with `wrangler d1 execute`.
+`users`, `apps`, `links`, `temp_links` (the expiry delete only sets `deleted_at`), `audit_events` (kept as long as the account), `blog_categories`, `blog_posts`, `contact_messages` and `password_resets`. Contact-form messages and used or expired reset tokens (hashes only) therefore accumulate until someone deletes them: owners can delete messages in the dashboard.
 
 ### Limits
 
-- An account can shorten its window, never lengthen it past `RETENTION_DAYS`.
-- Past the cutoff, raw rows are deleted once their day is in the rollups, and only anonymized until then. Within the retention window, a tenant can delete a link permanently, or erase one device or customer (see [Privacy and data](/self-hosting/privacy-and-data/#a-request-from-one-person)); a plain delete keeps the rows.
-- The sweep runs once a day at 03:17 UTC. Data older than the cutoff can exist for up to 24 hours before it is anonymized, and a Worker that is undeployed or erroring skips its runs silently.
-
-### Checking that it ran
-
-D1 keeps no job history. Confirm with a query against the oldest rows, for example:
-
-```bash
-npx wrangler d1 execute dectog --remote --env production \
-  --command "SELECT COUNT(*) FROM clicks WHERE ip_raw IS NOT NULL AND clicked_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-400 days')"
-```
-
-A count of 0 means the last sweep covered everything older than the cutoff. To see how far the rollups are:
-
-```bash
-npx wrangler d1 execute dectog --remote --env production \
-  --command "SELECT user_id, through_day, frozen_through FROM rollup_state ORDER BY through_day LIMIT 20"
-```
-
-`test/retention.test.ts` and `test/rollups.test.ts` in the Worker repository pin the behavior described on this page.
+- An account can shorten its window, never lengthen it past 400 days.
+- Past the cutoff, raw rows are deleted once their day is in the rollups, and only anonymized until then. Within the retention window, a tenant can delete a link permanently, or erase one device or customer (see [Privacy and data](/guides/privacy-and-data/#a-request-from-one-person)); a plain delete keeps the rows.
+- The sweep runs once a day at 03:17 UTC. Data older than the cutoff can exist for up to 24 hours before it is anonymized.

@@ -7,9 +7,6 @@ sidebar:
 
 This guide is for teams moving deep links and install attribution from Branch, Adjust or AppsFlyer. It maps names and behaviors, nothing else. Vendor terms are written as they appear in those products' documentation. It assumes the hosted service: the API at `https://app.adto.app` and links at `https://{username}.adto.app/{slug}`.
 
-:::note[Self-hosting]
-On your own deployment the API base is `PUBLIC_BASE_URL`, links use your `ROOT_DOMAIN`, and the fingerprint windows come from `ATTRIBUTION_WINDOW_HOURS` and `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS`. See [Configuration reference](/self-hosting/configuration-reference/).
-:::
 
 ## The verdict in their terms
 
@@ -119,4 +116,4 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 
 ## What AdTo does not do
 
-AdTo is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What AdTo does not do](/start/what-dectog-does-not-do/).
+AdTo is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What AdTo does not do](/start/what-adto-does-not-do/).

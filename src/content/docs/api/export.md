@@ -46,7 +46,7 @@ done
 
 To keep a copy current, remember the time of the last row you stored and ask with `since` set to it on the next run. Rows with that exact time come again; skip the ids you already have.
 
-Raw rows live for the retention window (`RETENTION_DAYS`, 400 days by default); older ones are gone. See [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
+Raw rows live for the retention window (`RETENTION_DAYS`, 400 days by default); older ones are gone. See [Scheduled jobs and retention](/guides/scheduled-jobs-and-retention/).
 
 ### Columns
 
@@ -76,9 +76,4 @@ Up to 50,000 rows (`EXPORT_STREAM_MAX_ROWS`) stream back at once, with the row c
 
 ### Larger exports
 
-Past the limit, what happens depends on whether the deployment has an `EXPORTS` R2 bucket ([Configuration reference](/self-hosting/configuration-reference/)).
-
-- **Without one** the export answers `422` with code `export_too_large`, `rows` and `max_rows`, and a message naming the ways out: a shorter window, tighter filters, or the paged route above.
-- **With one** it answers `202` with a job, `{id, data, status: "queued", total_rows, row_count, bytes, error, created_at, finished_at, expires_at, status_url, download_url: null}`, and writes the file in the background. `GET /api/admin/exports/:id` reports the job; once `status` is `done`, `download_url` is a signed link to the file, valid until `expires_at`, seven days after the file was written. The link carries its own credential (`?exp=&sig=`), so it works from a script or a mail without a session; a wrong or expired one answers `403` with code `invalid_download_link`.
-
-The request that asked starts the job, and most files are written before it ends. One that is not finished then is taken over by the next hourly cron, from the start, at most three attempts in all; after the third failure the job is `failed` with the `error`. The window is the one of the moment you asked, however long the job takes. The daily cron deletes a file seven days after it was written (the job turns `expired`) and the job a week after that.
+Past the limit, the export answers `422` with code `export_too_large`, `rows` and `max_rows`, and a message naming the ways out: a shorter window, tighter filters, or the paged route above.

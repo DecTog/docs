@@ -167,7 +167,7 @@ Section text: "Attribution behaviour. Everything here is off by default."
 | **Pasted-link and Meta window** | Number box, 1 to 720, placeholder `168`, suffix "hours" | "Hours a copied link (iOS tap-to-store, paste button) or a Meta install referrer still earns credit. An older click sends the user to the link but counts the install as organic, flagged Old pasted link or Old Meta referrer; an app that blocks those rules (Fraud rules) does not even route it. Empty uses the deployment default (168 hours, 7 days). Store referrers keep 30 days." The server accepts a whole number from 1 to 720 or an empty box. |
 | **Re-engagement window** | Number box, 1 to 720, placeholder `168`, suffix "hours" | "Hours after one of this app's links re-opened the installed app during which purchases and other events count for that link instead of the link that brought the install. Empty uses the deployment default (168 hours, 7 days)." Applied when the dashboard reads the numbers, so a change also moves past credit. |
 
-The fraud rules and both windows are read from the app the install concerns (see the note at the top of this page). The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules are explained in [Fraud rules](/start/fraud-rules/); the windows and confidence levels in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/self-hosting/attribution-internals/).
+The fraud rules and both windows are read from the app the install concerns (see the note at the top of this page). The interstitial and tap-to-store switches belong to the app a link uses. The fraud rules are explained in [Fraud rules](/start/fraud-rules/); the windows and confidence levels in [How attribution works](/start/how-attribution-works/) and [Attribution internals](/start/attribution-internals/).
 
 ## Saving
 
@@ -191,6 +191,3 @@ The AASA file lists every app that has both a bundle ID and a Team ID, as `TEAMI
 
 The trash icon asks `Delete app "<name>"? Links using it will fall back to your default app. This cannot be undone.` Links bound to the app lose their binding and are served by the oldest remaining app from the next tap on; so do link templates that named it, and the links made from them afterwards. The webhooks limited to the app are deleted with their delivery logs, and its store notification URLs stop working; account-wide webhooks stay. Clicks and installs recorded for the app stay. The status line shows "Deleted ✓".
 
-<Aside type="note" title="Self-hosting">
-The well-known files are served on your own root domain, so the Associated Domains entry becomes `applinks:your-username.your-root-domain` and the intent-filter hosts become `your-username.your-root-domain`. In path mode (a root domain that starts with `localhost`) the files are reachable only with `?u=your-username`, and on-device verification, which fetches them from the link host over https, is not possible.
-</Aside>

@@ -39,7 +39,7 @@ To test a link:
 3. Tap the link on the phone and check the tap appears, with **page beacon** if the link shows a page.
 4. Install and open the app. The install appears within a few seconds; open it to read the verdict.
 
-To run the same test again on the same phone, open the install, choose **Erase this device**, then tap the link again before you reinstall. Erasing removes the device's installs and strips the taps they were credited to of everything personal, so the fingerprint can no longer match an old tap. Erasing is for owners; see [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person).
+To run the same test again on the same phone, open the install, choose **Erase this device**, then tap the link again before you reinstall. Erasing removes the device's installs and strips the taps they were credited to of everything personal, so the fingerprint can no longer match an old tap. Erasing is for owners; see [A request from one person](/guides/privacy-and-data/#a-request-from-one-person).
 
 Erasing clears the server's data, not the phone's. On Android that is enough for the next install to count as new. An iPhone keeps the SDK's first-install date and saved device id in the Keychain, which survives deleting the app, so its next install still arrives as a reinstall. For a fresh install:
 
@@ -63,6 +63,3 @@ The detail opens from this screen, from the Overview's Recent installs and from 
 - **Tap**, **App opens**, **Events** and **Screens**, as on the [Overview](/dashboard/overview/#recent-installs).
 - **This device's data**: **Download everything stored (JSON)** and **Erase this device**, and on this screen **Every install from this device →**, which searches the list for the device id. Viewers do not see this part.
 
-:::note[Self-hosting]
-The screen is identical on a self-hosted deployment. Watch polls the server; it holds no connection open.
-:::

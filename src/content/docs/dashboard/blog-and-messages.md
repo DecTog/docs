@@ -77,7 +77,7 @@ Every account's plan and [monthly active users](/dashboard/settings/#plan), for 
 
 **Custom limit** under each account is that account's own limit in monthly active users, for a custom plan agreed by email: a number replaces the plan's limit (the account's Plan card then says "with a custom limit of …"), blank returns to the plan's. **Save** applies it at once: an account whose SDK traffic was paused and now fits resumes within a minute, without waiting for the daily job. The change is recorded in that account's [audit log](/dashboard/settings/#audit-log) under your email.
 
-Nothing happens on its own when an account is over: its links and apps keep working. The [Terms](https://adto.app/terms) promise to contact the account first, so write to it about moving to a plan that fits. On a deployment without Creem billing the screen says billing is not enabled.
+Nothing happens on its own when an account is over: its links and apps keep working. The [Terms](https://adto.app/terms) promise to contact the account first, so write to it about moving to a plan that fits.
 
 ## Where the public blog lives
 
@@ -87,6 +87,3 @@ Nothing happens on its own when an account is over: its links and apps keep work
 - A shared link to a published post previews as that post: its title, its excerpt and, when set, its featured image. See [Blog post pages](/api/well-known-seo-and-routing/#blog-post-pages).
 - `https://adto.app/sitemap.xml` lists the site pages and every published post, newest first; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).
 
-:::note[Self-hosting]
-The blog and the contact form are served on the worker's `SITE_URL` host, and the dashboard host (`WEB_URL`) redirects their paths there. The screens exist on every deployment; whether you use them is up to you.
-:::
