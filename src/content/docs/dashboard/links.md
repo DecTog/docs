@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-The Links screen, at https://app.dectog.com/dashboard/links, is where you create the links people tap. Its header reads "Deep links that open your app, track installs and expire when you want." Next to it, **Templates** manages [link templates](#templates), **Import CSV** creates many links from a file ([Importing links](#importing-links)), and **New link** opens the create panel; the panel is always open while the account has no links.
+The Links screen, at https://app.adto.app/dashboard/links, is where you create the links people tap. Its header reads "Deep links that open your app, track installs and expire when you want." Next to it, **Templates** manages [link templates](#templates), **Import CSV** creates many links from a file ([Importing links](#importing-links)), and **New link** opens the create panel; the panel is always open while the account has no links.
 
 On load the screen fetches your links, your apps (an account with exactly one app gets it preselected) and your username, which the deep-link previews use.
 
@@ -54,7 +54,7 @@ These values are stored on every click of the link, can be overridden per tap wi
 
 #### If the app isn't installed (mobile)
 
-**App Store / Play Store (default)** sends a phone without the app to the store configured on the app: the App Store, Google Play, or the OEM store that matches the phone's brand. **Custom URL** (placeholder `https://promo.example.com/offer`) sends it to that address instead. When the custom address is itself a store page on an Apple, Google Play, Huawei, Samsung or Xiaomi host, DecTog adds its attribution tag to it; vivo store addresses are not tagged. Stored as `redirect_url`; must be http(s).
+**App Store / Play Store (default)** sends a phone without the app to the store configured on the app: the App Store, Google Play, or the OEM store that matches the phone's brand. **Custom URL** (placeholder `https://promo.example.com/offer`) sends it to that address instead. When the custom address is itself a store page on an Apple, Google Play, Huawei, Samsung or Xiaomi host, AdTo adds its attribution tag to it; vivo store addresses are not tagged. Stored as `redirect_url`; must be http(s).
 
 #### If the app can't open the link (desktop)
 
@@ -121,7 +121,7 @@ Empty states: "No permanent links yet.", "No temporary links. Pick an expiry whe
 
 ## Importing links
 
-**Import CSV** opens a panel with two column presets: **DecTog columns** (headers named like the API fields, such as `slug`, `target`, `campaign`, `utm_source`, `external_id`) and **Firebase Dynamic Links export** (see [Importing an FDL export](/guides/migrate-from-firebase-dynamic-links/#importing-an-fdl-export)). After you pick a file, the panel shows how many links it found, the first ten with notes (a row without a slug, `afl` and `ifl` that differ), and **Import {n} links**. Links are created 100 per request; the result reads "{n} created, {m} failed." with a table of the failed rows by line number and error. Nothing is created until you press the button.
+**Import CSV** opens a panel with two column presets: **AdTo columns** (headers named like the API fields, such as `slug`, `target`, `campaign`, `utm_source`, `external_id`) and **Firebase Dynamic Links export** (see [Importing an FDL export](/guides/migrate-from-firebase-dynamic-links/#importing-an-fdl-export)). After you pick a file, the panel shows how many links it found, the first ten with notes (a row without a slug, `afl` and `ifl` that differ), and **Import {n} links**. Links are created 100 per request; the result reads "{n} created, {m} failed." with a table of the failed rows by line number and error. Nothing is created until you press the button.
 
 ## Editing a link
 
@@ -206,6 +206,3 @@ The Overview, the Customers screen and the per-link totals drop those rows immed
 
 The slug is free again as soon as the link is gone, for permanent and temporary links alike.
 
-:::note[Self-hosting]
-Link URLs follow the deployment's URL mode: `https://{username}.{root-domain}/{slug}` in subdomain mode, `{base-url}/r/{username}/{slug}` in path mode. The [Settings](/dashboard/settings/) screen shows which one applies.
-:::

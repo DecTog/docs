@@ -1,21 +1,18 @@
 ---
 title: Migrate from Branch, Adjust or AppsFlyer
-description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to DecTog links, dec_* parameters, the SDK verdict and the webhooks, with a plain list of what DecTog does not do.
+description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to AdTo links, dec_* parameters, the SDK verdict and the webhooks, with a plain list of what AdTo does not do.
 sidebar:
   order: 2
 ---
 
-This guide is for teams moving deep links and install attribution from Branch, Adjust or AppsFlyer. It maps names and behaviors, nothing else. Vendor terms are written as they appear in those products' documentation. It assumes the hosted service: the API at `https://app.dectog.com` and links at `https://{username}.dectog.com/{slug}`.
+This guide is for teams moving deep links and install attribution from Branch, Adjust or AppsFlyer. It maps names and behaviors, nothing else. Vendor terms are written as they appear in those products' documentation. It assumes the hosted service: the API at `https://app.adto.app` and links at `https://{username}.adto.app/{slug}`.
 
-:::note[Self-hosting]
-On your own deployment the API base is `PUBLIC_BASE_URL`, links use your `ROOT_DOMAIN`, and the fingerprint windows come from `ATTRIBUTION_WINDOW_HOURS` and `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS`. See [Configuration reference](/self-hosting/configuration-reference/).
-:::
 
 ## The verdict in their terms
 
 Every install report returns one `DectogAppInstallResponse`. This table places the vocabulary of the three products on its fields.
 
-| Concept | DecTog |
+| Concept | AdTo |
 |---|---|
 | The install came from a link (Branch `+clicked_branch_link`, AppsFlyer `af_status: Non-organic`, Adjust attribution with a tracker) | `matched: true`, `type: 'non-organic'`. `matched` is attribution credit. It is granted only at `matchConfidence` `guaranteed` or `high`. |
 | Deterministic match (Branch `+match_guaranteed`) | `matchConfidence: 'guaranteed'`, `matchSource` `referrer` or `clipboard`, and `referrerSource` naming the store: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo` or `meta`. |
@@ -34,9 +31,9 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 
 ## Branch
 
-| Branch | DecTog |
+| Branch | AdTo |
 |---|---|
-| Quick Link `https://xyz.app.link/abc` | `https://{username}.dectog.com/{slug}`, created on the Links page or with `POST /api/v1/links` |
+| Quick Link `https://xyz.app.link/abc` | `https://{username}.adto.app/{slug}`, created on the Links page or with `POST /api/v1/links` |
 | `$deeplink_path`, `$ios_deeplink_path`, `$android_deeplink_path` | `ios_deep_link_path` and `android_deep_link_path` on the link; `dec_deeplink` per tap |
 | `$fallback_url` | The link's `target` is the last mobile fallback, after the app's `fallback_url` |
 | `$desktop_url` | The link's `fallback_url`, or `dec_fallback` per tap. The default is the branded QR page. |
@@ -51,9 +48,9 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 
 ## Adjust
 
-Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
+Adjust's tracker URL parameters keep their names in AdTo with a `dec_` prefix.
 
-| Adjust | DecTog |
+| Adjust | AdTo |
 |---|---|
 | Tracker `https://app.adjust.com/<token>` | A link. `dec_tracker` records a tracker name per tap; it has no routing effect. |
 | `campaign`, `adgroup`, `creative`, `label` | `dec_campaign`, `dec_adgroup`, `dec_creative`, `dec_label`, falling back to the link's Tracking defaults |
@@ -72,9 +69,9 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 
 ## AppsFlyer
 
-| AppsFlyer | DecTog |
+| AppsFlyer | AdTo |
 |---|---|
-| OneLink `https://xyz.onelink.me/abc/...` | `https://{username}.dectog.com/{slug}` |
+| OneLink `https://xyz.onelink.me/abc/...` | `https://{username}.adto.app/{slug}` |
 | `af_dp`, `deep_link_value` | `dec_deeplink` per tap; `ios_deep_link_path` and `android_deep_link_path` on the link |
 | `deep_link_sub1` to `deep_link_sub10` | Link `metadata` (returned as `customParameters`), or the `dec_*` tracking fields |
 | `af_web_dp` | The link's `fallback_url` or `dec_fallback` |
@@ -93,19 +90,19 @@ Adjust's tracker URL parameters keep their names in DecTog with a `dec_` prefix.
 | Apple Search Ads | `appleSearchAds` on the verdict |
 | SKAdNetwork, Conversion Studio, ad-network integrations | None |
 
-AppsFlyer separates routing (UDL) from attribution data (GCD). DecTog separates them inside one object: `routing` says where to send a new user, `matched` and `clickParams` say who gets credit.
+AppsFlyer separates routing (UDL) from attribution data (GCD). AdTo separates them inside one object: `routing` says where to send a new user, `matched` and `clickParams` say who gets credit.
 
 ## Running both for a while
 
-A migration is safer when both tools see the same traffic for a few weeks. Keep the MMP's SDK in the app next to flutter_dectog, point a DecTog link's **If the app isn't installed > Custom URL** (`redirect_url`) at the MMP's tracking link, and turn on **MMP click handoff** for the app on the Apps page. A tap then goes through DecTog, which records the click, and on to the MMP's link with DecTog's click id added:
+A migration is safer when both tools see the same traffic for a few weeks. Keep the MMP's SDK in the app next to flutter_dectog, point an AdTo link's **If the app isn't installed > Custom URL** (`redirect_url`) at the MMP's tracking link, and turn on **MMP click handoff** for the app on the Apps page. A tap then goes through AdTo, which records the click, and on to the MMP's link with AdTo's click id added:
 
 | Destination host | Added |
 |---|---|
-| `*.onelink.me`, `app.appsflyer.com` (AppsFlyer) | `clickid=<DecTog click id>`, and `pid=<your media source>` when the app sets one |
+| `*.onelink.me`, `app.appsflyer.com` (AppsFlyer) | `clickid=<AdTo click id>`, and `pid=<your media source>` when the app sets one |
 | `*.sng.link` (Singular) | the same |
 | `app.adjust.com`, `adj.st` (Adjust) | the same |
 
-A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme links and other hosts are never changed. The click id is the 16-character `dtg_click` value that names the click in DecTog, so an install the MMP attributes can be looked up on the DecTog side by it. Whether the MMP keeps the `clickid` parameter in its raw data depends on the link and partner settings in its own dashboard; check one test install there before relying on it. The store redirect then belongs to the MMP's link, so DecTog's own install match for those taps falls back to the store referrer the MMP passes on, or to the fingerprint.
+A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme links and other hosts are never changed. The click id is the 16-character `dtg_click` value that names the click in AdTo, so an install the MMP attributes can be looked up on the AdTo side by it. Whether the MMP keeps the `clickid` parameter in its raw data depends on the link and partner settings in its own dashboard; check one test install there before relying on it. The store redirect then belongs to the MMP's link, so AdTo's own install match for those taps falls back to the store referrer the MMP passes on, or to the fingerprint.
 
 ## How attribution differs
 
@@ -117,6 +114,6 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 - A pasted link or a Meta referrer earns credit for 7 days (per app); an older one routes the user without credit. Store referrers keep 30 days.
 - Apple Search Ads is resolved server-side and arrives later: `pending`, then `resolved`, `no_attribution`, `invalid` or `expired`. Only `resolved` and `no_attribution` are final.
 
-## What DecTog does not do
+## What AdTo does not do
 
-DecTog is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What DecTog does not do](/start/what-dectog-does-not-do/).
+AdTo is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What AdTo does not do](/start/what-adto-does-not-do/).

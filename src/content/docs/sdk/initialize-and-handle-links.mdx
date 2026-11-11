@@ -18,10 +18,12 @@ final dectog = FlutterDectog();
 
 await dectog.initialize(DectogConfig(
   apiKey: 'dtg_pub_your_sdk_key',
+  baseUrl: 'https://app.adto.app',
+  linkRootDomain: 'adto.app',
 ));
 ```
 
-That is the whole setup for the hosted service: the SDK talks to `https://app.dectog.com` and recognizes links on `{username}.dectog.com`.
+That is the whole setup: the SDK talks to `https://app.adto.app` and recognizes links on `{username}.adto.app`. Name both hosts: flutter_dectog 1.0.x defaults to the old DecTog service (`https://app.dectog.com`, links on `dectog.com`), and with `baseUrl` alone it would expect links on the API host.
 
 What `initialize` does, in order:
 
@@ -42,8 +44,8 @@ Rules:
 | Field | Type | Default | Meaning |
 |---|---|---|---|
 | `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. |
-| `baseUrl` | `String?` | `null` → `https://app.dectog.com` | API base URL. Set it only when self-hosting. Trailing slashes are stripped. |
-| `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). Set it when self-hosted links live on a different host than the API. |
+| `baseUrl` | `String?` | `null` → `https://app.dectog.com`, the old DecTog service | API base URL: `https://app.adto.app` for AdTo. Trailing slashes are stripped. |
+| `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`): `adto.app` for AdTo. |
 | `linkDomains` | `List<String>` | `[]` | Your [custom link domains](/links/custom-domains/), like `go.yourbrand.com`: `https://go.yourbrand.com/{slug}` is a link of your account. The SDK also learns the active domain from the server after its first answer; listing it covers a link that opens the app on its very first start. |
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
 | `installReferrerProvider` | `Future<String?> Function()?` | `null` | Replaces the built-in Android referrer readers with your own Play referrer string. |
@@ -65,27 +67,13 @@ The attribution options are explained on [Install attribution](/sdk/install-attr
 
 `FlutterDectog().diagnostics()` compares the build with that record and returns warnings, also printed with `enableDebugLogging`: a bundle ID or package that differs from the dashboard's, an iOS URL scheme missing from `CFBundleURLTypes`, and on Android 12 and newer every link host the system has not verified for App Links. It never stops the SDK; call it from a debug screen or a test build.
 
-### Self-hosted backends
-
-Set `baseUrl` to your API and, when the links live on a different host, `linkRootDomain`:
-
-```dart
-await dectog.initialize(DectogConfig(
-  apiKey: 'dtg_pub_your_sdk_key',
-  baseUrl: 'https://app.example.com',
-  linkRootDomain: 'example.com', // links at https://{username}.example.com/{slug}
-));
-```
-
-Against a local worker use `http://10.0.2.2:8787` on the Android emulator and `http://localhost:8787` on the iOS simulator, with no `linkRootDomain` (the local worker runs in path mode, `/r/{username}/{slug}`). See [Testing](/sdk/testing/).
-
 ## Which URLs the SDK recognizes
 
-An incoming URL is a DecTog link when it matches one of these forms. `baseHost` is the host of `effectiveBaseUrl`, `root` is `effectiveLinkRootDomain` (or `baseHost` when that is null).
+An incoming URL is an AdTo link when it matches one of these forms. `baseHost` is the host of `effectiveBaseUrl`, `root` is `effectiveLinkRootDomain` (or `baseHost` when that is null).
 
 | Form | Example | Used for |
 |---|---|---|
-| `https://{username}.{root}/{slug}` | `https://acme.dectog.com/launch` | Hosted and self-hosted subdomain links. The username must contain no dot, and the host must differ from `baseHost`. |
+| `https://{username}.{root}/{slug}` | `https://acme.adto.app/launch` | AdTo links. The username must contain no dot, and the host must differ from `baseHost`. |
 | `https://{domain}/{slug}`, for a host in `linkDomains` or the custom domain the server names | `https://go.yourbrand.com/launch` | Your [custom link domain](/links/custom-domains/). The link belongs to the key's own account, which the SDK reads from the server. `{domain}/r/{username}/{slug}` works too. A host equal to `baseHost` or under `root` is never a custom domain. |
 | `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
 | any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |
@@ -109,7 +97,7 @@ if (initial != null) _handleLink(initial);
 
 void _handleLink(DectogLinkClick click) {
   if (click.error != null) {
-    // Not a DecTog link, or the SDK was not initialized yet.
+    // Not an AdTo link, or the SDK was not initialized yet.
     return;
   }
   // click.username and click.slug come from the URL itself.
@@ -128,7 +116,7 @@ What a `DectogLinkClick` carries:
 | `originalUrl`, `receivedAt` | Always. |
 | `username`, `slug` | Parsed from the URL; `'unknown'` when parsing failed. |
 | `linkResolution` | The public `GET /api/v1/resolve/{username}/{slug}` answered. It is `null` when the request failed; the click and the open were still reported. |
-| `error` | The URL is not a DecTog link (`Invalid DecTog URL format`), processing failed, or the SDK was not initialized. |
+| `error` | The URL is not an AdTo link (`Invalid AdTo URL format`), processing failed, or the SDK was not initialized. |
 | `clickParams` (getter) | The URL carries `dec_*` parameters. `deepLink` is the raw `dec_deeplink` value as it appeared in the URL. |
 | `isResolved`, `targetUrl`, `linkType` (getters) | Convenience views on `linkResolution`. |
 
@@ -165,17 +153,17 @@ A link that has a deep-link path opens as `{scheme}://{path}?…&dtg_l={username
 
 ## Links tapped inside your app
 
-iOS and Android never hand a Universal Link or an App Link back to the app that shows it. A DecTog link in your own chat, feed or help screen therefore opens the browser when tapped. Pass it to the SDK instead:
+iOS and Android never hand a Universal Link or an App Link back to the app that shows it. An AdTo link in your own chat, feed or help screen therefore opens the browser when tapped. Pass it to the SDK instead:
 
 ```dart
 // In your own link tap handler:
 final click = await FlutterDectog().handleUrl(url);
 if (click == null) {
-  await launchUrl(Uri.parse(url)); // not a DecTog link: open it as usual
+  await launchUrl(Uri.parse(url)); // not an AdTo link: open it as usual
 }
 ```
 
-`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `DectogLinkClick`. It counts as an app open, not as a click: the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not a DecTog link (including a custom domain the SDK does not know) and for an authentication callback.
+`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `DectogLinkClick`. It counts as an app open, not as a click: the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not an AdTo link (including a custom domain the SDK does not know) and for an authentication callback.
 
 ## Complete example
 
@@ -199,6 +187,8 @@ class DectogService {
     _installs = _dectog.onAppInstalled.listen(_onInstall);
     await _dectog.initialize(DectogConfig(
       apiKey: apiKey,
+      baseUrl: 'https://app.adto.app',
+      linkRootDomain: 'adto.app',
       enableDebugLogging: true,
     ));
     // The cold-start link was already delivered on onLinkClick; calling

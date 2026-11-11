@@ -1,37 +1,34 @@
 ---
 title: Migrate from Firebase Dynamic Links
-description: How Firebase Dynamic Links concepts, URL parameters, the REST API and the Flutter plugin map onto DecTog links, apps, dec_* parameters and the install verdict.
+description: How Firebase Dynamic Links concepts, URL parameters, the REST API and the Flutter plugin map onto AdTo links, apps, dec_* parameters and the install verdict.
 sidebar:
   order: 1
 ---
 
-Google shut down Firebase Dynamic Links on August 25, 2025. This guide maps what you had in Firebase Dynamic Links (FDL) onto DecTog and ends with a migration checklist. It assumes the hosted service: the API at `https://app.dectog.com` and links at `https://{username}.dectog.com/{slug}`.
+Google shut down Firebase Dynamic Links on August 25, 2025. This guide maps what you had in Firebase Dynamic Links (FDL) onto AdTo and ends with a migration checklist. It assumes the hosted service: the API at `https://app.adto.app` and links at `https://{username}.adto.app/{slug}`.
 
-Still deciding whether DecTog fits? The [Firebase Dynamic Links alternative](https://dectog.com/firebase-dynamic-links-alternative) page compares the two job by job and says when another tool fits better.
+Still deciding whether AdTo fits? The [Firebase Dynamic Links alternative](https://adto.app/firebase-dynamic-links-alternative) page compares the two job by job and says when another tool fits better.
 
-:::note[Self-hosting]
-On your own deployment the API base is `PUBLIC_BASE_URL` and links use your `ROOT_DOMAIN`. Set `baseUrl` and `linkRootDomain` in `DectogConfig`. See [Configuration reference](/self-hosting/configuration-reference/).
-:::
 
 ## Concepts
 
-| Firebase Dynamic Links | DecTog | Notes |
+| Firebase Dynamic Links | AdTo | Notes |
 |---|---|---|
 | Firebase project | Account: one username, an account key for servers and SDK keys for apps | The username is the link subdomain. See [Concepts](/start/concepts/). |
-| Dynamic link domain (`*.page.link` or your own) | `https://{username}.dectog.com`, or a subdomain of your own as a [custom domain](/links/custom-domains/), where the deployment offers it | One subdomain per account, and at most one custom domain. |
+| Dynamic link domain (`*.page.link` or your own) | `https://{username}.adto.app`, or a subdomain of your own as a [custom domain](/links/custom-domains/), where the deployment offers it | One subdomain per account, and at most one custom domain. |
 | Short dynamic link | Link: `slug` plus stored routing | You choose the slug (`[A-Za-z0-9_-]`, up to 128 characters). Slugs are unique across permanent and temporary links. |
 | `suffix.option: UNGUESSABLE` | Temporary link with an automatic slug `t_<10 hex>` | Temporary links expire after `ttlSeconds` (60 seconds to 30 days). See [Temporary links](/links/temporary-links/). |
 | Long dynamic link (every parameter in the URL) | No equivalent. Every link is stored. Per-tap overrides go in `dec_*` query parameters. | See [URL parameters](/links/url-parameters/). |
 | App registered in Firebase | App on the Apps page | Package, SHA-256 fingerprints, bundle ID, Team ID, store URLs, custom schemes. See [Apps](/dashboard/apps/). |
-| Automatic `assetlinks.json` and AASA | Generated from the registered apps and served on `https://{username}.dectog.com/.well-known/` | See [Platform setup](/sdk/platform-setup/). |
+| Automatic `assetlinks.json` and AASA | Generated from the registered apps and served on `https://{username}.adto.app/.well-known/` | See [Platform setup](/sdk/platform-setup/). |
 | Link analytics (`getLinkStats`) | Overview and Links in the dashboard; `click_count` on `GET /api/v1/links`; installs, opens, leads and revenue per link from the MCP `analytics` tool or the raw export | See [Overview](/dashboard/overview/) and [Export raw data](/api/export/). |
 | Deferred deep link on first open | Install verdict: `onAppInstalled` with `matched`, `routing`, `deepLink`, `link` and `customParameters` | See [Install attribution](/sdk/install-attribution/). |
 
 ## URL parameters
 
-FDL encoded routing in the URL. DecTog stores routing on the link and on the app and reads a small set of `dec_*` overrides at tap time.
+FDL encoded routing in the URL. AdTo stores routing on the link and on the app and reads a small set of `dec_*` overrides at tap time.
 
-| FDL parameter | DecTog | Where it lives |
+| FDL parameter | AdTo | Where it lives |
 |---|---|---|
 | `link` (the deep link and the web fallback) | Two things. In the app the SDK hands you the `slug`, the link's `metadata` and the `deep_link` route, not a URL. On the web the link's `target` is the last mobile fallback and the "Continue to" destination on the desktop QR page. | Link `target`, `metadata`, `ios_deep_link_path`, `android_deep_link_path` |
 | `apn` | `android_package`, plus the SHA-256 fingerprints for App Links | App |
@@ -47,7 +44,7 @@ FDL encoded routing in the URL. DecTog stores routing on the link and on the app
 | `ofl` (other platforms fallback) | The link's `fallback_url`, or `dec_fallback` on the shared URL. Without either, desktop visitors get the branded QR page. | Link, URL |
 | `st`, `sd`, `si` (social meta tags) | `og_title`, `og_description`, `og_image_url` on the link; the app's values are the defaults. Titles and descriptions are limited to 150 characters. | Link, app |
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | Same names. Stored on every click as given. `utm_campaign` and `utm_source` feed the Overview campaign and source charts. | URL |
-| `at`, `ct`, `mt`, `pt` (App Store analytics) | DecTog sets `ct=dtg_click=<id>` on every App Store redirect itself. The other tags have no equivalent. | |
+| `at`, `ct`, `mt`, `pt` (App Store analytics) | AdTo sets `ct=dtg_click=<id>` on every App Store redirect itself. The other tags have no equivalent. | |
 | `d=1` (debug view) | `GET /api/v1/resolve/{username}/{slug}`, public, no key | API |
 
 Two routing differences to plan for:
@@ -57,10 +54,10 @@ Two routing differences to plan for:
 
 ## The REST API
 
-| FDL REST API | DecTog |
+| FDL REST API | AdTo |
 |---|---|
 | `POST https://firebasedynamiclinks.googleapis.com/v1/shortLinks` | `POST /api/v1/links` (permanent), `POST /api/v1/links/bulk` (up to 100 at once) or `POST /api/v1/temp-links` (temporary) |
-| `dynamicLinkInfo.domainUriPrefix` | Implicit: `https://{username}.dectog.com` |
+| `dynamicLinkInfo.domainUriPrefix` | Implicit: `https://{username}.adto.app` |
 | `dynamicLinkInfo.link` | `target` (web fallback) plus `ios_deep_link_path` and `android_deep_link_path` (in-app route) |
 | `androidInfo.androidPackageName`, `iosInfo.iosBundleId`, `iosInfo.iosAppStoreId` | Set once on the app, not per link |
 | `androidInfo.androidFallbackLink`, `iosInfo.iosFallbackLink` | `redirect_url` on the link, or `dec_redirect_android` and `dec_redirect_ios` per tap |
@@ -99,6 +96,8 @@ final dectog = FlutterDectog();
 Future<void> start() async {
   await dectog.initialize(DectogConfig(
     apiKey: const String.fromEnvironment('DECTOG_API_KEY'),
+    baseUrl: 'https://app.adto.app',
+    linkRootDomain: 'adto.app',
   ));
 
   dectog.onLinkClick.listen(_open);
@@ -124,7 +123,7 @@ The SDK resolves the link, logs the in-app click and the app open itself. The li
 
 FDL matched a first open to a link with the Play Install Referrer on Android and, on iOS, with a link copied to the pasteboard by its app preview page.
 
-DecTog's order is similar but broader:
+AdTo's order is similar but broader:
 
 1. Android: the store redirect carries `referrer=dtg_click=<id>&dtg_l=<username>/<slug>`. The SDK reads the Play Install Referrer (and the Huawei, Samsung, Xiaomi and vivo store referrers) on first launch, retries transient errors, and sends a referrer that arrives later as a late claim.
 2. iOS: the SDK reads the pasteboard on first launch by default. The iOS tap-to-store page (Apps, Advanced) copies the link before opening the App Store. `DectogPasteButton` covers users who declined the iOS 16 paste alert.
@@ -134,13 +133,13 @@ The link's `metadata` comes back as `customParameters`, the `dec_deeplink` of th
 
 ## Analytics
 
-| FDL event | DecTog |
+| FDL event | AdTo |
 |---|---|
 | `CLICK` | Clicks on the Overview and per link. Bots and link unfurlers never count. A desktop visitor who lands on the QR page counts. |
 | `REDIRECT` | Not counted separately |
-| `APP_INSTALL` | Not observable; DecTog counts the SDK's first launch as the install |
+| `APP_INSTALL` | Not observable; AdTo counts the SDK's first launch as the install |
 | `APP_FIRST_OPEN` | Installs, split into attributed and organic. Reinstalls are excluded from the KPI. |
-| `APP_RE_OPEN` | Opens: a DecTog link opened the installed app |
+| `APP_RE_OPEN` | Opens: an AdTo link opened the installed app |
 
 Per-link numbers on the Links page are lifetime totals. See [Links](/dashboard/links/).
 
@@ -151,7 +150,7 @@ Per-link numbers on the Links page are lifetime totals. See [Links](/dashboard/l
 - Long dynamic links built in the app (`buildLink`).
 - More than one link domain of your own per account, and any where the deployment does not offer [custom domains](/links/custom-domains/).
 - Firebase Analytics integration and the Firebase console link list.
-- App Store analytics tags other than the `ct` DecTog sets itself.
+- App Store analytics tags other than the `ct` AdTo sets itself.
 
 ## Importing an FDL export
 
@@ -168,15 +167,15 @@ Per-link numbers on the Links page are lifetime totals. See [Links](/dashboard/l
 | `utm_source` … `utm_content` | the link's UTM values |
 | `apn`, `ibi` | not imported: the link uses your app from the Apps page |
 
-The **DecTog columns** preset takes headers named like the [create fields](/api/links/#create-a-link) instead (`slug`, `target`, `campaign`, `external_id`, `template_id` and so on). If your app reads the whole FDL `link` URL rather than a path, set the deep-link paths yourself after the import, or keep the URL in `metadata`.
+The **AdTo columns** preset takes headers named like the [create fields](/api/links/#create-a-link) instead (`slug`, `target`, `campaign`, `external_id`, `template_id` and so on). If your app reads the whole FDL `link` URL rather than a path, set the deep-link paths yourself after the import, or keep the URL in `metadata`.
 
 ## Migration checklist
 
-1. Sign up at `https://app.dectog.com/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen. Settings lists the SDK key again; the account key is shown only that once, and **Regenerate** in Settings replaces it. See [Quickstart](/start/quickstart/).
+1. Sign up at `https://app.adto.app/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen. Settings lists the SDK key again; the account key is shown only that once, and **Regenerate** in Settings replaces it. See [Quickstart](/start/quickstart/).
 2. Register the app on the Apps page: package and SHA-256 fingerprints (include the Play App Signing key), bundle ID and Team ID, both store URLs, your custom scheme. Use the Verify buttons.
-3. Add `applinks:{username}.dectog.com` to Associated Domains and an `autoVerify` intent filter for `{username}.dectog.com`. Reinstall the app. See [Platform setup](/sdk/platform-setup/).
+3. Add `applinks:{username}.adto.app` to Associated Domains and an `autoVerify` intent filter for `{username}.adto.app`. Reinstall the app. See [Platform setup](/sdk/platform-setup/).
 4. Replace `firebase_dynamic_links` with `flutter_dectog` using the table above. Inject the SDK key (`dtg_pub_…`) at build time with `--dart-define`.
 5. Recreate your links. If you exported them before the shutdown (Firebase's export came from [Google Takeout](https://firebase.google.com/support/guides/export-dynamic-links), one CSV per domain), the quickest way is to import that file: on the Links page, **Import CSV**, choose **Firebase Dynamic Links export** and pick it (see [Importing an FDL export](#importing-an-fdl-export)). From a script, send up to 100 links per call to `POST /api/v1/links/bulk`. Either way the old suffixes become the slugs, the former `link` destination the `target`, and its path the in-app route.
-6. Replace the old `page.link` URLs wherever they are published: those domains belong to Google and cannot be pointed at DecTog. A subdomain of your own that served FDL links, such as `links.yourbrand.com`, can move to DecTog as a [custom domain](/links/custom-domains/), where the deployment offers it.
+6. Replace the old `page.link` URLs wherever they are published: those domains belong to Google and cannot be pointed at AdTo. A subdomain of your own that served FDL links, such as `links.yourbrand.com`, can move to AdTo as a [custom domain](/links/custom-domains/), where the deployment offers it.
 7. Test on a physical device: tap a link, install from the store, open the app, and check Overview and `onAppInstalled`. See [Testing](/sdk/testing/).
 8. Update your privacy declarations for the device data the SDK collects by default. See [Device data and privacy](/sdk/device-data-and-privacy/).

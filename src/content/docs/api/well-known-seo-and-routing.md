@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-The DecTog worker answers every host in the zone: the site host (`dectog.com`, the apex, `SITE_URL`), the dashboard host (`app.dectog.com`, `APP_HOST`) and every account host (`<username>.dectog.com`). This page lists what each host and path does. Self-hosted deployments substitute their own `ROOT_DOMAIN`, `SITE_URL`, `APP_HOST`, `WEB_URL` and `PUBLIC_BASE_URL`; see [Configuration reference](/self-hosting/configuration-reference/).
+AdTo answers the site (`adto.app`), the dashboard and API (`app.adto.app`) and every account host (`<username>.adto.app`). This page lists what each host and path does.
 
 ## Association files
 
@@ -19,7 +19,7 @@ Universal Links and App Links need two files on the account host. The worker gen
 ### Which account the file is for
 
 1. A `?u=<username>` query parameter always wins. This is how the dashboard's Verify buttons fetch the file on the app host, and the only form that works in path mode or on `localhost`.
-2. Otherwise, when `ROOT_DOMAIN` does not start with `localhost`, the first label of the Host header: `acme.dectog.com` serves the account `acme`.
+2. Otherwise, when `ROOT_DOMAIN` does not start with `localhost`, the first label of the Host header: `acme.adto.app` serves the account `acme`.
 3. Otherwise: `400 {"error": {"code": "invalid_request", "message": "Subdomain not found in host"}}`.
 
 An unknown username, or a known one with no qualifying app, answers `404 {"error": {"code": "not_found", "message": "Configuration not found"}}`.
@@ -28,7 +28,7 @@ An unknown username, or a known one with no qualifying app, answers `404 {"error
 
 Both files are served with `content-type: application/json; charset=utf-8` and three extra headers: `x-hostname`, the request's Host header, `x-subdomain`, the resolved username (or the first host label when none was resolved), and `access-control-allow-origin: *`, so the dashboard's setup checklist can read them from your live host.
 
-```json title="https://acme.dectog.com/.well-known/apple-app-site-association"
+```json title="https://acme.adto.app/.well-known/apple-app-site-association"
 {
   "applinks": {
     "apps": [],
@@ -42,7 +42,7 @@ Both files are served with `content-type: application/json; charset=utf-8` and t
 
 One `details` entry per qualifying app; `webcredentials.apps` lists the same app ids, so password AutoFill can be associated too. Every path on the host is claimed (`/*`).
 
-```json title="https://acme.dectog.com/.well-known/assetlinks.json"
+```json title="https://acme.adto.app/.well-known/assetlinks.json"
 [
   {
     "relation": ["delegate_permission/common.handle_all_urls"],
@@ -58,8 +58,8 @@ One `details` entry per qualifying app; `webcredentials.apps` lists the same app
 One statement per qualifying app. Include the Play App Signing certificate's fingerprint, not only your upload key's, or verification fails on devices that installed from Play.
 
 ```bash title="Check what a host serves"
-curl -si https://acme.dectog.com/.well-known/apple-app-site-association
-curl -s 'https://app.dectog.com/.well-known/assetlinks.json?u=acme'
+curl -si https://acme.adto.app/.well-known/apple-app-site-association
+curl -s 'https://app.adto.app/.well-known/assetlinks.json?u=acme'
 ```
 
 ## robots.txt and sitemap.xml
@@ -75,12 +75,12 @@ Allow: /api/blog/
 Disallow: /dashboard
 Disallow: /api
 
-Sitemap: https://dectog.com/sitemap.xml
+Sitemap: https://adto.app/sitemap.xml
 ```
 
 `/api/blog/` is open because the blog pages load their posts from it in the browser (see [Blog post pages](#blog-post-pages)), and a renderer that may not fetch it, such as Google's, would see no post. It comes before `Disallow: /api` for crawlers that take the first matching rule; Google takes the longest. The blog API's responses carry `X-Robots-Tag: noindex`, so the JSON itself stays out of search results.
 
-`GET /sitemap.xml` (`application/xml`) lists `SITE_URL` plus `/`, `/about`, `/blog`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy` and `/terms`, then `/blog/<slug>` for every published post, newest first, with `<lastmod>` set to the post's `updated_at` date (`YYYY-MM-DD`). Drafts are never listed. The origin is `SITE_URL` (`https://dectog.com` on the hosted service), the host that serves those pages; the dashboard host sends them there with a permanent redirect.
+`GET /sitemap.xml` (`application/xml`) lists `SITE_URL` plus `/`, `/about`, `/blog`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy` and `/terms`, then `/blog/<slug>` for every published post, newest first, with `<lastmod>` set to the post's `updated_at` date (`YYYY-MM-DD`). Drafts are never listed. The origin is `SITE_URL` (`https://adto.app` on the hosted service), the host that serves those pages; the dashboard host sends them there with a permanent redirect.
 
 ## Blog post pages
 
@@ -88,21 +88,21 @@ The static export has no page per post. `/blog/<slug>` on the site host is answe
 
 | Tag | Value |
 |---|---|
-| `<title>` | `<post title> — DecTog Blog` |
+| `<title>` | `<post title> — AdTo Blog` |
 | `description`, `og:description`, `twitter:description` | The post's excerpt. Left out when the excerpt is empty. |
 | `og:title`, `twitter:title` | The post's title. |
 | `og:url` | `SITE_URL` plus `/blog/<slug>`, the address the sitemap lists. |
-| `og:site_name`, `og:type` | `DecTog`, `article` |
+| `og:site_name`, `og:type` | `AdTo`, `article` |
 | `og:image`, `twitter:image` | The post's featured image, else the site card `SITE_URL/media/og-card.png` with its `og:image:width` (1200), `og:image:height` (630) and `og:image:alt`. |
 | `twitter:card` | `summary_large_image` |
 
-The head also gets a canonical link to the same `og:url` address, and one BlogPosting JSON-LD block with the headline, the excerpt as description (when there is one), the address, the image, `datePublished`, `dateModified` (the post's `updated_at`) and DecTog as author and publisher.
+The head also gets a canonical link to the same `og:url` address, and one BlogPosting JSON-LD block with the headline, the excerpt as description (when there is one), the address, the image, `datePublished`, `dateModified` (the post's `updated_at`) and AdTo as author and publisher.
 
 Each added tag carries a `data-post-head` attribute; the page removes them when the visitor moves on to another page of the app. The page is sent without the export's `ETag`.
 
 Search and AI crawlers that run no script would find no article in the page, so the worker also writes the post's title as an `<h1>`, followed by its body, into the page's loading state. The body keeps the editor's markup (headings, paragraphs, lists, links, images, tables, code) and loses scripts, styles, frames, embedded objects, media, SVG, forms, every attribute outside a short list (so every event handler), and any `href` or `src` that is not `http`, `https`, `mailto` or relative. Once the post has loaded in the browser, the page shows it in place of the loading state.
 
-Drafts and unknown slugs get the article page unchanged, with status `404`, so search engines drop the address. The page still loads, gets a `404` for the post from the API, shows "Article Not Found" and titles itself `Article Not Found — DecTog Blog`. Only a `404` does that: when a published post's request fails any other way (blocked, offline, a server error), the page keeps the article the worker wrote into it. A HEAD request gets the status a GET would: `200` with the export's headers for a published post, `404` otherwise. A path under `/blog/` that cannot be a slug, such as `/blog/__next._tree.txt`, one of the files the browser's router fetches, is served from the static export as it is, or answers `404` when the export has no such file.
+Drafts and unknown slugs get the article page unchanged, with status `404`, so search engines drop the address. The page still loads, gets a `404` for the post from the API, shows "Article Not Found" and titles itself `Article Not Found — AdTo Blog`. Only a `404` does that: when a published post's request fails any other way (blocked, offline, a server error), the page keeps the article the worker wrote into it. A HEAD request gets the status a GET would: `200` with the export's headers for a published post, `404` otherwise. A path under `/blog/` that cannot be a slug, such as `/blog/__next._tree.txt`, one of the files the browser's router fetches, is served from the static export as it is, or answers `404` when the export has no such file.
 
 ### The blog index
 
@@ -123,21 +123,21 @@ The site host and the dashboard host both serve the dashboard's static export (i
 | any | `/_/collect` | The link pages' beacon (POST): the screen profile and device settings, and which button the visitor took. |
 | any | `/healthz`, `/readyz`, `/robots.txt`, `/sitemap.xml` | See this page. |
 | any | `/openapi.json` | The OpenAPI description of every route. |
-| `app.dectog.com`, `dectog.com` | `/mcp` | The [MCP server](/guides/automation-and-agents/#mcp-server). |
-| `app.dectog.com`, `dectog.com` | `/dectog.js` | The [web pixel](/sdk/web/). |
-| `dectog.com` | `/`, `/about`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms`, `/SKILL.md`, `/llms.txt`, the export's files | The static export: the landing page, the site pages and the agent docs, so `curl https://dectog.com/SKILL.md` works without a redirect. |
-| `dectog.com` | `/blog`, `/blog/<slug>` | The export's blog pages with the worker's additions; an unknown slug answers `404` (see [Blog post pages](#blog-post-pages)). |
-| `dectog.com` | `/login`, `/dashboard…`, `/invite`, `/reset-password` | `301` to `WEB_URL` plus the path and the query string: `https://dectog.com/login?tab=signup` goes to `https://app.dectog.com/login?tab=signup`. |
-| `app.dectog.com` | `/` | `302` to `/dashboard` with a valid session cookie, else to `/login`, with `cache-control: private, no-store`. |
-| `app.dectog.com` | `/about`, `/blog…`, `/contact`, `/customers…`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms` | `301` to `SITE_URL` plus the path and the query string: `https://app.dectog.com/contact?ref=x` goes to `https://dectog.com/contact?ref=x`. |
-| `app.dectog.com` | any other path | The dashboard's static export. `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
+| `app.adto.app`, `adto.app` | `/mcp` | The [MCP server](/guides/automation-and-agents/#mcp-server). |
+| `app.adto.app`, `adto.app` | `/dectog.js` | The [web pixel](/sdk/web/). |
+| `adto.app` | `/`, `/about`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms`, `/SKILL.md`, `/llms.txt`, the export's files | The static export: the landing page, the site pages and the agent docs, so `curl https://adto.app/SKILL.md` works without a redirect. |
+| `adto.app` | `/blog`, `/blog/<slug>` | The export's blog pages with the worker's additions; an unknown slug answers `404` (see [Blog post pages](#blog-post-pages)). |
+| `adto.app` | `/login`, `/dashboard…`, `/invite`, `/reset-password` | `301` to `WEB_URL` plus the path and the query string: `https://adto.app/login?tab=signup` goes to `https://app.adto.app/login?tab=signup`. |
+| `app.adto.app` | `/` | `302` to `/dashboard` with a valid session cookie, else to `/login`, with `cache-control: private, no-store`. |
+| `app.adto.app` | `/about`, `/blog…`, `/contact`, `/customers…`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms` | `301` to `SITE_URL` plus the path and the query string: `https://app.adto.app/contact?ref=x` goes to `https://adto.app/contact?ref=x`. |
+| `app.adto.app` | any other path | The dashboard's static export. `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | the apex without an assets binding (local development) | any path but `/` | `301` to `SITE_URL` plus the path and the query string; `/` answers `302` to `SITE_URL`. |
-| `www.dectog.com` | any path but the worker's | `301` to `SITE_URL` plus the path and the query string: `https://www.dectog.com/pricing?ref=x` goes to `https://dectog.com/pricing?ref=x`, so search engines keep one address per page. The worker's paths (`/api/…`, `/.well-known/…`, `/healthz` and the rest above) answer as on any host. Not when `SITE_URL` or `APP_HOST` is itself `www.<ROOT_DOMAIN>`. `www` is also a reserved username. |
-| `<username>.dectog.com` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or `404 {"error": {"code": "not_found", "message": "Not found"}}` when it is unset. |
-| `<username>.dectog.com` | `/<slug>` | The redirect engine. An unknown username here also follows `UNKNOWN_HOST_REDIRECT`; an unknown slug gets the 404 page and an expired temporary link the 410 page. See [How a tap is routed](/links/how-a-tap-is-routed/). |
-| `<username>.dectog.com` | two or more path segments | `404 {"error": {"code": "not_found", "message": "Not found"}}`. |
+| `www.adto.app` | any path but the worker's | `301` to `SITE_URL` plus the path and the query string: `https://www.adto.app/pricing?ref=x` goes to `https://adto.app/pricing?ref=x`, so search engines keep one address per page. The worker's paths (`/api/…`, `/.well-known/…`, `/healthz` and the rest above) answer as on any host. Not when `SITE_URL` or `APP_HOST` is itself `www.<ROOT_DOMAIN>`. `www` is also a reserved username. |
+| `<username>.adto.app` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://adto.app/` on the hosted service), or `404 {"error": {"code": "not_found", "message": "Not found"}}` when it is unset. |
+| `<username>.adto.app` | `/<slug>` | The redirect engine. An unknown username here also follows `UNKNOWN_HOST_REDIRECT`; an unknown slug gets the 404 page and an expired temporary link the 410 page. See [How a tap is routed](/links/how-a-tap-is-routed/). |
+| `<username>.adto.app` | two or more path segments | `404 {"error": {"code": "not_found", "message": "Not found"}}`. |
 
-In the hosted deployment `WEB_URL` and `PUBLIC_BASE_URL` are both `https://app.dectog.com` and `SITE_URL` is `https://dectog.com`, so account roots send visitors to the dashboard host and unknown hosts to the site.
+In the hosted deployment `WEB_URL` and `PUBLIC_BASE_URL` are both `https://app.adto.app` and `SITE_URL` is `https://adto.app`, so account roots send visitors to the dashboard host and unknown hosts to the site.
 
 ### HEAD requests
 
@@ -148,15 +148,15 @@ A HEAD request runs the same handler as GET and the response is returned without
 `GET /healthz` answers on every host:
 
 ```json
-{ "ok": true, "service": "dectog", "version": "v1", "host": "app.dectog.com" }
+{ "ok": true, "service": "dectog", "version": "v1", "host": "app.adto.app" }
 ```
 
 `host` echoes the request's Host header (`null` when absent). The route needs no authentication and is not rate limited.
 
-`GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
+`GET /readyz` is the readiness check. It runs `SELECT 1` against the database and compares the migrations it has applied with the ones bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 62, "applied": 62, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 2, "applied": 2, "missing": [] } }
 ```
 
-It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.
+It answers `503` with `ok: false` when the database does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even when the database is down.

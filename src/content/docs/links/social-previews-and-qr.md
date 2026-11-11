@@ -9,7 +9,7 @@ Two kinds of visitors never go through the normal routing: link unfurlers, which
 
 ## Who gets the preview page
 
-A request is treated as a bot when it is a `HEAD` request, when its user agent matches the bot list, or when Cloudflare's bot management reports a score below 30. The list is case-insensitive: the word `bot` on its own (so a Cubot phone does not match), `crawler`, `spider`, `facebookexternalhit`, `twitterbot`, `slackbot`, `whatsapp`, `telegrambot`, `linkedinbot`, `discordbot`, `googlebot`, `bingbot`, `applebot` (iMessage previews), `redditbot`, `pinterestbot`, `cardyb` (Bluesky), `mastodon/`, `embedly`, `iframely`, `skypeuripreview` (Teams and Skype), `preview`, `fetcher`, `monitor` and `headless`. The Pinterest in-app browser, which real people use, says `Pinterest/` without `bot` and is not matched.
+A request is treated as a bot when it is a `HEAD` request or when its user agent matches the bot list. The list is case-insensitive: the word `bot` on its own (so a Cubot phone does not match), `crawler`, `spider`, `facebookexternalhit`, `twitterbot`, `slackbot`, `whatsapp`, `telegrambot`, `linkedinbot`, `discordbot`, `googlebot`, `bingbot`, `applebot` (iMessage previews), `redditbot`, `pinterestbot`, `cardyb` (Bluesky), `mastodon/`, `embedly`, `iframely`, `skypeuripreview` (Teams and Skype), `preview`, `fetcher`, `monitor` and `headless`. The Pinterest in-app browser, which real people use, says `Pinterest/` without `bot` and is not matched.
 
 Bots receive a `200` page with Open Graph tags and no redirect, and **no click is recorded**. A `HEAD` request gets the same status and headers with no body. The page is served for permanent and temporary links alike; an expired temporary link answers `410` even to bots, and an unknown slug `404`.
 
@@ -20,7 +20,7 @@ Bots receive a `200` page with Open Graph tags and no redirect, and **no click i
 | `og:title` and `<title>` | The link's title, else the temporary link's, else the app's, else `Open in the app` |
 | `og:description` | The link's description, else the temporary link's, else the app's, else `Continue to {host}{path} in the app.` (for example `Continue to example.com/sale in the app.`, or `Continue to example.com in the app.` for a bare domain) built from the link's target or the app's fallback URL, or `Continue in the app.` when neither exists |
 | `og:image` and `twitter:image` | The link's image, else the temporary link's, else the app's. Omitted when none is set. |
-| `og:url` | The canonical link URL, `https://acme.dectog.com/welcome`, with no query string |
+| `og:url` | The canonical link URL, `https://acme.adto.app/welcome`, with no query string |
 | `twitter:card` | `summary_large_image` when an image exists, else `summary` |
 
 Each field falls back on its own, so a link with only a custom title still takes the app's image. The body holds a plain link to the target ("Redirecting to {target}") or, without one, "Open this link on your phone to continue in the app."; there is no meta refresh. The app used for the fallbacks is the link's app, or the account's default app for links without one and for temporary links.
@@ -64,8 +64,6 @@ The link is rendered through the redirect engine itself with each user agent, so
 | The image address answers … rather than an image | The URL is a page, not a picture. |
 | X shows the picture as a small square | `twitter:card` is not `summary_large_image`. The link page sets it whenever there is an image. |
 
-What the check cannot see: a firewall or Bot Fight Mode rule on your own Cloudflare zone that blocks a crawler before the Worker runs, because a Worker cannot request its own zone. If a platform shows no preview although the check is clean, look there first.
-
 ## Auto-fill from a web page
 
 On the Apps page, **Auto-fill from fallback URL** reads the Open Graph tags of the app's Fallback URL and fills the empty preview fields; existing values are kept. It appears once the Fallback URL is a valid http(s) address and at least one preview field is empty, and reports "Filled from your fallback URL" on success, with a reminder to review and save.
@@ -75,7 +73,7 @@ The fetch runs server-side (`GET /api/admin/og-preview?url=`) with these rules:
 | Rule | Value |
 |---|---|
 | Allowed URLs | Public http(s) only. `localhost`, `*.local`, `*.internal`, the private, loopback, link-local and carrier-grade NAT IPv4 ranges, `::1` and `fc`/`fd`/`fe80` IPv6 addresses are refused with "Enter a valid public http(s) URL". |
-| Request | Follows redirects, identifies as `DecTogBot/1.0` with a `facebookexternalhit/1.1` token so sites serve their crawler tags, 8-second timeout, reads at most 512 KB. |
+| Request | Follows redirects, identifies as `AdToBot/1.0` with a `facebookexternalhit/1.1` token so sites serve their crawler tags, 8-second timeout, reads at most 512 KB. |
 | Title | `og:title`, then `twitter:title`, then `<title>` |
 | Description | `og:description`, then `twitter:description`, then the `description` meta tag |
 | Image | `og:image:secure_url`, then `og:image`, then `twitter:image`, then `twitter:image:src`, resolved to an absolute http(s) URL |
@@ -90,12 +88,12 @@ Desktop visitors land on the QR page when no other destination applies: no `dec_
 
 | Element | Content |
 |---|---|
-| Brand line | The app's name, else "DecTog" |
-| QR code | An SVG (220 px) of the canonical link URL, `https://acme.dectog.com/welcome`, without any query string. Scanning it is a fresh mobile tap with its own click and store tag. |
+| Brand line | The app's name, else "AdTo" |
+| QR code | An SVG (220 px) of the canonical link URL, `https://acme.adto.app/welcome`, without any query string. Scanning it is a fresh mobile tap with its own click and store tag. |
 | Heading | "Scan to open on your phone", then "Point your camera at the code to continue to {host} in the app." when a target exists |
 | Store badges | Apple's **Download on the App Store** badge (the US/UK one in every language) and Google's **Get it on Google Play** badge in the page's language, linking to the plain store URLs without an attribution tag |
 | Scheme buttons | **Open in the iOS app** and **Open in the Android app**, one per configured scheme, or a single **Open in app** when both platforms share a scheme (the Android deep-link path is preferred). These carry no `dtg_click`. |
 | Continue link | "Continue to {host} on desktop", only when the link has a target or inherits an app fallback |
-| Footer | "Powered by DecTog" when the page is branded with an app name |
+| Footer | "Powered by AdTo" when the page is branded with an app name |
 
 The texts are in the visitor's language (English, German, French, Spanish or Italian), and which button the visitor took is recorded on the click; see [The link pages](/links/how-a-tap-is-routed/#the-link-pages). The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `dec_deeplink` from the URL; without a path they open `scheme://acme/welcome`.

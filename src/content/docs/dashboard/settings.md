@@ -5,47 +5,44 @@ sidebar:
   order: 6
 ---
 
-The Settings screen, at https://app.dectog.com/dashboard/settings, has up to eleven cards: **Account**, **Plan**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
+The Settings screen, at https://app.adto.app/dashboard/settings, has up to eleven cards: **Account**, **Plan**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
 | Field | Value |
 |---|---|
 | **Email** | The email you sign in with. |
-| **Username / subdomain** | Your username, which is also the host of your links: `https://{username}.dectog.com/{slug}`. |
+| **Username / subdomain** | Your username, which is also the host of your links: `https://{username}.adto.app/{slug}`. |
 | **Sign in with Google** | Shown when the deployment has Google sign-in configured: **Connect Google** links a Google account to your sign-in (yours, in every account you work in), and the row then reads **Connected**. Connecting signs out your other sessions. See [Connect Google](/dashboard/account-and-sign-in/#connect-google). |
 | **Revenue currency** | The currency every revenue total is in, EUR by default; one of the about 30 currencies the European Central Bank publishes reference rates for. Changing it converts every stored amount again. See [Revenue](/sdk/revenue/). |
-| **Data retention** | How many days the account keeps raw taps, installs, events and app starts, 1 to the deployment's maximum (400 on the hosted service). Empty keeps the maximum. **Save** applies it from the next daily run (03:17 UTC): older rows lose their personal columns, or go once the daily totals hold their day; totals stay. See [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/#anonymization-sweep-daily). |
+| **Data retention** | How many days the account keeps raw taps, installs, events and app starts, 1 to the deployment's maximum (400 on the hosted service). Empty keeps the maximum. **Save** applies it from the next daily run (03:17 UTC): older rows lose their personal columns, or go once the daily totals hold their day; totals stay. See [Scheduled jobs and retention](/guides/scheduled-jobs-and-retention/#anonymization-sweep-daily). |
 
 Apart from the revenue currency, the retention window and connecting Google nothing on this card is editable. There is no way to rename the account, change its email or delete it; see [Account and sign-in](/dashboard/account-and-sign-in/).
 
 ## Plan
 
-Your account's plan on hosted DecTog: its name, price and the monthly active users it covers (see [Pricing](https://dectog.com/pricing)), and a line on where the subscription stands: when it renews, that a failed payment is being retried, or when a cancelled plan ends. Payments, invoices and tax are handled by [Creem](https://www.creem.io), DecTog's merchant of record. The plan is the live account's: the test environment shows the same one. Every role sees the card; only owners act on it, and others read "An owner of this account chooses and manages the plan."
+Your account's plan on hosted AdTo: its name, price and the monthly active users it covers (see [Pricing](https://adto.app/pricing)), and a line on where the subscription stands: when it renews, that a failed payment is being retried, or when a cancelled plan ends. Payments, invoices and tax are handled by [Creem](https://www.creem.io), AdTo's merchant of record. The plan is the live account's: the test environment shows the same one. Every role sees the card; only owners act on it, and others read "An owner of this account chooses and manages the plan."
 
-Under the plan, the card shows the account's **monthly active users** against the plan's limit, for example "30,000 of 25,000 monthly active users · 30 days to October 25", with a bar. They are the devices that opened one of your apps with the DecTog SDK (its once-a-day ping when the app starts) in the 30 UTC days to yesterday; test-environment devices do not count. The number is counted once a day, so today's devices appear tomorrow. An account that [keeps](#account) fewer than 30 days of data is counted over the days it keeps, and the card says so. At or over the limit the bar turns amber and a line names the plan that fits, for example "Over Free's 25,000. Choose Starter below.", with that plan highlighted.
+Under the plan, the card shows the account's **monthly active users** against the plan's limit, for example "30,000 of 25,000 monthly active users · 30 days to October 25", with a bar. They are the devices that opened one of your apps with the AdTo SDK (its once-a-day ping when the app starts) in the 30 UTC days to yesterday; test-environment devices do not count. The number is counted once a day, so today's devices appear tomorrow. An account that [keeps](#account) fewer than 30 days of data is counted over the days it keeps, and the card says so. At or over the limit the bar turns amber and a line names the plan that fits, for example "Over Free's 25,000. Choose Starter below.", with that plan highlighted.
 
-When the daily count finds the account at or over its limit, DecTog emails its owner that day, again 7 days later, and after 14 days pauses the SDK traffic of its apps: installs, in-app clicks, events and opens are refused with `402 plan_limit` until a plan that fits is chosen, which resumes them within a minute. Links, the daily ping that counts users, the SDK configuration and the dashboard keep working, as the [Terms](https://dectog.com/terms) say. The card says where the warning stands ("Over the limit since October 20. If the account is still over on November 3, the SDK traffic of your apps pauses"), and while paused, since when; the bar turns red. The same standing is a banner at the top of every dashboard page, amber while the warning runs and red once traffic is paused, with the plan that fits as a button ("Choose Starter · $19/month", or "Resume with Starter" while paused) that opens this card with that plan picked; members and viewers see who can act instead. A custom plan is the account's own limit, set by DecTog, which the card shows in place of the plan's: "Free, with a custom limit of 1,000,000 monthly active users".
+When the daily count finds the account at or over its limit, AdTo emails its owner that day, again 7 days later, and after 14 days pauses the SDK traffic of its apps: installs, in-app clicks, events and opens are refused with `402 plan_limit` until a plan that fits is chosen, which resumes them within a minute. Links, the daily ping that counts users, the SDK configuration and the dashboard keep working, as the [Terms](https://adto.app/terms) say. The card says where the warning stands ("Over the limit since October 20. If the account is still over on November 3, the SDK traffic of your apps pauses"), and while paused, since when; the bar turns red. The same standing is a banner at the top of every dashboard page, amber while the warning runs and red once traffic is paused, with the plan that fits as a button ("Choose Starter · $19/month", or "Resume with Starter" while paused) that opens this card with that plan picked; members and viewers see who can act instead. A custom plan is the account's own limit, set by AdTo, which the card shows in place of the plan's: "Free, with a custom limit of 1,000,000 monthly active users".
 
 | Action | What happens |
 |---|---|
-| **Choose Starter**, **Choose Growth**, **Choose Scale** | Shown to owners on the Free plan. Opens Creem's checkout for that plan, with your email filled in. After paying you come back to Settings, which says "Payment received" until Creem confirms it, usually within a minute; the card then shows the plan. The **Choose** buttons on the [pricing page](https://dectog.com/pricing) open this card with that plan picked, through sign-in if you are signed out. |
+| **Choose Starter**, **Choose Growth**, **Choose Scale** | Shown to owners on the Free plan. Opens Creem's checkout for that plan, with your email filled in. After paying you come back to Settings, which says "Payment received" until Creem confirms it, usually within a minute; the card then shows the plan. The **Choose** buttons on the [pricing page](https://adto.app/pricing) open this card with that plan picked, through sign-in if you are signed out. |
 | **Switch to Starter**, **Switch to Growth**, **Switch to Scale** | Shown to owners on a paid plan that is running, for the other two plans. Asks for confirmation, then switches at once: moving up charges the difference for the rest of the month to your card now, moving down refunds the unused part of the month. The card says "Switching to …" until Creem confirms, usually within seconds. Not offered while a payment is failing or after you cancel. |
 | **Manage billing** | Shown to owners once the account has had a subscription. Opens Creem's customer portal, where you update your card, download invoices or cancel. Creem reports each change back within moments, and the card shows it the next time Settings loads. |
 
-When you cancel in the portal, Creem ends the subscription at once and charges nothing more, but the plan stays until the end of the month you paid for; the card says "Cancelled: the Starter plan ends on …, then the account is on Free." You can choose a plan again once it has ended. A payment that fails keeps the plan while Creem retries it; update your card in **Manage billing**. Refunds within 14 days of your first payment are by email to support@dectog.com; see the [Terms](https://dectog.com/terms).
+When you cancel in the portal, Creem ends the subscription at once and charges nothing more, but the plan stays until the end of the month you paid for; the card says "Cancelled: the Starter plan ends on …, then the account is on Free." You can choose a plan again once it has ended. A payment that fails keeps the plan while Creem retries it; update your card in **Manage billing**. Refunds within 14 days of your first payment are by email to support@adto.app; see the [Terms](https://adto.app/terms).
 
-Plan changes are recorded in the [audit log](#audit-log), by **DecTog**.
+Plan changes are recorded in the [audit log](#audit-log), by **AdTo**.
 
-:::note[Self-hosting]
-The card appears only on a deployment with Creem billing configured, which is hosted DecTog's. A self-hosted deployment has no plans and no card; see [Configuration reference](/self-hosting/configuration-reference/#secrets).
-:::
 
 ## Account key
 
 The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `dtg_` followed by 32 lowercase hex characters, 36 characters in total. Only owners see this card.
 
-The key is shown once: on the "Account created" screen after sign-up, and right after **Regenerate**. DecTog keeps only its SHA-256 and its first 8 characters, so the card shows those characters followed by dots, for example `dtg_3f9a••••••••••••••••••••••••••••`, and nobody, DecTog included, can show the key again.
+The key is shown once: on the "Account created" screen after sign-up, and right after **Regenerate**. AdTo keeps only its SHA-256 and its first 8 characters, so the card shows those characters followed by dots, for example `dtg_3f9a••••••••••••••••••••••••••••`, and nobody, AdTo included, can show the key again.
 
 | Action | What happens |
 |---|---|
@@ -76,8 +73,8 @@ Read-only facts about the deployment that serves your links.
 
 | Field | Value |
 |---|---|
-| **URL mode** | **Wildcard subdomain** on the hosted service: links are `https://{username}.dectog.com/{slug}`. **Path-based (workers.dev / dev)** on deployments without a wildcard domain: links are `{base-url}/r/{username}/{slug}`. |
-| **Root domain** | The domain under which link hosts live: `dectog.com` on the hosted service. |
+| **URL mode** | **Wildcard subdomain**: links are `https://{username}.adto.app/{slug}`. |
+| **Root domain** | The domain under which link hosts live: `adto.app` on the hosted service. |
 | **Example link** | Your link URL for the slug `welcome`, in the mode above, or on your custom domain once it is active. |
 
 Both forms are explained in [Concepts](/start/concepts/).
@@ -88,7 +85,7 @@ Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name
 
 ## Custom domain
 
-Your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. On a deployment without Cloudflare for SaaS the card says custom domains are not set up. The whole flow is in [Custom domains](/links/custom-domains/).
+Not available on AdTo at the moment: the card says so, and your links stay on `{username}.adto.app`. Where it is offered, it puts your links on a subdomain of your own, like `go.yourbrand.com`. Enter it and select **Add**; the card then shows the DNS records to add (two TXT records, then the CNAME), a status chip (**Waiting for DNS**, **Issuing certificate**, **Ready: point the CNAME**, **Active**, **No longer points here**, **Failed**, or **Removed**), Cloudflare's own message while it waits, **Check now** and **Remove**. While the domain is pending, the card checks again every minute on its own. Select a record's name or value to copy it. A removed domain shows when it will be deleted, and **Restore**. The whole flow is in [Custom domains](/links/custom-domains/).
 
 ## Team
 
@@ -96,7 +93,7 @@ The people who work in this account: the account itself (always an owner), then 
 
 ## Test environment
 
-A second account, `t-<username>`, for debug builds. **Create test environment** makes it with copies of your apps and link templates and shows its first SDK key; the key is also listed under **SDK keys** in the test environment. Put that key in debug builds: their installs, events, customers and links stay out of your live numbers, and test links carry `t-<username>` where yours carry your username (`https://t-acme.dectog.com/<slug>` on the hosted service), so add that host to the debug build's associated domains.
+A second account, `t-<username>`, for debug builds. **Create test environment** makes it with copies of your apps and link templates and shows its first SDK key; the key is also listed under **SDK keys** in the test environment. Put that key in debug builds: their installs, events, customers and links stay out of your live numbers, and test links carry `t-<username>` where yours carry your username (`https://t-acme.adto.app/<slug>` on the hosted service), so add that host to the debug build's associated domains.
 
 Once it exists, a **Live** / **Test** switch sits at the top of the sidebar. In the test environment every page shows the test account, an amber banner says so, and **Back to live** returns. Keys you create there are test keys; the custom domain stays with the live account. Changes made there are recorded in the test environment's own audit log, under your email, except team changes: the team is the live account's, so an invite or a role change made while in Test is in the live account's log. The test environment is never signed in to on its own: it has no password.
 
@@ -106,11 +103,11 @@ Every change to the account, newest first, 25 at a time (**Show older** loads mo
 
 - links, temporary links, link templates, apps, webhooks, SDK keys, site keys, the account key, the custom domain and the revenue currency, whether changed in the dashboard or through the API;
 - a plan checkout or plan switch started, and every change to the subscription that follows (bought, plan changed, payment failing, cancelled, ended);
-- the warning for being over the plan's limit, its reminder, the pause and the resumption of SDK traffic, and a custom limit set by DecTog;
+- the warning for being over the plan's limit, its reminder, the pause and the resumption of SDK traffic, and a custom limit set by AdTo;
 - every sign-in, wrong password, sign-out and password reset;
 - every CSV export.
 
-Each entry has its number, when it happened, what happened and to what (the link, app, key or webhook), who did it, and the fields that changed, before and after. Who is the email of the person signed in, the account key (by its prefix), an SDK key (by name and prefix), **DecTog** for changes DecTog made itself, or **Someone not signed in** for a wrong password or a reset request. DecTog's own changes are a webhook turned off after 20 failed deliveries, a custom domain's status moving (for example to **Active**), a removed domain deleted at the end of its grace, and the subscription changes Creem reports.
+Each entry has its number, when it happened, what happened and to what (the link, app, key or webhook), who did it, and the fields that changed, before and after. Who is the email of the person signed in, the account key (by its prefix), an SDK key (by name and prefix), **AdTo** for changes AdTo made itself, or **Someone not signed in** for a wrong password or a reset request. AdTo's own changes are a webhook turned off after 20 failed deliveries, a custom domain's status moving (for example to **Active**), a removed domain deleted at the end of its grace, and the subscription changes Creem reports.
 
 What is never recorded:
 
@@ -128,12 +125,10 @@ A code block you can paste into your app:
 ```dart
 await dectog.initialize(DectogConfig(
   apiKey: 'dtg_pub_…',
-  baseUrl: 'https://app.dectog.com',
+  baseUrl: 'https://app.adto.app',
+  linkRootDomain: 'adto.app',
 ));
 ```
 
-The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". The `baseUrl` is the deployment's public base URL; on the hosted service it matches the SDK's default, `https://app.dectog.com`, and can be left out. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". `baseUrl` and `linkRootDomain` name AdTo's hosts. Keep both: the released SDKs default to the old DecTog service. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 
-:::note[Self-hosting]
-**URL mode**, **Root domain** and the snippet's `baseUrl` come from the worker's `LINK_URL_MODE`, `ROOT_DOMAIN` and `PUBLIC_BASE_URL` variables; a root domain that starts with `localhost` forces path mode. See [Configuration reference](/self-hosting/configuration-reference/).
-:::

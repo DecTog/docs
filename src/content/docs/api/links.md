@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-A link is a short URL on your account's host, `https://<username>.dectog.com/<slug>`. Permanent links live until you delete them or give them an expiry, and carry routing, social-preview and tracking settings. Temporary links expire after a TTL and carry only a target and a social preview. Both kinds can be paused, archived, deleted and restored ([Pause, expire, archive and delete](#pause-expire-archive-and-delete)).
+A link is a short URL on your account's host, `https://<username>.adto.app/<slug>`. Permanent links live until you delete them or give them an expiry, and carry routing, social-preview and tracking settings. Temporary links expire after a TTL and carry only a target and a social preview. Both kinds can be paused, archived, deleted and restored ([Pause, expire, archive and delete](#pause-expire-archive-and-delete)).
 
 Every route on this page except `resolve` needs the Bearer key and the request signature described in [API overview](/api/overview/). All routes are scoped to the account that owns the key: you can only see and change your own links.
 
@@ -18,7 +18,7 @@ Every permanent-link route returns the full object, including fields you never s
   "id": "6f1c2a0e-3b7d-4c8e-9a11-2f5d8c0b4e77",
   "slug": "spring-sale",
   "target": "https://shop.example.com/sale",
-  "url": "https://acme.dectog.com/spring-sale",
+  "url": "https://acme.adto.app/spring-sale",
   "app_id": "0d4e5f66-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
   "click_count": 0,
   "created_at": "2026-10-12T09:00:00.000Z",
@@ -61,7 +61,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `id` | string | UUID, assigned by the server. |
 | `slug` | string | The path segment of the link. |
 | `target` | string or null | The web destination. `null` means "inherit the app's fallback URL at tap time". |
-| `url` | string | The public link URL in this deployment's URL mode (subdomain on the hosted service, `<PUBLIC_BASE_URL>/r/<username>/<slug>` in path mode). |
+| `url` | string | The public link URL, `https://<username>.adto.app/<slug>`. |
 | `app_id` | string or null | The app whose store URLs, schemes and fallback apply to this link. `null` means the account's default app (its oldest app). |
 | `click_count` | number | Lifetime counter. It grows on web taps, on SDK-reported clicks and on clicks synthesized from a store referrer. It never goes down. |
 | `created_at`, `updated_at` | string or null | ISO 8601 UTC. `updated_at` stays `null` until the first `PUT`. |
@@ -154,7 +154,7 @@ dectog POST /api/v1/links '{
 
 ```json title="POST /api/v1/links/bulk"
 {
-  "created": [ { "slug": "spring-1", "url": "https://acme.dectog.com/spring-1", … } ],
+  "created": [ { "slug": "spring-1", "url": "https://acme.adto.app/spring-1", … } ],
   "errors": [ { "index": 1, "slug": "spring-1", "code": "conflict", "error": "Duplicate slug or external_id in this batch" } ]
 }
 ```
@@ -296,7 +296,7 @@ Temporary links expire after a TTL. They have no app binding, no deep-link paths
   "id": "9a7b5c3d-1e2f-4a6b-8c9d-0e1f2a3b4c5d",
   "slug": "t_4f1e9c2b7a",
   "target": "https://example.com/build/1234",
-  "url": "https://acme.dectog.com/t_4f1e9c2b7a",
+  "url": "https://acme.adto.app/t_4f1e9c2b7a",
   "expires_at": "2026-10-12T10:00:00.000Z",
   "created_at": "2026-10-12T09:00:00.000Z",
   "ttl_seconds": 3600,
@@ -363,7 +363,7 @@ There is no list route for temporary links in the v1 API. The dashboard's `GET /
   "id": "6f1c2a0e-3b7d-4c8e-9a11-2f5d8c0b4e77",
   "slug": "spring-sale",
   "target": "https://shop.example.com/sale",
-  "url": "https://acme.dectog.com/spring-sale",
+  "url": "https://acme.adto.app/spring-sale",
   "type": "permanent",
   "created_at": "2026-10-12T09:00:00.000Z",
   "click_count": 12,

@@ -1,6 +1,6 @@
 ---
 title: Attribution internals
-description: How the Worker decides which click an install belongs to, the fingerprint scoring and confidence rules as implemented, claims, fraud rules, the rules an app blocks and the SDK state that feeds it.
+description: How AdTo decides which click an install belongs to, the fingerprint scoring and confidence rules as implemented, claims, fraud rules, the rules an app blocks and the SDK state that feeds it.
 sidebar:
   order: 5
 ---
@@ -22,7 +22,7 @@ The body can carry three signals. They are tried in this order:
 | Signal | Body field | Parsed as |
 |---|---|---|
 | Store referrer | `install_referrer` (with `referrer_store`: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo`; a referrer without a store counts as `google_play`) | `dtg_click=<id>` and optionally `dtg_l=<username>/<slug>` |
-| Copied link | `clipboard_url` | Must be one of this deployment's URLs (`/r/` path form, `<ROOT_DOMAIN>`, a `*.<ROOT_DOMAIN>` host, the `PUBLIC_BASE_URL` host) or a custom-scheme URL. The slug is the last path segment; `dtg_click=<id>` is read from the query. The raw clipboard text is never stored; only `clipboard_slug`. A URL on any other host is ignored. |
+| Copied link | `clipboard_url` | Must be an AdTo link URL (`adto.app`, a `{username}.adto.app` host, or the `/r/` path form on `app.adto.app`) or a custom-scheme URL. The slug is the last path segment; `dtg_click=<id>` is read from the query. The raw clipboard text is never stored; only `clipboard_slug`. A URL on any other host is ignored. |
 | Meta referrer | `meta_referrer` (read on Android when the app has a Facebook App ID) | `dtg_click=<id>` |
 
 For each signal that names a click id:
@@ -30,13 +30,13 @@ For each signal that names a click id:
 1. Look the click up within the tenant. If it exists and no install holds it (`matched_click_id`), it wins.
 2. If another install already holds it and that install has the same `device_id`, the SDK lost its state: the holder's verdict is returned with `replayed: true` and no new row is written.
 3. If another install on a different device holds it, the signal is a replay. The ladder notes it and **moves on to the next signal**.
-4. If the click row does not exist, the Worker synthesizes one from `dtg_l=<username>/<slug>` (the clipboard form names its slug directly). The username must be the caller's own and the slug must exist as a permanent or temporary link. The new row keeps the store's click id when it matches `^[A-Za-z0-9_-]{8,64}$`, gets `origin = 'synthesized_referrer'`, `source = 'web'`, `device_type` = the install's OS family (or `android` for a store referrer with unknown OS), `ip_hash` = the install's hash, `clicked_at` = the store's server-side click time (`referrer_click_server_ts`, else `meta_referrer_ts`, else now) and `metadata = {"synthesized_from": "<referrer|clipboard|meta>"}`. A permanent link's `click_count` goes up by one. If the slug is unknown the signal is skipped.
+4. If the click row does not exist, the server synthesizes one from `dtg_l=<username>/<slug>` (the clipboard form names its slug directly). The username must be the caller's own and the slug must exist as a permanent or temporary link. The new row keeps the store's click id when it matches `^[A-Za-z0-9_-]{8,64}$`, gets `origin = 'synthesized_referrer'`, `source = 'web'`, `device_type` = the install's OS family (or `android` for a store referrer with unknown OS), `ip_hash` = the install's hash, `clicked_at` = the store's server-side click time (`referrer_click_server_ts`, else `meta_referrer_ts`, else now) and `metadata = {"synthesized_from": "<referrer|clipboard|meta>"}`. A permanent link's `click_count` goes up by one. If the slug is unknown the signal is skipped.
 
 When every signal is exhausted, the ladder's outcome is `reuse` if any signal pointed at a consumed click, else `not_found` if any pointed at an unknown click, else `none`. Only `reuse` leaves a mark: the fraud flag `click_reuse`, and no fingerprint for this install.
 
 A win sets `match_source` to `referrer` (store and Meta) or `clipboard`, `referrer_source` to the store name or `meta` (null for the clipboard) and `match_confidence` to `guaranteed`. A store referrer has no time window: a very old click still matches, and `stale_referrer` flags it when it is older than 30 days.
 
-**Deterministic window.** A pasted link and Meta's referrer are bounded by `deterministicWindowHours`: the app's `deterministic_window_hours`, else `ATTRIBUTION_DETERMINISTIC_WINDOW_HOURS` (default 168, 7 days), never more than 30 days. The app is the clicked link's app, else the install's own. The age is measured from Meta's `meta_referrer_ts` when present, else the click row's `clicked_at`; a click synthesized from the tag carries the install time and is never stale. An older win is demoted (`staleSignalFlag`): it earns the flag `stale_clipboard` or `stale_meta`, consumes nothing, and the fingerprint decides as if no signal had matched. When the fingerprint neither credits nor routes, the stale click becomes `routing_click_id` with `match_confidence = 'medium'`, so the app still opens the link's content. When the app blocks the rule (`fraud_block_rules`), the stale click does not route either. A claim carrying a stale signal is `rejected` with `claim_reason: "stale_click"`.
+**Deterministic window.** A pasted link and Meta's referrer are bounded by `deterministicWindowHours`: the app's `deterministic_window_hours`, else 168 hours (7 days), never more than 30 days. The app is the clicked link's app, else the install's own. The age is measured from Meta's `meta_referrer_ts` when present, else the click row's `clicked_at`; a click synthesized from the tag carries the install time and is never stale. An older win is demoted (`staleSignalFlag`): it earns the flag `stale_clipboard` or `stale_meta`, consumes nothing, and the fingerprint decides as if no signal had matched. When the fingerprint neither credits nor routes, the stale click becomes `routing_click_id` with `match_confidence = 'medium'`, so the app still opens the link's content. When the app blocks the rule (`fraud_block_rules`), the stale click does not route either. A claim carrying a stale signal is `rejected` with `claim_reason: "stale_click"`.
 
 ### 2. The scored fingerprint
 
@@ -64,7 +64,7 @@ LIMIT 50
 
 So the pool is the 50 newest web clicks (recorded by the redirect engine or synthesized; an in-app open that flipped a row to `source = 'mobile_app'` is out) from the same hashed IP, on the same device family, inside the wide window, not yet credited to any install. A routing-only assignment does not consume a click.
 
-**Windows.** `fingerprintWindows` computes `wideHours = clamp(ATTRIBUTION_WINDOW_HOURS, 1, 720)` (default 24) and `lowHours = min(app override or ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS, wideHours)` (default 2). The app override is `low_entropy_window_hours` of the install's own app: the app whose Android package or iOS bundle ID equals `package_name`, or the only app of a one-app account (`appOfInstall` in `appscope.ts`). With no such app the deployment default applies. A candidate keeps the wide window only when the install is not on cellular and its device model or its screen profile could be compared with the install's, that is, present on both sides (`lowEntropy` false). Phone browsers send no model, so on iOS the screen profile the interstitial beacon records is what earns the wide window. Every other candidate must be younger than `lowHours`.
+**Windows.** `fingerprintWindows` uses a wide window of 24 hours and a narrow one of `min(app override or 2, 24)` hours. The app override is `low_entropy_window_hours` of the install's own app: the app whose Android package or iOS bundle ID equals `package_name`, or the only app of a one-app account (`appOfInstall` in `appscope.ts`). With no such app the 2-hour default applies. A candidate keeps the wide window only when the install is not on cellular and its device model or its screen profile could be compared with the install's, that is, present on both sides (`lowEntropy` false). Phone browsers send no model, so on iOS the screen profile the interstitial beacon records is what earns the wide window. Every other candidate must be younger than `lowHours`.
 
 **Scoring.** `scoreCandidate` adds points per signal. A signal missing on either side scores 0; absence is never evidence.
 
@@ -239,11 +239,11 @@ An `asa_token` on a claim restarts the Apple round-trip unless the row is alread
 
 ## Apple Search Ads
 
-Independent of the click ladder: the SDK sends the AdServices token, the Worker exchanges it with Apple and stores the result on the install (`asa_status`, `asa_attribution`). An attributed resolution re-fires the webhook. Statuses, retries and the 24-hour expiry are on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/); the SDK side is on [Deterministic attribution](/sdk/deterministic-attribution/).
+Independent of the click ladder: the SDK sends the AdServices token, the server exchanges it with Apple and stores the result on the install (`asa_status`, `asa_attribution`). An attributed resolution re-fires the webhook. Statuses, retries and the 24-hour expiry are on [Scheduled jobs and retention](/guides/scheduled-jobs-and-retention/); the SDK side is on [Deterministic attribution](/sdk/deterministic-attribution/).
 
 ## What the SDK keeps on the device
 
-The Worker's idempotency and claim logic depends on SDK state the server never sees directly.
+The server's idempotency and claim logic depends on SDK state the server never sees directly.
 
 - **Sentinel v2**: `.dectog_install.json` (`lib/src/services/install_state_store.dart`) in a backup-excluded directory (Android `noBackupFilesDir`, iOS `NSURLIsExcludedFromBackupKey`). Fields: `v` (2), `status` (`pending`, `tracked`, `failed`, `abandoned`), `install_attempt_id`, `attempt`, `created_at`, `attempted_at`, `tracked_at`, `last_attempt_at`, `last_error`, `install_id`, `package_first_install_ts`, `referrer_claimed`, `referrer_status`, `referrer_launches`, `plugin_version`. A sentinel whose `package_first_install_ts` differs from the package's current first-install time is a restored backup and is treated as absent. "Claimed" is written only after the server answered 200.
 - **Method channel** `dectog_device_identifiers`: the native readers behind the signals. Android: the Play Install Referrer reader (three attempts, server-side timestamps), the Huawei, Samsung, Xiaomi and vivo readers, the no-backup directory, package install info, launch info (referrer, launched-from-history) and the pasteboard helpers. iOS: install dates (file system and Keychain), backup exclusion, the AdServices token, the pasteboard helpers and the `UIPasteControl` platform view. Every method returns null or false on failure, and an unknown method degrades gracefully on the Dart side.

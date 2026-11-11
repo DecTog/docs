@@ -1,6 +1,6 @@
 ---
 title: Admin API
-description: The cookie-session routes the dashboard uses, listed for self-hosters who automate against their own deployment. Not a stable contract.
+description: The cookie-session routes the dashboard uses, listed for reference. Not a stable contract.
 sidebar:
   order: 7
 ---
@@ -21,13 +21,12 @@ Everything under `/api/admin` and `/api/auth` exists to serve the dashboard. Rou
 - Errors use the same `{"error": {"code", "message", "request_id"}}` envelope as the v1 API ([Errors](/api/overview/#errors)). A body that is not valid JSON answers `400 {"error": {"code": "invalid_request", "message": "Invalid JSON body"}}`.
 
 ```bash title="Log in and call a session route with curl"
-curl -sS -c jar.txt -X POST https://app.dectog.com/api/admin/login \
+curl -sS -c jar.txt -X POST https://app.adto.app/api/admin/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"you@example.com","password":"…","remember":true}'
-curl -sS -b jar.txt https://app.dectog.com/api/admin/links | jq '.links[] | {slug, click_count, installs}'
+curl -sS -b jar.txt https://app.adto.app/api/admin/links | jq '.links[] | {slug, click_count, installs}'
 ```
 
-Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_BASE_URL`.
 
 ## Accounts and sign-in
 
@@ -37,7 +36,7 @@ Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_
 | `POST /api/admin/signup` | public | `{email, password, username, turnstile_token?}`. Creates a `user` account and its first SDK key, sets a 30-day cookie, returns both keys. With `invite` (the token from an invite email) and no `username`: joins that account instead, as a sign-in with no account of its own and no keys; works while `OPEN_SIGNUPS=0`. The invite is checked before anything is written; the cookie `dectog_account` is set to the account joined. A `username` next to `invite` also creates your own account. | `201 {user, api_key, sdk_key}` (`api_key` is the account key); with an invite and no username `201 {user, joined: {account_id, account, role}}` (`user.username` is `null`); `403 Signup is currently closed` (`OPEN_SIGNUPS=0`, unless joining from an invite with no username); `400 Please enter a valid email address`, a password-rule message, `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `Username '<name>' is reserved`; `409 An account with this email or username already exists`; for the invite: `403 invite_other_email` (another address), `404 invite_not_found`, `409 invite_used`, `410 invite_expired`; `403 turnstile_failed` (`Verification failed. Please try again.`, or `Verification is unavailable right now. Please try again.` when siteverify cannot be reached) where the deployment runs [Turnstile](#turnstile) and the token is missing, spent or not for this form |
 | `POST /api/admin/login` | public | `{email, password, remember?, turnstile_token?}`. Email is trimmed and lower-cased. A test environment can never sign in. | `200 {user: {id, email, username, role, created_at}}` plus the cookie; `400 Email and password are required`; `401 Invalid email or password`; `429` over 10 attempts per minute from one IP. No per-account lockout. `403 turnstile_failed` (`Verification failed. Please try again.`, or `Verification is unavailable right now. Please try again.` when siteverify cannot be reached) where the deployment runs [Turnstile](#turnstile) and the token is missing, spent or not for this form, checked after the rate limit and before the password. |
 | `POST /api/admin/logout` | public | Deletes the cookie. | `200 {ok: true}` |
-| `GET /api/admin/me` | session | The person signed in, and the account the dashboard shows: the live account, or its test environment after the switch below. Answers in no account at all too. | `200 {user, account, environment, test_environment, plan_limit}`: `user` and `account` are `{id, email, username, role, custom_domain, created_at, environment}`; `environment` is `live` or `test`; `test_environment` is `{username}` or `null`; `plan_limit` (hosted DecTog) is `null` while the live account is under its plan's limit, else `{stage, since, pause_on, plan, limit, devices, fits}`, the standing the dashboard's banner shows on every page (`stage` `warned`, `reminded` or `paused`; `fits` the smallest paid plan the count fits, or `null`). `user.username` is `null` without an account of your own; in no account at all `account`, `environment`, `test_environment`, `role` and `live_account` are `null`, `accounts` is empty and `plan_limit` is `null` |
+| `GET /api/admin/me` | session | The person signed in, and the account the dashboard shows: the live account, or its test environment after the switch below. Answers in no account at all too. | `200 {user, account, environment, test_environment, plan_limit}`: `user` and `account` are `{id, email, username, role, custom_domain, created_at, environment}`; `environment` is `live` or `test`; `test_environment` is `{username}` or `null`; `plan_limit` (hosted AdTo) is `null` while the live account is under its plan's limit, else `{stage, since, pause_on, plan, limit, devices, fits}`, the standing the dashboard's banner shows on every page (`stage` `warned`, `reminded` or `paused`; `fits` the smallest paid plan the count fits, or `null`). `user.username` is `null` without an account of your own; in no account at all `account`, `environment`, `test_environment`, `role` and `live_account` are `null`, `accounts` is empty and `plan_limit` is `null` |
 | `POST /api/admin/forgot-password` | public | `{email, turnstile_token?}`. Creates a one-hour, single-use reset token (older unused tokens are cancelled) and emails `<WEB_URL>/reset-password?token=…` through Resend, or logs the link when `RESEND_API_KEY` is unset. | `200 {ok: true, message: "If that email exists, a reset link is on its way."}` whether or not the account exists; `429` over 5 requests per minute from one IP or 3 per minute for one address; `403 turnstile_failed` (`Verification failed. Please try again.`, or `Verification is unavailable right now. Please try again.` when siteverify cannot be reached) where the deployment runs [Turnstile](#turnstile) and the token is missing, spent or not for this form |
 | `POST /api/admin/reset-password` | public | `{token, password}`. Does not sign the user in. | `200 {ok: true}`; `400 Reset token is required`, a password-rule message, `This reset link is invalid or has expired`, `This reset link has already been used` |
 | `GET /api/auth/config` | public | What the login page and the contact form show. | `200 {signupOpen, googleEnabled, linkRootDomain, turnstileSiteKey}`; `linkRootDomain` is `ROOT_DOMAIN`, or `null` when unset; `turnstileSiteKey` is `TURNSTILE_SITE_KEY` while [Turnstile](#turnstile) runs, else `null` |
@@ -57,7 +56,7 @@ Password rule for signup and reset: 8 to 72 characters with at least one lowerca
 | `{"email", "password", "username"}` | Creates exactly that account with role `owner` and no demo data, in any environment. All three fields are required; password at least 12 characters (no other rule); username rules as above. Errors are `400` with `email, password and username are required`, `email is not a valid address`, `password must be at least 12 characters`, `username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `username '<name>' is reserved`, or `409 Username or email already exists`. `demo` is `false`. |
 | empty, not JSON, or a JSON object with none of those three keys | Seeds the demo account `demo@dectog.local` / `demo1234` / username `demo` (role `owner`) with the demo app, links, clicks and installs. `demo` is `true`. In production this answers `403 {"error": {"code": "forbidden", "message": "Demo seed is disabled in production — provide email, password and username"}}`. |
 
-The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` is set, `x-bootstrap-token` must equal `BOOTSTRAP_TOKEN`, otherwise `403 {"error": {"code": "forbidden", "message": "Bootstrap not permitted"}}`. In production without a configured token every call is refused. See [Local quick start](/self-hosting/local-quick-start/) and [Deploy](/self-hosting/deploy/).
+The header check runs first: when `ENVIRONMENT=production` or `BOOTSTRAP_TOKEN` is set, `x-bootstrap-token` must equal `BOOTSTRAP_TOKEN`, otherwise `403 {"error": {"code": "forbidden", "message": "Bootstrap not permitted"}}`. In production without a configured token every call is refused.
 
 ## Settings
 
@@ -93,7 +92,7 @@ Every session route needs a team role in the account it acts on, and the role is
 
 ## Plans
 
-Hosted DecTog only: on a deployment without Creem billing (`CREEM_*` unset, see [Configuration reference](/self-hosting/configuration-reference/#secrets)) `GET /api/admin/billing` answers `{enabled: false, plan: null, subscription: null}` and the other routes `404 billing_disabled`. The plan is the live account's, whichever environment the dashboard shows.
+Without Creem billing configured, `GET /api/admin/billing` answers `{enabled: false, plan: null, subscription: null}` and the other routes `404 billing_disabled`. The plan is the live account's, whichever environment the dashboard shows.
 
 | Method and path | Role | Purpose | Response |
 |---|---|---|---|
@@ -120,7 +119,7 @@ In the test environment, `POST /api/admin/custom-domain` answers `409 is_test_en
 
 ## Personal data
 
-A request from one person, for a device or a customer; see [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person) for what each covers. The same four routes exist under `/api/v1/devices/…` and `/api/v1/customers/…` for the account key (an SDK key gets `403 account_key_required`).
+A request from one person, for a device or a customer; see [A request from one person](/guides/privacy-and-data/#a-request-from-one-person) for what each covers. The same four routes exist under `/api/v1/devices/…` and `/api/v1/customers/…` for the account key (an SDK key gets `403 account_key_required`).
 
 | Method and path | Auth | Purpose | Response |
 |---|---|---|---|
@@ -140,7 +139,7 @@ Erasing something that was never stored answers `200` with zero counts: the requ
 
 An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_id, created_at}`:
 
-- `actor` is `{type: "user", id, email}`, `{type: "account_key", prefix}`, `{type: "sdk_key", id, prefix, name}`, `{type: "system"}` (DecTog itself) or `{type: "anonymous"}` (a wrong password, a reset request).
+- `actor` is `{type: "user", id, email}`, `{type: "account_key", prefix}`, `{type: "sdk_key", id, prefix, name}`, `{type: "system"}` (AdTo itself) or `{type: "anonymous"}` (a wrong password, a reset request).
 - `target` is `{type, id?, name?}`: a link by slug, an app, webhook or key by id with its name, a webhook by its URL's origin.
 - `changes` is `{field: [before, after]}`, or `null`. Secret fields hold `"[redacted]"`.
 - `request_id` matches the `x-request-id` of the response that made the change.
@@ -149,8 +148,8 @@ An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_
 |---|---|
 | Links | `link.created`, `link.updated`, `link.deleted`, `link.restored`, `link.bulk_created` (with the slugs), `temp_link.created`, `temp_link.updated`, `temp_link.deleted`, `temp_link.restored`, `temp_link.expired_deleted`, `template.created`, `template.updated`, `template.deleted` |
 | Apps | `app.created`, `app.updated`, `app.deleted`, `app.store_notifications_enabled`, `app.store_notifications_rotated`, `app.store_notifications_updated`, `app.store_notifications_disabled` |
-| Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by DecTog) |
-| Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by DecTog) |
+| Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by AdTo) |
+| Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by AdTo) |
 | Test environment | `test_environment.created` (in the live account's log; changes made in the test environment go to its own log) |
 | Team | `team.invited`, `team.invite_revoked`, `team.joined` (by the person who joined), `team.role_changed`, `team.member_removed`, `team.member_left` |
 | Keys and settings | `sdk_key.created`, `sdk_key.revoked`, `site_key.created`, `site_key.updated`, `site_key.revoked`, `account_key.regenerated`, `settings.base_currency_changed`, `settings.retention_changed` |
@@ -244,7 +243,7 @@ App fields and their validation messages (`400`). Every text field is trimmed be
 | `GET /api/admin/customers?q=&limit=&offset=` | session | Customer list. `q` (trimmed, 200 characters) is a substring match on `customer_id`, `name`, `email`, `phone`; `limit` default 50, 1 to 200. | `200 {total, limit, offset, customers: [...]}`, each with the customer fields, `matched_slug`, `match_source`, `app_platform`, `os`, `device_model`, `country` (where the install request came from), `events`, `revenue`, `last_event_at`, `shared_device_customers` |
 | `GET /api/admin/customers/:customerId` | session | Everything known about one customer. | `200 {customer, stats, devices, install, click, link, events (200), opens (50), screen_sessions (20), shared_device_customers (50), referred_by, referrals (50), referral_not_credited}`; `404 Customer not found`. `install` and `click` omit `ip_hash` but keep `ip_raw`. `referred_by` is the referral the customer's signup recorded, or null. `referral_not_credited` is `{referrer_customer_id, link_slug, reason, credited_customer_id?, referrer_known}` when there is none although the install's link or tap named a referrer, else null; `reason` is `existing_customer`, `reinstall`, `app_update` (an existing user who updated to a build with the SDK), `late_signup`, `withheld`, `self_referral`, `install_already_referred` (with the customer who took the install's referral in `credited_customer_id`) or `unknown`. `referrer_known`, on both, says whether the referrer has a customer record: a `dec_referrer` may name someone the app never identified. |
 | `GET /api/admin/retention?days=&slug=&campaign=&platform=` | session | The Retention card: day 1, 7 and 30 retention and weekly cohorts, calendar days in UTC. `days` default 90, 7 to 365; `slug` limits to installs credited to that link, `campaign` to installs whose click carried that `utm_campaign` or link campaign, `platform` to `ios` or `android` (anything else is a 400). | `200 {window: {days, start}, bucket: "calendar_day_utc", filters, installs, untracked, d1, d7, d30, weekly}`; each `dN` is `{eligible, retained, rate}` (`rate` a percentage with one decimal, null when nothing is eligible); `weekly` is `[{week, installs, retained: [n…], rates: [%…]}]`, newest first, nine weeks, null for weeks not started |
-| `GET /api/admin/attribution-quality?days=` | session | The match-confidence and referrer-health panel. `days` default 7, 1 to 365. Reinstalls and updates are included. `signal_check` totals the agree, mismatch and missing verdicts per signal, scored and unscored, over the window's installs that carry a `signal_check` (installs a deterministic signal matched to a recorded click); see [Attribution internals](/self-hosting/attribution-internals/#the-stored-explanation). | `200 {days, by_platform, referrer_status, match_sources, shadow: {n, agree, disagree}, signal_check: {n, signals: {<name>: {agree, mismatch, missing}}}, latency: {p50_ms, p90_ms, n}, updates_skipped}` |
+| `GET /api/admin/attribution-quality?days=` | session | The match-confidence and referrer-health panel. `days` default 7, 1 to 365. Reinstalls and updates are included. `signal_check` totals the agree, mismatch and missing verdicts per signal, scored and unscored, over the window's installs that carry a `signal_check` (installs a deterministic signal matched to a recorded click); see [Attribution internals](/start/attribution-internals/#the-stored-explanation). | `200 {days, by_platform, referrer_status, match_sources, shadow: {n, agree, disagree}, signal_check: {n, signals: {<name>: {agree, mismatch, missing}}}, latency: {p50_ms, p90_ms, n}, updates_skipped}` |
 | `GET /api/admin/analytics?event=&group_by=&interval=&tz=&<dimension>=` | session | The Breakdown card and the MCP `analytics` tool: see below. | `200 {window: {interval, tz, start, end, granularity, partial}, event, group_by, filters, truncated, data}`; `400` for any parameter it does not take |
 | `GET /api/admin/export.csv?data=&…` | session | The analytics answer (`data=analytics`, the default) or the raw rows of `clicks`, `installs`, `opens` or `events` as CSV, with the same window and filters. | `200 text/csv`; past 50,000 rows `202` with an export job, or `422 export_too_large` without an `EXPORTS` bucket. See [Export raw data](/api/export/#csv). |
 | `GET /api/admin/exports/:id` | session | A large export's job. | `200 {id, data, status, total_rows, row_count, bytes, error, created_at, finished_at, expires_at, status_url, download_url}`; `404` for another account's |
@@ -271,7 +270,7 @@ An install takes the dimensions of the tap that won it; an event those of the li
 Each row has the group values, then the metrics; `conversion` (first installs per click, in percent, one decimal) joins them when `clicks` and `installs` are both asked for. A metric whose rows lack the dimension, such as clicks by `match_source` or `app_version`, is `null` rather than 0. By time, every day or hour of the window is there, zero when nothing happened. `window.partial` is true when the window starts before the raw rows the retention window keeps.
 
 ```bash title="Installs and revenue by campaign and country, last 30 days, Berlin time, without the US"
-curl -sS -b jar.txt 'https://app.dectog.com/api/admin/analytics?event=installs,revenue&group_by=campaign,country&interval=30d&tz=Europe/Berlin&country=-US'
+curl -sS -b jar.txt 'https://app.adto.app/api/admin/analytics?event=installs,revenue&group_by=campaign,country&interval=30d&tz=Europe/Berlin&country=-US'
 ```
 
 ## Blog, messages and contact
@@ -305,8 +304,8 @@ The three public `GET /api/blog/…` routes answer with `X-Robots-Tag: noindex`:
 | `POST /api/contact` | 5 per hour per hashed IP, counted before validation, so invalid submissions use up the allowance. The 429 carries no `Retry-After`. |
 | `POST /api/admin/login` | 10 per minute per hashed IP, counted before the password check. `429` with `Retry-After`. There is no per-account lockout, so nobody can lock a user out by failing on purpose. |
 | `POST /api/admin/forgot-password` | 5 per minute per hashed IP and 3 per minute per email address. `429` with `Retry-After`. |
-| Every other `/api/admin` and `/api/auth` route | **None.** Signup, reset-password and bootstrap are not rate limited. Put your own protection in front of them when you expose a self-hosted dashboard publicly. |
+| Every other `/api/admin` and `/api/auth` route | **None.** Signup, reset-password and bootstrap are not rate limited. |
 
 ## Turnstile
 
-A deployment with the variable `TURNSTILE_SITE_KEY` and the secret `TURNSTILE_SECRET` set (the hosted service is one) runs [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) in front of `POST /api/admin/signup`, `POST /api/admin/login`, `POST /api/admin/forgot-password` and `POST /api/contact`. The pages render the widget with the site key `GET /api/auth/config` names, with the action `signup`, `login`, `forgot-password` or `contact`, and send the token it earns as `turnstile_token` in the JSON body. The Worker checks the token with Cloudflare's siteverify, passing the client IP, and requires a success for the route's action on the dashboard host (`WEB_URL`; the contact form: the site host, `SITE_URL`). A token is spent by the check, so every submit needs a new one; the pages ask the widget for one after each attempt. The check runs after the rate limit and before anything else, so a refused submit writes nothing and consumes no reset email or sign-in attempt. A script that drives these routes on such a deployment must run the widget in a browser; there is no bypass token. With either setting unset, `turnstileSiteKey` is `null` and the four routes take every submit. See [Configuration reference](/self-hosting/configuration-reference/#secrets).
+AdTo runs [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) in front of `POST /api/admin/signup`, `POST /api/admin/login`, `POST /api/admin/forgot-password` and `POST /api/contact`. The pages render the widget with the site key `GET /api/auth/config` names, with the action `signup`, `login`, `forgot-password` or `contact`, and send the token it earns as `turnstile_token` in the JSON body. The server checks the token with Cloudflare's siteverify, passing the client IP, and requires a success for the route's action on the dashboard host (`WEB_URL`; the contact form: the site host, `SITE_URL`). A token is spent by the check, so every submit needs a new one; the pages ask the widget for one after each attempt. The check runs after the rate limit and before anything else, so a refused submit writes nothing and consumes no reset email or sign-in attempt. A script that drives these routes must run the widget in a browser; there is no bypass token.

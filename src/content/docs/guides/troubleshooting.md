@@ -7,9 +7,6 @@ sidebar:
 
 Every entry describes what the hosted service and the SDK do today. Where a dashboard message or an API error string is quoted, it is quoted exactly.
 
-:::note[Self-hosting]
-Unknown usernames redirect to `UNKNOWN_HOST_REDIRECT` only when it is set; otherwise they get the 404 page. The fingerprint windows come from `ATTRIBUTION_WINDOW_HOURS` and `ATTRIBUTION_LOW_ENTROPY_WINDOW_HOURS`. Everything else below is the same.
-:::
 
 ## An install is not attributed
 
@@ -23,7 +20,7 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 
 | Chip | Value | Meaning | What to do |
 |---|---|---|---|
-| referrer delivered | `ok` | The store handed back a referrer. If it carried `dtg_click`, the install is matched at `guaranteed`. If not, the install came through the store without a DecTog redirect and the ladder moved on. | Nothing, unless `ok` installs are organic: check that the tap went through a tagged store URL (below). |
+| referrer delivered | `ok` | The store handed back a referrer. If it carried `dtg_click`, the install is matched at `guaranteed`. If not, the install came through the store without an AdTo redirect and the ladder moved on. | Nothing, unless `ok` installs are organic: check that the tap went through a tagged store URL (below). |
 | store reported organic | `organic` | Google Play returned its organic marker or an empty referrer. The install did not come through a tagged store link. | Check the path the tap took. The QR page's store buttons are untagged, a custom `redirect_url` or `dec_redirect` to a non-store host is never tagged, and custom vivo store URLs are never tagged. |
 | store too old for the API | `feature_not_supported` | The Play Store on the device does not support the Install Referrer API. Final. | Nothing. The fingerprint still runs. |
 | store service unavailable | `service_unavailable` | No connection to the Play Store service after up to three connection attempts, 3 seconds apart. | The SDK asks again on up to five later launches and sends a late claim; `onAppInstalled` emits the upgraded verdict. |
@@ -39,7 +36,7 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 
 ### The click was never recorded
 
-- Bots and link unfurlers get the preview page and no click: any user agent containing `bot` (as a word), `crawler`, `spider`, `preview`, `fetcher`, `monitor`, `headless`, `whatsapp` or the named social crawlers, and any request Cloudflare scores below 30. A plain `curl` is not on the list; unless Cloudflare scores it below 30, it records a click.
+- Bots and link unfurlers get the preview page and no click: any user agent containing `bot` (as a word), `crawler`, `spider`, `preview`, `fetcher`, `monitor`, `headless`, `whatsapp` or the named social crawlers. A plain `curl` is not on the list: it records a click.
 - Hint-less Chromium: the first request from a mobile Chromium browser that sends `Sec-CH-UA-Mobile: ?1` without a `Sec-CH-UA-Model` header, has no `Build/` token in its user agent and no in-app marker, gets a 302 with `Critical-CH` and records nothing. Chrome retries with the hint and the retry records the click. A client that never retries leaves no click row. The install can still be matched: the Play and OEM store referrers carry `dtg_l=<username>/<slug>`, and the server synthesizes the click from it. With the mobile interstitial on, the same happens through a one-shot self-redirect carrying `?_ch=1`.
 - In-app browsers (Facebook, Instagram and WebViews on Android) never take the hint path and never get the intent bounce. They get a plain 302 to the tagged store URL, so referrer attribution still works for them.
 - The demo seed's installs carry no IP hash and never fingerprint-match. Its attributed installs are all Android referrer matches and its organic ones all iOS. Do not judge the fingerprint with the demo account.
@@ -77,10 +74,10 @@ Call `FlutterDectog().diagnostics()` from a debug build. It reads the app's reco
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Taps open Chrome or the store although the app is installed | The domain is not verified for the installed build | `adb shell pm get-app-links <package>` must list `{username}.dectog.com` as `verified`. Reinstall after changing the manifest or the fingerprints; Android verifies at install and update. |
+| Taps open Chrome or the store although the app is installed | The domain is not verified for the installed build | `adb shell pm get-app-links <package>` must list `{username}.adto.app` as `verified`. Reinstall after changing the manifest or the fingerprints; Android verifies at install and update. |
 | Verify shows `N package(s), MISSING fingerprints` | No fingerprint saved for the package | Add the SHA-256 fingerprints on the Apps page. |
 | Verification fails although a fingerprint is saved | The saved fingerprint is not the one that signed the installed build | Store builds are signed by the Play App Signing key. Copy it from Play Console (Setup, App signing) and add it next to your upload and debug keys. Fingerprints are 32 colon-separated hex pairs; the server stores them uppercase. |
-| Only some hosts verify | The intent filter uses a wildcard | Intent filters do not support wildcards. Add an `android:autoVerify="true"` filter per host and list `{username}.dectog.com` explicitly. |
+| Only some hosts verify | The intent filter uses a wildcard | Intent filters do not support wildcards. Add an `android:autoVerify="true"` filter per host and list `{username}.adto.app` explicitly. |
 | Verification never succeeds in development | Dev hosts (`10.0.2.2`, `localhost`) cannot serve an assetlinks file Android accepts | Expected. Android 12 and later open those links only from explicit intents (`adb shell am start`) or after the user enables the link in system settings. |
 | Verify shows `Endpoint replied 404: Configuration not found` | No app on the account has a package | Save the package first. The well-known files are account-wide and built from every app. |
 
@@ -90,9 +87,9 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Verify shows `No app IDs configured` or `Endpoint replied 404: Configuration not found` | The AASA is built only from apps that have both a bundle ID and a Team ID | Save both on the Apps page. The file then serves at `https://{username}.dectog.com/.well-known/apple-app-site-association` and includes `webcredentials`. |
-| Taps open Safari although the file verifies | The entitlement is missing or the app was not reinstalled | Add `applinks:{username}.dectog.com` to the Associated Domains entitlement of every build configuration, enable the capability on the App ID, then reinstall. iOS fetches the AASA at install and update; an installed app never picks up a change. |
-| The entitlement is a wildcard, `applinks:*.dectog.com` | For a wildcard entry iOS fetches the AASA from the parent domain, `https://dectog.com/.well-known/apple-app-site-association`, and the apex answers 400 `{"error":{"code":"invalid_request","message":"Subdomain not found in host"}}` | Use the explicit host: `applinks:{username}.dectog.com`. |
+| Verify shows `No app IDs configured` or `Endpoint replied 404: Configuration not found` | The AASA is built only from apps that have both a bundle ID and a Team ID | Save both on the Apps page. The file then serves at `https://{username}.adto.app/.well-known/apple-app-site-association` and includes `webcredentials`. |
+| Taps open Safari although the file verifies | The entitlement is missing or the app was not reinstalled | Add `applinks:{username}.adto.app` to the Associated Domains entitlement of every build configuration, enable the capability on the App ID, then reinstall. iOS fetches the AASA at install and update; an installed app never picks up a change. |
+| The entitlement is a wildcard, `applinks:*.adto.app` | For a wildcard entry iOS fetches the AASA from the parent domain, `https://adto.app/.well-known/apple-app-site-association`, and the apex answers 400 `{"error":{"code":"invalid_request","message":"Subdomain not found in host"}}` | Use the explicit host: `applinks:{username}.adto.app`. |
 | Works from Notes but not from the address bar | Typing a URL into Safari never triggers a Universal Link | Tap the link from Notes, Messages or another app. |
 | Nothing works locally | The AASA must be served from a real domain over HTTPS | Path-mode and `localhost` deployments cannot pass; test against a deployed domain. The Simulator does not open Universal Links either. |
 | A redirect to `myapp://` does nothing | iOS never opens a custom scheme from a server redirect | Custom schemes open only from a direct tap: the "Open in app" button of the tap-to-store page or the buttons on the QR page. |
@@ -102,7 +99,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 - The domain is not verified for the installed build: see the two sections above.
 - The tap came from an in-app browser. Android in-app browsers and WebViews get a plain 302 to the store, never the intent bounce. On iOS the tap-to-store page leads with "Open in app" inside Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X when the app has an iOS scheme; otherwise the visitor gets the store.
 - The visitor is on a desktop user agent. Desktop never redirects to the target; it gets the QR page or a fallback URL. An iPad asks for desktop sites with a Mac user agent; its Safari tap counts as iOS only when the link's app is set up for iOS (a bundle ID, App Store URL or iOS scheme). See [How a tap is routed](/links/how-a-tap-is-routed/).
-- The SDK reports `Invalid DecTog URL format`: the tapped host does not match `baseUrl` and `linkRootDomain`. On the hosted service leave both unset.
+- The SDK reports `Invalid AdTo URL format`: the tapped host does not match `baseUrl` and `linkRootDomain`. For AdTo set `baseUrl: 'https://app.adto.app'` and `linkRootDomain: 'adto.app'`: the released SDKs default to the old DecTog service.
 - The app has no store URL: a phone without the app goes to the app's fallback URL, then the link target, then the QR page. Add the store URLs on the Apps page.
 
 ## 429 Too Many Requests
@@ -115,7 +112,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 | 120 per minute | The interstitial beacon `POST /_/collect`, per IP | 429 with an empty body; this limiter also returns 429 when its database write fails |
 | 5 per hour | The contact form, per IP | `Too many messages — try again later`, no `Retry-After` |
 
-`Retry-After` is the number of seconds until the current one-minute window ends, at least 1. The hosted service, and a deployment set up with `npm run setup`, count the account, device, IP and beacon limits with Cloudflare's Rate Limiting bindings, per Cloudflare location and approximately; without the bindings the counters live in D1, in windows aligned to the clock, not sliding. When the limiter's binding or database fails, SDK and API requests go through. The SDK honors `Retry-After` up to 10 seconds in-process and defers longer waits to the next launch; event batches rejected with 429 stay queued. Scripts should sleep for `Retry-After` seconds. See [API overview](/api/overview/).
+`Retry-After` is the number of seconds until the current one-minute window ends, at least 1. AdTo counts the account, device, IP and beacon limits in fixed one-minute windows aligned to the clock, kept by each server process. When the limiter fails, SDK and API requests go through. The SDK honors `Retry-After` up to 10 seconds in-process and defers longer waits to the next launch; event batches rejected with 429 stay queued. Scripts should sleep for `Retry-After` seconds. See [API overview](/api/overview/).
 
 ## Webhooks not arriving
 
@@ -153,7 +150,7 @@ Titles and descriptions are cut to 150 characters. See [Social previews and QR](
 | `Google sign-in was cancelled.` | You closed Google's consent screen |
 | `Google sign-in timed out — please try again.` | The OAuth state cookie (10 minutes) was missing or did not match when Google sent you back |
 | `Couldn't verify your Google account — please try again.` | Google's token could not be exchanged or checked, or the Google email is not verified |
-| `No DecTog account uses that Google email, and signup is currently closed.` | Signups are closed and no account has that email |
+| `No AdTo account uses that Google email, and signup is currently closed.` | Signups are closed and no account has that email |
 | `That email is already linked to a different Google account.` | The account with that email is linked to another Google identity |
 | `Google sign-in is not available right now.` | Google sign-in is not configured on this deployment |
 
@@ -163,11 +160,11 @@ A Google sign-in whose verified email matches an existing account links that acc
 
 | Response | When | Page text |
 |---|---|---|
-| 302 to `https://dectog.com/` | The username does not exist | None (hosted service) |
-| 404 page | The slug does not exist, or its link was deleted (an expired temporary link is, a day after expiry) | `Link not found` and `This DecTog link does not exist.` |
+| 302 to `https://adto.app/` | The username does not exist | None (hosted service) |
+| 404 page | The slug does not exist, or its link was deleted (an expired temporary link is, a day after expiry) | `Link not found` and `This AdTo link does not exist.` |
 | 410 page | A temporary link has expired, bots included | `Link expired` and `This temporary link has expired and is no longer available.` |
 | JSON `404 {"error":{"code":"not_found","message":"Not found"}}` | Two or more path segments on a link host | None |
 
-Both HTML pages carry `noindex`, a "Go to DecTog" button and the footer `Check the link for typos, or ask whoever shared it for a new one.`
+Both HTML pages carry `noindex`, a "Go to AdTo" button and the footer `Check the link for typos, or ask whoever shared it for a new one.`
 
 An expired link answers `GET /api/v1/resolve/{username}/{slug}` with `410 link_expired`, and a paused one with `410 link_paused`; neither records clicks. The daily job deletes temporary links expired for more than 24 hours that have no expired URL; after that the link is a 404, and its slug stays reserved until you restore it or delete it permanently. Deleting a link from the dashboard hides it and keeps its numbers in the Overview; only **Delete permanently** removes its clicks, installs, events and opens. See [Temporary links](/links/temporary-links/).

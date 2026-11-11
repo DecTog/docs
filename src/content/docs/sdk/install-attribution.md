@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-On the first launch after installation the SDK registers the install with `POST /api/v1/app-installs`, and the server answers with a verdict: did a DecTog link bring this install, and if so, which one. The verdict is a `DectogAppInstallResponse`, delivered on `onAppInstalled` and kept in `currentAppInstall`.
+On the first launch after installation the SDK registers the install with `POST /api/v1/app-installs`, and the server answers with a verdict: did an AdTo link bring this install, and if so, which one. The verdict is a `DectogAppInstallResponse`, delivered on `onAppInstalled` and kept in `currentAppInstall`.
 
 The server-side rules (the deterministic ladder, the fingerprint, fraud rules) are described on [How attribution works](/start/how-attribution-works/) and [Clicks and installs](/api/clicks-and-installs/). This page covers the SDK's side.
 
@@ -69,7 +69,7 @@ A late claim is `POST /api/v1/app-installs/{installId}/claim` with a determinist
 |---|---|
 | `late_referrer` | The Android referrer was not definitive at registration time and became available later, in the same process (the native reader was still retrying) or on one of the next five launches. Also used for an Apple Search Ads token obtained on a later launch. |
 | `clipboard` | The iOS pasteboard alert was answered after the registration request had already left. |
-| `paste_control` | The user tapped a `DectogPasteButton` and the pasteboard held a DecTog link. |
+| `paste_control` | The user tapped a `DectogPasteButton` and the pasteboard held an AdTo link. |
 
 Outcomes, as `claim` and `claimReason` on the returned verdict:
 

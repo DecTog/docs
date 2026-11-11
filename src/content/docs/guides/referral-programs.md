@@ -5,13 +5,13 @@ sidebar:
   order: 4
 ---
 
-A referral program needs three things: a link that names the user who shares it, a reliable record that a new user arrived through it, and a moment to hand out the reward. DecTog provides all three. The record is made on the server from the link the install was credited to, so a modified app cannot claim someone else's reward.
+A referral program needs three things: a link that names the user who shares it, a reliable record that a new user arrived through it, and a moment to hand out the reward. AdTo provides all three. The record is made on the server from the link the install was credited to, so a modified app cannot claim someone else's reward.
 
 ## 1. Give each user their referral link
 
 ```dart
 final link = await dectog.createReferralLink(customerId: currentUser.id);
-share(link.url); // e.g. https://acme.dectog.com/r-3fa94c1b2e
+share(link.url); // e.g. https://acme.adto.app/r-3fa94c1b2e
 ```
 
 `createReferralLink` returns the user's referral link, creating it on the first call and returning the same link afterwards. It works with the app's ordinary SDK key, which cannot create other links. The link has no destination of its own: it opens the app, or sends the visitor to the store and your app's fallback URL, like any link bound to your app. `customerId` is the id you pass to `identify`. The link's campaign is `referral` unless you pass `campaign`. Slugs starting with `r-` belong to referral links: no other link or temporary link can take one.
@@ -23,7 +23,7 @@ From a server, the same call is `POST /api/v1/referral-links` with `{"customer_i
 If your backend already builds share links, Adjust-style, skip the call: add the user's id to any permanent link as `dec_referrer`, with whatever else the tap needs.
 
 ```
-https://acme.dectog.com/invite?dec_referrer=1042&dec_label=eyJpIjoxMDQyfQ%3D%3D&dec_fallback=https%3A%2F%2Facme.com%2F
+https://acme.adto.app/invite?dec_referrer=1042&dec_label=eyJpIjoxMDQyfQ%3D%3D&dec_fallback=https%3A%2F%2Facme.com%2F
 ```
 
 Everything below works the same: the install gets `referrerCustomerId` `"1042"` (and the label as `install.clickParams?.label`), and the signup records the referral and sends `referral.converted`. The difference is trust. A referral link's customer is fixed on the server; a `dec_referrer` is whatever the URL says, so anyone can edit it to name someone else. The referral [fraud rules](#5-watch-for-self-referrals) still apply.
@@ -82,7 +82,7 @@ Webhooks subscribed to `referral.converted` that take the referral link's app (o
     "match_confidence": "guaranteed",
     "fraud_flags": [],
     "created_at": "2026-10-14T13:20:11.000Z",
-    "link": { "slug": "r-3fa94c1b2e", "url": "https://acme.dectog.com/r-3fa94c1b2e" }
+    "link": { "slug": "r-3fa94c1b2e", "url": "https://acme.adto.app/r-3fa94c1b2e" }
   },
   "processed_at": "2026-10-14T13:20:11.000Z"
   }
@@ -98,7 +98,7 @@ Every referral is checked against two [fraud rules](/start/fraud-rules/#referral
 - `referral_same_device`: the new customer signed up on a device the referrer used. The usual case is someone installing through their own link, signing in, then making a second account.
 - `referral_same_network`: the install came from a network one of the referrer's other devices used in the 30 days before. Never on cellular data. A household trips it too, so it is weak evidence on its own.
 
-`referral.fraud_flags` lists what hit, together with the install's own flags (an emulator, a re-signed build). Decide in your webhook what a flag costs, or let DecTog decide: on the [Apps](/dashboard/apps/#fraud-rules) page, tick **Reject referral** for either rule. A rejected referral is still recorded, as `rejected`, but sends no `referral.converted` and is not counted, so your reward code never sees it.
+`referral.fraud_flags` lists what hit, together with the install's own flags (an emulator, a re-signed build). Decide in your webhook what a flag costs, or let AdTo decide: on the [Apps](/dashboard/apps/#fraud-rules) page, tick **Reject referral** for either rule. A rejected referral is still recorded, as `rejected`, but sends no `referral.converted` and is not counted, so your reward code never sees it.
 
 ## In the dashboard
 

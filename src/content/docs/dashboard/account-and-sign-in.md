@@ -5,17 +5,17 @@ sidebar:
   order: 7
 ---
 
-Sign-in lives at https://app.dectog.com/login. The page is titled **Dashboard Access** ("Sign in — or create an account — to manage your deep links") and has two tabs, **Log in** and **Sign up**. `https://app.dectog.com/login?tab=signup` opens the Sign up tab directly. A browser that already holds a valid session is sent straight to the dashboard.
+Sign-in lives at https://app.adto.app/login. The page is titled **Dashboard Access** ("Sign in — or create an account — to manage your deep links") and has two tabs, **Log in** and **Sign up**. `https://app.adto.app/login?tab=signup` opens the Sign up tab directly. A browser that already holds a valid session is sent straight to the dashboard.
 
 ## Sign up
 
 | Field | Rules |
 |---|---|
 | **Email** | A valid address. Stored trimmed and lower-cased. |
-| **Username** | Suggested from the part of your email before `@` until you edit it (with the domain's first label added when that part is under 3 characters: `me@example.com` suggests `me-example`). 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-`, the prefix of [test environments](/dashboard/settings/#test-environment). The hint reads "Your links live on {username}.{root domain}" (`dectog.com` on the hosted service): the username is your link subdomain and cannot be changed later. |
+| **Username** | Suggested from the part of your email before `@` until you edit it (with the domain's first label added when that part is under 3 characters: `me@example.com` suggests `me-example`). 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-`, the prefix of [test environments](/dashboard/settings/#test-environment). The hint reads "Your links live on {username}.{root domain}" (`adto.app` on the hosted service): the username is your link subdomain and cannot be changed later. |
 | **Password** | 8 to 72 characters with at least one lowercase letter, one uppercase letter and one digit. Hint: "At least 8 characters, with upper and lowercase letters and a number". |
 
-**Create Account** submits. On the hosted service, and on a deployment that has [Turnstile](/api/admin-api/#turnstile) set up, Cloudflare Turnstile checks the browser first: the button waits until the check has passed, which usually takes under a second with nothing to see, and shows a small challenge box above the button when Cloudflare wants an interaction. The same check sits in front of **Log in**, **Send reset link**, joining from an invite and the site's contact form. Errors, verbatim from the server: `Please enter a valid email address`; the password rule that failed, such as `Password must include an uppercase letter`; `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`; `Username '{name}' is reserved`; `An account with this email or username already exists`; and `Signup is currently closed` when the deployment has closed signups, in which case the Sign up tab is hidden as well.
+**Create Account** submits. [Cloudflare Turnstile](/api/admin-api/#turnstile) checks the browser first: the button waits until the check has passed, which usually takes under a second with nothing to see, and shows a small challenge box above the button when Cloudflare wants an interaction. The same check sits in front of **Log in**, **Send reset link**, joining from an invite and the site's contact form. Errors, verbatim from the server: `Please enter a valid email address`; the password rule that failed, such as `Password must include an uppercase letter`; `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`; `Username '{name}' is reserved`; `An account with this email or username already exists`; and `Signup is currently closed` when the deployment has closed signups, in which case the Sign up tab is hidden as well.
 
 On success you are signed in and see **Account created — you are signed in.** with two keys: **SDK key, for your app** (listed again under Settings → [SDK keys](/dashboard/settings/#sdk-keys)) and **Account key, for servers and scripts**, which this screen shows once: "Copy it now: it is not shown again (Settings can replace it)." Then **Go to dashboard**.
 
@@ -41,11 +41,11 @@ Local development builds also show "Demo account: demo@dectog.local · demo1234"
 
 | Situation | Result |
 |---|---|
-| The Google account is connected to a DecTog account. | You are signed in, whatever its email is now. |
-| A DecTog account uses the same email and has no Google account connected. | Error: `A DecTog account already uses that email. Sign in with its password, then connect Google in Settings → Account.` Nothing is linked. |
-| A DecTog account uses the same email but is connected to a different Google account. | Error: `That email is already linked to a different Google account.` |
+| The Google account is connected to an AdTo account. | You are signed in, whatever its email is now. |
+| An AdTo account uses the same email and has no Google account connected. | Error: `An AdTo account already uses that email. Sign in with its password, then connect Google in Settings → Account.` Nothing is linked. |
+| An AdTo account uses the same email but is connected to a different Google account. | Error: `That email is already linked to a different Google account.` |
 | No account uses the email and signups are open. | One more step: **Signed in with Google as {email}. One last step:** with a **Choose a username** box that follows the signup rules. **Create Account** creates the account and shows the API key screen; **Cancel** abandons it. You have 15 minutes to finish, after which the page reports `Google sign-in expired — try again`. |
-| No account uses the email and signups are closed. | Error: `No DecTog account uses that Google email, and signup is currently closed.` |
+| No account uses the email and signups are closed. | Error: `No AdTo account uses that Google email, and signup is currently closed.` |
 
 Other errors shown on return: `Google sign-in was cancelled.`; `Google sign-in timed out — please try again.` (the handshake must complete within 10 minutes); `Couldn't verify your Google account — please try again.`; `Google sign-in is not available right now.`. Username errors on the last step: `That username is taken` and `An account with this Google email already exists — sign in instead`.
 
@@ -55,7 +55,7 @@ An account created through Google has no usable password: the server stores a ra
 
 A matching email is not enough to link an existing account: sign-up does not check that the address belongs to whoever signs up, so an account with your email might not be yours. To add Google sign-in to an account you have, sign in with its password, open Settings → **Account**, and select **Connect Google** next to **Sign in with Google** (shown when the deployment has Google sign-in configured). Choose the Google account; back in Settings, "Google is connected" confirms it, and the row reads **Connected**. Any Google account works, whatever its email. Connecting signs out every other session of the account; this browser stays signed in.
 
-Errors shown in Settings: `That Google account already signs in to another DecTog account.`, `Your sign-in is already connected to a different Google account.`, `Connecting Google was cancelled.`, `Connecting Google timed out. Please try again.`, `Couldn't verify your Google account. Please try again.`. Connecting cannot be undone from the dashboard.
+Errors shown in Settings: `That Google account already signs in to another AdTo account.`, `Your sign-in is already connected to a different Google account.`, `Connecting Google was cancelled.`, `Connecting Google timed out. Please try again.`, `Couldn't verify your Google account. Please try again.`. Connecting cannot be undone from the dashboard.
 
 If an account with your email exists that you did not create, use **Forgot password?**: the reset link goes to your address, and the new password signs out every session of whoever made it.
 
@@ -63,7 +63,7 @@ If an account with your email exists that you did not create, use **Forgot passw
 
 **Forgot password?** shows **Reset Password** ("Enter your email to receive a reset link") with an **Email** box and **Send Reset Link**. The reply is "If that email exists, a reset link is on its way.", whether or not an account exists. More than 5 requests a minute from one network, or 3 a minute for one address, show `Too many reset requests. Wait a minute and try again.`
 
-The email, with the subject "Reset your DecTog password", carries a link to `https://app.dectog.com/reset-password?token=…`. The token:
+The email, with the subject "Reset your AdTo password", carries a link to `https://app.adto.app/reset-password?token=…`. The token:
 
 - is valid for 1 hour;
 - can be used once; the server marks it used in the same step that changes the password, so a second submit fails;
@@ -89,7 +89,7 @@ An invite email links to `{WEB_URL}/invite?token=…`. The link works for 7 days
 
 | Situation | The page shows |
 |---|---|
-| The address has no DecTog sign-in yet. | **Choose a password** (the [sign-up password rules](#sign-up)) and **Join {account}**, and **Join with Google** when the deployment has Google sign-in. No username: you sign in as that address and work in the account that invited you. |
+| The address has no AdTo sign-in yet. | **Choose a password** (the [sign-up password rules](#sign-up)) and **Join {account}**, and **Join with Google** when the deployment has Google sign-in. No username: you sign in as that address and work in the account that invited you. |
 | The address already signs in. | **Sign in to join** (the login page, with the address filled in), and **Sign in with Google**. Back on the invite, select **Join {account}**. |
 | You are signed in with that address. | **Join {account}**. |
 | You are signed in with another address. | "You are signed in as {address}. Sign out, then open this link again to join with {invited address}." |
@@ -124,6 +124,3 @@ The owner is the account created by the deployment's bootstrap call, or by the l
 - **Changing the password while signed in.** Use **Forgot password?** and the emailed link.
 - **Ending other sessions.** A session ends when its token expires, 30 days after sign-in.
 
-:::note[Self-hosting]
-Signups are open unless the worker's `OPEN_SIGNUPS` variable is `"0"`. Cloudflare Turnstile guards the forms when `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET` are set (both, with your own widget's values; the shipped key is the hosted service's). Google sign-in appears only when `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, with `{WEB_URL}/api/auth/google/callback` registered as the redirect URI. Reset emails go through Resend with `RESEND_API_KEY`; without it, the reset link is printed to the worker's log instead. The hint under the username box always says `.dectog.com`, even when your links live under another root domain. See [Configuration reference](/self-hosting/configuration-reference/) and, for creating the owner account, [Local quick start](/self-hosting/local-quick-start/).
-:::

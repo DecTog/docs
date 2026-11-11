@@ -27,7 +27,7 @@ const DectogConfig(
 | Value | Default (`collect: null`) | What it sends | App Store (App Privacy) | Google Play (Data safety) |
 |---|---|---|---|---|
 | `deviceTier` | on | Device id (IDFV / `ANDROID_ID`), model, manufacturer, CPU, OS build, screen, text size and Increase Contrast (iOS only), dark mode, Reduce Motion, connectivity, carrier; the device ping | Device ID (analytics, linked); Product Interaction | Device or other IDs; App activity |
-| `pasteboard` | the dashboard setting, else on for iOS, off for Android | A copied DecTog link that names a click, read once at first launch | Nothing to declare (no required-reason API); iOS 16 and later shows the paste alert | Nothing to declare; Android 12 and later shows the clipboard notice |
+| `pasteboard` | the dashboard setting, else on for iOS, off for Android | A copied AdTo link that names a click, read once at first launch | Nothing to declare (no required-reason API); iOS 16 and later shows the paste alert | Nothing to declare; Android 12 and later shows the clipboard notice |
 | `oemReferrers` | the dashboard setting, else on | The Huawei, Samsung, Xiaomi and vivo store referrers (Android) | Not applicable | Nothing of its own: the store's referrer for this install |
 | `appleSearchAdsToken` | off | The AdServices attribution token (iOS 14.3 and later); no IDFA, no prompt | Advertising Data, for developer advertising | Not applicable |
 | `adId` | on once `advertisingIdProvider` is set | The IDFA after App Tracking Transparency, or the GAID | Device ID, used for tracking; the ATT prompt | Advertising ID; the `AD_ID` permission |
@@ -106,7 +106,7 @@ The iOS plugin also keeps two install dates in the Keychain (`first_install_time
 
 The core SDK does not read or send the Google Advertising ID or the IDFA. It depends on no Play services artifact and declares no `AD_ID` permission on Android; on iOS it links neither `AdSupport` nor `AppTrackingTransparency`, and its privacy manifest sets `NSPrivacyTracking` to `false`.
 
-Apps that want the advertising id add the companion package `flutter_dectog_adid`. It is the only DecTog package that links `AdSupport` and `AppTrackingTransparency` (iOS) and Play services ads-identifier with the `AD_ID` permission (Android):
+Apps that want the advertising id add the companion package `flutter_dectog_adid`. It is the only AdTo package that links `AdSupport` and `AppTrackingTransparency` (iOS) and Play services ads-identifier with the `AD_ID` permission (Android):
 
 ```dart
 import 'package:flutter_dectog_adid/flutter_dectog_adid.dart';
@@ -114,6 +114,8 @@ import 'package:flutter_dectog_adid/flutter_dectog_adid.dart';
 await DectogAdId.requestTracking(); // iOS: the ATT prompt, once
 await FlutterDectog().initialize(const DectogConfig(
   apiKey: 'dtg_pub_…',
+  baseUrl: 'https://app.adto.app',
+  linkRootDomain: 'adto.app',
   advertisingIdProvider: DectogAdId.provider,
 ));
 ```
@@ -155,7 +157,12 @@ If your consent regime is opt-in, start with `DectogConfig(enabled: false)` and 
 ## Waiting for consent
 
 ```dart
-await dectog.initialize(DectogConfig(apiKey: '…', enabled: false));
+await dectog.initialize(DectogConfig(
+  apiKey: '…',
+  baseUrl: 'https://app.adto.app',
+  linkRootDomain: 'adto.app',
+  enabled: false,
+));
 // … the user agrees:
 await dectog.setEnabled(true);
 ```
@@ -206,4 +213,4 @@ Every authenticated call carries the API key as a Bearer token plus an HMAC-SHA2
 
 ## Retention on the server
 
-After the retention window (400 days by default on the hosted service, shorter if the account sets its own), the server deletes the raw clicks, installs, events and app opens once its daily per-link counts hold their day, blanking their device fields, IPs and user agents until then, and blanks customers' contact details. What is kept and when it is removed is listed under [Privacy and data](/self-hosting/privacy-and-data/).
+After the retention window (400 days by default on the hosted service, shorter if the account sets its own), the server deletes the raw clicks, installs, events and app opens once its daily per-link counts hold their day, blanking their device fields, IPs and user agents until then, and blanks customers' contact details. What is kept and when it is removed is listed under [Privacy and data](/guides/privacy-and-data/).

@@ -5,17 +5,17 @@ sidebar:
   order: 3
 ---
 
-Install attribution answers one question: which link tap, if any, led to this first launch? DecTog answers it with a ladder of signals. Deterministic signals, which carry the click id itself, come first. A scored fingerprint comes last, and it only credits an install when it is sure. This page describes the behavior in user terms; the scoring details are in [Attribution internals](/self-hosting/attribution-internals/).
+Install attribution answers one question: which link tap, if any, led to this first launch? AdTo answers it with a ladder of signals. Deterministic signals, which carry the click id itself, come first. A scored fingerprint comes last, and it only credits an install when it is sure. This page describes the behavior in user terms; the scoring details are in [Attribution internals](/start/attribution-internals/).
 
 ## What happens at the tap
 
-A tap on `https://acme.dectog.com/welcome` records a click with a 16-character id and sends the visitor on. Where the click id goes next depends on the platform:
+A tap on `https://acme.adto.app/welcome` records a click with a 16-character id and sends the visitor on. Where the click id goes next depends on the platform:
 
 | Platform | Carrier of the click id |
 |---|---|
 | Android, to Google Play or an OEM store | The store URL's `referrer` parameter: `dtg_click=<id>&dtg_l=acme/welcome`. The store hands the string back to the app after the install. |
-| iOS, with **iOS tap-to-store** on | The "Get the app" tap copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the pasteboard, then opens the App Store. |
-| iOS, without tap-to-store | Nothing. Apple's `ct` tag is set on the store URL for App Store Connect, but it never reaches DecTog. |
+| iOS, with **iOS tap-to-store** on | The "Get the app" tap copies `https://acme.adto.app/welcome?dtg_click=<id>` to the pasteboard, then opens the App Store. |
+| iOS, without tap-to-store | Nothing. Apple's `ct` tag is set on the store URL for App Store Connect, but it never reaches AdTo. |
 | Any mobile tap, through the interstitial or tap-to-store page | The page also beacons the screen profile onto the click, which sharpens the fingerprint, and a few device settings, which are recorded for no points (see [Signals recorded for no points](#signals-recorded-for-no-points)). |
 
 If the app is already installed and the OS opens it directly, there is no install to attribute; the SDK reports an app open instead.
@@ -25,7 +25,7 @@ If the app is already installed and the OS opens it directly, there is no instal
 On the first launch the SDK registers the install once (an idempotent `install_attempt_id` makes retries safe) with every deterministic signal it can read:
 
 - the Google Play install referrer, or the Huawei, Samsung, Xiaomi or vivo one, waiting at most 5 seconds (`installReferrerTimeout`);
-- the pasteboard, on iOS by default (`DectogCollection.pasteboard`), only when it holds a URL and only if that URL is a DecTog link for this deployment;
+- the pasteboard, on iOS by default (`DectogCollection.pasteboard`), only when it holds a URL and only if that URL is an AdTo link for this deployment;
 - Meta's on-device install referrer on Android, when the app has a Facebook App ID (`DectogConfig.fbAppId`, else the one saved on the Apps page);
 - the device tier (model, OS, language, screen, text size and Increase Contrast (iOS only), dark mode, Reduce Motion, connectivity, carrier), on by default, which the fingerprint needs;
 - the Apple Search Ads token when `collect` names `appleSearchAdsToken`.

@@ -162,11 +162,11 @@ Marks the device active today: one `device_days` row per device and UTC day, wri
 | `app_version` | string, 64 | no | |
 | `os` | string, 32 | no | |
 
-Response: `200 {"ok": true}`. Device-day rows are deleted by the retention job; see [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
+Response: `200 {"ok": true}`. Device-day rows are deleted by the retention job; see [Scheduled jobs and retention](/guides/scheduled-jobs-and-retention/).
 
 ## POST /api/v1/app-opens
 
-Reports that a DecTog link opened the already-installed app (a warm open through an App Link, a Universal Link, a custom scheme or an intent bounce). Feeds the per-link Opens count and `last_open`.
+Reports that an AdTo link opened the already-installed app (a warm open through an App Link, a Universal Link, a custom scheme or an intent bounce). Feeds the per-link Opens count and `last_open`.
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|

@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-The Installs screen, at https://app.dectog.com/dashboard/installs, lists every install the SDK recorded, newest first, with how it was matched. Its header reads "Every install and why it was credited." The Overview's [Recent installs](/dashboard/overview/#recent-installs) card links here with **View all**, and the installs sheet on the [Links](/dashboard/links/) screen with **Open in Installs**, which opens the screen searched for that link.
+The Installs screen, at https://app.adto.app/dashboard/installs, lists every install the SDK recorded, newest first, with how it was matched. Its header reads "Every install and why it was credited." The Overview's [Recent installs](/dashboard/overview/#recent-installs) card links here with **View all**, and the installs sheet on the [Links](/dashboard/links/) screen with **Open in Installs**, which opens the screen searched for that link.
 
 ## The list
 
@@ -13,7 +13,7 @@ Each row shows when the app was installed, the verdict (`referrer`, `clipboard` 
 
 **reinstall** means one of two things: the app reported that it was installed on this device before, or the server already has an install with the same device id in this account. On an iPhone the SDK knows from a first-install date it keeps in the Keychain, which survives deleting the app; Android cannot tell on the phone, so there only the server's check applies. A reinstall is credited like any install and counted under the Overview's Reinstalls and each link's `+{n} reinstalls`, not under Installs.
 
-**app update** means an existing user updated into your first build with DecTog: the app was on the device before the SDK was, so the SDK reports the install as an update. It is never matched to a tap and counts as neither an install nor a reinstall; the Overview's Installs card counts app updates on a line of their own. Its first identify records no signup lead and no referral.
+**app update** means an existing user updated into your first build with AdTo: the app was on the device before the SDK was, so the SDK reports the install as an update. It is never matched to a tap and counts as neither an install nor a reinstall; the Overview's Installs card counts app updates on a line of their own. Its first identify records no signup lead and no referral.
 
 Above the list:
 
@@ -39,7 +39,7 @@ To test a link:
 3. Tap the link on the phone and check the tap appears, with **page beacon** if the link shows a page.
 4. Install and open the app. The install appears within a few seconds; open it to read the verdict.
 
-To run the same test again on the same phone, open the install, choose **Erase this device**, then tap the link again before you reinstall. Erasing removes the device's installs and strips the taps they were credited to of everything personal, so the fingerprint can no longer match an old tap. Erasing is for owners; see [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person).
+To run the same test again on the same phone, open the install, choose **Erase this device**, then tap the link again before you reinstall. Erasing removes the device's installs and strips the taps they were credited to of everything personal, so the fingerprint can no longer match an old tap. Erasing is for owners; see [A request from one person](/guides/privacy-and-data/#a-request-from-one-person).
 
 Erasing clears the server's data, not the phone's. On Android that is enough for the next install to count as new. An iPhone keeps the SDK's first-install date and saved device id in the Keychain, which survives deleting the app, so its next install still arrives as a reinstall. For a fresh install:
 
@@ -63,6 +63,3 @@ The detail opens from this screen, from the Overview's Recent installs and from 
 - **Tap**, **App opens**, **Events** and **Screens**, as on the [Overview](/dashboard/overview/#recent-installs).
 - **This device's data**: **Download everything stored (JSON)** and **Erase this device**, and on this screen **Every install from this device →**, which searches the list for the device id. Viewers do not see this part.
 
-:::note[Self-hosting]
-The screen is identical on a self-hosted deployment. Watch polls the server; it holds no connection open.
-:::

@@ -38,7 +38,7 @@ Slugs share one namespace: a temporary link cannot take a permanent link's slug 
   "id": "…",
   "slug": "t_3f9a1c27b0",
   "target": "https://example.com/offer",
-  "url": "https://acme.dectog.com/t_3f9a1c27b0",
+  "url": "https://acme.adto.app/t_3f9a1c27b0",
   "expires_at": "2026-10-13T09:15:00.000Z",
   "created_at": "2026-10-12T09:15:00.000Z",
   "ttl_seconds": 86400,

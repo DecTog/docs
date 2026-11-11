@@ -7,7 +7,7 @@ sidebar:
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-`flutter_dectog` is the DecTog SDK for Flutter. It opens DecTog links in your app, registers the first launch for install attribution, sends post-install events and can create links from the app. The package is MIT licensed.
+`flutter_dectog` is the AdTo SDK for Flutter. It opens AdTo links in your app, registers the first launch for install attribution, sends post-install events and can create links from the app. The package is MIT licensed.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | Dart | 3.7 or newer (`sdk: ">=3.7.0 <4.0.0"`) |
 | iOS | 15.0 or newer |
 | Android | 7.0 (API 24) or newer |
-| Account | A DecTog SDK key (`dtg_pub_` followed by 32 hex characters) from the dashboard's Settings page, under **SDK keys**. A new account has one. Never ship the account key (`dtg_…`): it can delete links. |
+| Account | An AdTo SDK key (`dtg_pub_` followed by 32 hex characters) from the dashboard's Settings page, under **SDK keys**. A new account has one. Never ship the account key (`dtg_…`): it can delete links. |
 
 The SDK targets iOS and Android. On other platforms it compiles and the link API works, but the install registration sends no referrer, no pasteboard URL and no device tier.
 

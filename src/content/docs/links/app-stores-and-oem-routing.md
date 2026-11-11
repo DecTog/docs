@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-When a mobile visitor does not have the app, DecTog sends them to a store with the click id attached. On Android the store hands that id back to the app through the install referrer, which makes the install deterministic. This page covers the store URLs, the tagging and the device detection. The order in which the store competes with custom redirects and fallbacks is in [How a tap is routed](/links/how-a-tap-is-routed/).
+When a mobile visitor does not have the app, AdTo sends them to a store with the click id attached. On Android the store hands that id back to the app through the install referrer, which makes the install deterministic. This page covers the store URLs, the tagging and the device detection. The order in which the store competes with custom redirects and fallbacks is in [How a tap is routed](/links/how-a-tap-is-routed/).
 
 ## Store URLs per app
 
@@ -53,7 +53,7 @@ Tagging replaces any `ct` or `referrer` parameter already present on the configu
 A custom mobile redirect (`dec_redirect_<platform>`, `dec_redirect`, or the link's **If the app isn't installed (mobile) > Custom URL**) is tagged the same way, but only when its host is a store: `apple.com` or a subdomain on iOS; `play.google.com` or one of the Huawei, Samsung or Xiaomi hosts above on Android. Any other URL is used verbatim. Because the vivo store has no host list, a custom vivo URL is never tagged; only the app's **vivo store URL** field is.
 
 :::note[The App Store tag is not an attribution path]
-Apple's `ct` parameter is an App Store Connect campaign token. It only works when paired with a `pt` provider token, and even then the data lands in App Store Connect, never in DecTog. iOS installs become deterministic through [iOS tap-to-store](/links/how-a-tap-is-routed/) and the SDK's pasteboard read, or through Apple Search Ads; otherwise the fingerprint decides. See [How attribution works](/start/how-attribution-works/).
+Apple's `ct` parameter is an App Store Connect campaign token. It only works when paired with a `pt` provider token, and even then the data lands in App Store Connect, never in AdTo. iOS installs become deterministic through [iOS tap-to-store](/links/how-a-tap-is-routed/) and the SDK's pasteboard read, or through Apple Search Ads; otherwise the fingerprint decides. See [How attribution works](/start/how-attribution-works/).
 :::
 
 ## How the SDK reads the referrer back

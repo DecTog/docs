@@ -1,5 +1,5 @@
-/* dectog.com identity on top of Starlight: white page, Ink text, neutral grays, one rationed orange.
-   Light values are dectog.com's own; the dark column is derived from them with the same neutral grays.
+/* adto.app identity on top of Starlight: white page, Ink text, neutral grays, one rationed orange.
+   Light values are adto.app's own; the dark column is derived from them with the same neutral grays.
    This file holds the tokens. chrome.css styles the frame around the content, content.css the content. */
 
 :root {
@@ -11,7 +11,7 @@
 	--dt-body: #ebebeb;
 	--dt-secondary: #aeaeae;
 	--dt-meta: #8f8f8f;
-	/* DecTog Orange, the logo's dot: dots and markers. The light tone is for small orange text. */
+	/* AdTo Orange, the colour of the logo's symbol: dots and markers. The light tone is for small orange text. */
 	--dt-accent: #ff520a;
 	--dt-accent-light: #ff7732;
 	--dt-link: #ff7732;
@@ -106,7 +106,7 @@
 	}
 }
 
-/* The home page has no sidebar; its column is the 1120px of dectog.com. */
+/* The home page has no sidebar; its column is the 1120px of adto.app. */
 html:root[data-theme]:not([data-has-sidebar]) {
 	--sl-content-width: 70rem;
 }
@@ -121,7 +121,7 @@ body {
 }
 
 /* Small uppercase label above a title: the section name on a page, the kicker on the home page.
-   dectog.com's eyebrow: an orange dot, then the label in Fira Code capitals. */
+   adto.app's eyebrow: an orange dot, then the label in Fira Code capitals. */
 .dt-eyebrow {
 	display: inline-flex;
 	align-items: center;

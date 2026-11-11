@@ -5,63 +5,15 @@ sidebar:
   order: 9
 ---
 
-## Local loop with a self-hosted worker
-
-The quickest way to exercise every SDK path is the local worker plus the bundled example app. The worker's local quick start (demo seed, bootstrap, URLs) is on [Local quick start](/self-hosting/local-quick-start/).
-
-1. Start the worker so that link URLs are reachable from the Android emulator:
-
-   ```bash
-   cd dectog/apps/worker
-   npm run dev:android   # wrangler dev on :8787 with PUBLIC_BASE_URL=http://10.0.2.2:8787
-   ```
-
-   `10.0.2.2` is the emulator's alias for the host machine. The iOS simulator shares the host's network and uses `http://localhost:8787`. The local worker runs in path mode, so links look like `http://10.0.2.2:8787/r/demo/welcome`.
-
-2. Configure the example app. It reads three `dart-define` values from a JSON file:
-
-   ```json title="example/env/dev.json"
-   {
-     "DECTOG_API_KEY": "dtg_paste_your_key_here",
-     "DECTOG_BASE_URL": "http://localhost:8787",
-     "DECTOG_LINK_ROOT_DOMAIN": ""
-   }
-   ```
-
-   `env/dev.json` is gitignored; copy `env/dev.json.example`. The example app substitutes `http://10.0.2.2:8787` on Android when `DECTOG_BASE_URL` is empty. Leave `DECTOG_LINK_ROOT_DOMAIN` empty against a path-mode worker.
-
-   ```bash
-   cd flutter_dectog/example
-   flutter pub get
-   flutter run --dart-define-from-file=env/dev.json
-   ```
-
-   In your own app the equivalent is `DectogConfig(apiKey: ..., baseUrl: 'http://10.0.2.2:8787')` on Android and `baseUrl: 'http://localhost:8787'` on iOS, with no `linkRootDomain`.
-
-   The example is Trails, a small app: a link opens it on a trail, a new install lands on the shared trail after signing up, invites go through the referral link, a demo purchase goes through `trackConversion`, and every screen is reported. Its `README.md` lists how to try each flow; its Debug screen runs `diagnostics()`, `getAttributionData()` and the consent switch.
-
-3. Fire links at the running app. The example app's manifest carries intent filters for `dectog://`, `http://10.0.2.2` and `https://localhost`; its `Info.plist` registers the `dectog` scheme.
-
-   ```bash
-   # Android emulator
-   adb shell am start -a android.intent.action.VIEW -d "dectog://demo/welcome"
-   adb shell am start -a android.intent.action.VIEW -d "http://10.0.2.2:8787/r/demo/welcome?utm_source=test"
-
-   # iOS simulator
-   xcrun simctl openurl booted "dectog://demo/welcome"
-   ```
-
-   The custom scheme shows iOS's "Open in app?" prompt. Universal Links need a real HTTPS domain that serves the association file, so they cannot be tested against a local worker. On Android the `http://10.0.2.2` and `https://localhost` filters never pass App Links verification, so on Android 12 and newer they only open the app from explicit intents like the ones above.
-
-With `enableDebugLogging: true` the SDK prints what it does: `Processing DecTog link: username=demo, slug=welcome`, `Mobile click logged successfully`, `First app launch detected - tracking app install`, `Install referrer: …`, and either `App install matched to deferred click: …` or `App install tracked as organic`.
-
 ## A test environment for debug builds
 
-Create a test environment in the dashboard (Settings → [Test environment](/dashboard/settings/#test-environment)): a second account, `t-<username>`, with the same apps. Give debug builds its SDK key, and its link host in their associated domains (`applinks:t-acme.dectog.com` and the Android intent filter), so nothing you test reaches your live numbers:
+Create a test environment in the dashboard (Settings → [Test environment](/dashboard/settings/#test-environment)): a second account, `t-<username>`, with the same apps. Give debug builds its SDK key, and its link host in their associated domains (`applinks:t-acme.adto.app` and the Android intent filter), so nothing you test reaches your live numbers:
 
 ```dart
 await dectog.initialize(DectogConfig(
   apiKey: kReleaseMode ? liveSdkKey : testSdkKey,
+  baseUrl: 'https://app.adto.app',
+  linkRootDomain: 'adto.app',
 ));
 ```
 
@@ -103,9 +55,9 @@ Things that look like failures and are not:
 ## Ship checklist
 
 - [ ] App record complete: bundle ID and Team ID (iOS), package and the **release / Play App Signing** fingerprint (Android), real store URLs. Both **Verify** buttons on the Apps page report your app IDs and packages with fingerprints present.
-- [ ] `applinks:{username}.dectog.com` in every entitlements file your build configurations use; an `autoVerify` intent filter for `{username}.dectog.com` in the manifest; `adb shell pm get-app-links <package>` reports `verified`.
+- [ ] `applinks:{username}.adto.app` in every entitlements file your build configurations use; an `autoVerify` intent filter for `{username}.adto.app` in the manifest; `adb shell pm get-app-links <package>` reports `verified`.
 - [ ] Custom scheme registered on both platforms if you saved one in the app record.
-- [ ] SDK key (`dtg_pub_…`, not the account key) injected at build time, not committed. `baseUrl` and `linkRootDomain` set only when self-hosting.
+- [ ] SDK key (`dtg_pub_…`, not the account key) injected at build time, not committed. `baseUrl: 'https://app.adto.app'` and `linkRootDomain: 'adto.app'` set, since the SDK's defaults are the old DecTog service.
 - [ ] `collect`, `advertisingIdProvider` and `persistDeviceId` chosen deliberately, and the privacy policy, Play Data safety form and App Store privacy labels updated for what you send. See [Device data and privacy](/sdk/device-data-and-privacy/).
 - [ ] If you ship through the Galaxy Store or GetApps, their referrer libraries added to the app module. See [Installation](/sdk/installation/).
 - [ ] `identify` called after signup and login, `trackConversion` on purchases, so leads and revenue reach the dashboard.

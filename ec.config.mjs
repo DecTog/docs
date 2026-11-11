@@ -1,7 +1,7 @@
 // @ts-check
 import { defineEcConfig } from '@astrojs/starlight/expressive-code';
 
-// Code blocks in the dectog.com identity. Syntax uses three colors only: the text color for code,
+// Code blocks in the adto.app identity. Syntax uses three colors only: the text color for code,
 // strings and names; the link tone for keywords, tag names and property names; green-gray for
 // comments and punctuation.
 const palette = {

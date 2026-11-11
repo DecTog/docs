@@ -1,6 +1,6 @@
 ---
 title: API overview
-description: Base URLs, Bearer keys, request signing, rate limits, CORS, the error shape and conventions of the DecTog REST API, with a complete signed curl example.
+description: Base URLs, Bearer keys, request signing, rate limits, CORS, the error shape and conventions of the AdTo REST API, with a complete signed curl example.
 sidebar:
   order: 1
 ---
@@ -11,12 +11,8 @@ The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use 
 
 | Deployment | API base | Link URLs |
 |---|---|---|
-| Hosted | `https://app.dectog.com` | `https://<username>.dectog.com/<slug>` |
-| Self-hosted | your `PUBLIC_BASE_URL` | subdomain or path mode, per your configuration |
+| Hosted | `https://app.adto.app` | `https://<username>.adto.app/<slug>` |
 
-:::note[Self-hosted deployments]
-Every example in this section uses the hosted base. A self-hosted deployment uses its own `PUBLIC_BASE_URL` (for example `http://localhost:8787` during development) and, in path mode, link URLs of the form `<PUBLIC_BASE_URL>/r/<username>/<slug>`. See [Configuration reference](/self-hosting/configuration-reference/).
-:::
 
 ## Routes at a glance
 
@@ -30,7 +26,7 @@ Every example in this section uses the hosted base. A self-hosted deployment use
 | `POST /api/v1/events`, `GET /api/v1/attribution`, `POST /api/v1/device-ping`, `POST /api/v1/app-opens` | key + signature | [Events and attribution](/api/events-and-attribution/) |
 | `GET /api/v1/clicks`, `GET /api/v1/app-installs`, `GET /api/v1/app-opens`, `GET /api/v1/events` | account key + signature | [Export raw data](/api/export/) |
 | `GET /api/v1/web-config`, `POST /api/v1/web-events` | site key, from an allowed origin | [Web pixel](/sdk/web/) |
-| `GET /api/v1/devices/:id/export`, `DELETE /api/v1/devices/:id`, the same for `/api/v1/customers/:id` | account key + signature | [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person) |
+| `GET /api/v1/devices/:id/export`, `DELETE /api/v1/devices/:id`, the same for `/api/v1/customers/:id` | account key + signature | [A request from one person](/guides/privacy-and-data/#a-request-from-one-person) |
 | Webhooks (outbound) | HMAC signature | [Webhooks](/api/webhooks/) |
 | `/api/admin/*`, `/api/auth/*` | session cookie, and a team role | [Admin API](/api/admin-api/) |
 | `/.well-known/*`, `/robots.txt`, `/sitemap.xml`, `/healthz`, `/readyz` | none | [Well-known files, SEO and routing](/api/well-known-seo-and-routing/) |
@@ -59,9 +55,9 @@ There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/se
 | `links:write` | `POST`, `PUT` and `DELETE` on `/api/v1/links` |
 
 - A new account gets its account key and one SDK key, "App key". Create more SDK keys (one per app or per build channel) and revoke them in Settings; an account holds up to 20 active SDK keys.
-- The server stores only each key's SHA-256 and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `invalid_api_key`, a revoked SDK key `revoked_api_key`, before anything else is checked. A key without the route's scope answers `403` with code `insufficient_scope` and the `required_scope`. An edge location keeps an SDK key and its account for a minute after looking them up (`SDK_AUTH_CACHE_SECONDS`, see [Configuration reference](/self-hosting/configuration-reference/)), so a key revoked a moment ago can still be accepted there until the minute is up.
+- The server stores only each key's SHA-256 and looks the account up by that hash. A missing or malformed key answers `401` with code `missing_api_key`, an unknown key `invalid_api_key`, a revoked SDK key `revoked_api_key`, before anything else is checked. A key without the route's scope answers `403` with code `insufficient_scope` and the `required_scope`. The server keeps an SDK key and its account for a minute after looking them up, so a key revoked a moment ago can still be accepted until the minute is up.
 - Revoking an SDK key stops every build that ships it within a minute; release a build with a new key first. Regenerating the account key affects only servers and scripts.
-- Keep the account and SDK keys out of source control where you can, and only ever send them to your DecTog base URL.
+- Keep the account and SDK keys out of source control where you can, and only ever send them to your AdTo base URL.
 
 ## Request signing
 
@@ -114,7 +110,7 @@ The helper below computes the signature with `openssl` and works in bash and zsh
 
 ```bash title="A signed curl helper"
 export DECTOG_API_KEY=dtg_0123456789abcdef0123456789abcdef
-export DECTOG_API=https://app.dectog.com
+export DECTOG_API=https://app.adto.app
 
 # dectog <METHOD> <path> [JSON body]
 dectog() {
@@ -136,7 +132,7 @@ dectog() {
 
 ```bash title="Create, list and delete a link"
 dectog POST /api/v1/links '{"slug":"spring-sale","target":"https://shop.example.com/sale","metadata":{"screen":"sale"}}'
-# {"id":"6f1c2a0e-…","slug":"spring-sale","target":"https://shop.example.com/sale","url":"https://acme.dectog.com/spring-sale",…}
+# {"id":"6f1c2a0e-…","slug":"spring-sale","target":"https://shop.example.com/sale","url":"https://acme.adto.app/spring-sale",…}
 
 dectog GET /api/v1/links | jq -r '.data[] | "\(.slug)\t\(.click_count)\t\(.url)"'
 
@@ -166,7 +162,7 @@ export function dectogHeaders(apiKey, rawBody = "") {
 
 ## OpenAPI
 
-`GET /openapi.json` serves an OpenAPI 3.1 description of every route, generated from the same table the server's tests check against the routes it answers. Routes marked `x-internal` serve the dashboard and may change without notice. Point a client generator or an agent at it: `https://app.dectog.com/openapi.json` on the hosted service.
+`GET /openapi.json` serves an OpenAPI 3.1 description of every route, generated from the same table the server's tests check against the routes it answers. Routes marked `x-internal` serve the dashboard and may change without notice. Point a client generator or an agent at it: `https://app.adto.app/openapi.json` on the hosted service.
 
 ## MCP
 
@@ -176,13 +172,11 @@ export function dectogHeaders(apiKey, rawBody = "") {
 
 SDKs also send `x-dectog-sdk: <name>/<version>`: `flutter_dectog/1.0.0`, `react-native-dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
 
-A self-hosted deployment can set `MIN_SDK_VERSION` to retire old builds, per SDK (`flutter_dectog/1.1.0, react-native-dectog/1.0.2`) or as a bare version for every SDK without its own entry (`1.1.0`): an identified SDK older than its minimum answers `400` with code `sdk_too_old` and the `min_version`. An SDK the setting does not name, and callers that do not identify as an SDK, are not checked.
-
 ## Rate limits
 
 Every authenticated `/api/v1` response reports the account limit in `x-ratelimit-limit` (3000). They describe the account counter only; the device and IP counters below can refuse a request first.
 
-The hosted service, and a self-hosted deployment set up with `npm run setup`, count the account, device, IP and beacon limits with Cloudflare's Rate Limiting bindings: one-minute windows kept per Cloudflare location, so the limits are approximate, and the response carries only `x-ratelimit-limit`. A deployment without those bindings in its Wrangler config (local development, an older config) counts them in D1 instead: fixed windows aligned to the wall clock (the current minute, `floor(now / 60 s)`), reset by the first request of a new minute, where a rejected request still counts; there the response also carries `x-ratelimit-remaining` and `x-ratelimit-reset` (seconds until the window ends). Several counters apply to one request.
+AdTo counts the account, device, IP and beacon limits in fixed one-minute windows aligned to the clock, kept by each server process; the response carries only `x-ratelimit-limit`. Several counters apply to one request.
 
 | Limit | Window | Counter key | Applies to |
 |---|---|---|---|
@@ -207,7 +201,7 @@ If the rate-limit counter cannot be written (a database or binding failure), the
 | Prefix | `access-control-allow-origin` | Other headers |
 |---|---|---|
 | `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-dectog-timestamp, x-dectog-signature, x-dectog-sdk, x-request-id`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS`; `access-control-expose-headers: x-request-id` |
-| `/api/admin/*` | `WEB_URL` (`https://app.dectog.com`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type, x-request-id`; same methods; `access-control-expose-headers: x-request-id` |
+| `/api/admin/*` | `WEB_URL` (`https://app.adto.app`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type, x-request-id`; same methods; `access-control-expose-headers: x-request-id` |
 
 `OPTIONS` on any `/api/*` path answers `204`. The v1 API never uses cookies, so browser clients only need the headers above.
 
@@ -237,7 +231,7 @@ Every error, on every route, is one JSON shape:
 | 400 | `sdk_too_old` | The calling SDK build is older than the deployment's `MIN_SDK_VERSION`; the error carries `min_version`. |
 | 401 | `missing_api_key`, `invalid_api_key`, `signature_required`, `stale_timestamp`, `invalid_signature` | Authentication or signature failed; see above. |
 | 401 | `not_authenticated`, `invalid_session` | Admin API only: no session cookie, or a bad or expired one. |
-| 402 | `plan_limit` | Hosted DecTog only: the account has been over its plan's limit for 14 days, so installs, in-app clicks, events, opens and the attribution pull are refused until a plan that fits is chosen; see [Settings](/dashboard/settings/#plan). |
+| 402 | `plan_limit` | Hosted AdTo only: the account has been over its plan's limit for 14 days, so installs, in-app clicks, events, opens and the attribution pull are refused until a plan that fits is chosen; see [Settings](/dashboard/settings/#plan). |
 | 403 | `forbidden` | Admin API only: the route needs the owner role, or bootstrap is not permitted. |
 | 404 | `not_found` | The resource is not in your account (`Link not found`, `Temporary link not found`, `Install not found`, `No install found for this device`), or no route matches. |
 | 409 | `conflict` | The slug is taken (`Slug already exists`, with the `slug`), or the instance is already bootstrapped. |
@@ -262,15 +256,15 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 `GET /healthz` needs no authentication, is not rate limited, and answers on every host:
 
 ```json
-{ "ok": true, "service": "dectog", "version": "v1", "host": "app.dectog.com" }
+{ "ok": true, "service": "dectog", "version": "v1", "host": "app.adto.app" }
 ```
 
 `host` echoes the request's Host header. Use it for uptime checks instead of a link URL. A tap check on a real link should send `x-dectog-no-track: 1` so it is not counted.
 
-`GET /readyz` is the readiness check. It runs `SELECT 1` against D1 and compares wrangler's `d1_migrations` table with the migrations bundled into this build:
+`GET /readyz` is the readiness check. It runs `SELECT 1` against the database and compares the migrations it has applied with the ones bundled into this build:
 
 ```json
-{ "ok": true, "database": true, "migrations": { "expected": 62, "applied": 62, "missing": [] } }
+{ "ok": true, "database": true, "migrations": { "expected": 2, "applied": 2, "missing": [] } }
 ```
 
-It answers `503` with `ok: false` when D1 does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even with a broken database binding.
+It answers `503` with `ok: false` when the database does not answer or a migration is missing, and lists the missing file names. It sends `cache-control: no-store`. Use it in deploy smoke tests: `/healthz` passes even when the database is down.

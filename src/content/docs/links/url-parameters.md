@@ -1,6 +1,6 @@
 ---
 title: URL parameters
-description: The dec_* query parameters that change routing, set the in-app route or tag a click per share, the utm_* parameters the Overview charts use, and the parameters DecTog reserves.
+description: The dec_* query parameters that change routing, set the in-app route or tag a click per share, the utm_* parameters the Overview charts use, and the parameters AdTo reserves.
 sidebar:
   order: 2
 ---
@@ -8,7 +8,7 @@ sidebar:
 Any link can be shared with query parameters that change what happens on that tap. Only keys prefixed `dec_` are read for routing and tracking; `utm_*` keys are stored for analytics. The parameters are not stored on the link, so the same link can be shared many ways:
 
 ```text
-https://acme.dectog.com/welcome?dec_campaign=newsletter&dec_deeplink=products/42&utm_source=email
+https://acme.adto.app/welcome?dec_campaign=newsletter&dec_deeplink=products/42&utm_source=email
 ```
 
 The same parsing applies to clicks the SDK reports when a link opens the installed app: the SDK sends the opened URL's `dec_*` keys as `link_params`, and the server validates them exactly as it does for a browser tap.
@@ -76,7 +76,7 @@ Each value is trimmed; an empty value or one with control characters is dropped;
 `dec_referrer` names the customer who shared this link, by the id your app passes to `identify`:
 
 ```
-https://acme.dectog.com/invite?dec_referrer=1042&dec_label=spring
+https://acme.adto.app/invite?dec_referrer=1042&dec_label=spring
 ```
 
 It is stored on the click, not in `click_params`. An install credited to the tap gets it as `install.link?.referrerCustomerId`, and the new user's first `identify` records a referral and sends `referral.converted`, exactly as a [referral link](/guides/referral-programs/) does. On a referral link the link's own customer wins and `dec_referrer` is ignored. The value is trimmed; one longer than 200 characters or with control characters is dropped, never cut. Anyone can edit the URL to name another customer, so when that matters, give each customer a referral link instead.
@@ -96,23 +96,23 @@ A link can carry its own `utm_source`, `utm_medium`, `utm_campaign`, `utm_term` 
 - A click whose URL has no value for a key stores the link's.
 - Every web destination of a tap gets the link's values added as query parameters, each only when the destination URL has none of its own: the desktop fallback, the custom redirect, the app's Fallback URL, the link's target, and a `dec_redirect` or `dec_fallback` URL. Store URLs never get them, and neither do scheme and `intent://` URLs.
 
-So `https://shop.example.com/sale` behind a link with `utm_source=newsletter` opens as `https://shop.example.com/sale?utm_source=newsletter`, and the shop's web analytics name the same campaign as DecTog.
+So `https://shop.example.com/sale` behind a link with `utm_source=newsletter` opens as `https://shop.example.com/sale?utm_source=newsletter`, and the shop's web analytics name the same campaign as AdTo.
 
 ## Your own parameters
 
 Keys without the `dec_` or `utm_` prefix are not read. A browser tap stores only its `dec_*` and `utm_*` values, so after a deferred install those are all that come back on the verdict: `?productId=42` on a shared link does not survive the trip through the store. On a warm open the SDK gives the app the whole opened URL, so `click.queryParameters['productId']` (`DectogLinkClickX`) works there, but only there, and the SDK reports none of those keys to the server.
 
-To send a route that works on both paths, put it in `dec_deeplink`: `?dec_deeplink=products/42`. The prefix also keeps DecTog's keys apart from your website's own parameters. The reasons are in [Design decisions](/start/design-decisions/).
+To send a route that works on both paths, put it in `dec_deeplink`: `?dec_deeplink=products/42`. The prefix also keeps AdTo's keys apart from your website's own parameters. The reasons are in [Design decisions](/start/design-decisions/).
 
 ## Reserved parameters
 
 | Parameter | Set by | Meaning |
 |---|---|---|
-| `dtg_click` | DecTog | The click id, added to store URLs (inside `referrer` or `ct`), to scheme and `intent://` URLs and to the copied link. Do not add it to links you share; a reported click with an unknown id gets a fresh id. |
-| `_ch` | DecTog | The marker of the one-shot client-hints redirect in front of the interstitial. |
-| `_ipad` | DecTog | The answer of the touch check in front of a Mac Safari tap: `1` for an iPad asking for desktop sites, `0` for a Mac. |
-| `_ref` | DecTog | The origin of the page that linked to a Mac Safari tap, carried past the touch check (whose own page would otherwise be the referrer). |
+| `dtg_click` | AdTo | The click id, added to store URLs (inside `referrer` or `ct`), to scheme and `intent://` URLs and to the copied link. Do not add it to links you share; a reported click with an unknown id gets a fresh id. |
+| `_ch` | AdTo | The marker of the one-shot client-hints redirect in front of the interstitial. |
+| `_ipad` | AdTo | The answer of the touch check in front of a Mac Safari tap: `1` for an iPad asking for desktop sites, `0` for a Mac. |
+| `_ref` | AdTo | The origin of the page that linked to a Mac Safari tap, carried past the touch check (whose own page would otherwise be the referrer). |
 
 ## Validation and what reaches the destination
 
-Each invalid parameter is dropped on its own; the rest still apply, and routing continues as if the dropped one were absent. Parameters are never forwarded: the visitor is sent to the destination URL as configured, and the only additions DecTog makes are the store tags (`ct` on the App Store, `referrer` on Google Play and the OEM stores), `dtg_click` on scheme and intent URLs, and the link's own UTM values on web destinations, plus `dtg_click` on web destinations for a link with **Add the click id to website destinations** on (see [Web pixel](/sdk/web/)). Social-preview bots and the QR code ignore parameters entirely; see [Social previews and the QR page](/links/social-previews-and-qr/).
+Each invalid parameter is dropped on its own; the rest still apply, and routing continues as if the dropped one were absent. Parameters are never forwarded: the visitor is sent to the destination URL as configured, and the only additions AdTo makes are the store tags (`ct` on the App Store, `referrer` on Google Play and the OEM stores), `dtg_click` on scheme and intent URLs, and the link's own UTM values on web destinations, plus `dtg_click` on web destinations for a link with **Add the click id to website destinations** on (see [Web pixel](/sdk/web/)). Social-preview bots and the QR code ignore parameters entirely; see [Social previews and the QR page](/links/social-previews-and-qr/).

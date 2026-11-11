@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The Overview is the first screen after you sign in, at https://app.dectog.com/dashboard. It shows clicks, installs, conversion, revenue and attribution quality for your whole account, over one of three time ranges, and refreshes itself every minute while it is on screen. The header reads "Clicks, installs and conversion for your links — live."
+The Overview is the first screen after you sign in, at https://app.adto.app/dashboard. It shows clicks, installs, conversion, revenue and attribution quality for your whole account, over one of three time ranges, and refreshes itself every minute while it is on screen. The header reads "Clicks, installs and conversion for your links — live."
 
 Every number on this page is defined below exactly as the server computes it. Several of them do not reconcile with each other by design; the last section lists those cases.
 
@@ -13,9 +13,9 @@ Every number on this page is defined below exactly as the server computes it. Se
 
 | Control | What it does |
 |---|---|
-| **7d**, **30d**, **90d** | Selects the time range. The default is **7d**. Every range is whole calendar days in UTC, today included: **7d** starts at midnight UTC 6 days ago, **30d** 29 days ago and **90d** 89 days ago. The totals come from the daily rollups, so only today's rows are read row by row (see [Scheduled jobs](/self-hosting/scheduled-jobs-and-retention/#daily-rollups-both-triggers)). |
+| **7d**, **30d**, **90d** | Selects the time range. The default is **7d**. Every range is whole calendar days in UTC, today included: **7d** starts at midnight UTC 6 days ago, **30d** 29 days ago and **90d** 89 days ago. The totals come from the daily rollups, so only today's rows are read row by row (see [Scheduled jobs](/guides/scheduled-jobs-and-retention/#daily-rollups-both-triggers)). |
 | Live refresh | Every minute the page reloads the overview and the recent events, but only while its tab is on screen. A hidden tab does not refresh; coming back to it refreshes at once when the last refresh is a minute old. The attribution-quality panel loads with the page and when you change the range. |
-| **Set up with your agent** | Copies the prompt `Read https://dectog.com/SKILL.md and help me get started with DecTog` to the clipboard. The label reads "Prompt copied — paste it into your agent" for two seconds. If the clipboard is blocked, a browser prompt shows the text instead. See [Automation and agents](/guides/automation-and-agents/). |
+| **Set up with your agent** | Copies the prompt `Read https://adto.app/SKILL.md and help me get started with AdTo` to the clipboard. The label reads "Prompt copied — paste it into your agent" for two seconds. If the clipboard is blocked, a browser prompt shows the text instead. See [Automation and agents](/guides/automation-and-agents/). |
 
 Under the title, the line "Live · refreshes every minute · the last {N} days (UTC), today included, against the {N} before" names the window and the comparison window used by every delta chip.
 
@@ -38,7 +38,7 @@ All eight cards always render. Counts use the server's own timestamps, so an ins
 |---|---|---|
 | **Clicks** | | Every click in the window: web taps on your links plus clicks reported by the SDK. Requests from bots never create a click. |
 | **Unique visitors** | | The number of distinct hashed IP addresses among those clicks. It counts IP addresses, not devices or people: two phones on one Wi-Fi network are one visitor, and one phone that moves from Wi-Fi to cellular is two. |
-| **Installs** | `first installs · {n} attributed · {n} flagged` | First installs reported in the window: installs on a device the server had not seen install the app before. "Attributed" is the subset the server matched to a click; "flagged" (shown when any) the ones that tripped a [fraud rule](/start/fraud-rules/). App updates are not installs: when an existing user updates into your first build with DecTog, the SDK reports the install as an app update. When the window has any, a second line reads `{n} app updates by existing users, not counted`. |
+| **Installs** | `first installs · {n} attributed · {n} flagged` | First installs reported in the window: installs on a device the server had not seen install the app before. "Attributed" is the subset the server matched to a click; "flagged" (shown when any) the ones that tripped a [fraud rule](/start/fraud-rules/). App updates are not installs: when an existing user updates into your first build with AdTo, the SDK reports the install as an app update. When the window has any, a second line reads `{n} app updates by existing users, not counted`. |
 | **Reinstalls** | `on a device that had the app before` | Reinstalls reported in the window: the server had seen the device install the app before, or the SDK found its own first-install date on the device. They go through the same matching as any other install and are counted here instead of under Installs. |
 | **Conversion** | `attributed installs ÷ clicks` | Attributed first installs divided by clicks, as a percentage with one decimal. Organic installs had no tap to convert, so they are left out. |
 | **Revenue** | `tracked conversions` | Net revenue of the window: purchases minus refunds, each converted into your revenue currency (Settings) with the ECB rate of its day. Amounts whose rate is not known yet count as 0 until the daily conversion run. |
@@ -93,7 +93,7 @@ Inside the card, an amber box appears when at least one first install in the win
 
 ### Recent events
 
-Subtitle: "Leads, conversions and custom events from your app — track them with the DecTog SDK."
+Subtitle: "Leads, conversions and custom events from your app — track them with the AdTo SDK."
 
 The 12 most recent events of any type (`identify`, `lead`, `conversion`, `custom`), newest first. **This card ignores the time range.** Each row shows a type chip (green for `conversion`, orange for `lead`, gray otherwise), the event name (or the type when there is no name), `/{slug}` when the event is attributed to a link, and on the right either the amount in the event's own currency (a refund with a minus sign) when the event carries revenue, or the event's date.
 
@@ -101,7 +101,7 @@ Empty state: "No events yet — call `identify` / `trackConversion` in the SDK."
 
 ### Top devices
 
-The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model DecTog knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in DecTog for the iPhone 8 to the iPhone 18 Pro Max. The count is first installs; when the model also had reinstalls the row adds `+{n} reinstalls`. App updates are left out.
+The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model AdTo knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in AdTo for the iPhone 8 to the iPhone 18 Pro Max. The count is first installs; when the model also had reinstalls the row adds `+{n} reinstalls`. App updates are left out.
 
 Empty state: "No device data yet — enable the device tier in the SDK (`DectogCollection.deviceTier`)." See [Device data and privacy](/sdk/device-data-and-privacy/).
 
@@ -119,13 +119,13 @@ Empty state: "No connectivity data yet."
 
 ### Top referrers
 
-The top 8 referring sites by clicks in the window. DecTog stores only the origin of the referring page (`https://news.ycombinator.com`, never the full URL). Clicks without a referrer, and clicks referred from one of DecTog's own domains, count as `(direct/none)`. Hover a truncated value to see it in full; the bar is relative to the sum of the rows shown.
+The top 8 referring sites by clicks in the window. AdTo stores only the origin of the referring page (`https://news.ycombinator.com`, never the full URL). Clicks without a referrer, and clicks referred from one of AdTo's own domains, count as `(direct/none)`. Hover a truncated value to see it in full; the bar is relative to the sum of the rows shown.
 
 Empty state: "No clicks in this window."
 
 ### Top countries by clicks
 
-The top 10 countries by clicks in the window, shown as a flag plus the two-letter code from Cloudflare's geolocation of the click. An unknown country shows as `??` without a flag. The card has no empty-state text.
+The top 10 countries by clicks in the window, shown as a flag plus the two-letter code from the geolocation of the click. An unknown country shows as `??` without a flag. The card has no empty-state text.
 
 ## Breakdown
 
@@ -251,10 +251,10 @@ The 12 newest installs, whatever the range: a chip with how each was matched (`r
 
 - **Verdict**: credited link, organic, or `credit to /{slug} withheld`, match source, confidence, reinstall, fraud flags.
 - **Fraud checks**: every install rule with what it compared, flagged, clear or not checked (see [Installs](/dashboard/installs/#the-install-detail)).
-- **Why**: the signal that named the click (store referrer, pasted link, Meta referrer, a late claim), or the fingerprint's best and runner-up candidates with each signal marked agree, mismatch or missing (device model, OS version, language, screen, network), their scores, the gap between them, the window that applied and how many repeat taps were merged. Under each candidate, **Recorded, not scored** marks the signals worth 0 points the same way: OS minor version, text size, dark mode, Increase Contrast, Reduce Motion, time zone (the UTC offset), language and region, and Android WebView build. **Show values** adds what the app and the tap each reported next to every signal (see [Installs](/dashboard/installs/#the-install-detail)). When a deterministic signal decided, a block **The tap the signal named, signal by signal** shows how that tap compares with the install, scored and unscored signals alike, and under **Network** whether it came from the install's address and IP version, when one was recorded (see [Attribution internals](/self-hosting/attribution-internals/#the-stored-explanation)), and the fingerprint's own pick is shown as well. When the fingerprint did not run, the reason is given.
+- **Why**: the signal that named the click (store referrer, pasted link, Meta referrer, a late claim), or the fingerprint's best and runner-up candidates with each signal marked agree, mismatch or missing (device model, OS version, language, screen, network), their scores, the gap between them, the window that applied and how many repeat taps were merged. Under each candidate, **Recorded, not scored** marks the signals worth 0 points the same way: OS minor version, text size, dark mode, Increase Contrast, Reduce Motion, time zone (the UTC offset), language and region, and Android WebView build. **Show values** adds what the app and the tap each reported next to every signal (see [Installs](/dashboard/installs/#the-install-detail)). When a deterministic signal decided, a block **The tap the signal named, signal by signal** shows how that tap compares with the install, scored and unscored signals alike, and under **Network** whether it came from the install's address and IP version, when one was recorded (see [Attribution internals](/start/attribution-internals/#the-stored-explanation)), and the fingerprint's own pick is shown as well. When the fingerprint did not run, the reason is given.
 - **Tap**: the credited (or routed) tap with its time, device and country, and any late claim that upgraded the verdict.
 - **App opens** and **Events** of that install, then its **Screens**: the install's app sessions with the screens shown in each, as on a [customer](/dashboard/customers/#screens).
-- **This device's data**: **Download everything stored (JSON)** and **Erase this device**, for a person's request to see or delete their data; see [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person). Erasing asks for confirmation, then shows what went ("Device erased: 1 install, 3 events…"). An install past the retention window has no device id left, and says so.
+- **This device's data**: **Download everything stored (JSON)** and **Erase this device**, for a person's request to see or delete their data; see [A request from one person](/guides/privacy-and-data/#a-request-from-one-person). Erasing asks for confirmation, then shows what went ("Device erased: 1 install, 3 events…"). An install past the retention window has no device id left, and says so.
 
 Installs recorded before match explanations existed show the verdict without the **Why** part.
 
@@ -271,6 +271,3 @@ These differences are by design. Knowing them saves you from chasing phantom dis
 - **Fraud counts.** First installs only, in the total and in each rule's chip.
 - **Withheld installs.** An install whose credit a blocked fraud rule withheld appears as Organic in the match sources and installs, even though the server still records which link it came from; the flagged counts place it under that link and campaign. See [Fraud rules](/start/fraud-rules/).
 
-:::note[Self-hosting]
-The screen is identical on a self-hosted deployment. The **Set up with your agent** prompt always points at `https://dectog.com/SKILL.md`.
-:::
