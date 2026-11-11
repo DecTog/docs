@@ -30,10 +30,12 @@ migration touches three docs pages. (2026-10-13)
 
 ## Settled for credibility (2026-10-14)
 
-**4. No backward compatibility before the first public release.** Nobody
-integrates DecTog yet, so response shapes, SDK methods and the schema change
-freely. *Rejected:* shims, v2 routes and deprecation periods before there is a
-user to protect. Ends at the first public release.
+**4. No backward compatibility before the first public release.** Until then
+nobody integrated DecTog, so response shapes, SDK methods and the schema
+changed freely. *Rejected:* shims, v2 routes and deprecation periods before
+there was a user to protect. Ended with flutter_dectog 1.0.0 on pub.dev
+(2026-11-04): API changes now keep the released SDKs working, and schema
+changes come as new migrations.
 
 **5. One error envelope.** Every route answers
 `{"error": {"code", "message", "request_id"}}`; `code` is stable, `message` may

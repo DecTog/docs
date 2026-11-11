@@ -38,9 +38,8 @@ DecTog tries deterministic signals first: the store install referrer on Android,
 
 ## Platform and hosting
 
-- **No native iOS (Swift) or Android (Kotlin) SDK.** The SDKs are for [Flutter](/sdk/installation/) and [React Native and Expo](/react-native/), plus `dectog.js` for your own web pages ([Web pixel](/sdk/web/)); an app written in Swift or Kotlin calls the [REST API](/api/overview/) itself. Neither SDK is on a package registry yet: they are published with the first release.
+- **No native iOS (Swift) or Android (Kotlin) SDK.** The SDKs are for [Flutter](/sdk/installation/) and [React Native and Expo](/react-native/), plus `dectog.js` for your own web pages ([Web pixel](/sdk/web/)); an app written in Swift or Kotlin calls the [REST API](/api/overview/) itself. The Flutter SDK is on [pub.dev](https://pub.dev/packages/flutter_dectog); the React Native SDK is not on npm yet.
 - **Custom link domains need the deployment's support,** one per account: Cloudflare for SaaS on its zone and three settings. Until then the Settings card says it is not set up. See [Custom domains](/links/custom-domains/).
 - **Three roles, no single sign-on.** A team has owners, members and viewers; everyone signs in with their own email and password or Google. There is no SAML, SCIM or per-app permission.
-- **Pre-release.** The API and the SDK may still change without a deprecation period until the first public release.
 
 The design choices behind several of these limits, and the alternatives that were rejected, are in [Design decisions](/start/design-decisions/).

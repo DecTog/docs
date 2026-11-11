@@ -10,7 +10,7 @@ DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog)
 | Repository | Contents | License |
 |---|---|---|
 | `DecTog/dectog` | The server: Cloudflare Worker, D1 database, Next.js dashboard and marketing site | AGPL-3.0 |
-| `DecTog/flutter_dectog` | The Flutter SDK, the `flutter_dectog` package (not yet published on pub.dev) | MIT |
+| `DecTog/flutter_dectog` | The Flutter SDK, the `flutter_dectog` package ([on pub.dev](https://pub.dev/packages/flutter_dectog)) | MIT |
 | `DecTog/react-native-dectog` | The React Native and Expo SDK, the `react-native-dectog` package (not yet published on npm) | MIT |
 | `DecTog/docs` | This site | Content CC BY 4.0, site code MIT |
 
