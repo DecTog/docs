@@ -1,13 +1,13 @@
 ---
 title: Security
-description: How to report a vulnerability, and what is true today of DecTog's dependencies, builds and releases.
+description: How to report a vulnerability, and what is true today of AdTo's dependencies, builds and releases.
 sidebar:
   order: 6
 ---
 
 ## Reporting a vulnerability
 
-Report privately, never in a public issue: through GitHub's private vulnerability reporting on the repository (the **Security** tab, **Report a vulnerability**), or by email to hello@dectog.com with `SECURITY` in the subject. A report is acknowledged within 48 hours, assessed within 5 working days, and a confirmed high or critical issue is fixed or mitigated within 30 days. Each repository's `SECURITY.md` lists what is in scope.
+Report privately, never in a public issue: through GitHub's private vulnerability reporting on the repository (the **Security** tab, **Report a vulnerability**), or by email to hello@adto.app with `SECURITY` in the subject. A report is acknowledged within 48 hours, assessed within 5 working days, and a confirmed high or critical issue is fixed or mitigated within 30 days. Each repository's `SECURITY.md` lists what is in scope.
 
 ## Dependencies and builds
 
@@ -25,4 +25,4 @@ The docs deploy token has the Workers Scripts: Edit permission, which Cloudflare
 
 The dashboard and this site are static builds: their npm packages run only while they are built, on their own sources, so a high advisory there is a build-time risk, not a running one. The dashboard's Next.js 15 bundles a PostCSS release with such advisories (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q and two follow-ups), which need attacker-controlled CSS at build time; the Next.js 16 upgrade removes them.
 
-DecTog has not made a tagged release yet. Release notes, the supported-versions table and the first pub.dev publish come with it.
+AdTo has not made a tagged release yet. Release notes, the supported-versions table and the first pub.dev publish come with it.

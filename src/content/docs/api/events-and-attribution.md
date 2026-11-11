@@ -166,7 +166,7 @@ Response: `200 {"ok": true}`. Device-day rows are deleted by the retention job; 
 
 ## POST /api/v1/app-opens
 
-Reports that a DecTog link opened the already-installed app (a warm open through an App Link, a Universal Link, a custom scheme or an intent bounce). Feeds the per-link Opens count and `last_open`.
+Reports that an AdTo link opened the already-installed app (a warm open through an App Link, a Universal Link, a custom scheme or an intent bounce). Feeds the per-link Opens count and `last_open`.
 
 | Field | Type | Required | Meaning |
 |---|---|---|---|

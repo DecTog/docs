@@ -1,11 +1,11 @@
 ---
 title: Privacy and data
-description: What a DecTog server stores about visitors, devices and customers, for how long, what the SDK sends, what a tenant can delete, and what to put in a privacy policy.
+description: What an AdTo server stores about visitors, devices and customers, for how long, what the SDK sends, what a tenant can delete, and what to put in a privacy policy.
 sidebar:
   order: 7
 ---
 
-This page lists the personal data a self-hosted DecTog handles, table by table, with the retention each column gets from the daily sweep (`RETENTION_DAYS`, default 400, or an account's shorter window). The sweep itself is specified on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). "Retention" means the value is set to `NULL` once the row is older than the cutoff; "forever" means the sweep never blanks it, so it lasts as long as its row. Rows of `clicks`, `app_installs`, `events` and `app_opens` older than the cutoff are deleted outright once the daily rollups hold their day, which leaves only the per-link daily counts; the one exception is an event with a store transaction id (a purchase, renewal or refund), kept with its personal columns nulled so its transaction is still known.
+This page lists the personal data a self-hosted AdTo handles, table by table, with the retention each column gets from the daily sweep (`RETENTION_DAYS`, default 400, or an account's shorter window). The sweep itself is specified on [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/). "Retention" means the value is set to `NULL` once the row is older than the cutoff; "forever" means the sweep never blanks it, so it lasts as long as its row. Rows of `clicks`, `app_installs`, `events` and `app_opens` older than the cutoff are deleted outright once the daily rollups hold their day, which leaves only the per-link daily counts; the one exception is an event with a store transaction id (a purchase, renewal or refund), kept with its personal columns nulled so its transaction is still known.
 
 ## IP addresses
 
@@ -151,13 +151,13 @@ What stays, and for how long:
 - **The audit log** records the request: who erased or exported, when, the number of rows per table, and the first 12 hex characters of `sha256("<account>:<device|customer>:<id>")`, never the id itself.
 - **A tombstone** with that hash, for 8 days: an SDK keeps unsent events up to 7 days, so an event of the erased device or customer with a client timestamp before the erasure is acknowledged and dropped. An edge location that looked the app's SDK key up shortly before the erasure still holds the account as it was, for up to `SDK_AUTH_CACHE_SECONDS` (60 by default; see [Configuration reference](/self-hosting/configuration-reference/)), and may store such an event in that minute; the daily sweep deletes it. Events made after the erasure are stored as new data.
 - **CSV exports** made earlier keep their copy until the file expires, at most 7 days.
-- **D1 Time Travel** can restore the database to any minute of the last 30 days (7 on the Workers Free plan; [Cloudflare's Time Travel page](https://developers.cloudflare.com/d1/reference/time-travel/)), so erased rows stay restorable there until then. Nothing in DecTog restores them.
+- **D1 Time Travel** can restore the database to any minute of the last 30 days (7 on the Workers Free plan; [Cloudflare's Time Travel page](https://developers.cloudflare.com/d1/reference/time-travel/)), so erased rows stay restorable there until then. Nothing in AdTo restores them.
 
 Deleting an install row frees its click for a future fingerprint match (the `NOT EXISTS` check in the candidate query), but the erased taps have no IP hash or device model left to match on.
 
 ## For your privacy policy
 
-A self-hosted DecTog makes you the controller of this data. Items a policy and the store declarations usually need to cover, with where each comes from:
+A self-hosted AdTo makes you the controller of this data. Items a policy and the store declarations usually need to cover, with where each comes from:
 
 1. **Link taps:** IP address (hashed and, until retention, raw), country, region and city, ASN, User-Agent and client hints, language, referrer origin, UTM parameters; on the interstitial and tap-to-store pages also the screen profile, text size, dark mode, Increase Contrast, Reduce Motion and UTC offset; purpose: routing, install attribution, fraud detection, analytics.
 2. **App installs and opens:** the vendor-scoped device identifier (IDFV persisted in the Keychain, or `ANDROID_ID`), hardware model and manufacturer, OS and version, screen metrics, text size, dark mode, Increase Contrast and Reduce Motion, UTC offset, connectivity and carrier codes (Android), app version and install dates, IP address; purpose: install attribution, reinstall detection, analytics. Declare the persisted identifier in the App Store privacy answers and the Play Data safety form.
@@ -171,6 +171,6 @@ A self-hosted DecTog makes you the controller of this data. Items a policy and t
 10. **Consent in your app:** with `DectogConfig(enabled: false)` the SDK sends nothing and reads no pasteboard until your app calls `setEnabled(true)`; events tracked meanwhile wait on the device (at most 7 days). See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
 11. **Processors:** Cloudflare (Workers, D1), plus Apple, Resend, Google and your own webhook endpoint where used.
 
-The device settings in items 1 and 2 need particular care. Text size, dark mode, Increase Contrast, Reduce Motion and the UTC offset are device configuration, and Apple's user-privacy rules for developers prohibit deriving data from a device's configuration to identify it; DecTog compares them one by one for 0 points and combines them into no identifier, but the App Store review risk is yours. Increase Contrast, Reduce Motion and a large text size can suggest a disability, which EU data-protection law may treat as health data. An app that cannot carry this leaves the SDK's device tier out or turns **Probabilistic match** off; the link pages still record the settings on the tap. See [Device data and privacy](/sdk/device-data-and-privacy/#device-settings).
+The device settings in items 1 and 2 need particular care. Text size, dark mode, Increase Contrast, Reduce Motion and the UTC offset are device configuration, and Apple's user-privacy rules for developers prohibit deriving data from a device's configuration to identify it; AdTo compares them one by one for 0 points and combines them into no identifier, but the App Store review risk is yours. Increase Contrast, Reduce Motion and a large text size can suggest a disability, which EU data-protection law may treat as health data. An app that cannot carry this leaves the SDK's device tier out or turns **Probabilistic match** off; the link pages still record the settings on the tap. See [Device data and privacy](/sdk/device-data-and-privacy/#device-settings).
 
 Adjust `RETENTION_DAYS` on the [Configuration reference](/self-hosting/configuration-reference/) if 400 days is longer than your policy allows.

@@ -2,13 +2,13 @@
   "name": "dectog-docs",
   "private": true,
   "version": "0.1.0",
-  "description": "DecTog documentation, published at https://docs.dectog.com",
+  "description": "AdTo documentation, published at https://docs.adto.app",
   "license": "MIT",
   "type": "module",
-  "homepage": "https://docs.dectog.com",
+  "homepage": "https://docs.adto.app",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DecTog/docs.git"
+    "url": "git+https://github.com/ad-to/docs.git"
   },
   "engines": {
     "node": ">=22"

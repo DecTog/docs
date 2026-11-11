@@ -40,6 +40,8 @@ export function pageFrom(source, { repo, frontmatter }) {
   const body = source
     .replace(/^<!--[\s\S]*?-->\s*/, '')
     .replace(/^# .+\n+/, '')
+    // The SDKs' own docs may still name the old host until their rename ships
+    .replaceAll('](https://docs.adto.app/', '](/')
     .replaceAll('](https://docs.dectog.com/', '](/');
   return `${frontmatter}\n\n<!-- Generated from ${repo}/doc/api-reference.md by npm run sync:sdk-reference. Edit it there. -->\n\n${body.trimEnd()}\n`;
 }
@@ -49,7 +51,7 @@ for (const p of PAGES) {
   const source = join(ROOT, '..', p.repo, 'doc', 'api-reference.md');
   const page = join(ROOT, 'src', 'content', 'docs', p.page);
   if (!existsSync(source)) {
-    console.error(`No ${source}: clone DecTog/${p.repo} next to this repo.`);
+    console.error(`No ${source}: clone the SDK repository (github.com/ad-to) next to this one as ${p.repo}.`);
     process.exit(2);
   }
   const expected = pageFrom(readFileSync(source, 'utf8'), p);

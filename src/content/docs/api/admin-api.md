@@ -21,13 +21,13 @@ Everything under `/api/admin` and `/api/auth` exists to serve the dashboard. Rou
 - Errors use the same `{"error": {"code", "message", "request_id"}}` envelope as the v1 API ([Errors](/api/overview/#errors)). A body that is not valid JSON answers `400 {"error": {"code": "invalid_request", "message": "Invalid JSON body"}}`.
 
 ```bash title="Log in and call a session route with curl"
-curl -sS -c jar.txt -X POST https://app.dectog.com/api/admin/login \
+curl -sS -c jar.txt -X POST https://app.adto.app/api/admin/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"you@example.com","password":"…","remember":true}'
-curl -sS -b jar.txt https://app.dectog.com/api/admin/links | jq '.links[] | {slug, click_count, installs}'
+curl -sS -b jar.txt https://app.adto.app/api/admin/links | jq '.links[] | {slug, click_count, installs}'
 ```
 
-Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_BASE_URL`.
+Self-hosted deployments replace `https://app.adto.app` with their own `PUBLIC_BASE_URL`.
 
 ## Accounts and sign-in
 
@@ -37,7 +37,7 @@ Self-hosted deployments replace `https://app.dectog.com` with their own `PUBLIC_
 | `POST /api/admin/signup` | public | `{email, password, username, turnstile_token?}`. Creates a `user` account and its first SDK key, sets a 30-day cookie, returns both keys. With `invite` (the token from an invite email) and no `username`: joins that account instead, as a sign-in with no account of its own and no keys; works while `OPEN_SIGNUPS=0`. The invite is checked before anything is written; the cookie `dectog_account` is set to the account joined. A `username` next to `invite` also creates your own account. | `201 {user, api_key, sdk_key}` (`api_key` is the account key); with an invite and no username `201 {user, joined: {account_id, account, role}}` (`user.username` is `null`); `403 Signup is currently closed` (`OPEN_SIGNUPS=0`, unless joining from an invite with no username); `400 Please enter a valid email address`, a password-rule message, `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`, `Username '<name>' is reserved`; `409 An account with this email or username already exists`; for the invite: `403 invite_other_email` (another address), `404 invite_not_found`, `409 invite_used`, `410 invite_expired`; `403 turnstile_failed` (`Verification failed. Please try again.`, or `Verification is unavailable right now. Please try again.` when siteverify cannot be reached) where the deployment runs [Turnstile](#turnstile) and the token is missing, spent or not for this form |
 | `POST /api/admin/login` | public | `{email, password, remember?, turnstile_token?}`. Email is trimmed and lower-cased. A test environment can never sign in. | `200 {user: {id, email, username, role, created_at}}` plus the cookie; `400 Email and password are required`; `401 Invalid email or password`; `429` over 10 attempts per minute from one IP. No per-account lockout. `403 turnstile_failed` (`Verification failed. Please try again.`, or `Verification is unavailable right now. Please try again.` when siteverify cannot be reached) where the deployment runs [Turnstile](#turnstile) and the token is missing, spent or not for this form, checked after the rate limit and before the password. |
 | `POST /api/admin/logout` | public | Deletes the cookie. | `200 {ok: true}` |
-| `GET /api/admin/me` | session | The person signed in, and the account the dashboard shows: the live account, or its test environment after the switch below. Answers in no account at all too. | `200 {user, account, environment, test_environment, plan_limit}`: `user` and `account` are `{id, email, username, role, custom_domain, created_at, environment}`; `environment` is `live` or `test`; `test_environment` is `{username}` or `null`; `plan_limit` (hosted DecTog) is `null` while the live account is under its plan's limit, else `{stage, since, pause_on, plan, limit, devices, fits}`, the standing the dashboard's banner shows on every page (`stage` `warned`, `reminded` or `paused`; `fits` the smallest paid plan the count fits, or `null`). `user.username` is `null` without an account of your own; in no account at all `account`, `environment`, `test_environment`, `role` and `live_account` are `null`, `accounts` is empty and `plan_limit` is `null` |
+| `GET /api/admin/me` | session | The person signed in, and the account the dashboard shows: the live account, or its test environment after the switch below. Answers in no account at all too. | `200 {user, account, environment, test_environment, plan_limit}`: `user` and `account` are `{id, email, username, role, custom_domain, created_at, environment}`; `environment` is `live` or `test`; `test_environment` is `{username}` or `null`; `plan_limit` (hosted AdTo) is `null` while the live account is under its plan's limit, else `{stage, since, pause_on, plan, limit, devices, fits}`, the standing the dashboard's banner shows on every page (`stage` `warned`, `reminded` or `paused`; `fits` the smallest paid plan the count fits, or `null`). `user.username` is `null` without an account of your own; in no account at all `account`, `environment`, `test_environment`, `role` and `live_account` are `null`, `accounts` is empty and `plan_limit` is `null` |
 | `POST /api/admin/forgot-password` | public | `{email, turnstile_token?}`. Creates a one-hour, single-use reset token (older unused tokens are cancelled) and emails `<WEB_URL>/reset-password?token=…` through Resend, or logs the link when `RESEND_API_KEY` is unset. | `200 {ok: true, message: "If that email exists, a reset link is on its way."}` whether or not the account exists; `429` over 5 requests per minute from one IP or 3 per minute for one address; `403 turnstile_failed` (`Verification failed. Please try again.`, or `Verification is unavailable right now. Please try again.` when siteverify cannot be reached) where the deployment runs [Turnstile](#turnstile) and the token is missing, spent or not for this form |
 | `POST /api/admin/reset-password` | public | `{token, password}`. Does not sign the user in. | `200 {ok: true}`; `400 Reset token is required`, a password-rule message, `This reset link is invalid or has expired`, `This reset link has already been used` |
 | `GET /api/auth/config` | public | What the login page and the contact form show. | `200 {signupOpen, googleEnabled, linkRootDomain, turnstileSiteKey}`; `linkRootDomain` is `ROOT_DOMAIN`, or `null` when unset; `turnstileSiteKey` is `TURNSTILE_SITE_KEY` while [Turnstile](#turnstile) runs, else `null` |
@@ -93,7 +93,7 @@ Every session route needs a team role in the account it acts on, and the role is
 
 ## Plans
 
-Hosted DecTog only: on a deployment without Creem billing (`CREEM_*` unset, see [Configuration reference](/self-hosting/configuration-reference/#secrets)) `GET /api/admin/billing` answers `{enabled: false, plan: null, subscription: null}` and the other routes `404 billing_disabled`. The plan is the live account's, whichever environment the dashboard shows.
+Hosted AdTo only: on a deployment without Creem billing (`CREEM_*` unset, see [Configuration reference](/self-hosting/configuration-reference/#secrets)) `GET /api/admin/billing` answers `{enabled: false, plan: null, subscription: null}` and the other routes `404 billing_disabled`. The plan is the live account's, whichever environment the dashboard shows.
 
 | Method and path | Role | Purpose | Response |
 |---|---|---|---|
@@ -140,7 +140,7 @@ Erasing something that was never stored answers `200` with zero counts: the requ
 
 An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_id, created_at}`:
 
-- `actor` is `{type: "user", id, email}`, `{type: "account_key", prefix}`, `{type: "sdk_key", id, prefix, name}`, `{type: "system"}` (DecTog itself) or `{type: "anonymous"}` (a wrong password, a reset request).
+- `actor` is `{type: "user", id, email}`, `{type: "account_key", prefix}`, `{type: "sdk_key", id, prefix, name}`, `{type: "system"}` (AdTo itself) or `{type: "anonymous"}` (a wrong password, a reset request).
 - `target` is `{type, id?, name?}`: a link by slug, an app, webhook or key by id with its name, a webhook by its URL's origin.
 - `changes` is `{field: [before, after]}`, or `null`. Secret fields hold `"[redacted]"`.
 - `request_id` matches the `x-request-id` of the response that made the change.
@@ -149,8 +149,8 @@ An entry is `{seq, action, actor, target, changes, ip_hash, user_agent, request_
 |---|---|
 | Links | `link.created`, `link.updated`, `link.deleted`, `link.restored`, `link.bulk_created` (with the slugs), `temp_link.created`, `temp_link.updated`, `temp_link.deleted`, `temp_link.restored`, `temp_link.expired_deleted`, `template.created`, `template.updated`, `template.deleted` |
 | Apps | `app.created`, `app.updated`, `app.deleted`, `app.store_notifications_enabled`, `app.store_notifications_rotated`, `app.store_notifications_updated`, `app.store_notifications_disabled` |
-| Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by DecTog) |
-| Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by DecTog) |
+| Webhooks | `webhook.created`, `webhook.updated`, `webhook.deleted`, `webhook.secret_rotated`, `webhook.tested`, `webhook.delivery_resent`, `webhook.disabled` (by AdTo) |
+| Custom domain | `custom_domain.added`, `custom_domain.removed`, `custom_domain.restored`, `custom_domain.status_changed` and `custom_domain.deleted` (by AdTo) |
 | Test environment | `test_environment.created` (in the live account's log; changes made in the test environment go to its own log) |
 | Team | `team.invited`, `team.invite_revoked`, `team.joined` (by the person who joined), `team.role_changed`, `team.member_removed`, `team.member_left` |
 | Keys and settings | `sdk_key.created`, `sdk_key.revoked`, `site_key.created`, `site_key.updated`, `site_key.revoked`, `account_key.regenerated`, `settings.base_currency_changed`, `settings.retention_changed` |
@@ -271,7 +271,7 @@ An install takes the dimensions of the tap that won it; an event those of the li
 Each row has the group values, then the metrics; `conversion` (first installs per click, in percent, one decimal) joins them when `clicks` and `installs` are both asked for. A metric whose rows lack the dimension, such as clicks by `match_source` or `app_version`, is `null` rather than 0. By time, every day or hour of the window is there, zero when nothing happened. `window.partial` is true when the window starts before the raw rows the retention window keeps.
 
 ```bash title="Installs and revenue by campaign and country, last 30 days, Berlin time, without the US"
-curl -sS -b jar.txt 'https://app.dectog.com/api/admin/analytics?event=installs,revenue&group_by=campaign,country&interval=30d&tz=Europe/Berlin&country=-US'
+curl -sS -b jar.txt 'https://app.adto.app/api/admin/analytics?event=installs,revenue&group_by=campaign,country&interval=30d&tz=Europe/Berlin&country=-US'
 ```
 
 ## Blog, messages and contact

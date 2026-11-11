@@ -1,12 +1,12 @@
 <p align="center">
-  <a href="https://dectog.com"><img src=".github/dectog-readme.png" alt="DecTog: Documentation" width="800"></a>
+  <a href="https://adto.app"><img src=".github/dectog-readme.png" alt="AdTo: Documentation" width="800"></a>
 </p>
 
 <div align="center">
 
-# DecTog documentation
+# AdTo documentation
 
-*The source of [docs.dectog.com](https://docs.dectog.com)*
+*The source of [docs.adto.app](https://docs.adto.app)*
 
 [![Site code: MIT](https://img.shields.io/badge/Site%20code-MIT-blue?style=flat-square)](LICENSE)
 [![Content: CC BY 4.0](https://img.shields.io/badge/Content-CC%20BY%204.0-lightgrey?style=flat-square)](LICENSE-CONTENT)
@@ -17,7 +17,7 @@
 
 </div>
 
-This repository holds the canonical documentation for [DecTog](https://dectog.com), the
+This repository holds the canonical documentation for [AdTo](https://adto.app), the
 self-hosted deep linking and install attribution service: quickstart, link routing, the Flutter
 and React Native SDKs, the dashboard, the REST API and self-hosting. It is built with
 [Astro Starlight](https://starlight.astro.build) and served from a Cloudflare Worker as static
@@ -28,10 +28,10 @@ disagree, the docs follow the code and say so.
 
 | Repository | Contents |
 |---|---|
-| [`DecTog/dectog`](https://github.com/DecTog/dectog) | The server: Cloudflare Worker, D1 database, Next.js dashboard and marketing site |
-| [`DecTog/flutter_dectog`](https://github.com/DecTog/flutter_dectog) | The Flutter SDK |
-| [`DecTog/react-native-dectog`](https://github.com/DecTog/react-native-dectog) | The React Native and Expo SDK |
-| `DecTog/docs` | This site |
+| [`ad-to/adto`](https://github.com/ad-to/adto) | The server: Cloudflare Worker, D1 database, Next.js dashboard and marketing site |
+| [`ad-to/flutter_adto`](https://github.com/ad-to/flutter_adto) | The Flutter SDK |
+| [`ad-to/react-native-adto`](https://github.com/ad-to/react-native-adto) | The React Native and Expo SDK |
+| `ad-to/docs` | This site |
 
 ## Working on the docs
 
@@ -70,7 +70,7 @@ npm run preview    # serves dist/ on http://localhost:4321 (production-like)
 
 ### Look and layout
 
-The site wears the dectog.com identity on top of Starlight:
+The site wears the adto.app identity on top of Starlight:
 
 - `src/styles/custom.css` holds the color, type and size tokens for both themes; `chrome.css`
   styles the header, sidebar, table of contents and footer; `content.css` styles what Markdown
@@ -89,8 +89,8 @@ The site wears the dectog.com identity on top of Starlight:
   `react-native-dectog` 1.0.x, server migration `0001_schema`). When that changes, bump it in
   `src/components/Footer.astro` and in the `starlightLlmsTxt` `details` in `astro.config.mjs`,
   which feed `llms.txt`.
-- `https://docs.dectog.com/llms.txt` and `/llms-full.txt` are generated at build time for AI
-  agents; `dectog.com/SKILL.md` links to them.
+- `https://docs.adto.app/llms.txt` and `/llms-full.txt` are generated at build time for AI
+  agents; `adto.app/SKILL.md` links to them.
 - `sdk/api-reference.md` is generated from `flutter_dectog/doc/api-reference.md`, which also
   builds the SDK's `llms.txt`. Edit it in the SDK repo, then run `npm run sync:sdk-reference`
   here (`-- --check` reports drift).

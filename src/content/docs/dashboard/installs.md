@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-The Installs screen, at https://app.dectog.com/dashboard/installs, lists every install the SDK recorded, newest first, with how it was matched. Its header reads "Every install and why it was credited." The Overview's [Recent installs](/dashboard/overview/#recent-installs) card links here with **View all**, and the installs sheet on the [Links](/dashboard/links/) screen with **Open in Installs**, which opens the screen searched for that link.
+The Installs screen, at https://app.adto.app/dashboard/installs, lists every install the SDK recorded, newest first, with how it was matched. Its header reads "Every install and why it was credited." The Overview's [Recent installs](/dashboard/overview/#recent-installs) card links here with **View all**, and the installs sheet on the [Links](/dashboard/links/) screen with **Open in Installs**, which opens the screen searched for that link.
 
 ## The list
 
@@ -13,7 +13,7 @@ Each row shows when the app was installed, the verdict (`referrer`, `clipboard` 
 
 **reinstall** means one of two things: the app reported that it was installed on this device before, or the server already has an install with the same device id in this account. On an iPhone the SDK knows from a first-install date it keeps in the Keychain, which survives deleting the app; Android cannot tell on the phone, so there only the server's check applies. A reinstall is credited like any install and counted under the Overview's Reinstalls and each link's `+{n} reinstalls`, not under Installs.
 
-**app update** means an existing user updated into your first build with DecTog: the app was on the device before the SDK was, so the SDK reports the install as an update. It is never matched to a tap and counts as neither an install nor a reinstall; the Overview's Installs card counts app updates on a line of their own. Its first identify records no signup lead and no referral.
+**app update** means an existing user updated into your first build with AdTo: the app was on the device before the SDK was, so the SDK reports the install as an update. It is never matched to a tap and counts as neither an install nor a reinstall; the Overview's Installs card counts app updates on a line of their own. Its first identify records no signup lead and no referral.
 
 Above the list:
 

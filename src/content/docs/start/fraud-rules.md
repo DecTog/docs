@@ -1,6 +1,6 @@
 ---
 title: Fraud rules
-description: Every fraud rule DecTog checks installs and referrals against, how strong each one is, and what an app gets when it blocks a rule instead of only flagging it.
+description: Every fraud rule AdTo checks installs and referrals against, how strong each one is, and what an app gets when it blocks a rule instead of only flagging it.
 sidebar:
   order: 4
 ---
@@ -31,8 +31,8 @@ Each rule is a plain comparison with a name, so every flag can be explained. The
 
 The timing rules (`impossible_speed`, `click_injection`, `stale_referrer`) only trust server clocks:
 
-- The tap time is Google's server-side click time for a store referrer, Meta's timestamp for a Meta referrer, and DecTog's own click record otherwise. A referrer that did not decide the match, such as an organic Play referrer on a fingerprint match, never times it.
-- The install time is the first launch as DecTog received it, or Google's server-side install-begin time.
+- The tap time is Google's server-side click time for a store referrer, Meta's timestamp for a Meta referrer, and AdTo's own click record otherwise. A referrer that did not decide the match, such as an organic Play referrer on a fingerprint match, never times it.
+- The install time is the first launch as AdTo received it, or Google's server-side install-begin time.
 
 The device clock is stored for review and never used. A claim that arrives on a later launch judges the install as of its first launch.
 
@@ -79,4 +79,4 @@ A fingerprint match whose credit was withheld can still be upgraded by a store r
 
 ## What the rules cannot catch
 
-The SDK key that signs requests ships inside your app, so anyone who extracts it can send requests that look like the SDK's, with any values they like. These rules catch abuse through the real SDK: emulators, modified or re-signed builds, sideloaded copies, device farms on one network, taps fired after a download began. They do not prove that a request came from a genuine device. Device attestation (Play Integrity, App Attest) is not part of DecTog yet.
+The SDK key that signs requests ships inside your app, so anyone who extracts it can send requests that look like the SDK's, with any values they like. These rules catch abuse through the real SDK: emulators, modified or re-signed builds, sideloaded copies, device farms on one network, taps fired after a download began. They do not prove that a request came from a genuine device. Device attestation (Play Integrity, App Attest) is not part of AdTo yet.

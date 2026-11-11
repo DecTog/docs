@@ -19,7 +19,7 @@ final link = await dectog.createLink(
   campaign: 'spring',
   metadata: {'promo': 'spring-2026'},
 );
-print(link.url); // https://{username}.dectog.com/spring-sale
+print(link.url); // https://{username}.adto.app/spring-sale
 ```
 
 Only `slug` is required. Every other parameter is optional and omitted from the request when `null`:

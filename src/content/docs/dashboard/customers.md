@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-The Customers screen, at https://app.dectog.com/dashboard/customers, lists every customer your app has identified by calling `identify` in the SDK, together with the link that brought each one in. Its header reads "Users your app identified with the SDK's `identify` — and the link that brought them in." The screen is read-only: there is no edit and no delete.
+The Customers screen, at https://app.adto.app/dashboard/customers, lists every customer your app has identified by calling `identify` in the SDK, together with the link that brought each one in. Its header reads "Users your app identified with the SDK's `identify` — and the link that brought them in." The screen is read-only: there is no edit and no delete.
 
 A customer exists as soon as the SDK sends an `identify` event with a customer ID. How to send one, and what the server stores, is in [Events](/sdk/events/).
 
@@ -26,7 +26,7 @@ A customer exists as soon as the SDK sends an `identify` event with a customer I
 | **Attributed link** | `/{slug}` of the link credited with the customer's install, or **Organic** (also when a blocked [fraud rule](/start/fraud-rules/) withheld the credit). |
 | **Country** | A flag and the name of the country the customer's install request came from, by Cloudflare's geolocation of its network address, for attributed and organic customers alike. **Unknown** when no install is linked yet or its request had no country. |
 
-Empty states: "No customers yet — call `DecTog.identify(customerId: …)` in your app after sign-in." and "No customers match your search."
+Empty states: "No customers yet — call `AdTo.identify(customerId: …)` in your app after sign-in." and "No customers match your search."
 
 ### How a customer is tied to an install
 
@@ -57,7 +57,7 @@ Subtitle: "Set by identify(). A later call replaces each field it sends; fields 
 | **First seen** | When the customer record was created. |
 | **Last identified** | The last time an `identify` touched the record. |
 | **First event**, **Last event** | From the customer's events. |
-| **Referred by** | The customer whose referral this customer's signup recorded, and the link, such as `1042 via /invite`. The id opens that customer's page; it is plain text when the app has never identified that id (a `dec_referrer` can name anyone); a **rejected** chip when a referral rule the app blocks hit, and the referral's fraud flags. When the install's link or tap named a referrer but the signup recorded no referral, the referrer shows muted with a **not credited** chip and the reason under it: the device had the app before (a reinstall), the user already had the app and updated it to a build with DecTog (an app update), the customer existed before the install, they signed up more than 30 days after it, a blocked fraud rule withheld the install's credit, the link named the customer themself, or another customer signed up on the install first (an install credits one referral). See [Referral programs](/guides/referral-programs/#2-the-friend-installs-and-signs-up). |
+| **Referred by** | The customer whose referral this customer's signup recorded, and the link, such as `1042 via /invite`. The id opens that customer's page; it is plain text when the app has never identified that id (a `dec_referrer` can name anyone); a **rejected** chip when a referral rule the app blocks hit, and the referral's fraud flags. When the install's link or tap named a referrer but the signup recorded no referral, the referrer shows muted with a **not credited** chip and the reason under it: the device had the app before (a reinstall), the user already had the app and updated it to a build with AdTo (an app update), the customer existed before the install, they signed up more than 30 days after it, a blocked fraud rule withheld the install's credit, the link named the customer themself, or another customer signed up on the install first (an install credits one referral). See [Referral programs](/guides/referral-programs/#2-the-friend-installs-and-signs-up). |
 | **Referred** | The customers this customer referred, up to 50, newest first, each with its **rejected** chip and fraud flags. Each id opens that customer's page. |
 | **Devices** | Up to 20 distinct device IDs seen on the customer's events, plus the install's device. |
 
@@ -94,7 +94,7 @@ Shown only when other customers share a device. Subtitle: "Other customers ident
 
 Subtitle: "Reported by the SDK at install; the country and IP are the install request's." Shown when the customer has an install; empty values are hidden.
 
-**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **App update** (`Yes, an existing user` when the user already had the app and updated it to a build with DecTog; hidden otherwise), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Country** (where the install request came from, with its flag), **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report; `—` when the deployment sets `STORE_RAW_IP=0`), **Device ID** and **Install ID**.
+**Platform**, **App version** (with the build number in parentheses), **Package**, **OS** (name and version), **Device** (manufacturer and model), **Device kind**, **Physical device** (Yes or No), **Reinstall** (Yes or No), **App update** (`Yes, an existing user` when the user already had the app and updated it to a build with AdTo; hidden otherwise), **Screen** (such as `1080×2400 @2.625x`), **CPU**, **Language**, **Timezone**, **Country** (where the install request came from, with its flag), **Connectivity**, **Carrier (MCC/MNC)**, **Installer** (the package that installed the app), **Install time (device)**, **Install IP** (the raw IP of the install report; `—` when the deployment sets `STORE_RAW_IP=0`), **Device ID** and **Install ID**.
 
 Which of these the SDK sends depends on its data tier; see [Device data and privacy](/sdk/device-data-and-privacy/).
 
@@ -119,7 +119,7 @@ Subtitle: "App sessions on this customer's devices, newest first, with the scree
 
 ### App opens
 
-Shown only when there are any. Subtitle: "Times a DecTog link re-opened the installed app on this customer's devices." Each row is `/{slug}` with the date and time; the latest 50 across the customer's devices.
+Shown only when there are any. Subtitle: "Times an AdTo link re-opened the installed app on this customer's devices." Each row is `/{slug}` with the date and time; the latest 50 across the customer's devices.
 
 :::note[Self-hosting]
 The screen behaves the same on a self-hosted deployment. The daily retention job blanks a customer's name, email and phone after the configured retention period; see [Scheduled jobs and retention](/self-hosting/scheduled-jobs-and-retention/).
@@ -127,4 +127,4 @@ The screen behaves the same on a self-hosted deployment. The daily retention job
 
 ### Personal data
 
-At the bottom of the page: **Download everything stored (JSON)** saves what DecTog holds about the customer (the record, its events, its referrals and its devices), and **Erase this customer** deletes it after a confirmation, together with each device only this customer used. A device another customer also used keeps that customer's data. The page then shows what went, for example "Customer erased: 1 customer record, 1 device, 1 install, 5 events". Both are recorded in the [audit log](/dashboard/settings/#audit-log) without the customer id. What each covers is in [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person).
+At the bottom of the page: **Download everything stored (JSON)** saves what AdTo holds about the customer (the record, its events, its referrals and its devices), and **Erase this customer** deletes it after a confirmation, together with each device only this customer used. A device another customer also used keeps that customer's data. The page then shows what went, for example "Customer erased: 1 customer record, 1 device, 1 install, 5 events". Both are recorded in the [audit log](/dashboard/settings/#audit-log) without the customer id. What each covers is in [A request from one person](/self-hosting/privacy-and-data/#a-request-from-one-person).

@@ -5,7 +5,7 @@ sidebar:
   order: 9
 ---
 
-Your links also send people to your website: the desktop QR page's website link, a mobile custom redirect, a link whose target is a web page. `dectog.js` on that website reports what those visitors do there (a sign-up, a purchase) and DecTog credits it to the link they tapped, next to the app's installs and events. The Overview's Breakdown shows it under **Event source: web**, and the Links table in a **Web** column.
+Your links also send people to your website: the desktop QR page's website link, a mobile custom redirect, a link whose target is a web page. `dectog.js` on that website reports what those visitors do there (a sign-up, a purchase) and AdTo credits it to the link they tapped, next to the app's installs and events. The Overview's Breakdown shows it under **Event source: web**, and the Links table in a **Web** column.
 
 ## Set it up
 
@@ -15,7 +15,7 @@ Your links also send people to your website: the desktop QR page's website link,
 
 ```html
 <script>window.dectog = window.dectog || [];</script>
-<script src="https://app.dectog.com/dectog.js" data-site-key="dtg_site_0123456789abcdef0123456789abcdef" async></script>
+<script src="https://app.adto.app/dectog.js" data-site-key="dtg_site_0123456789abcdef0123456789abcdef" async></script>
 ```
 
 A self-hosted deployment serves it from its own `PUBLIC_BASE_URL`; the snippet in Settings has the right host. The script is about 2 KB gzipped and has no dependencies. A site with a Content-Security-Policy needs that host in `script-src` and `connect-src`.
@@ -62,10 +62,10 @@ All three are first-party, `SameSite=Lax`, and `Secure` on https pages. Web even
 ## The app banner
 
 ```js
-dectog.banner({ link: 'https://acme.dectog.com/app', text: 'Get the Acme app', button: 'Open' });
+dectog.banner({ link: 'https://acme.adto.app/app', text: 'Get the Acme app', button: 'Open' });
 ```
 
-A bar at the bottom of the page (`position: 'top'` moves it) that opens a DecTog link, on iPhones, iPads and Android only unless `mobileOnly: false`. Point it at a link of yours, so the tap is a click like any other and the install that follows is attributed to it. Closing it hides it for 30 days when storing is allowed.
+A bar at the bottom of the page (`position: 'top'` moves it) that opens an AdTo link, on iPhones, iPads and Android only unless `mobileOnly: false`. Point it at a link of yours, so the tap is a click like any other and the install that follows is attributed to it. Closing it hides it for 30 days when storing is allowed.
 
 `dectog.clickId()` returns the click id the visitor came with, or `null`.
 

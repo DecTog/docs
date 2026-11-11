@@ -1,11 +1,11 @@
 ---
 title: Automation and agents
-description: Connect an AI agent to DecTog's MCP server, script the API with your account key (signed requests, bulk links, exports, temporary links in CI, QR codes), and point agents at SKILL.md and llms.txt.
+description: Connect an AI agent to AdTo's MCP server, script the API with your account key (signed requests, bulk links, exports, temporary links in CI, QR codes), and point agents at SKILL.md and llms.txt.
 sidebar:
   order: 3
 ---
 
-Everything the Flutter SDK does with links, a script or an AI agent can do too. This page covers the MCP server that agents connect to, working shell examples against the hosted API at `https://app.dectog.com`, and the files that AI agents read.
+Everything the Flutter SDK does with links, a script or an AI agent can do too. This page covers the MCP server that agents connect to, working shell examples against the hosted API at `https://app.adto.app`, and the files that AI agents read.
 
 ## What you need
 
@@ -13,7 +13,7 @@ Everything the Flutter SDK does with links, a script or an AI agent can do too. 
 - Every `/api/v1` call except `GET /api/v1/resolve/{username}/{slug}` needs `Authorization: Bearer <key>` and a request signature.
 - `curl` 7.76 or newer (for `--fail-with-body`), `openssl` and `jq`.
 
-Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only to `https://app.dectog.com` or your own deployment.
+Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only to `https://app.adto.app` or your own deployment.
 
 :::note[Self-hosting]
 Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLIC_BASE_URL>/r/{username}/{slug}`. `SKILL.md`, `llms.txt` and the agent catalog (`/.well-known/ard.json`) are served from your `SITE_URL` and your `WEB_URL`.
@@ -21,7 +21,7 @@ Set `DECTOG_API` to your `PUBLIC_BASE_URL`. In path mode links look like `<PUBLI
 
 ## MCP server
 
-DecTog runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://app.dectog.com/mcp`. A self-hosted deployment serves it at `https://app.<your domain>/mcp`. Agents such as Claude Code, Claude Desktop, Cursor and VS Code connect to it and call DecTog tools directly, with no request signing.
+AdTo runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://app.adto.app/mcp`. A self-hosted deployment serves it at `https://app.<your domain>/mcp`. Agents such as Claude Code, Claude Desktop, Cursor and VS Code connect to it and call AdTo tools directly, with no request signing.
 
 - **Transport:** Streamable HTTP. Every answer is plain JSON. There is no session and no event stream, so `GET /mcp` answers 405.
 - **Key:** send `Authorization: Bearer <account key>`. An SDK key also works, but only within its scopes and without the account tools marked below.
@@ -30,16 +30,16 @@ DecTog runs a [Model Context Protocol](https://modelcontextprotocol.io) server a
 Connect Claude Code:
 
 ```bash
-claude mcp add --transport http dectog https://app.dectog.com/mcp \
+claude mcp add --transport http dectog https://app.adto.app/mcp \
   --header "Authorization: Bearer $DECTOG_ACCOUNT_KEY"
 ```
 
 Other clients take the same two values, the URL and the `Authorization` header, in their MCP settings.
 
-The DecTog plugin for Claude Code bundles the same server with five skills: links and the API, the Flutter SDK, the React Native SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
+The AdTo plugin for Claude Code bundles the same server with five skills: links and the API, the Flutter SDK, the React Native SDK, self-hosting, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
 
 ```text
-/plugin install dectog --marketplace DecTog/dectog
+/plugin install dectog --marketplace ad-to/adto
 ```
 
 | Tool | What it does |
@@ -79,7 +79,7 @@ This helper does it in bash. It was checked against the server's verification co
 # Usage: source dectog.sh; dectog_call METHOD PATH [JSON_BODY]
 # Prints the response body. Exits non-zero on HTTP 4xx/5xx (the body is still printed).
 : "${DECTOG_API_KEY:?set DECTOG_API_KEY to your dtg_ key}"
-DECTOG_API="${DECTOG_API:-https://app.dectog.com}"
+DECTOG_API="${DECTOG_API:-https://app.adto.app}"
 
 dectog_call() {
   local method=$1 path=$2 body=${3:-}
@@ -208,7 +208,7 @@ Temporary links use the default app's routing and fallback, have no click counte
 
 ## QR codes
 
-DecTog draws a QR code on the branded page that desktop visitors see when neither the link nor its app has a fallback URL. The code encodes the canonical link URL without any query string. Opening that page from a script records a click unless the user agent matches the bot list, so do not use it to generate images.
+AdTo draws a QR code on the branded page that desktop visitors see when neither the link nor its app has a fallback URL. The code encodes the canonical link URL without any query string. Opening that page from a script records a click unless the user agent matches the bot list, so do not use it to generate images.
 
 For files, encode the link's `url` with any QR library; the server does nothing more than that:
 
@@ -224,7 +224,7 @@ Append `utm_*` or `dec_*` parameters to the encoded URL if you want them on the 
 Anyone can read what a link points at. No key, no signature, no rate limit:
 
 ```bash
-curl -sS https://app.dectog.com/api/v1/resolve/acme/spring-sale | jq
+curl -sS https://app.adto.app/api/v1/resolve/acme/spring-sale | jq
 ```
 
 Every key is always present. Temporary links return `click_count`, `metadata` and the deep-link paths as `null`; permanent links return `expires_at` and `ttl_seconds` as `null`.
@@ -243,18 +243,18 @@ A 429 returns `{"error":{"code":"rate_limited","message":"Rate limit exceeded"}}
 
 | File | What it is |
 |---|---|
-| `https://dectog.com/SKILL.md` | The agent guide: concepts, API, SDK, webhook and self-hosting in one file, with a `version` in its frontmatter. Also served at `https://app.dectog.com/SKILL.md`. |
-| `https://dectog.com/llms.txt` | A short index of agent-readable references. Also at `https://app.dectog.com/llms.txt`. |
-| `https://dectog.com/.well-known/ard.json` | The agent catalog, for registries and agents that discover resources by domain ([Agentic Resource Discovery](https://agenticresourcediscovery.org/)). It lists the MCP server, with its URL, protocol versions and `Authorization` header inline as an MCP Server Card, and `SKILL.md`. The same document answers at `/.well-known/ai-catalog.json`, the name MCP server-card discovery reads, and on `https://app.dectog.com`. |
-| `https://docs.dectog.com/llms.txt` | An index of every page on this site with its description, generated at build time |
-| `https://docs.dectog.com/llms-full.txt` | Every page of this site in one Markdown file |
+| `https://adto.app/SKILL.md` | The agent guide: concepts, API, SDK, webhook and self-hosting in one file, with a `version` in its frontmatter. Also served at `https://app.adto.app/SKILL.md`. |
+| `https://adto.app/llms.txt` | A short index of agent-readable references. Also at `https://app.adto.app/llms.txt`. |
+| `https://adto.app/.well-known/ard.json` | The agent catalog, for registries and agents that discover resources by domain ([Agentic Resource Discovery](https://agenticresourcediscovery.org/)). It lists the MCP server, with its URL, protocol versions and `Authorization` header inline as an MCP Server Card, and `SKILL.md`. The same document answers at `/.well-known/ai-catalog.json`, the name MCP server-card discovery reads, and on `https://app.adto.app`. |
+| `https://docs.adto.app/llms.txt` | An index of every page on this site with its description, generated at build time |
+| `https://docs.adto.app/llms-full.txt` | Every page of this site in one Markdown file |
 
 Agents that keep a local copy can fetch them directly:
 
 ```bash
 mkdir -p ~/.dectog/skills
-curl -sS https://dectog.com/SKILL.md > ~/.dectog/skills/SKILL.md
-curl -sS https://docs.dectog.com/llms-full.txt > ~/.dectog/skills/docs.md
+curl -sS https://adto.app/SKILL.md > ~/.dectog/skills/SKILL.md
+curl -sS https://docs.adto.app/llms-full.txt > ~/.dectog/skills/docs.md
 ```
 
 ### The "Set up with your agent" button
@@ -262,7 +262,7 @@ curl -sS https://docs.dectog.com/llms-full.txt > ~/.dectog/skills/docs.md
 The Overview page of the dashboard has a "Set up with your agent" button. It copies this prompt to the clipboard:
 
 ```text
-Read https://dectog.com/SKILL.md and help me get started with DecTog
+Read https://adto.app/SKILL.md and help me get started with AdTo
 ```
 
 The label changes to "Prompt copied — paste it into your agent" for two seconds. If the browser blocks clipboard access, a `window.prompt` dialog titled "Copy this prompt into your agent:" shows the text instead. The button's tooltip shows the prompt as well. Paste it into Claude Code, Cursor or any other coding agent.
@@ -271,7 +271,7 @@ The label changes to "Prompt copied — paste it into your agent" for two second
 
 The Universal Links file and App Links file tooltips on the Apps page have a "⧉ Copy for AI" button. Each copies a setup prompt already filled with your link domain, your username, the app's bundle ID and Team ID (iOS) or package and SHA-256 fingerprints (Android), the URL of the served well-known file, and the exact steps: the Associated Domains entry, the `autoVerify` intent filter without wildcards, and the reinstall that both platforms need. The iOS prompt also states that a 302 to a custom scheme can never open an iOS app. See [Apps](/dashboard/apps/).
 
-One correction to make before you paste the iOS prompt: it suggests the wildcard entry `applinks:*.dectog.com`. Use the explicit host `applinks:{username}.dectog.com` instead. For a wildcard entry iOS fetches the AASA from the parent domain, and `https://dectog.com/.well-known/apple-app-site-association` answers 400. See [Troubleshooting](/guides/troubleshooting/).
+One correction to make before you paste the iOS prompt: it suggests the wildcard entry `applinks:*.adto.app`. Use the explicit host `applinks:{username}.adto.app` instead. For a wildcard entry iOS fetches the AASA from the parent domain, and `https://adto.app/.well-known/apple-app-site-association` answers 400. See [Troubleshooting](/guides/troubleshooting/).
 
 ## Rules worth giving an agent
 

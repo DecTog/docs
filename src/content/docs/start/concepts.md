@@ -1,15 +1,15 @@
 ---
 title: Concepts
-description: The objects DecTog works with, accounts, apps, links, clicks, installs, verdicts, claims, events and the link URL modes, and how they relate.
+description: The objects AdTo works with, accounts, apps, links, clicks, installs, verdicts, claims, events and the link URL modes, and how they relate.
 sidebar:
   order: 2
 ---
 
-DecTog is small. Everything in the dashboard, the API and the SDK maps onto the handful of objects below.
+AdTo is small. Everything in the dashboard, the API and the SDK maps onto the handful of objects below.
 
 ## Account
 
-An account is one tenant, one username and one link subdomain. The username is the first label of every link URL (`https://acme.dectog.com/welcome` belongs to the account `acme`) and the value the SDK and the verdict call `username`. It cannot be renamed, and an account cannot be deleted from the dashboard.
+An account is one tenant, one username and one link subdomain. The username is the first label of every link URL (`https://acme.adto.app/welcome` belongs to the account `acme`) and the value the SDK and the verdict call `username`. It cannot be renamed, and an account cannot be deleted from the dashboard.
 
 Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. A third kind, the site key (`dtg_site_` and 32 hex characters), sits in your web pages for [`dectog.js`](/sdk/web/) and works only from the origins it lists. All three kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
 
@@ -52,7 +52,7 @@ The server builds link URLs in one of two modes, set by `LINK_URL_MODE` and `ROO
 
 | Mode | URL | Used when |
 |---|---|---|
-| `subdomain` | `https://{username}.{ROOT_DOMAIN}/{slug}` | Hosted service (`ROOT_DOMAIN=dectog.com`) and production self-hosts with a wildcard DNS record |
+| `subdomain` | `https://{username}.{ROOT_DOMAIN}/{slug}` | Hosted service (`ROOT_DOMAIN=adto.app`) and production self-hosts with a wildcard DNS record |
 | `path` | `{PUBLIC_BASE_URL}/r/{username}/{slug}` | Local development, `workers.dev` deployments. Forced whenever `ROOT_DOMAIN` starts with `localhost`, whatever the mode says. |
 
 An account with an active [custom domain](/links/custom-domains/) gets `https://{custom domain}/{slug}` in either mode; its subdomain or path URLs keep working.
@@ -99,7 +99,7 @@ After the install the SDK can report:
 |---|---|---|
 | Event | `trackConversion`, `trackEvent`, `identify` | Typed rows (`conversion`, `custom`, `lead`, `identify`) stamped with the install's matched link, so leads and revenue appear per link. `identify` is stored as an event too; the first identify of a new user on a fresh install is the `lead`. Batches of up to 100 events. |
 | Customer | `identify(customerId: ...)` | Your user id with optional name, email and phone, bound to the device's install attribution. A later call overwrites the fields it sends and keeps the ones it omits; the install association stays with the first install. Browse them under **Customers**. |
-| App open | Automatic | A DecTog link opened the already-installed app. Counted as **Opens** on the Overview and per link. |
+| App open | Automatic | An AdTo link opened the already-installed app. Counted as **Opens** on the Overview and per link. |
 
 See [Events](/sdk/events/) and [Events and attribution](/api/events-and-attribution/).
 

@@ -1,27 +1,27 @@
 ---
 title: How a tap is routed
-description: Every decision the redirect engine makes between a tap on a DecTog link and the destination, on mobile, on desktop and for bots, and when the click is recorded.
+description: Every decision the redirect engine makes between a tap on an AdTo link and the destination, on mobile, on desktop and for bots, and when the click is recorded.
 sidebar:
   order: 1
 ---
 
-A link such as `https://acme.dectog.com/welcome` is served by the redirect engine. This page lists its decisions in the order the server takes them. The examples use the hosted service; on a self-hosted path-mode deployment the same link is `{PUBLIC_BASE_URL}/r/acme/welcome`.
+A link such as `https://acme.adto.app/welcome` is served by the redirect engine. This page lists its decisions in the order the server takes them. The examples use the hosted service; on a self-hosted path-mode deployment the same link is `{PUBLIC_BASE_URL}/r/acme/welcome`.
 
 ## Entry points
 
 | Request | Handled when |
 |---|---|
-| `https://{username}.dectog.com/{slug}` | Subdomain mode. Exactly one path segment; two or more return JSON `404 {"error":{"code":"not_found","message":"Not found"}}`. |
+| `https://{username}.adto.app/{slug}` | Subdomain mode. Exactly one path segment; two or more return JSON `404 {"error":{"code":"not_found","message":"Not found"}}`. |
 | `https://{custom domain}/{slug}` | The account's [custom domain](/links/custom-domains/) while it is ready, active, moved or within the 7 days after its removal. Its root goes to the app's Fallback URL. |
 | `{base}/r/{username}/{slug}` | Any host, any mode; on a custom domain only for the account it belongs to (another account's link is a 404). |
 | `{base}/?user={username}/{slug}` | Any host except the dashboard host and custom domains. |
-| `https://{username}.dectog.com/` | No slug: a known username is sent to the dashboard, an unknown one to `UNKNOWN_HOST_REDIRECT`. |
+| `https://{username}.adto.app/` | No slug: a known username is sent to the dashboard, an unknown one to `UNKNOWN_HOST_REDIRECT`. |
 
 ## Decision order
 
 | # | Check | Result |
 |---|---|---|
-| 1 | The username does not exist | `302` to `UNKNOWN_HOST_REDIRECT` (`https://dectog.com/` on the hosted service), or the 404 page when that variable is unset. Applies in path mode too. |
+| 1 | The username does not exist | `302` to `UNKNOWN_HOST_REDIRECT` (`https://adto.app/` on the hosted service), or the 404 page when that variable is unset. Applies in path mode too. |
 | 2 | No permanent or temporary link has this slug, or the link is deleted | `404` page |
 | 3 | The link is paused | `410` "Link paused" page, for bots as well, **no click recorded** |
 | 4 | The link has expired: a temporary link's `expires_at`, or a permanent link's when it has one, has passed | `302` to the link's expired URL when it has one, else the `410` "Link expired" page; for bots as well, **no click recorded** |
@@ -37,7 +37,7 @@ An archived link routes like any other. See [Links: pause, expire, archive and d
 
 ## The click row
 
-The click gets a 16-character id (the `dtg_click` value), `source: web`, the link kind, device type, OS (the Android major version comes from the client hint when present; the iOS version from Safari's `Version/` token, because Safari 26 and later freeze the OS token at 18.6 or 18.7, and an 18.6 or later OS token without one, as in-app browsers send, is stored without a version), the iOS minor version from the same `Version/` token, browser, device model (from the `Sec-CH-UA-Model` hint or a WebView `Build/` token), the user agent (512 characters), `Accept-Language` (128 characters), country, region, city and ASN from Cloudflare, the salted IP hash plus the raw IP (unless the deployment sets `STORE_RAW_IP=0`), the referring page's origin (null when the referrer is DecTog itself), the `utm_*` values and the `dec_*` tracking values. The interstitial and tap-to-store pages add the screen size, pixel ratio, touch points and connection type later, with the device's text size (iOS and iPadOS only), dark mode, Increase Contrast and Reduce Motion settings and its UTC offset. No CPU architecture is recorded: no phone browser sends one. Permanent links also increment their lifetime click counter; temporary links have none.
+The click gets a 16-character id (the `dtg_click` value), `source: web`, the link kind, device type, OS (the Android major version comes from the client hint when present; the iOS version from Safari's `Version/` token, because Safari 26 and later freeze the OS token at 18.6 or 18.7, and an 18.6 or later OS token without one, as in-app browsers send, is stored without a version), the iOS minor version from the same `Version/` token, browser, device model (from the `Sec-CH-UA-Model` hint or a WebView `Build/` token), the user agent (512 characters), `Accept-Language` (128 characters), country, region, city and ASN from Cloudflare, the salted IP hash plus the raw IP (unless the deployment sets `STORE_RAW_IP=0`), the referring page's origin (null when the referrer is AdTo itself), the `utm_*` values and the `dec_*` tracking values. The interstitial and tap-to-store pages add the screen size, pixel ratio, touch points and connection type later, with the device's text size (iOS and iPadOS only), dark mode, Increase Contrast and Reduce Motion settings and its UTC offset. No CPU architecture is recorded: no phone browser sends one. Permanent links also increment their lifetime click counter; temporary links have none.
 
 ## Which value applies
 
@@ -112,11 +112,11 @@ Their in-app browsers open an installed app from an `intent://` URL but ignore i
 
 ### The interstitial page
 
-Turned on per app with **Mobile beacon interstitial**, and on or off for a single link under **Mobile landing pages** in the link drawer (`mobile_interstitial: true | false`; `null` follows the app). The page is titled "Opening the app…", carries `noindex`, and on load sends `{c, w, h, dpr, t, e, fs, cs, hc, rm, tz}` to `/_/collect`, which updates the click row once: the click id, the screen width and height, the pixel ratio, touch points and connection type, then the text size (`fs`, the computed px of `font: -apple-system-body`, sent only when the browser resolves the iOS system text style), the color scheme (`cs`, `dark` or `light`), Increase Contrast (`hc`, 1 or 0 from `prefers-contrast: more` or `no-preference`), Reduce Motion (`rm`, 1 or 0 from `prefers-reduced-motion`) and the UTC offset in minutes (`tz`). A key the browser cannot answer is left out; a value out of range is stored as null. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
+Turned on per app with **Mobile beacon interstitial**, and on or off for a single link under **Mobile landing pages** in the link drawer (`mobile_interstitial: true | false`; `null` follows the app). The page is titled "Opening the app…", carries `noindex`, and on load sends `{c, w, h, dpr, t, e, fs, cs, hc, rm, tz}` to `/_/collect`, which updates the click row once: the click id, the screen width and height, the pixel ratio, touch points and connection type, then the text size (`fs`, the computed px of `font: -apple-system-body`, sent only when the browser resolves the iOS system text style), the color scheme (`cs`, `dark` or `light`), Increase Contrast (`hc`, 1 or 0 from `prefers-contrast: more` or `no-preference`), Reduce Motion (`rm`, 1 or 0 from `prefers-reduced-motion`) and the UTC offset in minutes (`tz`). A key the browser cannot answer is left out; a value out of range is stored as null. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.adto.app/welcome?dtg_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
 
 ### The iOS tap-to-store page
 
-Turned on per app with **iOS tap-to-store**, and on or off for a single link under **Mobile landing pages** in the link drawer (`ios_tap_to_store: true | false`; `null` follows the app), so a paid campaign link can show it while a support link opens the store directly. iOS has no install referrer and Safari only writes the pasteboard from a user gesture, so this page replaces the automatic redirect with one button. It is titled "Get {app name}" and shows **Get {app name}** plus, when the app has an iOS scheme, a secondary **Open in app** button. Inside the Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X in-app browsers, and only when a scheme exists, the heading becomes "Continue in the app" and **Open in app** comes first. The Get tap shows a "Link saved" notice, writes `https://acme.dectog.com/welcome?dtg_click=<id>` to the pasteboard and opens the tagged store URL; a 600 ms safety timer opens the store even if the write never settles. **Open in app** only navigates to the scheme URL. There are no timers before the tap, and the same beacon as the interstitial fires on load. Without JavaScript the page shows an **Open the App Store** link.
+Turned on per app with **iOS tap-to-store**, and on or off for a single link under **Mobile landing pages** in the link drawer (`ios_tap_to_store: true | false`; `null` follows the app), so a paid campaign link can show it while a support link opens the store directly. iOS has no install referrer and Safari only writes the pasteboard from a user gesture, so this page replaces the automatic redirect with one button. It is titled "Get {app name}" and shows **Get {app name}** plus, when the app has an iOS scheme, a secondary **Open in app** button. Inside the Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X in-app browsers, and only when a scheme exists, the heading becomes "Continue in the app" and **Open in app** comes first. The Get tap shows a "Link saved" notice, writes `https://acme.adto.app/welcome?dtg_click=<id>` to the pasteboard and opens the tagged store URL; a 600 ms safety timer opens the store even if the write never settles. **Open in app** only navigates to the scheme URL. There are no timers before the tap, and the same beacon as the interstitial fires on load. Without JavaScript the page shows an **Open the App Store** link.
 
 ### Client hints and hint-less Chromium
 
@@ -140,11 +140,11 @@ Desktop never redirects to the link's target automatically. The target only appe
 
 | Status | Page | When |
 |---|---|---|
-| 404 | "Link not found" / "This DecTog link does not exist." | Unknown slug, a deleted link, or unknown username when `UNKNOWN_HOST_REDIRECT` is unset |
+| 404 | "Link not found" / "This AdTo link does not exist." | Unknown slug, a deleted link, or unknown username when `UNKNOWN_HOST_REDIRECT` is unset |
 | 410 | "Link paused" / "This link is paused and not available right now." | A paused link |
 | 410 | "Link expired" / "This link has expired and is no longer available." | An expired link without an expired URL; for a temporary link until the daily delete (after that: 404) |
 
-Both pages carry `noindex`, a status chip, a **Go to DecTog** button pointing at `https://dectog.com/` and the footer "Check the link for typos, or ask whoever shared it for a new one." They are in the visitor's language like every link page (see [The link pages](#the-link-pages)). Two or more path segments on a tenant host return JSON `404 {"error":{"code":"not_found","message":"Not found"}}` instead.
+Both pages carry `noindex`, a status chip, a **Go to AdTo** button pointing at `https://adto.app/` and the footer "Check the link for typos, or ask whoever shared it for a new one." They are in the visitor's language like every link page (see [The link pages](#the-link-pages)). Two or more path segments on a tenant host return JSON `404 {"error":{"code":"not_found","message":"Not found"}}` instead.
 
 ## The link pages
 

@@ -1,5 +1,5 @@
 ---
-// Sign-in and sign-up on the hosted service, as in the dectog.com header.
+// Sign-in and sign-up on the hosted service, as in the adto.app header.
 // `stacked` renders both as full-width buttons for the menu below 800px.
 interface Props {
 	stacked?: boolean;
@@ -8,8 +8,8 @@ interface Props {
 const { stacked = false } = Astro.props;
 ---
 
-<a class:list={['login', { stacked }]} href="https://app.dectog.com/login">Log in</a>
-<a class:list={['cta', { stacked }]} href="https://app.dectog.com/login?tab=signup">
+<a class:list={['login', { stacked }]} href="https://app.adto.app/login">Log in</a>
+<a class:list={['cta', { stacked }]} href="https://app.adto.app/login?tab=signup">
 	Get started
 	<svg
 		viewBox="0 0 24 24"
@@ -42,7 +42,7 @@ const { stacked = false } = Astro.props;
 	.login:hover {
 		color: var(--dt-ink);
 	}
-	/* The page's main action: dectog.com's Ink pill, which turns white on the dark page. */
+	/* The page's main action: adto.app's Ink pill, which turns white on the dark page. */
 	.cta {
 		display: inline-flex;
 		align-items: center;

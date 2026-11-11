@@ -5,14 +5,14 @@ sidebar:
   order: 1
 ---
 
-DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog):
+AdTo is four repositories under [github.com/ad-to](https://github.com/ad-to):
 
 | Repository | Contents | License |
 |---|---|---|
-| `DecTog/dectog` | The server: Cloudflare Worker, D1 database, Next.js dashboard and marketing site | AGPL-3.0 |
-| `DecTog/flutter_dectog` | The Flutter SDK, the `flutter_dectog` package ([on pub.dev](https://pub.dev/packages/flutter_dectog)) | MIT |
-| `DecTog/react-native-dectog` | The React Native and Expo SDK, the `react-native-dectog` package (not yet published on npm) | MIT |
-| `DecTog/docs` | This site | Content CC BY 4.0, site code MIT |
+| `ad-to/adto` | The server: Cloudflare Worker, D1 database, Next.js dashboard and marketing site | AGPL-3.0 |
+| `ad-to/flutter_adto` | The Flutter SDK, the `flutter_dectog` package ([on pub.dev](https://pub.dev/packages/flutter_dectog)) | MIT |
+| `ad-to/react-native-adto` | The React Native and Expo SDK, the `react-native-dectog` package (not yet published on npm) | MIT |
+| `ad-to/docs` | This site | Content CC BY 4.0, site code MIT |
 
 ## Repository layout
 
@@ -27,7 +27,7 @@ DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog)
 | `apps/worker/wrangler.jsonc` | Dev defaults and the `production` environment |
 | `wrangler.jsonc`, `package.json` (root) | The Deploy to Cloudflare button's deployment on workers.dev and its build and deploy commands. See [One click on workers.dev](/self-hosting/deploy/#one-click-on-workersdev) |
 | `apps/web/src/app/` | The Next.js app: `(site)` marketing pages, `login`, `reset-password`, `dashboard/**` |
-| `apps/web/public/SKILL.md`, `llms.txt` | The agent guide and index, served at `https://dectog.com/SKILL.md` and `/llms.txt` |
+| `apps/web/public/SKILL.md`, `llms.txt` | The agent guide and index, served at `https://adto.app/SKILL.md` and `/llms.txt` |
 | `docs/API_CONTRACT.md` | The SDK-to-worker contract, route by route |
 | `deploy/terraform/` | A Terraform module for the Cloudflare resources of a self-hosted deployment: the zone, DNS records, the D1 database, the optional exports bucket and custom-domain fallback origin. See [Deploy to Cloudflare](/self-hosting/deploy/#infrastructure-as-code-with-terraform) |
 
@@ -40,7 +40,7 @@ DecTog is four repositories under [github.com/DecTog](https://github.com/DecTog)
 | `lib/src/models/` | `DectogConfig`, `DectogLink`, `DectogTempLink`, `DectogLinkResolution`, `DectogLinkClick`, `DectogAppInstallRequest`, `DectogAppInstallResponse`, `DectogClickParams`, `DectogError` |
 | `lib/src/services/` | Device identity and hardware, the install referrer service, the install state store (the `.dectog_install.json` sentinel), the event queue, request signing, the retry policy, the sensitive-URL filter, the link deduper |
 | `lib/src/widgets/dectog_paste_button.dart` | `DectogPasteButton` |
-| `android/src/main/kotlin/app/dectog/core/` | The framework-free Android reads every DecTog SDK shares as source: `DectogDevice.kt` (device id, carrier, package and launch info, Meta referrer, App Links state), `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
+| `android/src/main/kotlin/app/dectog/core/` | The framework-free Android reads every AdTo SDK shares as source: `DectogDevice.kt` (device id, carrier, package and launch info, Meta referrer, App Links state), `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
 | `android/src/main/kotlin/app/dectog/flutter_dectog/` | `DectogIdentifiersPlugin.kt`, which maps the method channel onto `app.dectog.core` |
 | `ios/flutter_dectog/` | The Swift package. Framework-free, shared as source: `DectogDevice.swift`, `DectogInstallDates.swift`, `DectogKeychain.swift`, `DectogPasteTargetView.swift`; Flutter glue: `DectogIdentifiersPlugin.swift`, `DectogPasteControl.swift`. `ios/flutter_dectog.podspec` for CocoaPods hosts |
 | `example/` | Trails, the example app: shared links, invites and referrals, onboarding, `identify`, a demo purchase, screen views. Reads `env/dev.json` for `DECTOG_API_KEY`, `DECTOG_BASE_URL`, `DECTOG_LINK_ROOT_DOMAIN`; `example/site/` is its store-badges page |
@@ -70,7 +70,7 @@ A port of `flutter_dectog` on the same contract and fixtures; [Porting the SDK](
 |---|---|
 | `src/content/docs/<group>/<slug>.md` | One page per file; the sidebar groups are fixed in `astro.config.mjs` and pages are ordered by `sidebar.order` |
 | `src/components/Footer.astro` | The footer with the version note (the SDK versions and the latest migration) and the license split |
-| `wrangler.jsonc` | The Worker that serves `dist/` on the route `docs.dectog.com/*` |
+| `wrangler.jsonc` | The Worker that serves `dist/` on the route `docs.adto.app/*` |
 | `.github/workflows/deploy.yml` | Builds on every push and pull request; deploys on push to `main` |
 
 ## Running the checks
@@ -116,7 +116,7 @@ The worker talks to D1 with raw, parameterized SQL and no ORM. The rules:
 - API keys are stored as a SHA-256 hash plus a prefix. The account key is shown once and kept no other way; SDK and site keys also keep an AES-GCM encrypted copy (keyed from `JWT_SECRET`) so Settings can show them again. Every SDK call is also HMAC-signed with the key.
 - Attribution: deterministic signals first (store referrers, Meta, pasteboard), then a scored, tenant-scoped fingerprint; one install per click; 24-hour window for candidates with a device model or a screen profile to compare with the install and 2 hours otherwise; credit only at high confidence, routing at medium, nothing on a tie between different links. See [Attribution internals](/self-hosting/attribution-internals/).
 - Privacy: hashed IPs (IPv6 at /64), raw rows deleted (or their personal columns blanked) on the retention schedule, ad identifiers in their own table and never joined to device data, and a vendor-scoped device id that survives a reinstall by default (`persistDeviceId` on iOS). See [Privacy and data](/self-hosting/privacy-and-data/).
-- The name: DecTog is a coined word with no expansion. Prose writes DecTog, one word with a capital D and a capital T; code, package names and domains use `dectog`; identifiers keep their language's casing (`FlutterDectog`, `DectogConfig`).
+- The name: AdTo is a coined word with no expansion. Prose writes AdTo, one word with a capital D and a capital T; code, package names and domains use `dectog`; identifiers keep their language's casing (`FlutterDectog`, `DectogConfig`).
 
 ## Proposing a change
 
@@ -124,12 +124,12 @@ The worker talks to D1 with raw, parameterized SQL and no ORM. The rules:
 2. Fork, branch, and keep the checks above green. A worker change that touches a route, a verdict field or a limit needs a test in `apps/worker/test/`; an SDK change needs one in `test/`.
 3. Keep the prose in step with the code. The pages of this site, `docs/API_CONTRACT.md`, `apps/web/public/SKILL.md` and `llms.txt` all describe the same behavior; update the ones your change affects, and bump the version note in `src/components/Footer.astro` when the SDK version or the latest migration changes.
 4. Never commit secrets. `.dev.vars`, `env/dev.json` and OAuth client secret files stay out of commits.
-5. Open a pull request. The docs site builds every pull request; a merged change reaches docs.dectog.com with the next deploy.
+5. Open a pull request. The docs site builds every pull request; a merged change reaches docs.adto.app with the next deploy.
 
 Documentation fixes are the quickest contribution: every page has an "Edit page" link that opens the file on GitHub.
 
 ## Licenses
 
-- The server (`DecTog/dectog`: the Worker, the web app and everything else in that repository) is licensed under the GNU AGPL v3. You can run it, modify it and self-host it. If you offer a modified version as a network service, you must publish your changes.
-- The Flutter SDK (`DecTog/flutter_dectog`) is licensed under the MIT License, so the AGPL never reaches your app.
+- The server (`ad-to/adto`: the Worker, the web app and everything else in that repository) is licensed under the GNU AGPL v3. You can run it, modify it and self-host it. If you offer a modified version as a network service, you must publish your changes.
+- The Flutter SDK (`ad-to/flutter_adto`) is licensed under the MIT License, so the AGPL never reaches your app.
 - These docs: the content under `src/content` is licensed under CC BY 4.0 (reuse it with attribution); the site code (configuration, components, styles) is MIT.

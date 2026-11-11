@@ -1,18 +1,18 @@
 ---
 title: Local quick start
-description: Run the DecTog worker, a local D1 database and the dashboard on your machine, seed demo data and tap your first link.
+description: Run the AdTo worker, a local D1 database and the dashboard on your machine, seed demo data and tap your first link.
 sidebar:
   order: 1
 ---
 
 import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-A local DecTog is two processes. The Cloudflare Worker runs on port 8787 with a local D1 database under `apps/worker/.wrangler/state`: it serves the REST API, the admin API, the redirect engine and the well-known files. The Next.js app runs on port 3000 and proxies every `/api/*`, `/r/*` and `/.well-known/*` request to the worker (`apps/web/next.config.ts`), so the dashboard's session cookie stays same-origin. You do not need a Cloudflare account; `wrangler dev` runs everything locally.
+A local AdTo is two processes. The Cloudflare Worker runs on port 8787 with a local D1 database under `apps/worker/.wrangler/state`: it serves the REST API, the admin API, the redirect engine and the well-known files. The Next.js app runs on port 3000 and proxies every `/api/*`, `/r/*` and `/.well-known/*` request to the worker (`apps/web/next.config.ts`), so the dashboard's session cookie stays same-origin. You do not need a Cloudflare account; `wrangler dev` runs everything locally.
 
 ## Prerequisites
 
 - Node 22.12 or newer, and npm.
-- A clone of the server repository: `git clone https://github.com/DecTog/dectog`.
+- A clone of the server repository: `git clone https://github.com/ad-to/adto`.
 - Flutter 3.29 or newer, only if you also run the example app. See [Testing](/sdk/testing/).
 
 ## Start the worker

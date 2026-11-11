@@ -7,13 +7,13 @@ sidebar:
 
 import { Steps, Tabs, TabItem, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
 
-This page uses the hosted service: the dashboard and API live at `https://app.dectog.com`, links at `https://{username}.dectog.com/{slug}`. Self-hosting changes a few values; the steps call them out. The examples use the username `acme` and the slug `welcome`.
+This page uses the hosted service: the dashboard and API live at `https://app.adto.app`, links at `https://{username}.adto.app/{slug}`. Self-hosting changes a few values; the steps call them out. The examples use the username `acme` and the slug `welcome`.
 
 <Steps>
 
 1. ## Sign up
 
-   Open [app.dectog.com/login?tab=signup](https://app.dectog.com/login?tab=signup). The page opens on the **Sign up** tab.
+   Open [app.adto.app/login?tab=signup](https://app.adto.app/login?tab=signup). The page opens on the **Sign up** tab.
 
    | Field | Rule |
    |---|---|
@@ -21,13 +21,9 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
    | Username | 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit (`^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$`). Reserved names: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, `pay`, `posog`, `domains`, and any name starting with `t-`. The form suggests a username from your email until you edit it. |
    | Password | 8 to 72 characters with at least one uppercase letter, one lowercase letter and one digit. |
 
-   The username is your link subdomain. Every link you create is `https://acme.dectog.com/{slug}`, and the hint under the field reads "Your links live on acme.dectog.com". There is no way to rename an account later.
+   The username is your link subdomain. Every link you create is `https://acme.adto.app/{slug}`, and the hint under the field reads "Your links live on acme.adto.app". There is no way to rename an account later.
 
    Click **Create Account**. The next screen says "Account created" and shows two keys: **SDK key, for your app** (`dtg_pub_` and 32 hex characters), which goes into the SDK, and **Account key, for servers and scripts** (`dtg_` and 32 hex characters), which never goes into an app. Copy the account key now: it is shown only this once (**Settings** can replace it). The SDK key stays listed under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
-
-   <Aside type="note" title="Self-hosting">
-   On your own deployment the first account comes from `POST /api/admin/bootstrap`, not from the signup form. See [Local quick start](/self-hosting/local-quick-start/).
-   </Aside>
 
 2. ## Register the app
 
@@ -48,7 +44,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
 3. ## Platform setup
 
-   Both files are served per account at `https://acme.dectog.com/.well-known/...` as soon as the fields from step 2 are saved. The **Verify** buttons on the Apps page fetch the saved files and summarize what they contain.
+   Both files are served per account at `https://acme.adto.app/.well-known/...` as soon as the fields from step 2 are saved. The **Verify** buttons on the Apps page fetch the saved files and summarize what they contain.
 
    <Tabs>
      <TabItem label="iOS">
@@ -57,11 +53,11 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
        ```xml title="ios/Runner/Runner.entitlements"
        <key>com.apple.developer.associated-domains</key>
        <array>
-         <string>applinks:acme.dectog.com</string>
+         <string>applinks:acme.adto.app</string>
        </array>
        ```
 
-       iOS downloads `https://acme.dectog.com/.well-known/apple-app-site-association` when the app is installed, so rebuild and reinstall after saving the bundle ID and Team ID. Test by tapping a link in Messages or Notes, not by typing it into Safari.
+       iOS downloads `https://acme.adto.app/.well-known/apple-app-site-association` when the app is installed, so rebuild and reinstall after saving the bundle ID and Team ID. Test by tapping a link in Messages or Notes, not by typing it into Safari.
      </TabItem>
      <TabItem label="Android">
        Add a verified `https` intent filter for your link host to the main activity. Intent filters cannot use wildcards, so list the host explicitly:
@@ -71,11 +67,11 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
          <action android:name="android.intent.action.VIEW" />
          <category android:name="android.intent.category.DEFAULT" />
          <category android:name="android.intent.category.BROWSABLE" />
-         <data android:scheme="https" android:host="acme.dectog.com" />
+         <data android:scheme="https" android:host="acme.adto.app" />
        </intent-filter>
        ```
 
-       Android verifies `https://acme.dectog.com/.well-known/assetlinks.json` at install time against the package and fingerprints you saved. Until verification passes, taps in Chrome still open the app through an `intent://` redirect, provided the app has both a scheme and a package. If you set an Android app scheme, add a second intent filter for it.
+       Android verifies `https://acme.adto.app/.well-known/assetlinks.json` at install time against the package and fingerprints you saved. Until verification passes, taps in Chrome still open the app through an `intent://` redirect, provided the app has both a scheme and a package. If you set an Android app scheme, add a second intent filter for it.
      </TabItem>
    </Tabs>
 
@@ -99,6 +95,9 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
    Future<void> initDectog() async {
      await dectog.initialize(DectogConfig(
        apiKey: 'dtg_pub_your_sdk_key', // Dashboard > Settings > SDK keys
+       // The SDK's defaults are the old DecTog service: name AdTo's hosts
+       baseUrl: 'https://app.adto.app',
+       linkRootDomain: 'adto.app',
      ));
 
      // A link opened the running app (Universal Link, App Link or your scheme).
@@ -154,7 +153,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
    | **App** | Shown once you have an app. **Default app** means the first app you registered. |
    | **Expires** | Leave **Never**. Any other value creates a [temporary link](/links/temporary-links/). |
 
-   Click **Create link**. The list now shows `/welcome`; the copy icon next to it copies `https://acme.dectog.com/welcome`. **Advanced options** on the same form hold the per-platform deep-link paths, the Tracking defaults and the custom mobile and desktop destinations, all described in [How a tap is routed](/links/how-a-tap-is-routed/).
+   Click **Create link**. The list now shows `/welcome`; the copy icon next to it copies `https://acme.adto.app/welcome`. **Advanced options** on the same form hold the per-platform deep-link paths, the Tracking defaults and the custom mobile and desktop destinations, all described in [How a tap is routed](/links/how-a-tap-is-routed/).
 
    You can also create links from code: `dectog.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your account key and the request signature described in [REST API overview](/api/overview/).
 
@@ -164,7 +163,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
 
    <Tabs>
      <TabItem label="Android">
-       1. Open `https://acme.dectog.com/welcome` in Chrome on the phone. DecTog sends it to the Play Store with `referrer=dtg_click=<id>&dtg_l=acme/welcome` on the store URL.
+       1. Open `https://acme.adto.app/welcome` in Chrome on the phone. AdTo sends it to the Play Store with `referrer=dtg_click=<id>&dtg_l=acme/welcome` on the store URL.
        2. Install the app from the store and open it.
        3. `onAppInstalled` emits a verdict with `matched: true`, `matchSource: 'referrer'`, `referrerSource: 'google_play'` and `matchConfidence: 'guaranteed'`.
 
@@ -172,7 +171,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.de
      </TabItem>
      <TabItem label="iOS">
        1. On the Apps page, turn on **iOS tap-to-store** under Advanced and save.
-       2. Open the link in Safari on the iPhone and tap **Get \{app name\}**. The page copies `https://acme.dectog.com/welcome?dtg_click=<id>` to the pasteboard and opens the App Store.
+       2. Open the link in Safari on the iPhone and tap **Get \{app name\}**. The page copies `https://acme.adto.app/welcome?dtg_click=<id>` to the pasteboard and opens the App Store.
        3. Install the app (App Store or TestFlight) and open it. On iOS 16 and later the system asks to allow the paste; accept it.
        4. `onAppInstalled` emits `matched: true`, `matchSource: 'clipboard'` and `matchConfidence: 'guaranteed'`.
 

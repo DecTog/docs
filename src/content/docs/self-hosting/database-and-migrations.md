@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-DecTog stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. The Worker talks to it with raw, parameterized SQL; there is no ORM. The rules are summarized below.
+AdTo stores everything in one Cloudflare D1 (SQLite) database, bound as `DB`. The Worker talks to it with raw, parameterized SQL; there is no ORM. The rules are summarized below.
 
 ## Tables
 

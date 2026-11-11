@@ -9,7 +9,7 @@ const description =
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://docs.dectog.com',
+	site: 'https://docs.adto.app',
 	trailingSlash: 'always',
 	// Pages that moved; published copies of SKILL.md and the plugin still link the old URLs.
 	redirects: {
@@ -17,12 +17,12 @@ export default defineConfig({
 	},
 	integrations: [
 		starlight({
-			title: 'DecTog Docs',
+			title: 'AdTo Docs',
 			description,
 			favicon: '/favicon.svg',
-			// dectog.com is reached from the logo (src/components/SiteTitle.astro).
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/DecTog' }],
-			editLink: { baseUrl: 'https://github.com/DecTog/docs/edit/main/' },
+			// adto.app is reached from the logo (src/components/SiteTitle.astro).
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/ad-to' }],
+			editLink: { baseUrl: 'https://github.com/ad-to/docs/edit/main/' },
 			lastUpdated: true,
 			customCss: [
 				// Self-hosted variable fonts: Outfit for headings, Inter for text, Fira Code for code.
@@ -47,12 +47,12 @@ export default defineConfig({
 				// LinkedIn): public/og-card.png, rendered from src/brand/og-card.html.
 				// Absolute URL and the size: WhatsApp and Facebook read neither relative
 				// URLs nor unsized images reliably.
-				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://docs.dectog.com/og-card.png' } },
+				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://docs.adto.app/og-card.png' } },
 				{ tag: 'meta', attrs: { property: 'og:image:type', content: 'image/png' } },
 				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
 				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
-				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'DecTog documentation: how deep links land in the app' } },
-				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://docs.dectog.com/og-card.png' } },
+				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'AdTo documentation: how deep links land in the app' } },
+				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://docs.adto.app/og-card.png' } },
 			],
 			// Each group lists the pages found in its directory. Order inside a group comes
 			// from the `sidebar.order` frontmatter field of each page. Groups start collapsed;
@@ -70,32 +70,32 @@ export default defineConfig({
 			],
 			plugins: [
 				starlightLlmsTxt({
-					projectName: 'DecTog',
+					projectName: 'AdTo',
 					description,
 					details: [
-						'DecTog is a self-hostable deep-linking and install-attribution service: short links that open an installed app or route visitors through the app stores, deferred deep linking for new installs, post-install events and a real-time dashboard.',
-						'The hosted service lives at https://dectog.com (API at https://app.dectog.com, links on `{username}.dectog.com`). The server (Cloudflare Worker + D1 + Next.js dashboard) is AGPL-3.0; the Flutter SDK `flutter_dectog` and the React Native SDK `react-native-dectog` are MIT.',
+						'AdTo is a self-hostable deep-linking and install-attribution service: short links that open an installed app or route visitors through the app stores, deferred deep linking for new installs, post-install events and a real-time dashboard.',
+						'The hosted service lives at https://adto.app (API at https://app.adto.app, links on `{username}.adto.app`). The server (Cloudflare Worker + D1 + Next.js dashboard) is AGPL-3.0; the Flutter SDK `flutter_dectog` and the React Native SDK `react-native-dectog` are MIT.',
 						'These pages describe the behaviour of flutter_dectog 1.0.x, react-native-dectog 1.0.x and the server on its current database migrations.',
 					].join('\n\n'),
 					optionalLinks: [
 						{
 							label: 'Agent skill file',
-							url: 'https://dectog.com/SKILL.md',
+							url: 'https://adto.app/SKILL.md',
 							description: 'Compact integration guide for AI coding agents.',
 						},
 						{
 							label: 'Flutter SDK agent reference',
-							url: 'https://raw.githubusercontent.com/DecTog/flutter_dectog/main/llms.txt',
+							url: 'https://raw.githubusercontent.com/ad-to/flutter_adto/main/llms.txt',
 							description: 'llms.txt shipped inside the flutter_dectog package: types, link URLs, routing and init.',
 						},
 						{
 							label: 'React Native SDK agent reference',
-							url: 'https://raw.githubusercontent.com/DecTog/react-native-dectog/main/llms.txt',
+							url: 'https://raw.githubusercontent.com/ad-to/react-native-adto/main/llms.txt',
 							description: 'llms.txt shipped inside the react-native-dectog package: types, link URLs, setup and init.',
 						},
 						{
 							label: 'Source code',
-							url: 'https://github.com/DecTog',
+							url: 'https://github.com/ad-to',
 							description: 'Server, SDKs and these docs on GitHub.',
 						},
 					],
@@ -103,7 +103,7 @@ export default defineConfig({
 						{ label: 'Flutter SDK', paths: ['sdk/**'], description: 'Installing and using the Flutter SDK.' },
 						{ label: 'React Native SDK', paths: ['react-native/**'], description: 'Installing and using the React Native and Expo SDK.' },
 						{ label: 'REST API', paths: ['api/**'], description: 'The REST API: links, attribution, events, raw export and webhooks.' },
-						{ label: 'Self-hosting', paths: ['self-hosting/**'], description: 'Running your own DecTog server.' },
+						{ label: 'Self-hosting', paths: ['self-hosting/**'], description: 'Running your own AdTo server.' },
 					],
 				}),
 				// Also check the links passed to the home page components.

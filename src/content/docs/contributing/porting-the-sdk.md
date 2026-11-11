@@ -1,18 +1,18 @@
 ---
 title: Porting the SDK
-description: How a DecTog SDK is built on the shared contract, the shared fixtures and the shared native code, using the React Native SDK as the worked example.
+description: How an AdTo SDK is built on the shared contract, the shared fixtures and the shared native code, using the React Native SDK as the worked example.
 sidebar:
   order: 2
 ---
 
-DecTog has two app SDKs on one contract: `flutter_dectog`, the reference implementation, and `react-native-dectog`, a port of it. A new SDK (a native Swift or Kotlin one, say) follows the same route. Nothing below is a specification of its own: the server's [API overview](/api/overview/) and its `docs/API_CONTRACT.md` are the contract, and the Flutter SDK's behaviour is the reference.
+AdTo has two app SDKs on one contract: `flutter_dectog`, the reference implementation, and `react-native-dectog`, a port of it. A new SDK (a native Swift or Kotlin one, say) follows the same route. Nothing below is a specification of its own: the server's [API overview](/api/overview/) and its `docs/API_CONTRACT.md` are the contract, and the Flutter SDK's behaviour is the reference.
 
 ## What a port shares, byte for byte
 
 | What | Source | Why |
 |---|---|---|
 | Golden wire fixtures | `dectog/apps/worker/test/fixtures/wire/` | Every v1 response the server sends, held to its shape by the server's own test. Each SDK parses all of them in a test that fails when a new fixture appears unparsed. |
-| Link-URL cases | `flutter_dectog/test/fixtures/url-cases.json` | Which URLs are DecTog links and which are not: subdomain, path and custom-domain forms, `dtg_l` scheme links, development forms, and the shapes that must be rejected. Each SDK runs every case. |
+| Link-URL cases | `flutter_dectog/test/fixtures/url-cases.json` | Which URLs are AdTo links and which are not: subdomain, path and custom-domain forms, `dtg_l` scheme links, development forms, and the shapes that must be rejected. Each SDK runs every case. |
 | Native reads | `flutter_dectog/android/src/main/kotlin/app/dectog/core/`, and `DectogDevice.swift`, `DectogKeychain.swift`, `DectogInstallDates.swift`, `DectogPasteTargetView.swift` | The store install referrers, the pasteboard, the paste control, the Keychain device id, the install dates. They import no framework, so an SDK maps its own bridge onto them instead of rewriting them (design decision R19: shared native code stays source, never an opaque binary). |
 | The iOS privacy manifest | `flutter_dectog/ios/.../PrivacyInfo.xcprivacy` | The same reads, so the same declarations. |
 

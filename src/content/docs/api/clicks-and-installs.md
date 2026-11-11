@@ -108,7 +108,7 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `google_play_instant` | boolean | Must be a JSON boolean; any other type stores `null`. |
 | `meta_referrer`, `meta_referrer_ts` | string 512, epoch ms | Meta's on-device install referrer. The SDK reads it when the app has a Facebook App ID: `DectogConfig.fbAppId`, else the `fb_app_id` saved on the Apps page, which the SDK gets from `GET /api/v1/sdk-config`. |
 | `meta_referrer_is_ct` | boolean | Click-through (`true`) or view-through (`false`). Stored only together with `meta_referrer`. |
-| `clipboard_url` | string, up to 2048 | A DecTog link found on the pasteboard. Only links of this account on this deployment are read: `https://<username>.<root>/<slug>`, `/r/<username>/<slug>` on the root domain or the public base host, a custom-scheme URL carrying `dtg_l=<username>/<slug>`, or the development form `dectog://<username>/<slug>`. A link of another account, `/r/` on any other host, or an untagged scheme URL is ignored. The slug is stored as `clipboard_slug`; the raw clipboard content is never stored. |
+| `clipboard_url` | string, up to 2048 | An AdTo link found on the pasteboard. Only links of this account on this deployment are read: `https://<username>.<root>/<slug>`, `/r/<username>/<slug>` on the root domain or the public base host, a custom-scheme URL carrying `dtg_l=<username>/<slug>`, or the development form `dectog://<username>/<slug>`. A link of another account, `/r/` on any other host, or an untagged scheme URL is ignored. The slug is stored as `clipboard_slug`; the raw clipboard content is never stored. |
 | `asa_token` | string, 4096 | The Apple Search Ads attribution token from AdServices. |
 
 Epoch values must fall between 1970 and 2100, otherwise they become `null`.
@@ -177,7 +177,7 @@ When a blocked rule withholds the credit, the response has `"matched": false`, `
   "link": {
     "slug": "spring-sale",
     "target": "https://shop.example.com/sale",
-    "url": "https://acme.dectog.com/spring-sale",
+    "url": "https://acme.adto.app/spring-sale",
     "created_at": "2026-10-01T09:00:00.000Z",
     "metadata": { "screen": "sale" }
   },
@@ -271,7 +271,7 @@ dectog POST /api/v1/app-installs/3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f/claim '{
 
 ## Apple Search Ads
 
-`asa_token` is exchanged server-side with Apple's attribution API. The result is provenance only: it never changes `matched`, which is about DecTog links. See [Deterministic attribution](/sdk/deterministic-attribution/) for the SDK side.
+`asa_token` is exchanged server-side with Apple's attribution API. The result is provenance only: it never changes `matched`, which is about AdTo links. See [Deterministic attribution](/sdk/deterministic-attribution/) for the SDK side.
 
 | `status` | Meaning |
 |---|---|

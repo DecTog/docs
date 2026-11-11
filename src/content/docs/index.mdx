@@ -1,6 +1,6 @@
 ---
-title: DecTog documentation
-description: Deep links, install attribution and real-time analytics for mobile apps. Hosted at dectog.com or on your own Cloudflare account.
+title: AdTo documentation
+description: Deep links, install attribution and real-time analytics for mobile apps. Hosted at adto.app or on your own Cloudflare account.
 template: splash
 hero:
   tagline: Short links that open your app, route new users through the stores and tell you which link brought each install. SDKs for Flutter and React Native, one dashboard, your own infrastructure if you want it.
@@ -10,8 +10,8 @@ hero:
     - text: Flutter SDK
       link: /sdk/installation/
       variant: secondary
-    - text: dectog.com
-      link: https://dectog.com
+    - text: adto.app
+      link: https://adto.app
       icon: external
       variant: minimal
 ---
@@ -60,6 +60,8 @@ final dectog = FlutterDectog();
 
 await dectog.initialize(DectogConfig(
   apiKey: 'dtg_pub_your_sdk_key',
+  baseUrl: 'https://app.adto.app',
+  linkRootDomain: 'adto.app',
 ));
 ```
 
@@ -93,7 +95,7 @@ Create a link in the dashboard, over the REST API or from the app.
 		'React Native SDK': 'The Expo module and its config plugin: the same links, attribution and events from React Native.',
 		Dashboard: 'Every screen and every number on it, defined exactly as the server computes it.',
 		'REST API': 'Authentication, request signing, rate limits, links, installs, events and webhooks.',
-		'Self-hosting': 'Run DecTog on your own Cloudflare account: deploy, configure, operate and keep your data.',
+		'Self-hosting': 'Run AdTo on your own Cloudflare account: deploy, configure, operate and keep your data.',
 		Guides: 'Troubleshooting, migrating from Firebase Dynamic Links or Branch, automation and AI agents.',
 		Contributing: 'Repository layout, tests, migration rules and the licenses of the server, the SDKs and these docs.',
 	}}

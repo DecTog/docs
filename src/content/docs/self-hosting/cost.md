@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-A self-hosted DecTog runs on one Cloudflare account: one Worker, one D1 database. This page turns measured usage into a monthly bill, and states where a single deployment stops scaling today.
+A self-hosted AdTo runs on one Cloudflare account: one Worker, one D1 database. This page turns measured usage into a monthly bill, and states where a single deployment stops scaling today.
 
 ## What one operation uses
 
@@ -45,7 +45,7 @@ The Workers Free plan caps each day at 100,000 requests, 5 million rows read and
 - **App sessions:** about 9,000 three-minute sessions that track a screen every 30 seconds (about 11 written rows each: the day's ping, the session's row and five more flushes), which is about 19 people in the app at any moment on average. Without screen tracking, the day's ping and one event, about 11,000.
 - **Dashboard:** the Overview refreshes once a minute while its tab is on screen. Its totals come from the daily rollups plus today's raw rows, but its breakdowns (campaigns, sources, devices, carriers, fraud) still read the window's raw rows on each refresh: about ten rows per install plus a few per click. At 1,000 installs a week, one tab kept on screen all day on the 7-day view reads about 15 million rows: three days of the Free plan's quota. A hidden tab reads nothing.
 
-So the Free plan suits trying DecTog out, and the Paid plan suits any real traffic.
+So the Free plan suits trying AdTo out, and the Paid plan suits any real traffic.
 
 ## The ceiling: storage and the retention window
 

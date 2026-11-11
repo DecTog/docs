@@ -1,11 +1,11 @@
 ---
 title: Webhooks
-description: The signed POSTs DecTog sends to your backend for installs, conversions, leads, opens, referrals, clicks and link changes, how deliveries are logged and retried, and how to verify them in Node, Python and PHP.
+description: The signed POSTs AdTo sends to your backend for installs, conversions, leads, opens, referrals, clicks and link changes, how deliveries are logged and retried, and how to verify them in Node, Python and PHP.
 sidebar:
   order: 5
 ---
 
-DecTog POSTs events to your own backend: every install verdict, conversions and leads, app opens, referrals, link changes and, if you ask, every tap. Add webhooks in [Dashboard: Apps](/dashboard/apps/), under an app's **Webhooks**. A webhook receives either that app's events or every app's, and the events you tick. Deleting an app deletes the webhooks limited to it. Every delivery is logged for 30 days and retried for about a day when your endpoint does not answer 2xx.
+AdTo POSTs events to your own backend: every install verdict, conversions and leads, app opens, referrals, link changes and, if you ask, every tap. Add webhooks in [Dashboard: Apps](/dashboard/apps/), under an app's **Webhooks**. A webhook receives either that app's events or every app's, and the events you tick. Deleting an app deletes the webhooks limited to it. Every delivery is logged for 30 days and retried for about a day when your endpoint does not answer 2xx.
 
 ## Adding a webhook
 
@@ -72,7 +72,7 @@ The `data` of `app.installed` and `app.install_updated`:
   "link": {
     "slug": "spring-sale",
     "target": "https://shop.example.com/sale",
-    "url": "https://acme.dectog.com/spring-sale",
+    "url": "https://acme.adto.app/spring-sale",
     "created_at": "2026-10-01T09:00:00.000Z"
   },
   "device": {
@@ -136,7 +136,7 @@ The payload has no `routing` object and no `install_attempt_id`.
 
 ## Test event
 
-**Send test** delivers a `webhook.test` event now and logs it like any other delivery, with `data` `{"username": "acme", "test": true, "message": "A test delivery from the DecTog dashboard"}`. A failed test is neither retried nor counted toward the failure thresholds.
+**Send test** delivers a `webhook.test` event now and logs it like any other delivery, with `data` `{"username": "acme", "test": true, "message": "A test delivery from the AdTo dashboard"}`. A failed test is neither retried nor counted toward the failure thresholds.
 
 ## Dashboard API
 

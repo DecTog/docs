@@ -7,7 +7,7 @@ sidebar:
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-A deterministic signal carries the click id itself, so the server can credit the exact click regardless of IP changes, shared networks or time elapsed. When DecTog sends a visitor to a store it tags the store URL: Google Play and the OEM stores get `referrer=dtg_click={id}&dtg_l={username}/{slug}` (one URL-encoded value), and the App Store gets `ct=dtg_click={id}`. The SDK reads these signals back on the first launch and sends them with the install registration. A verdict built from one of them has `matchConfidence: 'guaranteed'`.
+A deterministic signal carries the click id itself, so the server can credit the exact click regardless of IP changes, shared networks or time elapsed. When AdTo sends a visitor to a store it tags the store URL: Google Play and the OEM stores get `referrer=dtg_click={id}&dtg_l={username}/{slug}` (one URL-encoded value), and the App Store gets `ct=dtg_click={id}`. The SDK reads these signals back on the first launch and sends them with the install registration. A verdict built from one of them has `matchConfidence: 'guaranteed'`.
 
 The `dtg_l` tag names the link, so the server can still attribute the install when the web click row never landed (for example a browser that never retried the client-hints redirect): it synthesizes the click from the referrer.
 
@@ -29,7 +29,7 @@ The plugin reads every store's install referrer natively, in parallel, on the fi
 `DectogCollection.oemReferrers` (on by default, or as the dashboard sets it) controls whether the four OEM readers run at all; a `collect` set without it reads Google Play only.
 
 <Aside type="caution" title="OEM store pass-through is unverified">
-Only Google Play documents how it hands the `referrer` parameter of a store URL back to the installed app. DecTog tags the Huawei, Samsung, Xiaomi and vivo store URLs the same way and the SDK reads each store's referrer, but whether each store passes the value through has not been confirmed with a real install. Verify it on a device from that store before relying on it; until then, treat installs through those stores as fingerprint-attributed.
+Only Google Play documents how it hands the `referrer` parameter of a store URL back to the installed app. AdTo tags the Huawei, Samsung, Xiaomi and vivo store URLs the same way and the SDK reads each store's referrer, but whether each store passes the value through has not been confirmed with a real install. Verify it on a device from that store before relying on it; until then, treat installs through those stores as fingerprint-attributed.
 </Aside>
 
 **Play retries.** The Play reader makes up to three connection attempts 3 seconds apart on the transient responses (`SERVICE_UNAVAILABLE`, `SERVICE_DISCONNECTED`, `DEVELOPER_ERROR`), with a 5-second watchdog per attempt so a service that never calls back cannot hang the read. `FEATURE_NOT_SUPPORTED`, `PERMISSION_ERROR`, a missing Play Store and Play's own organic marker (`utm_source=google-play&utm_medium=organic`) are definitive answers.
@@ -72,13 +72,13 @@ The pasteboard read defaults to off on Android, where the Play referrer is alrea
 
 ## Pasteboard read on the first launch
 
-iOS has no install referrer, so DecTog uses the pasteboard. The web side seeds it: with **iOS tap-to-store** enabled in the app's Advanced settings, an iPhone tap sees a one-button page whose "Get the app" button copies the link with its click id (`https://{username}.dectog.com/{slug}?dtg_click={id}`) and then opens the App Store. The mobile interstitial's "Open app" button copies the same value before trying your scheme.
+iOS has no install referrer, so AdTo uses the pasteboard. The web side seeds it: with **iOS tap-to-store** enabled in the app's Advanced settings, an iPhone tap sees a one-button page whose "Get the app" button copies the link with its click id (`https://{username}.adto.app/{slug}?dtg_click={id}`) and then opens the App Store. The mobile interstitial's "Open app" button copies the same value before trying your scheme.
 
 On the first launch the SDK, with the pasteboard read at its default (on for iOS while the tap-to-store page or the interstitial is on for the app or one of the account's links; without one, nothing on the pasteboard can name a click, so the server's SDK config turns the read off; a first launch whose config does not arrive within its 1.5 s budget falls back to on):
 
 1. Asks `UIPasteboard.general.hasURLs` whether a URL is there. This is a metadata check and shows no alert.
 2. Only when a URL is present, reads it (`pasteboard.url`, else `pasteboard.string`, at most 2048 characters). On iOS 16 and newer this read is what shows Apple's "Allow paste from …?" alert. iOS 15 shows the passive "pasted from" banner instead.
-3. Checks on the device whether the text parses as a DecTog link for this deployment (the same forms the link handler recognizes) **and** names a click or a link (`dtg_click=` or `dtg_l=`), which is what the tap-to-store page copies. Anything else, including a plain share link the user copied to paste into a chat, is left on the pasteboard and never sent.
+3. Checks on the device whether the text parses as an AdTo link for this deployment (the same forms the link handler recognizes) **and** names a click or a link (`dtg_click=` or `dtg_l=`), which is what the tap-to-store page copies. Anything else, including a plain share link the user copied to paste into a chat, is left on the pasteboard and never sent.
 4. Sends the URL as `clipboard_url` with the registration and notes the pasteboard's change counter (`UIPasteboard.changeCount`).
 5. Clears the pasteboard only when the server credited the link (`matchSource: 'clipboard'`, or a late claim answered `upgraded`) **and** the change counter is unchanged, so nothing the user copied in the meantime is wiped. A link the server did not credit stays where it was.
 
@@ -97,14 +97,18 @@ final willPrompt = await FlutterDectog().willShowPasteboardPrompt();
 if (willPrompt) {
   // Show your explanation, then initialize.
 }
-await FlutterDectog().initialize(DectogConfig(apiKey: 'dtg_pub_your_sdk_key'));
+await FlutterDectog().initialize(DectogConfig(
+  apiKey: 'dtg_pub_your_sdk_key',
+  baseUrl: 'https://app.adto.app',
+  linkRootDomain: 'adto.app',
+));
 ```
 
 It returns `true` only when all of these hold: the device runs iOS 16 or newer, the read is enabled for iOS (the optional `collect` argument stands in for the config's before `initialize`; then the dashboard setting and the platform default apply), the install has not been registered yet, and the pasteboard currently holds a URL (checked silently). It is always `false` on Android.
 
 ## DectogPasteButton
 
-`DectogPasteButton` renders Apple's `UIPasteControl` (iOS 16 and newer). The system enables the button only when the pasteboard holds a URL or text, evaluated from metadata. Tapping it reads the pasteboard **without** the alert, because the tap is the user's consent. The SDK validates the value as a DecTog link and sends it as a late claim (`claim_source: paste_control`); an upgraded verdict is re-emitted on `onAppInstalled`. If the tap happens before the install id exists, the URL is held and claimed right after the registration.
+`DectogPasteButton` renders Apple's `UIPasteControl` (iOS 16 and newer). The system enables the button only when the pasteboard holds a URL or text, evaluated from metadata. Tapping it reads the pasteboard **without** the alert, because the tap is the user's consent. The SDK validates the value as an AdTo link and sends it as a late claim (`claim_source: paste_control`); an upgraded verdict is re-emitted on `onAppInstalled`. If the tap happens before the install id exists, the URL is held and claimed right after the registration.
 
 Use it as the recovery path on an onboarding or "I have an invite link" screen, for users who declined the alert and for apps that opted out of the automatic read:
 
@@ -150,7 +154,7 @@ The server exchanges the token with Apple: three attempts 5 seconds apart inside
 
 `appleSearchAds` is `null` until a token was ever sent. Once resolved it carries `orgId`, `campaignId`, `adGroupId`, `keywordId`, `adId`, `conversionType` (`Download`, `Redownload`, `PreOrder`), `claimType` (`Click` for tap-through, `Impression` for view-through), `clickDate`, `impressionDate`, `countryOrRegion` and `supplyPlacement`, plus `resolvedAt`. The ids match the Apple Ads campaign reports; names are not part of Apple's payload. `isPending` and `isAttributed` are convenience getters.
 
-Apple Search Ads attribution is provenance only. It never changes `matched`, which is about DecTog links. Because the first-launch verdict is cached for the life of the process, the status is usually `pending` on that launch; call `getAttributionData()` on a later launch to see the resolved record.
+Apple Search Ads attribution is provenance only. It never changes `matched`, which is about AdTo links. Because the first-launch verdict is cached for the life of the process, the status is usually `pending` on that launch; call `getAttributionData()` on a later launch to see the resolved record.
 
 </TabItem>
 </Tabs>

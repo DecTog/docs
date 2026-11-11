@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-**Blog**, **Messages** and **Plans** are the site operator's screens: they manage the public blog at https://dectog.com/blog and the inbox of the public contact form, and show every account's plan usage. They appear in the sidebar only for the account with the `owner` role. Other accounts that open `/dashboard/blog`, `/dashboard/messages` or `/dashboard/plans` are redirected to the Overview, and the API answers `403 Owner access required`. Who the owner is, and why signup never creates one, is explained in [Account and sign-in](/dashboard/account-and-sign-in/).
+**Blog**, **Messages** and **Plans** are the site operator's screens: they manage the public blog at https://adto.app/blog and the inbox of the public contact form, and show every account's plan usage. They appear in the sidebar only for the account with the `owner` role. Other accounts that open `/dashboard/blog`, `/dashboard/messages` or `/dashboard/plans` are redirected to the Overview, and the API answers `403 Owner access required`. Who the owner is, and why signup never creates one, is explained in [Account and sign-in](/dashboard/account-and-sign-in/).
 
 Unlike every other screen, these are not scoped to an account: there is one blog and one inbox per deployment, and Plans covers every account.
 
@@ -60,7 +60,7 @@ The trash icon asks **Delete message**: "Are you sure you want to delete this me
 
 ### The public contact form
 
-Messages come from https://dectog.com/contact ("Get in Touch"). The form is checked in the browser and again by the server:
+Messages come from https://adto.app/contact ("Get in Touch"). The form is checked in the browser and again by the server:
 
 | Field | Rules |
 |---|---|
@@ -73,19 +73,19 @@ The server accepts at most 5 submissions per hour per IP address. Submissions ar
 
 ## Plans
 
-Every account's plan and [monthly active users](/dashboard/settings/#plan), for hosted DecTog's paid plans. The daily job at 03:17 UTC counts every account, including ones that never open Settings, and moves each one over its limit through the warning described under [Plan](/dashboard/settings/#plan): emailed that day, reminded after 7 days, its SDK traffic paused after 14. Each account shows its username, its plan, its email (select it to write to them), its count against the limit that applies with a bar, and the last day counted; **Not counted yet** means the daily job has not run since it signed up. Accounts at or over their limit come first, marked **Over the limit · pauses on …** while the warning runs and **SDK traffic paused since …** (in red) once it has, then the rest by how close they are; the line above the list says how many are over and how many are paused.
+Every account's plan and [monthly active users](/dashboard/settings/#plan), for hosted AdTo's paid plans. The daily job at 03:17 UTC counts every account, including ones that never open Settings, and moves each one over its limit through the warning described under [Plan](/dashboard/settings/#plan): emailed that day, reminded after 7 days, its SDK traffic paused after 14. Each account shows its username, its plan, its email (select it to write to them), its count against the limit that applies with a bar, and the last day counted; **Not counted yet** means the daily job has not run since it signed up. Accounts at or over their limit come first, marked **Over the limit · pauses on …** while the warning runs and **SDK traffic paused since …** (in red) once it has, then the rest by how close they are; the line above the list says how many are over and how many are paused.
 
 **Custom limit** under each account is that account's own limit in monthly active users, for a custom plan agreed by email: a number replaces the plan's limit (the account's Plan card then says "with a custom limit of …"), blank returns to the plan's. **Save** applies it at once: an account whose SDK traffic was paused and now fits resumes within a minute, without waiting for the daily job. The change is recorded in that account's [audit log](/dashboard/settings/#audit-log) under your email.
 
-Nothing happens on its own when an account is over: its links and apps keep working. The [Terms](https://dectog.com/terms) promise to contact the account first, so write to it about moving to a plan that fits. On a deployment without Creem billing the screen says billing is not enabled.
+Nothing happens on its own when an account is over: its links and apps keep working. The [Terms](https://adto.app/terms) promise to contact the account first, so write to it about moving to a plan that fits. On a deployment without Creem billing the screen says billing is not enabled.
 
 ## Where the public blog lives
 
-- The blog is served by the site host: `https://dectog.com/blog` and `https://dectog.com/blog/{slug}`.
-- `https://app.dectog.com/blog` and `https://app.dectog.com/blog/{slug}` answer with a permanent redirect (301) to the same path and query string on the site host, like the other site pages asked of the dashboard host.
+- The blog is served by the site host: `https://adto.app/blog` and `https://adto.app/blog/{slug}`.
+- `https://app.adto.app/blog` and `https://app.adto.app/blog/{slug}` answer with a permanent redirect (301) to the same path and query string on the site host, like the other site pages asked of the dashboard host.
 - Only published posts are public; a draft's URL returns a "not found" response. The public blog page loads up to 50 posts, with a search box and a category filter.
 - A shared link to a published post previews as that post: its title, its excerpt and, when set, its featured image. See [Blog post pages](/api/well-known-seo-and-routing/#blog-post-pages).
-- `https://dectog.com/sitemap.xml` lists the site pages and every published post, newest first; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).
+- `https://adto.app/sitemap.xml` lists the site pages and every published post, newest first; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).
 
 :::note[Self-hosting]
 The blog and the contact form are served on the worker's `SITE_URL` host, and the dashboard host (`WEB_URL`) redirects their paths there. The screens exist on every deployment; whether you use them is up to you.
