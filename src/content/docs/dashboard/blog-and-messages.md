@@ -82,7 +82,7 @@ Nothing happens on its own when an account is over: its links and apps keep work
 ## Where the public blog lives
 
 - The blog is served by the site host: `https://adto.app/blog` and `https://adto.app/blog/{slug}`.
-- `https://app.adto.app/blog` and `https://app.adto.app/blog/{slug}` answer with a permanent redirect (301) to the same path and query string on the site host, like the other site pages asked of the dashboard host.
+- `https://dashboard.adto.app/blog` and `https://dashboard.adto.app/blog/{slug}` answer with a permanent redirect (301) to the same path and query string on the site host, like the other site pages asked of the dashboard host.
 - Only published posts are public; a draft's URL returns a "not found" response. The public blog page loads up to 50 posts, with a search box and a category filter.
 - A shared link to a published post previews as that post: its title, its excerpt and, when set, its featured image. See [Blog post pages](/api/well-known-seo-and-routing/#blog-post-pages).
 - `https://adto.app/sitemap.xml` lists the site pages and every published post, newest first; see [Well-known, SEO and routing](/api/well-known-seo-and-routing/).

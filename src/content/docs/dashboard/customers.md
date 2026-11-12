@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-The Customers screen, at https://app.adto.app/dashboard/customers, lists every customer your app has identified by calling `identify` in the SDK, together with the link that brought each one in. Its header reads "Users your app identified with the SDK's `identify` — and the link that brought them in." The screen is read-only: there is no edit and no delete.
+The Customers screen, at https://dashboard.adto.app/dashboard/customers, lists every customer your app has identified by calling `identify` in the SDK, together with the link that brought each one in. Its header reads "Users your app identified with the SDK's `identify` — and the link that brought them in." The screen is read-only: there is no edit and no delete.
 
 A customer exists as soon as the SDK sends an `identify` event with a customer ID. How to send one, and what the server stores, is in [Events](/sdk/events/).
 

@@ -21,7 +21,7 @@ await adto.initialize(AdtoConfig(
 ));
 ```
 
-That is the whole setup: the SDK talks to `https://app.adto.app` and recognizes links on `{username}.adto.app`. Those are the defaults, so AdTo apps name neither.
+That is the whole setup: the SDK talks to `https://api.adto.app` and recognizes links on `{username}.adto.app`. Those are the defaults, so AdTo apps name neither.
 
 What `initialize` does, in order:
 
@@ -42,7 +42,7 @@ Rules:
 | Field | Type | Default | Meaning |
 |---|---|---|---|
 | `apiKey` | `String` | required | An SDK key (`adto_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. |
-| `baseUrl` | `String?` | `null` → `https://app.adto.app` | API base URL. Trailing slashes are stripped. |
+| `baseUrl` | `String?` | `null` → `https://api.adto.app` | API base URL. Trailing slashes are stripped. |
 | `linkRootDomain` | `String?` | `null` → `adto.app` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). |
 | `linkDomains` | `List<String>` | `[]` | Your [custom link domains](/links/custom-domains/), like `go.yourbrand.com`: `https://go.yourbrand.com/{slug}` is a link of your account. The SDK also learns the active domain from the server after its first answer; listing it covers a link that opens the app on its very first start. |
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
@@ -55,7 +55,7 @@ Rules:
 | `enabled` | `bool` | `true` | Whether collection is on before the app calls `setEnabled`. `false` waits for consent; see [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent). |
 | `environment` | `AdtoEnvironment?` | `null` | A check, not a switch: the key alone decides the account, and this changes nothing at runtime. The environment this build's key should belong to, `live` or `test`; when the app calls `diagnostics()`, it warns if the key belongs to the other one. See [Testing](/sdk/testing/). |
 
-The config also exposes `AdtoConfig.defaultBaseUrl` (`https://app.adto.app`), `AdtoConfig.defaultLinkRootDomain` (`adto.app`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
+The config also exposes `AdtoConfig.defaultBaseUrl` (`https://api.adto.app`), `AdtoConfig.defaultLinkRootDomain` (`adto.app`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
 
 The attribution options are explained on [Install attribution](/sdk/install-attribution/), [Deterministic attribution](/sdk/deterministic-attribution/) and [Device data and privacy](/sdk/device-data-and-privacy/).
 

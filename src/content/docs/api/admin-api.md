@@ -21,10 +21,10 @@ Everything under `/api/admin` and `/api/auth` exists to serve the dashboard. Rou
 - Errors use the same `{"error": {"code", "message", "request_id"}}` envelope as the v1 API ([Errors](/api/overview/#errors)). A body that is not valid JSON answers `400 {"error": {"code": "invalid_request", "message": "Invalid JSON body"}}`.
 
 ```bash title="Log in and call a session route with curl"
-curl -sS -c jar.txt -X POST https://app.adto.app/api/admin/login \
+curl -sS -c jar.txt -X POST https://dashboard.adto.app/api/admin/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"you@example.com","password":"…","remember":true}'
-curl -sS -b jar.txt https://app.adto.app/api/admin/links | jq '.links[] | {slug, click_count, installs}'
+curl -sS -b jar.txt https://dashboard.adto.app/api/admin/links | jq '.links[] | {slug, click_count, installs}'
 ```
 
 
@@ -270,7 +270,7 @@ An install takes the dimensions of the tap that won it; an event those of the li
 Each row has the group values, then the metrics; `conversion` (first installs per click, in percent, one decimal) joins them when `clicks` and `installs` are both asked for. A metric whose rows lack the dimension, such as clicks by `match_source` or `app_version`, is `null` rather than 0. By time, every day or hour of the window is there, zero when nothing happened. `window.partial` is true when the window starts before the raw rows the retention window keeps.
 
 ```bash title="Installs and revenue by campaign and country, last 30 days, Berlin time, without the US"
-curl -sS -b jar.txt 'https://app.adto.app/api/admin/analytics?event=installs,revenue&group_by=campaign,country&interval=30d&tz=Europe/Berlin&country=-US'
+curl -sS -b jar.txt 'https://dashboard.adto.app/api/admin/analytics?event=installs,revenue&group_by=campaign,country&interval=30d&tz=Europe/Berlin&country=-US'
 ```
 
 ## Blog, messages and contact

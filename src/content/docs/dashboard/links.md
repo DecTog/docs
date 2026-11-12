@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-The Links screen, at https://app.adto.app/dashboard/links, is where you create the links people tap. Its header reads "Deep links that open your app, track installs and expire when you want." Next to it, **Templates** manages [link templates](#templates), **Import CSV** creates many links from a file ([Importing links](#importing-links)), and **New link** opens the create panel; the panel is always open while the account has no links.
+The Links screen, at https://dashboard.adto.app/dashboard/links, is where you create the links people tap. Its header reads "Deep links that open your app, track installs and expire when you want." Next to it, **Templates** manages [link templates](#templates), **Import CSV** creates many links from a file ([Importing links](#importing-links)), and **New link** opens the create panel; the panel is always open while the account has no links.
 
 On load the screen fetches your links, your apps (an account with exactly one app gets it preselected) and your username, which the deep-link previews use.
 

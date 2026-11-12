@@ -11,7 +11,7 @@ The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use 
 
 | Deployment | API base | Link URLs |
 |---|---|---|
-| Hosted | `https://app.adto.app` | `https://<username>.adto.app/<slug>` |
+| Hosted | `https://api.adto.app` | `https://<username>.adto.app/<slug>` |
 
 
 ## Routes at a glance
@@ -110,7 +110,7 @@ The helper below computes the signature with `openssl` and works in bash and zsh
 
 ```bash title="A signed curl helper"
 export ADTO_API_KEY=adto_0123456789abcdef0123456789abcdef
-export ADTO_API=https://app.adto.app
+export ADTO_API=https://api.adto.app
 
 # adto <METHOD> <path> [JSON body]
 adto() {
@@ -162,7 +162,7 @@ export function adtoHeaders(apiKey, rawBody = "") {
 
 ## OpenAPI
 
-`GET /openapi.json` serves an OpenAPI 3.1 description of every route, generated from the same table the server's tests check against the routes it answers. Routes marked `x-internal` serve the dashboard and may change without notice. Point a client generator or an agent at it: `https://app.adto.app/openapi.json` on the hosted service.
+`GET /openapi.json` serves an OpenAPI 3.1 description of every route, generated from the same table the server's tests check against the routes it answers. Routes marked `x-internal` serve the dashboard and may change without notice. Point a client generator or an agent at it: `https://api.adto.app/openapi.json` on the hosted service.
 
 ## MCP
 
@@ -201,7 +201,7 @@ If the rate-limit counter cannot be written (a database or binding failure), the
 | Prefix | `access-control-allow-origin` | Other headers |
 |---|---|---|
 | `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-adto-timestamp, x-adto-signature, x-adto-sdk, x-request-id`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS`; `access-control-expose-headers: x-request-id` |
-| `/api/admin/*` | `WEB_URL` (`https://app.adto.app`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type, x-request-id`; same methods; `access-control-expose-headers: x-request-id` |
+| `/api/admin/*` | `WEB_URL` (`https://dashboard.adto.app`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type, x-request-id`; same methods; `access-control-expose-headers: x-request-id` |
 
 `OPTIONS` on any `/api/*` path answers `204`. The v1 API never uses cookies, so browser clients only need the headers above.
 
@@ -256,7 +256,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 `GET /healthz` needs no authentication, is not rate limited, and answers on every host:
 
 ```json
-{ "ok": true, "service": "adto", "version": "v1", "host": "app.adto.app" }
+{ "ok": true, "service": "adto", "version": "v1", "host": "api.adto.app" }
 ```
 
 `host` echoes the request's Host header. Use it for uptime checks instead of a link URL. A tap check on a real link should send `x-adto-no-track: 1` so it is not counted.

@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The Overview is the first screen after you sign in, at https://app.adto.app/dashboard. It shows clicks, installs, conversion, revenue and attribution quality for your whole account, over one of three time ranges, and refreshes itself every minute while it is on screen. The header reads "Clicks, installs and conversion for your links — live."
+The Overview is the first screen after you sign in, at https://dashboard.adto.app/dashboard. It shows clicks, installs, conversion, revenue and attribution quality for your whole account, over one of three time ranges, and refreshes itself every minute while it is on screen. The header reads "Clicks, installs and conversion for your links — live."
 
 Every number on this page is defined below exactly as the server computes it. Several of them do not reconcile with each other by design; the last section lists those cases.
 

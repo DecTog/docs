@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Google shut down Firebase Dynamic Links on August 25, 2025. This guide maps what you had in Firebase Dynamic Links (FDL) onto AdTo and ends with a migration checklist. It assumes the hosted service: the API at `https://app.adto.app` and links at `https://{username}.adto.app/{slug}`.
+Google shut down Firebase Dynamic Links on August 25, 2025. This guide maps what you had in Firebase Dynamic Links (FDL) onto AdTo and ends with a migration checklist. It assumes the hosted service: the API at `https://api.adto.app` and links at `https://{username}.adto.app/{slug}`.
 
 Still deciding whether AdTo fits? The [Firebase Dynamic Links alternative](https://adto.app/firebase-dynamic-links-alternative) page compares the two job by job and says when another tool fits better.
 
@@ -169,7 +169,7 @@ The **AdTo columns** preset takes headers named like the [create fields](/api/li
 
 ## Migration checklist
 
-1. Sign up at `https://app.adto.app/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen. Settings lists the SDK key again; the account key is shown only that once, and **Regenerate** in Settings replaces it. See [Quickstart](/start/quickstart/).
+1. Sign up at `https://dashboard.adto.app/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen. Settings lists the SDK key again; the account key is shown only that once, and **Regenerate** in Settings replaces it. See [Quickstart](/start/quickstart/).
 2. Register the app on the Apps page: package and SHA-256 fingerprints (include the Play App Signing key), bundle ID and Team ID, both store URLs, your custom scheme. Use the Verify buttons.
 3. Add `applinks:{username}.adto.app` to Associated Domains and an `autoVerify` intent filter for `{username}.adto.app`. Reinstall the app. See [Platform setup](/sdk/platform-setup/).
 4. Replace `firebase_dynamic_links` with `flutter_adto` using the table above. Inject the SDK key (`adto_pub_…`) at build time with `--dart-define`.
