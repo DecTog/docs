@@ -22,7 +22,7 @@ The body can carry three signals. They are tried in this order:
 | Signal | Body field | Parsed as |
 |---|---|---|
 | Store referrer | `install_referrer` (with `referrer_store`: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo`; a referrer without a store counts as `google_play`) | `adto_click=<id>` and optionally `adto_l=<username>/<slug>` |
-| Copied link | `clipboard_url` | Must be an AdTo link URL (`adto.app`, a `{username}.adto.app` host, or the `/r/` path form on `app.adto.app`) or a custom-scheme URL. The slug is the last path segment; `adto_click=<id>` is read from the query. The raw clipboard text is never stored; only `clipboard_slug`. A URL on any other host is ignored. |
+| Copied link | `clipboard_url` | Must be an AdTo link URL (`adto.app`, a `{username}.adto.app` host, or the `/r/` path form on `api.adto.app`) or a custom-scheme URL. The slug is the last path segment; `adto_click=<id>` is read from the query. The raw clipboard text is never stored; only `clipboard_slug`. A URL on any other host is ignored. |
 | Meta referrer | `meta_referrer` (read on Android when the app has a Facebook App ID) | `adto_click=<id>` |
 
 For each signal that names a click id:

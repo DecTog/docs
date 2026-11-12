@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-This guide is for teams moving deep links and install attribution from Branch, Adjust or AppsFlyer. It maps names and behaviors, nothing else. Vendor terms are written as they appear in those products' documentation. It assumes the hosted service: the API at `https://app.adto.app` and links at `https://{username}.adto.app/{slug}`.
+This guide is for teams moving deep links and install attribution from Branch, Adjust or AppsFlyer. It maps names and behaviors, nothing else. Vendor terms are written as they appear in those products' documentation. It assumes the hosted service: the API at `https://api.adto.app` and links at `https://{username}.adto.app/{slug}`.
 
 
 ## The verdict in their terms

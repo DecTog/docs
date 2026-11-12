@@ -78,7 +78,7 @@ export default defineConfig({
 					description,
 					details: [
 						'AdTo is a hosted deep-linking and install-attribution service: short links that open an installed app or route visitors through the app stores, deferred deep linking for new installs, post-install events and a real-time dashboard.',
-						'The site lives at https://adto.app (API at https://app.adto.app, links on `{username}.adto.app`). The Flutter SDK `flutter_adto` and the React Native SDK `react-native-adto` are MIT and default to those hosts.',
+						'The site lives at https://adto.app (API at https://api.adto.app, links on `{username}.adto.app`). The Flutter SDK `flutter_adto` and the React Native SDK `react-native-adto` are MIT and default to those hosts.',
 						'These pages describe the behaviour of flutter_adto 1.0.x, react-native-adto 1.0.x and the AdTo service.',
 					].join('\n\n'),
 					optionalLinks: [

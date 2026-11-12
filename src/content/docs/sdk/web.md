@@ -15,7 +15,7 @@ Your links also send people to your website: the desktop QR page's website link,
 
 ```html
 <script>window.adto = window.adto || [];</script>
-<script src="https://app.adto.app/adto.js" data-site-key="adto_site_0123456789abcdef0123456789abcdef" async></script>
+<script src="https://api.adto.app/adto.js" data-site-key="adto_site_0123456789abcdef0123456789abcdef" async></script>
 ```
 
 The snippet in Settings has the right host. The script is about 2 KB gzipped and has no dependencies. A site with a Content-Security-Policy needs that host in `script-src` and `connect-src`.

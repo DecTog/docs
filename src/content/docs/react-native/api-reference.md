@@ -32,7 +32,7 @@ type AdtoConfig = {
 | Member | Default | Meaning |
 |---|---|---|
 | `apiKey` | required | An SDK key (`adto_pub_…`, dashboard Settings → SDK keys). Never ship the account key (`adto_…`): it can delete links. |
-| `baseUrl` | `https://app.adto.app` | The API base. |
+| `baseUrl` | `https://api.adto.app` | The API base. |
 | `linkRootDomain` | `adto.app` without `baseUrl`, else the `baseUrl` host | The root tenant link hosts hang off: `{username}.<root>/{slug}`. |
 | `linkDomains` | `[]` | The account's custom link domains (`go.yourbrand.com`). The SDK also learns the active one from the server. |
 | `enableDebugLogging` | `false` | Log what the SDK does with `console.log`. |

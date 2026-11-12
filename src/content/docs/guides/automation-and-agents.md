@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-Everything the Flutter SDK does with links, a script or an AI agent can do too. This page covers the MCP server that agents connect to, working shell examples against the hosted API at `https://app.adto.app`, and the files that AI agents read.
+Everything the Flutter SDK does with links, a script or an AI agent can do too. This page covers the MCP server that agents connect to, working shell examples against the hosted API at `https://api.adto.app`, and the files that AI agents read.
 
 ## What you need
 
@@ -13,12 +13,12 @@ Everything the Flutter SDK does with links, a script or an AI agent can do too. 
 - Every `/api/v1` call except `GET /api/v1/resolve/{username}/{slug}` needs `Authorization: Bearer <key>` and a request signature.
 - `curl` 7.76 or newer (for `--fail-with-body`), `openssl` and `jq`.
 
-Keep the key in an environment variable such as `ADTO_API_KEY`. Send it only to `https://app.adto.app`.
+Keep the key in an environment variable such as `ADTO_API_KEY`. Send it only to `https://api.adto.app`.
 
 
 ## MCP server
 
-AdTo runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://app.adto.app/mcp`. Agents such as Claude Code, Claude Desktop, Cursor and VS Code connect to it and call AdTo tools directly, with no request signing.
+AdTo runs a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://api.adto.app/mcp`. Agents such as Claude Code, Claude Desktop, Cursor and VS Code connect to it and call AdTo tools directly, with no request signing.
 
 - **Transport:** Streamable HTTP. Every answer is plain JSON. There is no session and no event stream, so `GET /mcp` answers 405.
 - **Key:** send `Authorization: Bearer <account key>`. An SDK key also works, but only within its scopes and without the account tools marked below.
@@ -27,7 +27,7 @@ AdTo runs a [Model Context Protocol](https://modelcontextprotocol.io) server at 
 Connect Claude Code:
 
 ```bash
-claude mcp add --transport http adto https://app.adto.app/mcp \
+claude mcp add --transport http adto https://api.adto.app/mcp \
   --header "Authorization: Bearer $ADTO_ACCOUNT_KEY"
 ```
 
@@ -76,7 +76,7 @@ This helper does it in bash. It was checked against the server's verification co
 # Usage: source adto.sh; adto_call METHOD PATH [JSON_BODY]
 # Prints the response body. Exits non-zero on HTTP 4xx/5xx (the body is still printed).
 : "${ADTO_API_KEY:?set ADTO_API_KEY to your adto_ key}"
-ADTO_API="${ADTO_API:-https://app.adto.app}"
+ADTO_API="${ADTO_API:-https://api.adto.app}"
 
 adto_call() {
   local method=$1 path=$2 body=${3:-}
@@ -221,7 +221,7 @@ Append `utm_*` or `adto_*` parameters to the encoded URL if you want them on the
 Anyone can read what a link points at. No key, no signature, no rate limit:
 
 ```bash
-curl -sS https://app.adto.app/api/v1/resolve/acme/spring-sale | jq
+curl -sS https://api.adto.app/api/v1/resolve/acme/spring-sale | jq
 ```
 
 Every key is always present. Temporary links return `click_count`, `metadata` and the deep-link paths as `null`; permanent links return `expires_at` and `ttl_seconds` as `null`.
@@ -240,9 +240,9 @@ A 429 returns `{"error":{"code":"rate_limited","message":"Rate limit exceeded"}}
 
 | File | What it is |
 |---|---|
-| `https://adto.app/SKILL.md` | The agent guide: concepts, API, SDKs and webhooks in one file, with a `version` in its frontmatter. Also served at `https://app.adto.app/SKILL.md`. |
-| `https://adto.app/llms.txt` | A short index of agent-readable references. Also at `https://app.adto.app/llms.txt`. |
-| `https://adto.app/.well-known/ard.json` | The agent catalog, for registries and agents that discover resources by domain ([Agentic Resource Discovery](https://agenticresourcediscovery.org/)). It lists the MCP server, with its URL, protocol versions and `Authorization` header inline as an MCP Server Card, and `SKILL.md`. The same document answers at `/.well-known/ai-catalog.json`, the name MCP server-card discovery reads, and on `https://app.adto.app`. |
+| `https://adto.app/SKILL.md` | The agent guide: concepts, API, SDKs and webhooks in one file, with a `version` in its frontmatter. Also served at `https://api.adto.app/SKILL.md`. |
+| `https://adto.app/llms.txt` | A short index of agent-readable references. Also at `https://dashboard.adto.app/llms.txt`. |
+| `https://adto.app/.well-known/ard.json` | The agent catalog, for registries and agents that discover resources by domain ([Agentic Resource Discovery](https://agenticresourcediscovery.org/)). It lists the MCP server, with its URL, protocol versions and `Authorization` header inline as an MCP Server Card, and `SKILL.md`. The same document answers at `/.well-known/ai-catalog.json`, the name MCP server-card discovery reads, and on `https://api.adto.app`. |
 | `https://docs.adto.app/llms.txt` | An index of every page on this site with its description, generated at build time |
 | `https://docs.adto.app/llms-full.txt` | Every page of this site in one Markdown file |
 

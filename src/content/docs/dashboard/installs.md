@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-The Installs screen, at https://app.adto.app/dashboard/installs, lists every install the SDK recorded, newest first, with how it was matched. Its header reads "Every install and why it was credited." The Overview's [Recent installs](/dashboard/overview/#recent-installs) card links here with **View all**, and the installs sheet on the [Links](/dashboard/links/) screen with **Open in Installs**, which opens the screen searched for that link.
+The Installs screen, at https://dashboard.adto.app/dashboard/installs, lists every install the SDK recorded, newest first, with how it was matched. Its header reads "Every install and why it was credited." The Overview's [Recent installs](/dashboard/overview/#recent-installs) card links here with **View all**, and the installs sheet on the [Links](/dashboard/links/) screen with **Open in Installs**, which opens the screen searched for that link.
 
 ## The list
 

@@ -69,7 +69,7 @@ Adto.onLinkClick((click) => {
 await Adto.initialize({ apiKey: 'adto_pub_…' });
 ```
 
-The SDK defaults to `https://app.adto.app` and links on `{username}.adto.app`. `onLinkClick` fires for every AdTo link that opens the app: Universal Links and App Links, the path form `<api host>/r/<username>/<slug>`, custom-domain links and custom-scheme links, which name their link in `adto_l` (an app route such as `acme://products/42` without it is not a link). The cold-start link fires once per process; a relaunch from the Android recents screen replays nothing; OAuth and social-login callbacks are never reported or emitted. Each click carries `clickParams`, the link's `adto_*` values, and `queryParameters`, every parameter of the opened URL; see [URL parameters](/links/url-parameters/).
+The SDK defaults to `https://api.adto.app` and links on `{username}.adto.app`. `onLinkClick` fires for every AdTo link that opens the app: Universal Links and App Links, the path form `<api host>/r/<username>/<slug>`, custom-domain links and custom-scheme links, which name their link in `adto_l` (an app route such as `acme://products/42` without it is not a link). The cold-start link fires once per process; a relaunch from the Android recents screen replays nothing; OAuth and social-login callbacks are never reported or emitted. Each click carries `clickParams`, the link's `adto_*` values, and `queryParameters`, every parameter of the opened URL; see [URL parameters](/links/url-parameters/).
 
 For an AdTo link tapped inside the app (a chat message, a push), `Adto.handleUrl(url)` routes it the same way and reports it as an open, not a click. `getInitialLink()` returns the cold-start link.
 

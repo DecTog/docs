@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-AdTo answers the site (`adto.app`), the dashboard and API (`app.adto.app`) and every account host (`<username>.adto.app`). This page lists what each host and path does.
+AdTo answers the site (`adto.app`), the dashboard (`dashboard.adto.app`), the API (`api.adto.app`) and every account host (`<username>.adto.app`). This page lists what each host and path does.
 
 ## Association files
 
@@ -59,7 +59,7 @@ One statement per qualifying app. Include the Play App Signing certificate's fin
 
 ```bash title="Check what a host serves"
 curl -si https://acme.adto.app/.well-known/apple-app-site-association
-curl -s 'https://app.adto.app/.well-known/assetlinks.json?u=acme'
+curl -s 'https://api.adto.app/.well-known/assetlinks.json?u=acme'
 ```
 
 ## robots.txt and sitemap.xml
@@ -123,21 +123,21 @@ The site host and the dashboard host both serve the dashboard's static export (i
 | any | `/_/collect` | The link pages' beacon (POST): the screen profile and device settings, and which button the visitor took. |
 | any | `/healthz`, `/readyz`, `/robots.txt`, `/sitemap.xml` | See this page. |
 | any | `/openapi.json` | The OpenAPI description of every route. |
-| `app.adto.app`, `adto.app` | `/mcp` | The [MCP server](/guides/automation-and-agents/#mcp-server). |
-| `app.adto.app`, `adto.app` | `/adto.js` | The [web pixel](/sdk/web/). |
+| `api.adto.app`, `adto.app` | `/mcp` | The [MCP server](/guides/automation-and-agents/#mcp-server). |
+| `api.adto.app`, `adto.app` | `/adto.js` | The [web pixel](/sdk/web/). |
 | `adto.app` | `/`, `/about`, `/contact`, `/customers/istoria`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms`, `/SKILL.md`, `/llms.txt`, the export's files | The static export: the landing page, the site pages and the agent docs, so `curl https://adto.app/SKILL.md` works without a redirect. |
 | `adto.app` | `/blog`, `/blog/<slug>` | The export's blog pages with the worker's additions; an unknown slug answers `404` (see [Blog post pages](#blog-post-pages)). |
-| `adto.app` | `/login`, `/dashboard…`, `/invite`, `/reset-password` | `301` to `WEB_URL` plus the path and the query string: `https://adto.app/login?tab=signup` goes to `https://app.adto.app/login?tab=signup`. |
-| `app.adto.app` | `/` | `302` to `/dashboard` with a valid session cookie, else to `/login`, with `cache-control: private, no-store`. |
-| `app.adto.app` | `/about`, `/blog…`, `/contact`, `/customers…`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms` | `301` to `SITE_URL` plus the path and the query string: `https://app.adto.app/contact?ref=x` goes to `https://adto.app/contact?ref=x`. |
-| `app.adto.app` | any other path | The dashboard's static export. `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
+| `adto.app` | `/login`, `/dashboard…`, `/invite`, `/reset-password` | `301` to `WEB_URL` plus the path and the query string: `https://adto.app/login?tab=signup` goes to `https://dashboard.adto.app/login?tab=signup`. |
+| `dashboard.adto.app` | `/` | `302` to `/dashboard` with a valid session cookie, else to `/login`, with `cache-control: private, no-store`. |
+| `dashboard.adto.app` | `/about`, `/blog…`, `/contact`, `/customers…`, `/firebase-dynamic-links-alternative`, `/pricing`, `/privacy`, `/terms` | `301` to `SITE_URL` plus the path and the query string: `https://dashboard.adto.app/contact?ref=x` goes to `https://adto.app/contact?ref=x`. |
+| `dashboard.adto.app` | any other path | The dashboard's static export. `/login` and `/login/` with a valid session cookie answer `302 /dashboard` with `cache-control: private, no-store`. |
 | the apex without an assets binding (local development) | any path but `/` | `301` to `SITE_URL` plus the path and the query string; `/` answers `302` to `SITE_URL`. |
 | `www.adto.app` | any path but the worker's | `301` to `SITE_URL` plus the path and the query string: `https://www.adto.app/pricing?ref=x` goes to `https://adto.app/pricing?ref=x`, so search engines keep one address per page. The worker's paths (`/api/…`, `/.well-known/…`, `/healthz` and the rest above) answer as on any host. Not when `SITE_URL` or `APP_HOST` is itself `www.<ROOT_DOMAIN>`. `www` is also a reserved username. |
 | `<username>.adto.app` | `/` | Known username: `302` to `WEB_URL`. Unknown username: `302` to `UNKNOWN_HOST_REDIRECT` (`https://adto.app/` on the hosted service), or `404 {"error": {"code": "not_found", "message": "Not found"}}` when it is unset. |
 | `<username>.adto.app` | `/<slug>` | The redirect engine. An unknown username here also follows `UNKNOWN_HOST_REDIRECT`; an unknown slug gets the 404 page and an expired temporary link the 410 page. See [How a tap is routed](/links/how-a-tap-is-routed/). |
 | `<username>.adto.app` | two or more path segments | `404 {"error": {"code": "not_found", "message": "Not found"}}`. |
 
-In the hosted deployment `WEB_URL` and `PUBLIC_BASE_URL` are both `https://app.adto.app` and `SITE_URL` is `https://adto.app`, so account roots send visitors to the dashboard host and unknown hosts to the site.
+In the hosted deployment `WEB_URL` is `https://dashboard.adto.app`, `PUBLIC_BASE_URL` is `https://api.adto.app` and `SITE_URL` is `https://adto.app`, so account roots send visitors to the dashboard host and unknown hosts to the site.
 
 ### HEAD requests
 
@@ -148,7 +148,7 @@ A HEAD request runs the same handler as GET and the response is returned without
 `GET /healthz` answers on every host:
 
 ```json
-{ "ok": true, "service": "adto", "version": "v1", "host": "app.adto.app" }
+{ "ok": true, "service": "adto", "version": "v1", "host": "api.adto.app" }
 ```
 
 `host` echoes the request's Host header (`null` when absent). The route needs no authentication and is not rate limited.

@@ -5,14 +5,14 @@ sidebar:
   order: 7
 ---
 
-Sign-in lives at https://app.adto.app/login. The page is titled **Dashboard Access** ("Sign in — or create an account — to manage your deep links") and has two tabs, **Log in** and **Sign up**. `https://app.adto.app/login?tab=signup` opens the Sign up tab directly. A browser that already holds a valid session is sent straight to the dashboard.
+Sign-in lives at https://dashboard.adto.app/login. The page is titled **Dashboard Access** ("Sign in — or create an account — to manage your deep links") and has two tabs, **Log in** and **Sign up**. `https://dashboard.adto.app/login?tab=signup` opens the Sign up tab directly. A browser that already holds a valid session is sent straight to the dashboard.
 
 ## Sign up
 
 | Field | Rules |
 |---|---|
 | **Email** | A valid address. Stored trimmed and lower-cased. |
-| **Username** | Suggested from the part of your email before `@` until you edit it (with the domain's first label added when that part is under 3 characters: `me@example.com` suggests `me-example`). 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: `app`, `www`, `api`, `links`, `dashboard`, `admin`, `mail`, `static`, `cdn`, `docs`, `status`, `help`, `support`, and any name starting with `t-`, the prefix of [test environments](/dashboard/settings/#test-environment). The hint reads "Your links live on {username}.{root domain}" (`adto.app` on the hosted service): the username is your link subdomain and cannot be changed later. |
+| **Username** | Suggested from the part of your email before `@` until you edit it (with the domain's first label added when that part is under 3 characters: `me@example.com` suggests `me-example`). 3 to 32 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit. Reserved names are refused: about 150 service and infrastructure names, such as `app`, `api`, `dashboard`, `www`, `admin`, `mail`, `docs`, `status`, `blog`, `billing`, `login`, `staging` and `demo`, and any name starting with `t-`, the prefix of [test environments](/dashboard/settings/#test-environment). The hint reads "Your links live on {username}.{root domain}" (`adto.app` on the hosted service): the username is your link subdomain and cannot be changed later. |
 | **Password** | 8 to 72 characters with at least one lowercase letter, one uppercase letter and one digit. Hint: "At least 8 characters, with upper and lowercase letters and a number". |
 
 **Create Account** submits. [Cloudflare Turnstile](/api/admin-api/#turnstile) checks the browser first: the button waits until the check has passed, which usually takes under a second with nothing to see, and shows a small challenge box above the button when Cloudflare wants an interaction. The same check sits in front of **Log in**, **Send reset link**, joining from an invite and the site's contact form. Errors, verbatim from the server: `Please enter a valid email address`; the password rule that failed, such as `Password must include an uppercase letter`; `Username must be 3-32 lowercase letters, digits or hyphens, starting and ending alphanumeric`; `Username '{name}' is reserved`; `An account with this email or username already exists`; and `Signup is currently closed` when the deployment has closed signups, in which case the Sign up tab is hidden as well.
@@ -63,7 +63,7 @@ If an account with your email exists that you did not create, use **Forgot passw
 
 **Forgot password?** shows **Reset Password** ("Enter your email to receive a reset link") with an **Email** box and **Send Reset Link**. The reply is "If that email exists, a reset link is on its way.", whether or not an account exists. More than 5 requests a minute from one network, or 3 a minute for one address, show `Too many reset requests. Wait a minute and try again.`
 
-The email, with the subject "Reset your AdTo password", carries a link to `https://app.adto.app/reset-password?token=…`. The token:
+The email, with the subject "Reset your AdTo password", carries a link to `https://dashboard.adto.app/reset-password?token=…`. The token:
 
 - is valid for 1 hour;
 - can be used once; the server marks it used in the same step that changes the password, so a second submit fails;
