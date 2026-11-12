@@ -13,7 +13,7 @@ const palette = {
 const theme = (type) => {
 	const { background, text, keyword, quiet } = palette[type];
 	return {
-		name: `dectog-${type}`,
+		name: `adto-${type}`,
 		type,
 		colors: { 'editor.background': background, 'editor.foreground': text },
 		settings: [

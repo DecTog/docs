@@ -9,11 +9,11 @@ Everything the Flutter SDK does with links, a script or an AI agent can do too. 
 
 ## What you need
 
-- Your account key from Settings. It starts with `dtg_` and is followed by 32 hex characters, and has every scope. Scripts use it; apps use SDK keys (`dtg_pub_…`), which cannot change links. Regenerating it invalidates the old key immediately. See [Settings](/dashboard/settings/).
+- Your account key from Settings. It starts with `adto_` and is followed by 32 hex characters, and has every scope. Scripts use it; apps use SDK keys (`adto_pub_…`), which cannot change links. Regenerating it invalidates the old key immediately. See [Settings](/dashboard/settings/).
 - Every `/api/v1` call except `GET /api/v1/resolve/{username}/{slug}` needs `Authorization: Bearer <key>` and a request signature.
 - `curl` 7.76 or newer (for `--fail-with-body`), `openssl` and `jq`.
 
-Keep the key in an environment variable such as `DECTOG_API_KEY`. Send it only to `https://app.adto.app`.
+Keep the key in an environment variable such as `ADTO_API_KEY`. Send it only to `https://app.adto.app`.
 
 
 ## MCP server
@@ -27,8 +27,8 @@ AdTo runs a [Model Context Protocol](https://modelcontextprotocol.io) server at 
 Connect Claude Code:
 
 ```bash
-claude mcp add --transport http dectog https://app.adto.app/mcp \
-  --header "Authorization: Bearer $DECTOG_ACCOUNT_KEY"
+claude mcp add --transport http adto https://app.adto.app/mcp \
+  --header "Authorization: Bearer $ADTO_ACCOUNT_KEY"
 ```
 
 Other clients take the same two values, the URL and the `Authorization` header, in their MCP settings.
@@ -36,7 +36,7 @@ Other clients take the same two values, the URL and the `Authorization` header, 
 The AdTo plugin for Claude Code bundles the same server with four skills: links and the API, the Flutter SDK, the React Native SDK, and troubleshooting. It asks for the account key, which it keeps in the system keychain, and the API base URL:
 
 ```text
-/plugin install dectog --marketplace ad-to/adto
+/plugin install adto --marketplace ad-to/adto
 ```
 
 | Tool | What it does |
@@ -66,28 +66,28 @@ The link and attribution tools call the matching `/api/v1` route with your key, 
 
 The signature scheme is the one the SDK uses:
 
-- `x-dectog-timestamp`: whole Unix seconds, within 1800 seconds of the server clock.
-- `x-dectog-signature`: `v1=<hex>` where `hex = HMAC-SHA256(key = your key, message = "<timestamp>.<sha256hex(raw body)>")`.
+- `x-adto-timestamp`: whole Unix seconds, within 1800 seconds of the server clock.
+- `x-adto-signature`: `v1=<hex>` where `hex = HMAC-SHA256(key = your key, message = "<timestamp>.<sha256hex(raw body)>")`.
 - `GET` and `HEAD` sign the empty string. For other methods the body you send must be byte-for-byte the string you hashed.
 
 This helper does it in bash. It was checked against the server's verification code.
 
-```bash title="dectog.sh"
-# Usage: source dectog.sh; dectog_call METHOD PATH [JSON_BODY]
+```bash title="adto.sh"
+# Usage: source adto.sh; adto_call METHOD PATH [JSON_BODY]
 # Prints the response body. Exits non-zero on HTTP 4xx/5xx (the body is still printed).
-: "${DECTOG_API_KEY:?set DECTOG_API_KEY to your dtg_ key}"
-DECTOG_API="${DECTOG_API:-https://app.adto.app}"
+: "${ADTO_API_KEY:?set ADTO_API_KEY to your adto_ key}"
+ADTO_API="${ADTO_API:-https://app.adto.app}"
 
-dectog_call() {
+adto_call() {
   local method=$1 path=$2 body=${3:-}
   local ts body_hash sig
   ts=$(date +%s)
   body_hash=$(printf '%s' "$body" | openssl dgst -sha256 | sed 's/^.* //')
-  sig=$(printf '%s' "$ts.$body_hash" | openssl dgst -sha256 -hmac "$DECTOG_API_KEY" | sed 's/^.* //')
-  curl -sS --fail-with-body -X "$method" "$DECTOG_API$path" \
-    -H "Authorization: Bearer $DECTOG_API_KEY" \
-    -H "x-dectog-timestamp: $ts" \
-    -H "x-dectog-signature: v1=$sig" \
+  sig=$(printf '%s' "$ts.$body_hash" | openssl dgst -sha256 -hmac "$ADTO_API_KEY" | sed 's/^.* //')
+  curl -sS --fail-with-body -X "$method" "$ADTO_API$path" \
+    -H "Authorization: Bearer $ADTO_API_KEY" \
+    -H "x-adto-timestamp: $ts" \
+    -H "x-adto-signature: v1=$sig" \
     -H 'Content-Type: application/json' \
     ${body:+--data-binary "$body"}
 }
@@ -110,28 +110,28 @@ The full scheme and the rate limits are on [API overview](/api/overview/).
 ## Create, read, update, delete
 
 ```bash
-source ./dectog.sh
+source ./adto.sh
 
 # Create a permanent link. 201 with every field of the link.
-dectog_call POST /api/v1/links \
+adto_call POST /api/v1/links \
   '{"slug":"spring-sale","target":"https://shop.example.com/sale","metadata":{"screen":"sale"}}'
 
 # Read one link, or the whole list (newest first).
-dectog_call GET /api/v1/links/spring-sale | jq .url
-dectog_call GET /api/v1/links | jq length
+adto_call GET /api/v1/links/spring-sale | jq .url
+adto_call GET /api/v1/links | jq length
 
 # Update. An absent key keeps its value; "" or null clears it.
-dectog_call PUT /api/v1/links/spring-sale \
+adto_call PUT /api/v1/links/spring-sale \
   '{"ios_deep_link_path":"sale/2","android_deep_link_path":"sale/2","campaign":"spring"}'
 
 # Pause it (taps get a 410, nothing recorded), resume it, or expire it at a time.
-dectog_call PUT /api/v1/links/spring-sale '{"disabled":true,"disabled_reason":"sale over"}'
-dectog_call PUT /api/v1/links/spring-sale '{"expires_at":"2026-12-31T23:59:00Z","expired_url":"https://shop.example.com/over"}'
+adto_call PUT /api/v1/links/spring-sale '{"disabled":true,"disabled_reason":"sale over"}'
+adto_call PUT /api/v1/links/spring-sale '{"expires_at":"2026-12-31T23:59:00Z","expired_url":"https://shop.example.com/over"}'
 
 # Delete. 200 {"success":true}; the link answers 404 but its history stays (restorable).
-dectog_call DELETE /api/v1/links/spring-sale
+adto_call DELETE /api/v1/links/spring-sale
 # Delete for good: the link's clicks, attributed installs, events and opens go with it.
-dectog_call DELETE "/api/v1/links/spring-sale?permanent=true"
+adto_call DELETE "/api/v1/links/spring-sale?permanent=true"
 ```
 
 What to expect:
@@ -149,13 +149,13 @@ Field rules are on [Links API](/api/links/).
 #!/usr/bin/env bash
 # links.csv: slug,target,screen (no header)
 set -uo pipefail
-source "$(dirname "$0")/dectog.sh"
+source "$(dirname "$0")/adto.sh"
 
 while IFS=, read -r slug target screen; do
   body=$(jq -nc --arg s "$slug" --arg t "$target" --arg sc "$screen" \
     '{slug:$s, target:$t, metadata:{screen:$sc, campaign:"spring"}}')
   for attempt in 1 2 3; do
-    if out=$(dectog_call POST /api/v1/links "$body" 2>/dev/null); then
+    if out=$(adto_call POST /api/v1/links "$body" 2>/dev/null); then
       echo "created  $slug -> $(jq -r .url <<<"$out")"; break
     fi
     case "$(jq -r .error.code <<<"$out" 2>/dev/null)" in
@@ -177,7 +177,7 @@ The limiter uses fixed one-minute windows, so a 60-second sleep always lands in 
 echo 'slug,clicks,url,target,created' > links.csv
 cursor=""
 while :; do
-  page=$(dectog_call GET "/api/v1/links?limit=200${cursor:+&cursor=$cursor}")
+  page=$(adto_call GET "/api/v1/links?limit=200${cursor:+&cursor=$cursor}")
   jq -r '.data[] | [.slug, .click_count, .url, .target, .created_at] | @csv' <<<"$page" >> links.csv
   cursor=$(jq -r '.next_cursor // empty' <<<"$page")
   [ -n "$cursor" ] || break
@@ -193,10 +193,10 @@ Temporary links expire on their own and are deleted a day after expiry, so a pip
 ```yaml title=".github/workflows/build.yml (excerpt)"
 - name: Publish a link to this build
   env:
-    DECTOG_API_KEY: ${{ secrets.DECTOG_API_KEY }}
+    ADTO_API_KEY: ${{ secrets.ADTO_API_KEY }}
   run: |
-    source ./scripts/dectog.sh
-    url=$(dectog_call POST /api/v1/temp-links \
+    source ./scripts/adto.sh
+    url=$(adto_call POST /api/v1/temp-links \
       "$(jq -nc --arg t "$ARTIFACT_URL" '{target:$t, ttlSeconds:86400}')" | jq -r .url)
     echo "Build ${GITHUB_SHA::7}: $url" >> "$GITHUB_STEP_SUMMARY"
 ```
@@ -210,11 +210,11 @@ AdTo draws a QR code on the branded page that desktop visitors see when neither 
 For files, encode the link's `url` with any QR library; the server does nothing more than that:
 
 ```bash
-url=$(dectog_call GET /api/v1/links/spring-sale | jq -r .url)
+url=$(adto_call GET /api/v1/links/spring-sale | jq -r .url)
 qrencode -o spring-sale.png "$url"
 ```
 
-Append `utm_*` or `dec_*` parameters to the encoded URL if you want them on the scan. See [Social previews and QR](/links/social-previews-and-qr/).
+Append `utm_*` or `adto_*` parameters to the encoded URL if you want them on the scan. See [Social previews and QR](/links/social-previews-and-qr/).
 
 ## Public resolve
 
@@ -249,9 +249,9 @@ A 429 returns `{"error":{"code":"rate_limited","message":"Rate limit exceeded"}}
 Agents that keep a local copy can fetch them directly:
 
 ```bash
-mkdir -p ~/.dectog/skills
-curl -sS https://adto.app/SKILL.md > ~/.dectog/skills/SKILL.md
-curl -sS https://docs.adto.app/llms-full.txt > ~/.dectog/skills/docs.md
+mkdir -p ~/.adto/skills
+curl -sS https://adto.app/SKILL.md > ~/.adto/skills/SKILL.md
+curl -sS https://docs.adto.app/llms-full.txt > ~/.adto/skills/docs.md
 ```
 
 ### The "Set up with your agent" button

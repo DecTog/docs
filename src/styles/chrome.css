@@ -314,7 +314,7 @@ main footer > .meta:not(:has(*)) {
 }
 
 /* Line added by src/components/Footer.astro */
-.dectog-footer {
+.adto-footer {
 	margin-top: 2rem;
 	font-size: var(--sl-text-xs);
 	line-height: 1.6;
@@ -323,10 +323,10 @@ main footer > .meta:not(:has(*)) {
 	flex-wrap: wrap;
 	gap: 0.25rem 1.25rem;
 }
-.dectog-footer a {
+.adto-footer a {
 	color: inherit;
 	transition: color var(--dt-ease);
 }
-.dectog-footer a:hover {
+.adto-footer a:hover {
 	color: var(--dt-ink);
 }

@@ -16,7 +16,7 @@ Records a click that happened inside the app: the app was already installed and 
 | Field | Type | Required | Meaning |
 |---|---|---|---|
 | `slug` | string | yes | One of your permanent or temporary slugs. Unknown slugs answer `404 {"error": {"code": "not_found", "message": "Link not found"}}`. |
-| `click_id` | string | no | The `dtg_click` id the app received through an Android intent bounce. See the flip rules below. |
+| `click_id` | string | no | The `adto_click` id the app received through an Android intent bounce. See the flip rules below. |
 | `platform` | string | no | `ios` or `android` (any case). Sets the click's device type and the OS label (`iOS 17.5`, `Android 14`). |
 | `os_version` | string | no | Up to 32 characters; combined with `platform` into the OS label and the OS major. |
 | `device_type` | string | no | Used only when `platform` is not `ios` or `android`; otherwise the server classifies the request's User-Agent. |
@@ -27,7 +27,7 @@ Records a click that happened inside the app: the app was already installed and 
 | `device_model` | string | no | Trimmed, unquoted and lowercased. |
 | `metadata` | JSON | no | Stored when truthy. |
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | string | no | Stored as strings. |
-| `link_params` | object | no | String-to-string map of the opened URL's `dec_*` parameters. Parsed like the redirect engine does: `dec_deeplink` is checked against the link's app schemes, tracking values are capped at 255 characters, and the link's own `label`, `campaign`, `adgroup` and `creative` fill whatever the URL did not set. See [URL parameters](/links/url-parameters/). |
+| `link_params` | object | no | String-to-string map of the opened URL's `adto_*` parameters. Parsed like the redirect engine does: `adto_deeplink` is checked against the link's app schemes, tracking values are capped at 255 characters, and the link's own `label`, `campaign`, `adgroup` and `creative` fill whatever the URL did not set. See [URL parameters](/links/url-parameters/). |
 | `client_click_time` | string | no | ISO 8601, device clock, when the link reached the device. Dropped silently when unparseable; stored up to 64 characters. |
 | `launch_referrer` | string | no | The launching app's referrer (`Activity.getReferrer()` or `referrerURL`), up to 512 characters. |
 
@@ -97,7 +97,7 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 
 | Field | Type | Meaning |
 |---|---|---|
-| `install_referrer` | string, 2048 | The raw Play or OEM store referrer. Attribution reads `dtg_click=<id>` and `dtg_l=<username>/<slug>` from it. |
+| `install_referrer` | string, 2048 | The raw Play or OEM store referrer. Attribution reads `adto_click=<id>` and `adto_l=<username>/<slug>` from it. |
 | `referrer_store` | string | `google_play`, `huawei`, `samsung`, `xiaomi` or `vivo`. Defaults to `google_play` when `install_referrer` is present; other values are dropped. |
 | `referrer_status` | string | `ok`, `organic`, `feature_not_supported`, `service_unavailable`, `developer_error`, `permission_error`, `timeout`, `error`, `not_available` or `not_android`. |
 | `referrer_attempts` | integer 0 to 1000 | |
@@ -106,9 +106,9 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `referrer_click_server_ts`, `install_begin_server_ts` | epoch ms | Google's server-side pair. `referrer_click_server_ts` times a store-referrer match for `impossible_speed`, `click_injection` and `stale_referrer`, and dates synthesized clicks; `install_begin_server_ts` is when the download began, for `click_injection`. |
 | `install_version` | string, 64 | |
 | `google_play_instant` | boolean | Must be a JSON boolean; any other type stores `null`. |
-| `meta_referrer`, `meta_referrer_ts` | string 512, epoch ms | Meta's on-device install referrer. The SDK reads it when the app has a Facebook App ID: `DectogConfig.fbAppId`, else the `fb_app_id` saved on the Apps page, which the SDK gets from `GET /api/v1/sdk-config`. |
+| `meta_referrer`, `meta_referrer_ts` | string 512, epoch ms | Meta's on-device install referrer. The SDK reads it when the app has a Facebook App ID: `AdtoConfig.fbAppId`, else the `fb_app_id` saved on the Apps page, which the SDK gets from `GET /api/v1/sdk-config`. |
 | `meta_referrer_is_ct` | boolean | Click-through (`true`) or view-through (`false`). Stored only together with `meta_referrer`. |
-| `clipboard_url` | string, up to 2048 | An AdTo link found on the pasteboard. Only links of this account on this deployment are read: `https://<username>.<root>/<slug>`, `/r/<username>/<slug>` on the root domain or the public base host, a custom-scheme URL carrying `dtg_l=<username>/<slug>`, or the development form `dectog://<username>/<slug>`. A link of another account, `/r/` on any other host, or an untagged scheme URL is ignored. The slug is stored as `clipboard_slug`; the raw clipboard content is never stored. |
+| `clipboard_url` | string, up to 2048 | An AdTo link found on the pasteboard. Only links of this account on this deployment are read: `https://<username>.<root>/<slug>`, `/r/<username>/<slug>` on the root domain or the public base host, a custom-scheme URL carrying `adto_l=<username>/<slug>`, or the development form `adto://<username>/<slug>`. A link of another account, `/r/` on any other host, or an untagged scheme URL is ignored. The slug is stored as `clipboard_slug`; the raw clipboard content is never stored. |
 | `asa_token` | string, 4096 | The Apple Search Ads attribution token from AdServices. |
 
 Epoch values must fall between 1970 and 2100, otherwise they become `null`.
@@ -134,11 +134,11 @@ Epoch values must fall between 1970 and 2100, otherwise they become `null`.
 
 1. **Replay.** When `install_attempt_id` matches a row of your account, the stored verdict comes back with `"replayed": true`. Nothing is written and nothing is re-matched.
 2. **Reinstall flag.** `is_reinstall` is `true` when `install_state` is `reinstall`, or when the same `device_id` already has a non-reinstall install in your account. The flag does not stop matching; the dashboard counts reinstalls apart from first installs.
-3. **Deterministic ladder.** Signals are tried in order: store referrer, clipboard URL, Meta referrer. Each signal that carries `dtg_click=<id>` is resolved:
+3. **Deterministic ladder.** Signals are tried in order: store referrer, clipboard URL, Meta referrer. Each signal that carries `adto_click=<id>` is resolved:
    - The click exists and no install holds it: match. `match_source` is `referrer` (store or Meta) or `clipboard`, `referrer_source` is the store name, `meta`, or `null` for clipboard, and `match_confidence` is `guaranteed`.
    - The click is held by an install with the same `device_id`: that install's verdict is replayed (`"replayed": true`), nothing is written.
    - The click is held by another device's install: the ladder **moves on to the next signal** and remembers the reuse.
-   - The click id is unknown: when the signal also carries `dtg_l=<your username>/<slug>` for an existing link (a clipboard URL names its slug by construction), a web click with that id is synthesized (`origin: "synthesized_referrer"`, `clicked_at` from the server-side referrer time, else now) and the install matches it. Otherwise the ladder moves on.
+   - The click id is unknown: when the signal also carries `adto_l=<your username>/<slug>` for an existing link (a clipboard URL names its slug by construction), a web click with that id is synthesized (`origin: "synthesized_referrer"`, `clicked_at` from the server-side referrer time, else now) and the install matches it. Otherwise the ladder moves on.
    - When no signal matched and at least one was a reuse, the install gets the `click_reuse` flag and the fingerprint does not run. `click_reuse` is therefore only ever the final outcome, never a reason to skip a later signal.
 4. **Fingerprint.** Runs unless `install_state` is `update`, step 3 ended in reuse, the registration carries `recovered_from`, or the install's app turned **Probabilistic match** off. Candidates: your `source: "web"` clicks from iOS and Android, wherever the tap was sent, from the same hashed IP and the same device family (`os`), not yet credited to any install, from the last 24 hours, newest 50. A click keeps the 24 hour window only when it and the install share a device model or a screen profile to compare (present on both sides) and the install is not on `cellular`; every other click must be inside the low-entropy window (2 hours by default, overridable per app up to 720 hours and never longer than the wide window). Scoring per click: model match +40 (a mismatch excludes the click), OS major +15 or −30, language +10 or −15, screen short side within 3 % +15 or −40, same ASN +10; missing signals score 0. The iOS minor version, `text_size`, `dark_mode`, `high_contrast`, `reduce_motion` and `utc_offset_min` are compared too and recorded in the install's explanation for 0 points (see [Attribution internals](/start/attribution-internals/)). Confidence from the ranked list: `low` when the top two are within 10 points or the top score is negative; `high` when the top is unique and has a model match, a screen agreement plus OS major, or a score of at least 15; `medium` for a unique top scoring 0 to 14. Only `high` credits the click (`match_source: "fingerprint"`); `medium` fills `routing` without credit; `low` does nothing. When step 3 already matched, the fingerprint still runs as a shadow and records whether it agrees.
 5. **Link check.** A matched click whose link no longer exists makes the install organic.
@@ -208,7 +208,7 @@ When a blocked rule withholds the credit, the response has `"matched": false`, `
 | `username`, `slug` | string | when matched | The matched link. |
 | `link` | object | when matched **and** the link is permanent | `slug`, `target`, `url`, `created_at`, `metadata`. A temporary-link match has `username` and `slug` but no `link`. |
 | `custom_params` | JSON or null | when matched | The permanent link's `metadata`; `null` for temporary links or when none is set. |
-| `click_params` | object or null | when matched | The matched click's `dec_*` values: `deep_link`, `label`, `campaign`, `adgroup`, `creative`, `tracker`. `null` when the click carried none. |
+| `click_params` | object or null | when matched | The matched click's `adto_*` values: `deep_link`, `label`, `campaign`, `adgroup`, `creative`, `tracker`. `null` when the click carried none. |
 | `deep_link` | string or null | when matched | Mirrors `click_params.deep_link`. |
 | `clicked_at` | string or null | when matched | The matched click's time. |
 
@@ -249,8 +249,8 @@ Every call refreshes telemetry first: non-null signal fields overwrite the store
 | `unchanged` plus `"replayed": true` | `already_deterministic` | The named click is held by another install of the same `device_id`. | That install's verdict; the SDK adopts its `install_id`. |
 | `upgraded` | none | The signal names a usable click. The deterministic click replaces a fingerprint guess, credited or withheld (the guessed click is released), or organic. `claimed_at` is set, the install is judged again against the new tap (flags about the released tap go; `stale_*` and `click_reuse` stay), a blocked rule that hits again withholds the credit (`matched: false`), and the webhook fires `app.install_updated`. | The new verdict with `"match_confidence": "guaranteed"`. |
 | `rejected` | `click_reuse` | The click is held by another device's install. `click_reuse` is added to `fraud_flags`. | The stored verdict. |
-| `rejected` | `click_not_found` | The click id is unknown and no `dtg_l` of yours could synthesize it. | The stored verdict. |
-| `rejected` | `no_signal` | No signal in the body carries `dtg_click`. | The stored verdict. |
+| `rejected` | `click_not_found` | The click id is unknown and no `adto_l` of yours could synthesize it. | The stored verdict. |
+| `rejected` | `no_signal` | No signal in the body carries `adto_click`. | The stored verdict. |
 | `rejected` | `stale_click` | The pasted link's or Meta referrer's click is older than the app's deterministic window (default 7 days). `stale_clipboard` or `stale_meta` is added to `fraud_flags`. | The stored verdict. |
 
 Claims never run the fingerprint: a claim with no deterministic signal is `rejected / no_signal` even when a fingerprint candidate exists.
@@ -258,8 +258,8 @@ Claims never run the fingerprint: a claim with no deterministic signal is `rejec
 An `asa_token` on a claim is accepted unless the row's status is already `resolved` or `no_attribution`; it sets the status back to `pending` with zero attempts and starts the round-trip, including on `unchanged` and `rejected` claims.
 
 ```bash title="A referrer that arrived on the third launch"
-dectog POST /api/v1/app-installs/3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f/claim '{
-  "install_referrer": "dtg_click=4f1e9c2b7a3d5e6f&dtg_l=acme/spring-sale",
+adto POST /api/v1/app-installs/3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f/claim '{
+  "install_referrer": "adto_click=4f1e9c2b7a3d5e6f&adto_l=acme/spring-sale",
   "referrer_store": "google_play",
   "referrer_status": "ok",
   "referrer_click_server_ts": 1760259552000,

@@ -10,14 +10,12 @@ sidebar:
 Create a test environment in the dashboard (Settings → [Test environment](/dashboard/settings/#test-environment)): a second account, `t-<username>`, with the same apps. Give debug builds its SDK key, and its link host in their associated domains (`applinks:t-acme.adto.app` and the Android intent filter), so nothing you test reaches your live numbers:
 
 ```dart
-await dectog.initialize(DectogConfig(
+await adto.initialize(AdtoConfig(
   apiKey: kReleaseMode ? liveSdkKey : testSdkKey,
-  baseUrl: 'https://app.adto.app',
-  linkRootDomain: 'adto.app',
 ));
 ```
 
-The key alone decides which account gets the data: there is nothing else to set. `DectogConfig(environment:)` (`live` or `test`) is an optional check, not a switch, and changes nothing at runtime: when the app calls `diagnostics()`, it warns if the key belongs to the other environment. Without it, `diagnostics()` still warns when a release build carries a test key. In the dashboard, the **Live** / **Test** switch at the top of the sidebar shows either account.
+The key alone decides which account gets the data: there is nothing else to set. `AdtoConfig(environment:)` (`live` or `test`) is an optional check, not a switch, and changes nothing at runtime: when the app calls `diagnostics()`, it warns if the key belongs to the other environment. Without it, `diagnostics()` still warns when a release build carries a test key. In the dashboard, the **Live** / **Test** switch at the top of the sidebar shows either account.
 
 ## Testing link handling
 
@@ -38,8 +36,8 @@ Install attribution only works for a build that was installed the way your users
 1. In **Dashboard → Apps**, save the real App Store and Play Store URLs and the SHA-256 fingerprint of the certificate the installed build is signed with (the Play App Signing key for a store build). Turn on **iOS tap-to-store** under Advanced if you want the deterministic pasteboard path on iPhone.
 2. Create a link in **Dashboard → Links**.
 3. Uninstall the app from a physical device. On Android, `adb shell pm clear <package>` also resets the SDK's state without uninstalling.
-4. Tap the link on that device. Android lands in Play with `referrer=dtg_click=…&dtg_l=…` on the store URL. iOS lands on the tap-to-store page; "Get the app" copies the link with its click id and opens the App Store.
-5. Install from the store and open the app once. `onAppInstalled` fires with `matched: true`, `matchConfidence: 'guaranteed'`, `slug` naming the link, and `matchSource` `referrer` (Android, `referrerSource: 'google_play'`) or `clipboard` (iOS). On iOS 16 and newer the first launch shows the "Allow paste" alert; decline it to test the `DectogPasteButton` recovery path.
+4. Tap the link on that device. Android lands in Play with `referrer=adto_click=…&adto_l=…` on the store URL. iOS lands on the tap-to-store page; "Get the app" copies the link with its click id and opens the App Store.
+5. Install from the store and open the app once. `onAppInstalled` fires with `matched: true`, `matchConfidence: 'guaranteed'`, `slug` naming the link, and `matchSource` `referrer` (Android, `referrerSource: 'google_play'`) or `clipboard` (iOS). On iOS 16 and newer the first launch shows the "Allow paste" alert; decline it to test the `AdtoPasteButton` recovery path.
 6. Without a deterministic signal (pasteboard declined, referrer unavailable) the server falls back to the fingerprint: the install must come from the same network as the tap, within 24 hours (2 hours for cellular installs, or clicks with neither a device model nor a screen profile to compare with the install). Expect `matchConfidence` `high` with `matched: true`, or `medium` with `routing` only.
 7. Check the **Overview**: the install appears in the Installs number and in the attribution-quality panel, whose referrer-status chips show how the Android read ended.
 
@@ -57,7 +55,7 @@ Things that look like failures and are not:
 - [ ] App record complete: bundle ID and Team ID (iOS), package and the **release / Play App Signing** fingerprint (Android), real store URLs. Both **Verify** buttons on the Apps page report your app IDs and packages with fingerprints present.
 - [ ] `applinks:{username}.adto.app` in every entitlements file your build configurations use; an `autoVerify` intent filter for `{username}.adto.app` in the manifest; `adb shell pm get-app-links <package>` reports `verified`.
 - [ ] Custom scheme registered on both platforms if you saved one in the app record.
-- [ ] SDK key (`dtg_pub_…`, not the account key) injected at build time, not committed. `baseUrl: 'https://app.adto.app'` and `linkRootDomain: 'adto.app'` set, since the SDK's defaults are the old DecTog service.
+- [ ] SDK key (`adto_pub_…`, not the account key) injected at build time, not committed.
 - [ ] `collect`, `advertisingIdProvider` and `persistDeviceId` chosen deliberately, and the privacy policy, Play Data safety form and App Store privacy labels updated for what you send. See [Device data and privacy](/sdk/device-data-and-privacy/).
 - [ ] If you ship through the Galaxy Store or GetApps, their referrer libraries added to the app module. See [Installation](/sdk/installation/).
 - [ ] `identify` called after signup and login, `trackConversion` on purchases, so leads and revenue reach the dashboard.

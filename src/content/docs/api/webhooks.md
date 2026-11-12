@@ -30,10 +30,10 @@ Every delivery is a POST of the same envelope:
 | Header | Value |
 |---|---|
 | `content-type` | `application/json` |
-| `x-dectog-event` | The event name, as in the body. |
-| `x-dectog-event-id` | The `event_id`, as in the body. |
-| `x-dectog-signature` | `sha256=<hex>` where hex is HMAC-SHA256 of the **raw request body** keyed with your secret, lowercase. |
-| `x-dectog-timestamp` | Unix seconds when the request was built. |
+| `x-adto-event` | The event name, as in the body. |
+| `x-adto-event-id` | The `event_id`, as in the body. |
+| `x-adto-signature` | `sha256=<hex>` where hex is HMAC-SHA256 of the **raw request body** keyed with your secret, lowercase. |
+| `x-adto-timestamp` | Unix seconds when the request was built. |
 
 `event_id` is the same on every attempt and on a manual resend: deduplicate on it. `attempt` counts from 1. The signature covers the body bytes only. Verify against the raw bytes exactly as received, before any JSON parsing or re-serialization.
 
@@ -43,7 +43,7 @@ Every delivery is a POST of the same envelope:
 |---|---|---|
 | `app.installed` | A first-launch report (`POST /api/v1/app-installs`) produced a verdict. Organic installs fire too. Replays (`"replayed": true`) do not. | the install, [below](#the-install-events) |
 | `app.install_updated` | A late claim upgraded the verdict (`"claim": "upgraded"`), or Apple Search Ads resolved with `attribution: true`. | the same |
-| `event.conversion`, `event.lead` | The SDK's event batch, or [`dectog.js`](/sdk/web/) on your website, stored a conversion or a lead (the automatic signup lead included); duplicates are not sent again. `source` is `web` for the website's, `store` for a store notification's, `null` for the app's. | `{username, event: {id, type, event_name, revenue, currency, revenue_base, transaction_type, transaction_id, original_transaction_id, product_id, store, source, customer_id, install_id, slug, open_slug, client_timestamp, metadata, created_at}}` |
+| `event.conversion`, `event.lead` | The SDK's event batch, or [`adto.js`](/sdk/web/) on your website, stored a conversion or a lead (the automatic signup lead included); duplicates are not sent again. `source` is `web` for the website's, `store` for a store notification's, `null` for the app's. | `{username, event: {id, type, event_name, revenue, currency, revenue_base, transaction_type, transaction_id, original_transaction_id, product_id, store, source, customer_id, install_id, slug, open_slug, client_timestamp, metadata, created_at}}` |
 | `app.opened` | A link opened the installed app (`POST /api/v1/app-opens`). | `{username, open: {id, slug, click_id, install_id, device_id, app_version, os, created_at}}` |
 | `referral.converted` | A referred user signed up. | `{username, referral: {…}}`, see [Referral programs](/guides/referral-programs/#4-reward-from-the-webhook) |
 | `click.recorded` | Every tap and every in-app open the SDK reports. Not ticked by default: one delivery per tap. | `{username, click: {id, slug, link_kind, source, device_type, os, browser, country, lang, referrer, ip_hash, utm_source, utm_medium, utm_campaign, utm_term, utm_content, link_params, clicked_at}}`; never the raw IP, the user agent or a device id |
@@ -155,15 +155,15 @@ The dashboard uses these session routes; see [Admin API](/api/admin-api/#webhook
 
 ## Verifying the signature
 
-All three snippets compute `sha256=` + HMAC-SHA256(secret, raw body) and compare it in constant time with the `x-dectog-signature` header. They produce identical values for identical input.
+All three snippets compute `sha256=` + HMAC-SHA256(secret, raw body) and compare it in constant time with the `x-adto-signature` header. They produce identical values for identical input.
 
 ```js title="Node (Express)"
 import express from "express";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const SECRET = process.env.DECTOG_WEBHOOK_SECRET;
+const SECRET = process.env.ADTO_WEBHOOK_SECRET;
 
-function verifyDectogSignature(rawBody, signatureHeader) {
+function verifyAdtoSignature(rawBody, signatureHeader) {
   if (typeof signatureHeader !== "string" || !signatureHeader.startsWith("sha256=")) return false;
   const expected = "sha256=" + createHmac("sha256", SECRET).update(rawBody).digest("hex");
   const a = Buffer.from(expected);
@@ -174,8 +174,8 @@ function verifyDectogSignature(rawBody, signatureHeader) {
 const app = express();
 
 // Keep the raw bytes: express.json() would re-serialize and break the check.
-app.post("/dectog/events", express.raw({ type: "application/json" }), (req, res) => {
-  if (!verifyDectogSignature(req.body, req.get("x-dectog-signature"))) {
+app.post("/adto/events", express.raw({ type: "application/json" }), (req, res) => {
+  if (!verifyAdtoSignature(req.body, req.get("x-adto-signature"))) {
     return res.status(401).end();
   }
   const delivery = JSON.parse(req.body.toString("utf8"));
@@ -192,19 +192,19 @@ import os
 from flask import Flask, abort, request
 
 app = Flask(__name__)
-SECRET = os.environ["DECTOG_WEBHOOK_SECRET"].encode()
+SECRET = os.environ["ADTO_WEBHOOK_SECRET"].encode()
 
 
-def verify_dectog_signature(raw_body: bytes, signature_header: str | None) -> bool:
+def verify_adto_signature(raw_body: bytes, signature_header: str | None) -> bool:
     if not signature_header or not signature_header.startswith("sha256="):
         return False
     expected = "sha256=" + hmac.new(SECRET, raw_body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature_header)
 
 
-@app.post("/dectog/events")
-def dectog_events():
-    if not verify_dectog_signature(request.get_data(), request.headers.get("x-dectog-signature")):
+@app.post("/adto/events")
+def adto_events():
+    if not verify_adto_signature(request.get_data(), request.headers.get("x-adto-signature")):
         abort(401)
     delivery = request.get_json(force=True)
     # dedupe on delivery["event_id"], then handle delivery["event"] and delivery["data"]
@@ -213,9 +213,9 @@ def dectog_events():
 
 ```php title="PHP"
 <?php
-$secret = getenv('DECTOG_WEBHOOK_SECRET');
+$secret = getenv('ADTO_WEBHOOK_SECRET');
 $rawBody = file_get_contents('php://input');
-$signature = $_SERVER['HTTP_X_DECTOG_SIGNATURE'] ?? '';
+$signature = $_SERVER['HTTP_X_ADTO_SIGNATURE'] ?? '';
 
 $expected = 'sha256=' . hash_hmac('sha256', $rawBody, $secret);
 if (!hash_equals($expected, $signature)) {

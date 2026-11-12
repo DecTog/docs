@@ -11,8 +11,8 @@ AdTo does deep linking and install attribution for your own links. It is not a m
 
 - **No SKAdNetwork or AdAttributionKit.** No conversion values, no postbacks, no ad-network attribution on iOS.
 - **No ad-network clicks and no postbacks.** Ad networks cannot send AdTo their clicks or impressions server to server, and AdTo sends no postbacks to Meta Ads, Google Ads, TikTok Ads or any other network. An install from an ad is attributed only when the ad's tap went through an AdTo link. Why, and when this would change: [Design decisions](/start/design-decisions/) (27).
-- **Two ad-platform signals only.** The Apple Search Ads token (AdServices, resolved with Apple) and Meta's on-device install referrer from the Facebook and Instagram apps, which the SDK reads on Android when the app has a Facebook App ID (`DectogConfig.fbAppId`, else the one saved on the Apps page). The referrer credits the AdTo link it names, not an ad.
-- **Advertising identifiers only on request, and never matched on.** The core SDK never reads the GAID or the IDFA and never shows the App Tracking Transparency prompt; an app that wants them adds the separate `flutter_dectog_adid` package and asks for tracking itself. The server stores the id per install and joins it to nothing: attribution never uses it. There is no identity graph and no cross-app or cross-account identity: device ids are vendor-scoped and stay inside one account.
+- **Two ad-platform signals only.** The Apple Search Ads token (AdServices, resolved with Apple) and Meta's on-device install referrer from the Facebook and Instagram apps, which the SDK reads on Android when the app has a Facebook App ID (`AdtoConfig.fbAppId`, else the one saved on the Apps page). The referrer credits the AdTo link it names, not an ad.
+- **Advertising identifiers only on request, and never matched on.** The core SDK never reads the GAID or the IDFA and never shows the App Tracking Transparency prompt; an app that wants them adds the separate `flutter_adto_adid` package and asks for tracking itself. The server stores the id per install and joins it to nothing: attribution never uses it. There is no identity graph and no cross-app or cross-account identity: device ids are vendor-scoped and stay inside one account.
 
 ## Probabilistic matching
 
@@ -28,7 +28,7 @@ AdTo tries deterministic signals first: the store install referrer on Android, t
 
 - **No multi-touch.** Each install is credited to at most one click, and each event to one link: the link that last re-opened the app, inside its app's re-engagement window (7 days by default), else the install's link. A user who reinstalls is matched again like any install, carries `is_reinstall: true` and is left out of the Installs count.
 - **No uninstall tracking.**
-- **Only `dec_*` parameters survive an install.** Other query parameters on a shared link are not stored, so they do not come back after a deferred install; carry an in-app route in `dec_deeplink`. See [URL parameters](/links/url-parameters/#your-own-parameters).
+- **Only `adto_*` parameters survive an install.** Other query parameters on a shared link are not stored, so they do not come back after a deferred install; carry an in-app route in `adto_deeplink`. See [URL parameters](/links/url-parameters/#your-own-parameters).
 
 ## Analytics and data
 
@@ -38,7 +38,7 @@ AdTo tries deterministic signals first: the store install referrer on Android, t
 
 ## Platform and hosting
 
-- **No native iOS (Swift) or Android (Kotlin) SDK.** The SDKs are for [Flutter](/sdk/installation/) and [React Native and Expo](/react-native/), plus `dectog.js` for your own web pages ([Web pixel](/sdk/web/)); an app written in Swift or Kotlin calls the [REST API](/api/overview/) itself. The Flutter SDK is on [pub.dev](https://pub.dev/packages/flutter_dectog); the React Native SDK is not on npm yet.
+- **No native iOS (Swift) or Android (Kotlin) SDK.** The SDKs are for [Flutter](/sdk/installation/) and [React Native and Expo](/react-native/), plus `adto.js` for your own web pages ([Web pixel](/sdk/web/)); an app written in Swift or Kotlin calls the [REST API](/api/overview/) itself. The Flutter SDK is on [pub.dev](https://pub.dev/packages/flutter_adto); the React Native SDK is not on npm yet.
 - **Custom link domains are not available on AdTo at the moment.** Your links are on `{username}.adto.app`. See [Custom domains](/links/custom-domains/).
 - **Three roles, no single sign-on.** A team has owners, members and viewers; everyone signs in with their own email and password or Google. There is no SAML, SCIM or per-app permission.
 

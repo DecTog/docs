@@ -67,12 +67,12 @@ Every permanent-link route returns the full object, including fields you never s
 | `created_at`, `updated_at` | string or null | ISO 8601 UTC. `updated_at` stays `null` until the first `PUT`. |
 | `metadata` | JSON or null | Your own data. Delivered to the app on attributed installs as `custom_params` and inside `link.metadata`. |
 | `og_title`, `og_description`, `og_image_url` | string or null | Social preview overrides for bots and unfurlers. Fall back to the app's values. See [Social previews and QR](/links/social-previews-and-qr/). |
-| `ios_deep_link_path`, `android_deep_link_path` | string or null | The app route a custom-scheme open uses on that platform: `scheme://<path>?dtg_l=<username>/<slug>` instead of `scheme://<username>/<slug>?dtg_l=…`. Stored without a leading slash. |
+| `ios_deep_link_path`, `android_deep_link_path` | string or null | The app route a custom-scheme open uses on that platform: `scheme://<path>?adto_l=<username>/<slug>` instead of `scheme://<username>/<slug>?adto_l=…`. Stored without a leading slash. |
 | `redirect_url` | string or null | Mobile visitors without the app go here instead of the store. A store URL here is still tagged with the click id. |
 | `fallback_url` | string or null | Where desktop visitors go instead of the QR page, and the last mobile fallback. |
-| `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `dec_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
+| `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `adto_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | This link's iOS tap-to-store page and mobile interstitial. `null` follows the app's setting. See [How a tap is routed](/links/how-a-tap-is-routed/#mobile-delivering-it). |
-| `append_click_id` | boolean or null | Whether the link adds `dtg_click` to its web destinations, for [`dectog.js`](/sdk/web/). `null` is off, or the template's value. |
+| `append_click_id` | boolean or null | Whether the link adds `adto_click` to its web destinations, for [`adto.js`](/sdk/web/). `null` is off, or the template's value. |
 | `routing_rules` | array or null | Geo and language rules, first match wins. See [Geo and language rules](#geo-and-language-rules). |
 | `template_id` | string or null | The [template](#templates) whose values fill every field this link leaves empty. The fields above are the link's own. |
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | string or null | Added to the link's web destinations and stored on clicks whose URL has none. See [Link-level UTM values](/links/url-parameters/#link-level-utm-values). |
@@ -107,7 +107,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `redirect_url`, `fallback_url` | string | no | http(s) URLs. `""` stores `null`. |
 | `label`, `campaign`, `adgroup`, `creative` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | no | `true` or `false` overrides the app's setting for this link; `null` or absent follows it. Anything else answers `400 Invalid ios_tap_to_store: must be true, false or null (follow the app)`. |
-| `append_click_id` | boolean or null | no | `true` adds `dtg_click=<click id>` to the link's web destinations (never stores, MMP links or schemes); `false` or `null` does not. A template can set it. Anything else answers `400 Invalid append_click_id: must be true, false or null`. |
+| `append_click_id` | boolean or null | no | `true` adds `adto_click=<click id>` to the link's web destinations (never stores, MMP links or schemes); `false` or `null` does not. A template can set it. Anything else answers `400 Invalid append_click_id: must be true, false or null`. |
 | `routing_rules` | array or null | no | Up to 20 rules; `null` or `[]` stores none. See below. |
 | `template_id` | string | no | One of your templates; anything else answers `400 Unknown template_id`. When `app_id` is absent, the template's app applies. |
 | `utm_source` … `utm_content` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
@@ -136,7 +136,7 @@ Checks run in this order and stop at the first failure:
 The server also rejects `og_title` or `og_description` longer than 150 characters and an `og_image_url` that is not an http(s) URL, with the `400` strings listed under [Update a link](#update-a-link).
 
 ```bash title="Create a link"
-dectog POST /api/v1/links '{
+adto POST /api/v1/links '{
   "slug": "spring-sale",
   "target": "https://shop.example.com/sale",
   "metadata": { "screen": "sale" },
@@ -146,7 +146,7 @@ dectog POST /api/v1/links '{
 }'
 ```
 
-`dectog` is the signing helper from [API overview](/api/overview/).
+`adto` is the signing helper from [API overview](/api/overview/).
 
 ## Create many links
 
@@ -174,7 +174,7 @@ A link created with `external_id` can be named by it anywhere a v1 link route ta
 | Nothing | Created with the create rules (`slug` is then required); `201` with the Link |
 
 ```bash title="Sync one product's link"
-dectog PUT /api/v1/links/upsert '{"external_id": "product-42", "slug": "p42", "target": "https://shop.example.com/p/42", "campaign": "catalog"}'
+adto PUT /api/v1/links/upsert '{"external_id": "product-42", "slug": "p42", "target": "https://shop.example.com/p/42", "campaign": "catalog"}'
 ```
 
 ## Templates
@@ -224,12 +224,12 @@ A template holds defaults for link fields. A link with `template_id` takes the t
 Validation is the same as on create. Errors come back as `400` with the same strings, plus `{"error": {"code": "invalid_request", "message": "og_title must be at most 150 characters"}}`, `{"error": {"code": "invalid_request", "message": "og_description must be at most 150 characters"}}` and `{"error": {"code": "invalid_request", "message": "og_image_url must be a valid http(s) URL"}}`.
 
 ```bash title="Clear the target so the link inherits the app fallback"
-dectog PUT /api/v1/links/spring-sale '{"target": null, "label": "launch-week"}'
+adto PUT /api/v1/links/spring-sale '{"target": null, "label": "launch-week"}'
 ```
 
 ## Geo and language rules
 
-A rule replaces some of the link's fields for taps from given countries or browser languages. Rules are tried in order and the first match wins; a tap no rule matches is routed as usual, and the URL's `dec_*` parameters still win over a rule. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
+A rule replaces some of the link's fields for taps from given countries or browser languages. Rules are tried in order and the first match wins; a tap no rule matches is routed as usual, and the URL's `adto_*` parameters still win over a rule. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
 
 | Rule field | Type | Rules |
 |---|---|---|
@@ -244,14 +244,14 @@ A rule replaces some of the link's fields for taps from given countries or brows
 A rule needs a condition (`countries`, `languages`, `percent`, `starts_at` or `ends_at`; a tap must meet every one a rule has) and at least one of the destination fields. Unknown fields, more than 20 rules, shares over 100, or a bad value answer `400`, for example `{"error": {"code": "invalid_request", "message": "routing_rules[0] needs a condition: countries, languages, percent, starts_at or ends_at"}}`.
 
 ```bash title="German-speaking visitors get the German sale page and in-app route"
-dectog PUT /api/v1/links/spring-sale '{"routing_rules": [
+adto PUT /api/v1/links/spring-sale '{"routing_rules": [
   {"countries": ["DE", "AT", "CH"], "fallback_url": "https://shop.example.de/sale", "ios_deep_link_path": "de/sale", "android_deep_link_path": "de/sale"},
   {"languages": ["fr"], "fallback_url": "https://shop.example.fr/soldes"}
 ]}'
 ```
 
 ```bash title="Half the visitors see the new landing page; compare by routing_rule"
-dectog PUT /api/v1/links/spring-sale '{"routing_rules": [
+adto PUT /api/v1/links/spring-sale '{"routing_rules": [
   {"name": "new-landing", "percent": 50, "fallback_url": "https://shop.example.com/new", "redirect_url": "https://shop.example.com/new-m"}
 ]}'
 ```
@@ -270,7 +270,7 @@ A link that is not live records nothing: no click row, no click count, for peopl
 Pausing a paused link keeps its first `disabled_at`. A paused link that has also expired answers as paused.
 
 ```bash title="End a sale at midnight and send late taps to a page"
-dectog PUT /api/v1/links/spring-sale '{"expires_at": "2026-12-31T23:59:00Z", "expired_url": "https://shop.example.com/sale-over"}'
+adto PUT /api/v1/links/spring-sale '{"expires_at": "2026-12-31T23:59:00Z", "expired_url": "https://shop.example.com/sale-over"}'
 ```
 
 ### Delete, restore, delete permanently
@@ -333,7 +333,7 @@ How `ttlSeconds` is interpreted:
 Other errors: `400 {"error": {"code": "invalid_request", "message": "Invalid slug"}}`, `400 {"error": {"code": "invalid_request", "message": "Invalid target: must be a valid http(s) URL"}}`, `409 {"error": {"code": "conflict", "message": "Slug already exists", "slug": "…"}}`. Invalid `og_*` values are rejected as on permanent-link create.
 
 ```bash title="A link for a CI build that expires in one hour"
-dectog POST /api/v1/temp-links '{"target": "https://example.com/build/1234", "ttlSeconds": 3600}'
+adto POST /api/v1/temp-links '{"target": "https://example.com/build/1234", "ttlSeconds": 3600}'
 ```
 
 ### Read, update and delete

@@ -84,7 +84,7 @@ Errors: "Enter a valid http(s) URL", "Enter a valid public http(s) URL", "Couldn
 
 ## The QR page
 
-Desktop visitors land on the QR page when no other destination applies: no `dec_redirect` or `dec_fallback` on the URL, no custom desktop fallback on the link, no Fallback URL on the app. Mobile visitors see it only when they have no destination at all (no store URL, no custom redirect, no app fallback, no target). The visit records a click.
+Desktop visitors land on the QR page when no other destination applies: no `adto_redirect` or `adto_fallback` on the URL, no custom desktop fallback on the link, no Fallback URL on the app. Mobile visitors see it only when they have no destination at all (no store URL, no custom redirect, no app fallback, no target). The visit records a click.
 
 | Element | Content |
 |---|---|
@@ -92,8 +92,8 @@ Desktop visitors land on the QR page when no other destination applies: no `dec_
 | QR code | An SVG (220 px) of the canonical link URL, `https://acme.adto.app/welcome`, without any query string. Scanning it is a fresh mobile tap with its own click and store tag. |
 | Heading | "Scan to open on your phone", then "Point your camera at the code to continue to {host} in the app." when a target exists |
 | Store badges | Apple's **Download on the App Store** badge (the US/UK one in every language) and Google's **Get it on Google Play** badge in the page's language, linking to the plain store URLs without an attribution tag |
-| Scheme buttons | **Open in the iOS app** and **Open in the Android app**, one per configured scheme, or a single **Open in app** when both platforms share a scheme (the Android deep-link path is preferred). These carry no `dtg_click`. |
+| Scheme buttons | **Open in the iOS app** and **Open in the Android app**, one per configured scheme, or a single **Open in app** when both platforms share a scheme (the Android deep-link path is preferred). These carry no `adto_click`. |
 | Continue link | "Continue to {host} on desktop", only when the link has a target or inherits an app fallback |
 | Footer | "Powered by AdTo" when the page is branded with an app name |
 
-The texts are in the visitor's language (English, German, French, Spanish or Italian), and which button the visitor took is recorded on the click; see [The link pages](/links/how-a-tap-is-routed/#the-link-pages). The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `dec_deeplink` from the URL; without a path they open `scheme://acme/welcome`.
+The texts are in the visitor's language (English, German, French, Spanish or Italian), and which button the visitor took is recorded on the click; see [The link pages](/links/how-a-tap-is-routed/#the-link-pages). The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `adto_deeplink` from the URL; without a path they open `scheme://acme/welcome`.

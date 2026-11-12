@@ -5,13 +5,13 @@ sidebar:
   order: 4
 ---
 
-On the first launch after installation the SDK registers the install with `POST /api/v1/app-installs`, and the server answers with a verdict: did an AdTo link bring this install, and if so, which one. The verdict is a `DectogAppInstallResponse`, delivered on `onAppInstalled` and kept in `currentAppInstall`.
+On the first launch after installation the SDK registers the install with `POST /api/v1/app-installs`, and the server answers with a verdict: did an AdTo link bring this install, and if so, which one. The verdict is a `AdtoAppInstallResponse`, delivered on `onAppInstalled` and kept in `currentAppInstall`.
 
 The server-side rules (the deterministic ladder, the fingerprint, fraud rules) are described on [How attribution works](/start/how-attribution-works/) and [Clicks and installs](/api/clicks-and-installs/). This page covers the SDK's side.
 
 ## What happens on the first launch
 
-1. **Sentinel check.** The SDK reads `.dectog_install.json` from its backup-excluded directory. No file (or a file whose stored package first-install time differs from the current one) means a fresh install: a new `install_attempt_id` (a UUID) is generated and persisted as `pending` before anything is sent.
+1. **Sentinel check.** The SDK reads `.adto_install.json` from its backup-excluded directory. No file (or a file whose stored package first-install time differs from the current one) means a fresh install: a new `install_attempt_id` (a UUID) is generated and persisted as `pending` before anything is sent.
 2. **Signal collection, concurrently.** The Android install referrer (up to `installReferrerTimeout`, 5 seconds by default), the device and hardware tier, network and carrier, the WebView user agent (Android), Meta's referrer (Android, with `fbAppId`), the pasteboard (iOS by default), and the Apple Search Ads token (iOS, opt in). Every read except the referrer and the pasteboard is capped at 1.5 seconds; the Apple Search Ads token at 0.5 seconds; the pasteboard at 6 seconds. A slow read is simply left out.
 3. **Registration.** One `POST /api/v1/app-installs` with up to two in-process attempts of 15 seconds each. Network errors, timeouts, 408, 429 and 5xx are retried after a jittered backoff; a `Retry-After` header up to 10 seconds is honored, a longer one defers to the next launch. Other 4xx responses are not retried in-process.
 4. **Verdict.** The response is emitted on `onAppInstalled`, the sentinel becomes `tracked` with the server's `installId`, and the install id is persisted for later event batches and app-open reports.
@@ -24,7 +24,7 @@ Later launches never register again. They may send late claims, and they do not 
 ## Reading the verdict
 
 ```dart
-dectog.onAppInstalled.listen((install) {
+adto.onAppInstalled.listen((install) {
   final route = install.routing?.deepLink ?? install.deepLink;
   if (route != null) _openRoute(route);           // medium confidence or better
   if (install.matched) _creditInstall(install);   // high or guaranteed only
@@ -69,7 +69,7 @@ A late claim is `POST /api/v1/app-installs/{installId}/claim` with a determinist
 |---|---|
 | `late_referrer` | The Android referrer was not definitive at registration time and became available later, in the same process (the native reader was still retrying) or on one of the next five launches. Also used for an Apple Search Ads token obtained on a later launch. |
 | `clipboard` | The iOS pasteboard alert was answered after the registration request had already left. |
-| `paste_control` | The user tapped a `DectogPasteButton` and the pasteboard held an AdTo link. |
+| `paste_control` | The user tapped a `AdtoPasteButton` and the pasteboard held an AdTo link. |
 
 Outcomes, as `claim` and `claimReason` on the returned verdict:
 
@@ -78,8 +78,8 @@ Outcomes, as `claim` and `claimReason` on the returned verdict:
 | `upgraded` | | The signal named a click; the verdict is now `guaranteed` and is re-emitted. A fingerprint guess, if any, is released. |
 | `unchanged` | `already_deterministic` | A deterministic signal already decided the install (a replay of the same signal, or a verdict whose credit a blocked fraud rule withheld, which keeps the click as evidence). A fingerprint match whose credit was withheld can still be upgraded. |
 | `rejected` | `click_reuse` | The click is already credited to another device's install. The flag `click_reuse` is added. |
-| `rejected` | `click_not_found` | The click id is unknown and the signal carried no usable `dtg_l` tag to synthesize it. |
-| `rejected` | `no_signal` | The body carried no `dtg_click` at all. |
+| `rejected` | `click_not_found` | The click id is unknown and the signal carried no usable `adto_l` tag to synthesize it. |
+| `rejected` | `no_signal` | The body carried no `adto_click` at all. |
 | `rejected` | `stale_click` | The pasted link or Meta referrer names a click older than the app's deterministic window (7 days by default). |
 
 The referrer question is marked settled in the sentinel only after the server acknowledged the claim (200, or 404 for an install the server no longer knows), so a claim lost to a network error is retried on the next launch. Claims never run the fingerprint.
@@ -101,14 +101,14 @@ The SDK also sends `first_install_ts`: the package's `firstInstallTime` on Andro
 
 ## The sentinel and backup exclusion
 
-The install sentinel is the file `.dectog_install.json` (format version 2) in the SDK's private storage directory:
+The install sentinel is the file `.adto_install.json` (format version 2) in the SDK's private storage directory:
 
-- Android: `Context.getNoBackupFilesDir()/dectog/`, excluded from key/value backup and Auto Backup by the platform.
-- iOS: the Application Support directory, subfolder `dectog`, with `NSURLIsExcludedFromBackupKey` set on the folder.
+- Android: `Context.getNoBackupFilesDir()/adto/`, excluded from key/value backup and Auto Backup by the platform.
+- iOS: the Application Support directory, subfolder `adto`, with `NSURLIsExcludedFromBackupKey` set on the folder.
 
 A restored backup therefore never carries a `tracked` sentinel onto a fresh install, which would suppress the registration for good. As a second line of defense the file stores the package first-install time it was written with; a mismatch means the file came from a previous installation and it is discarded.
 
-The sentinel records the status (`pending`, `tracked`, `failed`, `abandoned`), `install_attempt_id`, the attempt counter, timestamps, the last error, the server `install_id`, whether the referrer and the Apple Search Ads token were delivered and acknowledged, and how many launches have re-read the referrer. The same directory holds the SDK state file (`.dectog_sdk_state.json`) and the event queue (`.dectog_event_queue.jsonl`).
+The sentinel records the status (`pending`, `tracked`, `failed`, `abandoned`), `install_attempt_id`, the attempt counter, timestamps, the last error, the server `install_id`, whether the referrer and the Apple Search Ads token were delivered and acknowledged, and how many launches have re-read the referrer. The same directory holds the SDK state file (`.adto_sdk_state.json`) and the event queue (`.adto_event_queue.jsonl`).
 
 To make a device register again during development, uninstall the app (iOS) or run `adb shell pm clear <package>` (Android). See [Testing](/sdk/testing/).
 

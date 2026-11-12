@@ -12,13 +12,13 @@ sidebar:
 Pass the transaction id the store gave you and the store:
 
 ```dart
-await dectog.trackConversion(
+await adto.trackConversion(
   revenue: 9.99,
   currency: 'EUR',
   productId: 'pro_monthly',
   transactionId: purchase.transactionId,
-  store: DectogStore.appStore,       // or DectogStore.play
-  purchaseType: DectogPurchaseType.subscription,
+  store: AdtoStore.appStore,       // or AdtoStore.play
+  purchaseType: AdtoPurchaseType.subscription,
 );
 ```
 
@@ -29,14 +29,14 @@ The server stores each transaction once per store and type. A purchase you repor
 A renewal is a purchase with its own transaction id that names the subscription's first purchase as `originalTransactionId`:
 
 ```dart
-await dectog.trackConversion(
+await adto.trackConversion(
   revenue: 9.99,
   currency: 'EUR',
   productId: 'pro_monthly',
   transactionId: renewal.transactionId,
   originalTransactionId: renewal.originalTransactionId,
-  store: DectogStore.appStore,
-  purchaseType: DectogPurchaseType.subscription,
+  store: AdtoStore.appStore,
+  purchaseType: AdtoPurchaseType.subscription,
 );
 ```
 
@@ -45,16 +45,16 @@ The renewal is credited to the link and install of that first purchase, even whe
 ## Refunds and cancellations
 
 ```dart
-await dectog.trackConversion(
+await adto.trackConversion(
   revenue: 9.99,                      // the amount refunded
   currency: 'EUR',
   transactionId: refunded.transactionId,
-  store: DectogStore.appStore,
-  transactionType: DectogTransactionType.refund,
+  store: AdtoStore.appStore,
+  transactionType: AdtoTransactionType.refund,
 );
 ```
 
-A refund is subtracted from the link's net revenue and is credited to the same link as the purchase it refunds. A `DectogTransactionType.cancel` records that a subscription will not renew; it moves no money and needs a `revenue` of 0.
+A refund is subtracted from the link's net revenue and is credited to the same link as the purchase it refunds. A `AdtoTransactionType.cancel` records that a subscription will not renew; it moves no money and needs a `revenue` of 0.
 
 ## Google Play transaction ids
 
@@ -62,14 +62,14 @@ On Google Play, pass the order id as `transactionId` and the purchase token as `
 
 ```dart
 // in_app_purchase on Android
-await dectog.trackConversion(
+await adto.trackConversion(
   revenue: 4.99,
   currency: 'EUR',
   productId: purchase.productID,
   transactionId: purchase.purchaseID,                                  // GPA.…
   originalTransactionId: purchase.verificationData.serverVerificationData, // the purchase token
-  store: DectogStore.play,
-  purchaseType: DectogPurchaseType.subscription,
+  store: AdtoStore.play,
+  purchaseType: AdtoPurchaseType.subscription,
 );
 ```
 
@@ -78,10 +78,10 @@ await dectog.trackConversion(
 With StoreKit 2, pass the transaction's `jwsRepresentation` as `appStoreJws`. With `in_app_purchase` on iOS it is the purchase's `verificationData.serverVerificationData`:
 
 ```dart
-await dectog.trackConversion(
+await adto.trackConversion(
   revenue: 9.99,
   currency: 'EUR',
-  store: DectogStore.appStore,
+  store: AdtoStore.appStore,
   appStoreJws: purchase.verificationData.serverVerificationData,
 );
 ```

@@ -45,12 +45,12 @@ Matching is case-insensitive. A device with no recognizable brand goes to Google
 
 | Store | Parameter added | Value |
 |---|---|---|
-| App Store | `ct` | `dtg_click=<click id>` |
-| Google Play and every OEM store | `referrer` | `dtg_click=<click id>&dtg_l={username}/{slug}`, URL-encoded as one value |
+| App Store | `ct` | `adto_click=<click id>` |
+| Google Play and every OEM store | `referrer` | `adto_click=<click id>&adto_l={username}/{slug}`, URL-encoded as one value |
 
-Tagging replaces any `ct` or `referrer` parameter already present on the configured URL. The `dtg_l` part names the link, so an install can be attributed from the referrer alone even when the web click was never recorded.
+Tagging replaces any `ct` or `referrer` parameter already present on the configured URL. The `adto_l` part names the link, so an install can be attributed from the referrer alone even when the web click was never recorded.
 
-A custom mobile redirect (`dec_redirect_<platform>`, `dec_redirect`, or the link's **If the app isn't installed (mobile) > Custom URL**) is tagged the same way, but only when its host is a store: `apple.com` or a subdomain on iOS; `play.google.com` or one of the Huawei, Samsung or Xiaomi hosts above on Android. Any other URL is used verbatim. Because the vivo store has no host list, a custom vivo URL is never tagged; only the app's **vivo store URL** field is.
+A custom mobile redirect (`adto_redirect_<platform>`, `adto_redirect`, or the link's **If the app isn't installed (mobile) > Custom URL**) is tagged the same way, but only when its host is a store: `apple.com` or a subdomain on iOS; `play.google.com` or one of the Huawei, Samsung or Xiaomi hosts above on Android. Any other URL is used verbatim. Because the vivo store has no host list, a custom vivo URL is never tagged; only the app's **vivo store URL** field is.
 
 :::note[The App Store tag is not an attribution path]
 Apple's `ct` parameter is an App Store Connect campaign token. It only works when paired with a `pt` provider token, and even then the data lands in App Store Connect, never in AdTo. iOS installs become deterministic through [iOS tap-to-store](/links/how-a-tap-is-routed/) and the SDK's pasteboard read, or through Apple Search Ads; otherwise the fingerprint decides. See [How attribution works](/start/how-attribution-works/).
@@ -58,7 +58,7 @@ Apple's `ct` parameter is an App Store Connect campaign token. It only works whe
 
 ## How the SDK reads the referrer back
 
-On the first launch the Flutter SDK reads the install referrer natively and sends it with the install registration. Google Play URL-decodes the `referrer` value and returns the exact string `dtg_click=<id>&dtg_l=acme/welcome`.
+On the first launch the Flutter SDK reads the install referrer natively and sends it with the install registration. Google Play URL-decodes the `referrer` value and returns the exact string `adto_click=<id>&adto_l=acme/welcome`.
 
 | Store | Reader | What the host app adds |
 |---|---|---|
@@ -68,7 +68,7 @@ On the first launch the Flutter SDK reads the install referrer natively and send
 | Samsung Galaxy Store | Reached by reflection | `store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0` in the app's Gradle dependencies |
 | Xiaomi GetApps | Reached by reflection | `com.miui.referrer:homereferrer:1.0.0.7` in the app's Gradle dependencies |
 
-The OEM readers are on by default (`DectogCollection.oemReferrers`). When more than one store returns a referrer, the one whose install began last wins. The first-launch registration waits at most `installReferrerTimeout` (default 5 seconds); a referrer that arrives later is sent as a claim and upgrades the verdict. The verdict's `referrer_source` names the store: `google_play`, `huawei`, `samsung`, `xiaomi` or `vivo` (`meta` is the Meta on-device referrer, read on Android when the app has a Facebook App ID, in `DectogConfig(fbAppId:)` or on the Apps page). The Overview's **Install referrer reads** chips show how often each outcome occurred. SDK details are in [Deterministic attribution](/sdk/deterministic-attribution/).
+The OEM readers are on by default (`AdtoCollection.oemReferrers`). When more than one store returns a referrer, the one whose install began last wins. The first-launch registration waits at most `installReferrerTimeout` (default 5 seconds); a referrer that arrives later is sent as a claim and upgrades the verdict. The verdict's `referrer_source` names the store: `google_play`, `huawei`, `samsung`, `xiaomi` or `vivo` (`meta` is the Meta on-device referrer, read on Android when the app has a Facebook App ID, in `AdtoConfig(fbAppId:)` or on the Apps page). The Overview's **Install referrer reads** chips show how often each outcome occurred. SDK details are in [Deterministic attribution](/sdk/deterministic-attribution/).
 
 :::caution[Confirm each OEM store with a real install]
 Only Google Play documents its `referrer` parameter. The OEM stores are tagged the same way, and the SDK reads each store's referrer API, but whether a given store passes the value through end to end has to be confirmed with a real install from that store before you rely on it.
@@ -77,5 +77,5 @@ Only Google Play documents its `referrer` parameter. The OEM stores are tagged t
 ## What is not tagged
 
 - The store buttons on the desktop QR page link to the plain App Store and Play Store URLs. A scan of the QR code is a new tap on the link and gets its own tag; a click on those buttons does not.
-- The "Open in app" buttons on the QR page carry no `dtg_click`; the interstitial, tap-to-store and intent-bounce URLs do.
+- The "Open in app" buttons on the QR page carry no `adto_click`; the interstitial, tap-to-store and intent-bounce URLs do.
 - A verified Universal Link or App Link never reaches the server, so nothing is tagged; the SDK reports the open directly.

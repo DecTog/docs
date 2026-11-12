@@ -36,7 +36,7 @@ Bots (recognized by their User-Agent) never produce a click row. Link taps set n
 | Screen profile | `screen_width`, `screen_height`, `pixel_ratio`, `max_touch_points`, `connection_type` | the beacon of the pages a phone gets instead of a plain redirect: the mobile interstitial, the iOS tap-to-store page, and the Facebook and Instagram page on Android | screen fields after 30 days; `connection_type` forever |
 | Device settings | `text_size` (iOS and iPadOS only), `dark_mode`, `high_contrast` (Increase Contrast), `reduce_motion` (Reduce Motion), `utc_offset_min` | the same beacon, from the browser's media queries, the system body font and the page's clock | with the screen fields, after 30 days |
 | Traffic source | `referrer` | `Referer` header reduced to its origin; null for AdTo's own hosts | forever |
-| Campaign | `utm_*`, `link_params` (`dec_*` values) | the link URL's query string | forever |
+| Campaign | `utm_*`, `link_params` (`adto_*` values) | the link URL's query string | forever |
 | Page button | `cta`, `cta_at` | the link page's beacon: which store, app or website button was tapped first | forever |
 | SDK-reported opens | `device_id`, `session_id`, `client_click_time`, `launch_referrer` | the SDK's `POST /api/v1/clicks` | `device_id` and `launch_referrer` at retention; the rest forever |
 
@@ -54,21 +54,21 @@ Bots (recognized by their User-Agent) never produce a click row. Link taps set n
 | UTC offset | `utc_offset_min` | always sent, like the time zone | retention, with the device tier |
 | App | `app_platform`, `app_version`, `app_build_number`, `package_name`, `installer_package`, `install_time`, `update_time`, `first_install_ts`, `install_state`, `is_physical_device` | always sent | forever |
 | WebView User-Agent | `web_user_agent` (512 characters) | SDK | retention |
-| Store referrer | `install_referrer` (2048 characters), `referrer_store`, `referrer_status`, the click and install-begin timestamps | Play, Huawei, Samsung, Xiaomi or vivo referrer | forever. The string carries `dtg_click=<id>` and `dtg_l=<username>/<slug>`, plus whatever else the store put in it. |
+| Store referrer | `install_referrer` (2048 characters), `referrer_store`, `referrer_status`, the click and install-begin timestamps | Play, Huawei, Samsung, Xiaomi or vivo referrer | forever. The string carries `adto_click=<id>` and `adto_l=<username>/<slug>`, plus whatever else the store put in it. |
 | Meta referrer | `meta_referrer` (512 characters), `meta_referrer_ts`, `meta_referrer_is_ct` | Meta's on-device provider, only when the app has a Facebook App ID | `meta_referrer` at retention; the rest forever |
 | Copied link | `clipboard_slug` | the pasteboard; only the slug and click id are extracted, the clipboard text itself is never stored | forever |
-| Apple Search Ads | `asa_token`; `asa_attribution` (campaign, ad group, keyword and ad ids, dates, country) | AdServices, only with `DectogCollection.appleSearchAdsToken` | the token is nulled as soon as the status settles, or at retention; the record forever |
+| Apple Search Ads | `asa_token`; `asa_attribution` (campaign, ad group, keyword and ad ids, dates, country) | AdServices, only with `AdtoCollection.appleSearchAdsToken` | the token is nulled as soon as the status settles, or at retention; the record forever |
 | Verdict and fraud | `matched*`, `match_*`, `referrer_source`, `candidate_count`, `routing_click_id`, `fp_shadow_*`, `fraud_flags`, `blocked_by` | the server | forever |
 | Signing certificate | `signing_cert_sha256`: the SHA-256 of the certificate the app is signed with (Android). It identifies your build, not the person | `metadata.build_signature` from the SDK | forever |
 | Free-form | `metadata` | whatever the app put in the request's `metadata` | forever |
 
 ### Advertising identifiers
 
-`POST /api/v1/app-installs` accepts `ad_id` and `ad_tracking_limited` and stores them in `ad_identifiers`, keyed by install id. No query joins that table to `app_installs` or to `device_id`; it is written once and deleted by the sweep. flutter_dectog itself reads neither the GAID nor the IDFA; these fields are only sent by apps that add the `flutter_dectog_adid` package, and only when the user allowed tracking (otherwise `ad_tracking_limited` is `true` and no id is sent). See [Device data and privacy](/sdk/device-data-and-privacy/).
+`POST /api/v1/app-installs` accepts `ad_id` and `ad_tracking_limited` and stores them in `ad_identifiers`, keyed by install id. No query joins that table to `app_installs` or to `device_id`; it is written once and deleted by the sweep. flutter_adto itself reads neither the GAID nor the IDFA; these fields are only sent by apps that add the `flutter_adto_adid` package, and only when the user allowed tracking (otherwise `ad_tracking_limited` is `true` and no id is sent). See [Device data and privacy](/sdk/device-data-and-privacy/).
 
 ### What the SDK sends per tier
 
-The device tier (`DectogCollection.deviceTier`) is on by default and `persistDeviceId` is `true` by default. With the device tier on, every install registration carries the device id, hardware, screen, settings and network fields above, and every in-app click the device id and model. With it off, those fields are absent: the server then cannot detect reinstalls by device, the fingerprint has no model or screen signal, and `GET /api/v1/attribution` works by `install_id` only. The OS, locale (the UTC offset included), app and referrer fields are sent regardless. The pasteboard read (`DectogCollection.pasteboard`) is on by default on iOS while one of the account's pages copies the link (tap-to-store or the interstitial), off on Android, unless the dashboard or `collect` says otherwise; on iOS 16 and later it triggers the system paste notice; the Apple Search Ads token is off by default.
+The device tier (`AdtoCollection.deviceTier`) is on by default and `persistDeviceId` is `true` by default. With the device tier on, every install registration carries the device id, hardware, screen, settings and network fields above, and every in-app click the device id and model. With it off, those fields are absent: the server then cannot detect reinstalls by device, the fingerprint has no model or screen signal, and `GET /api/v1/attribution` works by `install_id` only. The OS, locale (the UTC offset included), app and referrer fields are sent regardless. The pasteboard read (`AdtoCollection.pasteboard`) is on by default on iOS while one of the account's pages copies the link (tap-to-store or the interstitial), off on Android, unless the dashboard or `collect` says otherwise; on iOS 16 and later it triggers the system paste notice; the Apple Search Ads token is off by default.
 
 ## Customers and events
 
@@ -129,11 +129,11 @@ There is no way through the dashboard or the API to delete an account or to rena
 
 ## A request from one person
 
-When someone asks what you hold about them, or asks you to delete it, find their device or customer id (the Customers screen, or the install detail on Overview and Links) and use **Download everything stored (JSON)** or **Erase this device** / **Erase this customer** there. From a server, with the account key and the `dectog` helper from [Signing with curl](/api/overview/#signing-with-curl):
+When someone asks what you hold about them, or asks you to delete it, find their device or customer id (the Customers screen, or the install detail on Overview and Links) and use **Download everything stored (JSON)** or **Erase this device** / **Erase this customer** there. From a server, with the account key and the `adto` helper from [Signing with curl](/api/overview/#signing-with-curl):
 
 ```bash
-dectog GET    /api/v1/devices/<device_id>/export > device.json
-dectog DELETE /api/v1/devices/<device_id>
+adto GET    /api/v1/devices/<device_id>/export > device.json
+adto DELETE /api/v1/devices/<device_id>
 ```
 
 `/api/v1/customers/<customer_id>/export` and `DELETE /api/v1/customers/<customer_id>` do the same for a customer (URL-encode an id with `/`, spaces or other reserved characters). An SDK key gets `403 account_key_required`.
@@ -161,11 +161,11 @@ You are the controller of this data and AdTo is your processor; email support@ad
 3. **Store install referrers** (Play, Huawei, Samsung, Xiaomi, vivo) and, if you set a Facebook App ID, Meta's on-device install referrer.
 4. **Pasteboard access on iOS** on first launch (system notice on iOS 16 and later), if you leave the pasteboard read at its default and turn on iOS tap-to-store or the interstitial.
 5. **Apple Search Ads attribution token**, if `collect` names `appleSearchAdsToken`.
-6. **Advertising identifier** (IDFA after ATT, GAID), only with the `flutter_dectog_adid` package.
+6. **Advertising identifier** (IDFA after ATT, GAID), only with the `flutter_adto_adid` package.
 7. **Customer identity**: whatever your app sends in `identify` (name, email, phone, your customer id) and in event metadata, stored in plain text.
 8. **Retention:** clicks, installs, events and app opens deleted after your retention window (400 days, or shorter if your account sets one), keeping only daily per-link counts; other personal columns anonymized then; the screen profile and device settings of taps after 30 days, Apple tokens as soon as resolved.
-9. **Your website, with [`dectog.js`](/sdk/web/):** first-party cookies `dtg_click` (the click a visitor landed with, 30 days), `dtg_consent` (their answer, a year) and `dtg_banner`; the leads, purchases and custom events your pages send, with no IP stored. In the EU and EEA, the UK and Switzerland, and for browsers that send Global Privacy Control, nothing is stored before consent.
-10. **Consent in your app:** with `DectogConfig(enabled: false)` the SDK sends nothing and reads no pasteboard until your app calls `setEnabled(true)`; events tracked meanwhile wait on the device (at most 7 days). See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
+9. **Your website, with [`adto.js`](/sdk/web/):** first-party cookies `adto_click` (the click a visitor landed with, 30 days), `adto_consent` (their answer, a year) and `adto_banner`; the leads, purchases and custom events your pages send, with no IP stored. In the EU and EEA, the UK and Switzerland, and for browsers that send Global Privacy Control, nothing is stored before consent.
+10. **Consent in your app:** with `AdtoConfig(enabled: false)` the SDK sends nothing and reads no pasteboard until your app calls `setEnabled(true)`; events tracked meanwhile wait on the device (at most 7 days). See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
 11. **Processors:** AdTo, which runs on Render in Frankfurt, plus Apple, Resend, Google and your own webhook endpoint where used.
 
 The device settings in items 1 and 2 need particular care. Text size, dark mode, Increase Contrast, Reduce Motion and the UTC offset are device configuration, and Apple's user-privacy rules for developers prohibit deriving data from a device's configuration to identify it; AdTo compares them one by one for 0 points and combines them into no identifier, but the App Store review risk is yours. Increase Contrast, Reduce Motion and a large text size can suggest a disability, which EU data-protection law may treat as health data. An app that cannot carry this leaves the SDK's device tier out or turns **Probabilistic match** off; the link pages still record the settings on the tap. See [Device data and privacy](/sdk/device-data-and-privacy/#device-settings).

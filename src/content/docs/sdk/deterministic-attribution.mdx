@@ -1,15 +1,15 @@
 ---
 title: Deterministic attribution
-description: The signals that name the exact click without a fingerprint, including Play and OEM store referrers, Meta's on-device referrer, the iOS pasteboard read, DectogPasteButton and the Apple Search Ads token.
+description: The signals that name the exact click without a fingerprint, including Play and OEM store referrers, Meta's on-device referrer, the iOS pasteboard read, AdtoPasteButton and the Apple Search Ads token.
 sidebar:
   order: 5
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-A deterministic signal carries the click id itself, so the server can credit the exact click regardless of IP changes, shared networks or time elapsed. When AdTo sends a visitor to a store it tags the store URL: Google Play and the OEM stores get `referrer=dtg_click={id}&dtg_l={username}/{slug}` (one URL-encoded value), and the App Store gets `ct=dtg_click={id}`. The SDK reads these signals back on the first launch and sends them with the install registration. A verdict built from one of them has `matchConfidence: 'guaranteed'`.
+A deterministic signal carries the click id itself, so the server can credit the exact click regardless of IP changes, shared networks or time elapsed. When AdTo sends a visitor to a store it tags the store URL: Google Play and the OEM stores get `referrer=adto_click={id}&adto_l={username}/{slug}` (one URL-encoded value), and the App Store gets `ct=adto_click={id}`. The SDK reads these signals back on the first launch and sends them with the install registration. A verdict built from one of them has `matchConfidence: 'guaranteed'`.
 
-The `dtg_l` tag names the link, so the server can still attribute the install when the web click row never landed (for example a browser that never retried the client-hints redirect): it synthesizes the click from the referrer.
+The `adto_l` tag names the link, so the server can still attribute the install when the web click row never landed (for example a browser that never retried the client-hints redirect): it synthesizes the click from the referrer.
 
 <Tabs syncKey="platform">
 <TabItem label="Android">
@@ -26,7 +26,7 @@ The plugin reads every store's install referrer natively, in parallel, on the fi
 | Samsung Galaxy Store | `samsung` | Samsung's client library, reached by reflection, capped at 2 seconds | the host app adds `store.galaxy.samsung.installreferrer:samsung_galaxystore_install_referrer:4.0.0` |
 | Xiaomi GetApps | `xiaomi` | Xiaomi's client library, reached by reflection, capped at 3 seconds | the host app adds `com.miui.referrer:homereferrer:1.0.0.7` |
 
-`DectogCollection.oemReferrers` (on by default, or as the dashboard sets it) controls whether the four OEM readers run at all; a `collect` set without it reads Google Play only.
+`AdtoCollection.oemReferrers` (on by default, or as the dashboard sets it) controls whether the four OEM readers run at all; a `collect` set without it reads Google Play only.
 
 <Aside type="caution" title="OEM store pass-through is unverified">
 Only Google Play documents how it hands the `referrer` parameter of a store URL back to the installed app. AdTo tags the Huawei, Samsung, Xiaomi and vivo store URLs the same way and the SDK reads each store's referrer, but whether each store passes the value through has not been confirmed with a real install. Verify it on a device from that store before relying on it; until then, treat installs through those stores as fingerprint-attributed.
@@ -59,69 +59,67 @@ Only Google Play documents how it hands the `referrer` parameter of a store URL 
 
 ## Meta's on-device referrer
 
-The Facebook App ID enables this read: the one saved on the dashboard's Apps page, which the SDK reads at start-up, or `DectogConfig.fbAppId`, which takes precedence. With the ID set to your Facebook App ID (digits only), the plugin queries the install-referrer content providers of the Facebook, Instagram and Facebook Lite apps for that app id and sends what they recorded as `meta_referrer`, with Meta's timestamp and its click-through flag (`meta_referrer_is_ct`). When the recorded referrer carries `dtg_click`, the server credits that click with `matchSource: 'referrer'` and `referrerSource: 'meta'`. The read has a 1.5-second budget and runs only on Android; iOS has no equivalent.
+The Facebook App ID enables this read: the one saved on the dashboard's Apps page, which the SDK reads at start-up, or `AdtoConfig.fbAppId`, which takes precedence. With the ID set to your Facebook App ID (digits only), the plugin queries the install-referrer content providers of the Facebook, Instagram and Facebook Lite apps for that app id and sends what they recorded as `meta_referrer`, with Meta's timestamp and its click-through flag (`meta_referrer_is_ct`). When the recorded referrer carries `adto_click`, the server credits that click with `matchSource: 'referrer'` and `referrerSource: 'meta'`. The read has a 1.5-second budget and runs only on Android; iOS has no equivalent.
 
 Meta's referrer earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page. An older one opens the link's content (`routing`) but the install counts as organic with the flag `stale_meta`.
 
 ## Pasteboard on Android
 
-The pasteboard read defaults to off on Android, where the Play referrer is already deterministic and Android 12 and newer shows a "pasted from your clipboard" notice on every read. A `collect` set with `DectogCollection.pasteboard` forces the read: a description-only check first (the clip must be textual and not flagged sensitive), then the first clip item is accepted when it is a single token of at most 2048 characters with a valid scheme (`http(s)` needs a host, a custom scheme needs `://`). Everything else is the same as on iOS.
+The pasteboard read defaults to off on Android, where the Play referrer is already deterministic and Android 12 and newer shows a "pasted from your clipboard" notice on every read. A `collect` set with `AdtoCollection.pasteboard` forces the read: a description-only check first (the clip must be textual and not flagged sensitive), then the first clip item is accepted when it is a single token of at most 2048 characters with a valid scheme (`http(s)` needs a host, a custom scheme needs `://`). Everything else is the same as on iOS.
 
 </TabItem>
 <TabItem label="iOS">
 
 ## Pasteboard read on the first launch
 
-iOS has no install referrer, so AdTo uses the pasteboard. The web side seeds it: with **iOS tap-to-store** enabled in the app's Advanced settings, an iPhone tap sees a one-button page whose "Get the app" button copies the link with its click id (`https://{username}.adto.app/{slug}?dtg_click={id}`) and then opens the App Store. The mobile interstitial's "Open app" button copies the same value before trying your scheme.
+iOS has no install referrer, so AdTo uses the pasteboard. The web side seeds it: with **iOS tap-to-store** enabled in the app's Advanced settings, an iPhone tap sees a one-button page whose "Get the app" button copies the link with its click id (`https://{username}.adto.app/{slug}?adto_click={id}`) and then opens the App Store. The mobile interstitial's "Open app" button copies the same value before trying your scheme.
 
 On the first launch the SDK, with the pasteboard read at its default (on for iOS while the tap-to-store page or the interstitial is on for the app or one of the account's links; without one, nothing on the pasteboard can name a click, so the server's SDK config turns the read off; a first launch whose config does not arrive within its 1.5 s budget falls back to on):
 
 1. Asks `UIPasteboard.general.hasURLs` whether a URL is there. This is a metadata check and shows no alert.
 2. Only when a URL is present, reads it (`pasteboard.url`, else `pasteboard.string`, at most 2048 characters). On iOS 16 and newer this read is what shows Apple's "Allow paste from …?" alert. iOS 15 shows the passive "pasted from" banner instead.
-3. Checks on the device whether the text parses as an AdTo link for this deployment (the same forms the link handler recognizes) **and** names a click or a link (`dtg_click=` or `dtg_l=`), which is what the tap-to-store page copies. Anything else, including a plain share link the user copied to paste into a chat, is left on the pasteboard and never sent.
+3. Checks on the device whether the text parses as an AdTo link for this deployment (the same forms the link handler recognizes) **and** names a click or a link (`adto_click=` or `adto_l=`), which is what the tap-to-store page copies. Anything else, including a plain share link the user copied to paste into a chat, is left on the pasteboard and never sent.
 4. Sends the URL as `clipboard_url` with the registration and notes the pasteboard's change counter (`UIPasteboard.changeCount`).
 5. Clears the pasteboard only when the server credited the link (`matchSource: 'clipboard'`, or a late claim answered `upgraded`) **and** the change counter is unchanged, so nothing the user copied in the meantime is wiped. A link the server did not credit stays where it was.
 
 The read has a 6-second budget because the user has to answer the alert. When the answer arrives after the registration left, the URL is sent as a late claim (`claim_source: clipboard`).
 
-**What the server accepts** (`clipboard_url`): an `http(s)` URL whose host is the deployment's root domain or one of its subdomains, or its API host, or whose path starts with `/r/`; or any custom-scheme URL. The last path segment must be a valid slug. The URL attributes only when it carries `dtg_click`; a bare copied link is recorded as `clipboard_slug` for diagnostics but earns no credit, and a late claim with a bare link is rejected with `no_signal`. A credited pasteboard match has `matchSource: 'clipboard'` and `matchConfidence: 'guaranteed'`.
+**What the server accepts** (`clipboard_url`): an `http(s)` URL whose host is the deployment's root domain or one of its subdomains, or its API host, or whose path starts with `/r/`; or any custom-scheme URL. The last path segment must be a valid slug. The URL attributes only when it carries `adto_click`; a bare copied link is recorded as `clipboard_slug` for diagnostics but earns no credit, and a late claim with a bare link is rejected with `no_signal`. A credited pasteboard match has `matchSource: 'clipboard'` and `matchConfidence: 'guaranteed'`.
 
-Pass a `collect` set without `DectogCollection.pasteboard` to opt out on iOS.
+Pass a `collect` set without `AdtoCollection.pasteboard` to opt out on iOS.
 
 ### Explaining the alert first
 
 `willShowPasteboardPrompt()` tells you whether this launch's read will show the iOS 16 alert, so an onboarding screen can explain it. It can be called before `initialize()`:
 
 ```dart
-final willPrompt = await FlutterDectog().willShowPasteboardPrompt();
+final willPrompt = await FlutterAdto().willShowPasteboardPrompt();
 if (willPrompt) {
   // Show your explanation, then initialize.
 }
-await FlutterDectog().initialize(DectogConfig(
-  apiKey: 'dtg_pub_your_sdk_key',
-  baseUrl: 'https://app.adto.app',
-  linkRootDomain: 'adto.app',
+await FlutterAdto().initialize(AdtoConfig(
+  apiKey: 'adto_pub_your_sdk_key',
 ));
 ```
 
 It returns `true` only when all of these hold: the device runs iOS 16 or newer, the read is enabled for iOS (the optional `collect` argument stands in for the config's before `initialize`; then the dashboard setting and the platform default apply), the install has not been registered yet, and the pasteboard currently holds a URL (checked silently). It is always `false` on Android.
 
-## DectogPasteButton
+## AdtoPasteButton
 
-`DectogPasteButton` renders Apple's `UIPasteControl` (iOS 16 and newer). The system enables the button only when the pasteboard holds a URL or text, evaluated from metadata. Tapping it reads the pasteboard **without** the alert, because the tap is the user's consent. The SDK validates the value as an AdTo link and sends it as a late claim (`claim_source: paste_control`); an upgraded verdict is re-emitted on `onAppInstalled`. If the tap happens before the install id exists, the URL is held and claimed right after the registration.
+`AdtoPasteButton` renders Apple's `UIPasteControl` (iOS 16 and newer). The system enables the button only when the pasteboard holds a URL or text, evaluated from metadata. Tapping it reads the pasteboard **without** the alert, because the tap is the user's consent. The SDK validates the value as an AdTo link and sends it as a late claim (`claim_source: paste_control`); an upgraded verdict is re-emitted on `onAppInstalled`. If the tap happens before the install id exists, the URL is held and claimed right after the registration.
 
 Use it as the recovery path on an onboarding or "I have an invite link" screen, for users who declined the alert and for apps that opted out of the automatic read:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_dectog/flutter_dectog.dart';
+import 'package:flutter_adto/flutter_adto.dart';
 
 Widget pasteRecovery() {
-  if (!DectogPasteButton.isSupported) return const SizedBox.shrink();
-  return const DectogPasteButton(
+  if (!AdtoPasteButton.isSupported) return const SizedBox.shrink();
+  return const AdtoPasteButton(
     size: Size(220, 44),
-    displayMode: DectogPasteDisplayMode.iconAndLabel,
-    cornerStyle: DectogPasteCornerStyle.capsule,
+    displayMode: AdtoPasteDisplayMode.iconAndLabel,
+    cornerStyle: AdtoPasteCornerStyle.capsule,
   );
 }
 ```
@@ -133,15 +131,15 @@ Widget pasteRecovery() {
 | `cornerStyle` | `capsule` | `capsule`, `dynamic`, `fixed`, `large`, `medium`, `small` |
 | `backgroundColor`, `foregroundColor` | system | Optional tints |
 
-`DectogPasteButton.isSupported` is `true` on iOS 16 and newer only. Elsewhere the widget builds an empty box. Apple decides the label ("Paste") and the tint rules.
+`AdtoPasteButton.isSupported` is `true` on iOS 16 and newer only. Elsewhere the widget builds an empty box. Apple decides the label ("Paste") and the tint rules.
 
-The pasted link must carry `dtg_click` to attribute; the same server rules as the automatic read apply.
+The pasted link must carry `adto_click` to attribute; the same server rules as the automatic read apply.
 
 ## Apple Search Ads
 
-With `DectogCollection.appleSearchAdsToken` in `collect` the plugin reads the AdServices attribution token (`AAAttribution.attributionToken()`, iOS 14.3 and newer). The token carries no identifier and shows no prompt; it is `nil` on the simulator. The first launch gives it 0.5 seconds; when it was not ready, later launches fetch it and send it through a claim until the server acknowledges it. The token travels as `asa_token`.
+With `AdtoCollection.appleSearchAdsToken` in `collect` the plugin reads the AdServices attribution token (`AAAttribution.attributionToken()`, iOS 14.3 and newer). The token carries no identifier and shows no prompt; it is `nil` on the simulator. The first launch gives it 0.5 seconds; when it was not ready, later launches fetch it and send it through a claim until the server acknowledges it. The token travels as `asa_token`.
 
-The server exchanges the token with Apple: three attempts 5 seconds apart inside the install request, then one attempt per scheduled pass (both cron triggers, up to 100 pending tokens each) until Apple answers or the token's 24-hour lifetime passes. The result is `DectogAppInstallResponse.appleSearchAds`, a `DectogAppleSearchAds`:
+The server exchanges the token with Apple: three attempts 5 seconds apart inside the install request, then one attempt per scheduled pass (both cron triggers, up to 100 pending tokens each) until Apple answers or the token's 24-hour lifetime passes. The result is `AdtoAppInstallResponse.appleSearchAds`, a `AdtoAppleSearchAds`:
 
 | `status` | Meaning |
 |---|---|
@@ -161,7 +159,7 @@ Apple Search Ads attribution is provenance only. It never changes `matched`, whi
 
 ## How long a pasted link counts
 
-A pasted link, whether read on the first launch or through `DectogPasteButton`, earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page (1 to 720 hours). A link copied weeks ago, or re-shared as text, still opens its content in the app through `routing`, but the install counts as organic with the flag `stale_clipboard`; when the app blocks that rule it does not route either. A late paste of such a link answers `claim: rejected`, `claimReason: stale_click`. Store referrers are not limited this way.
+A pasted link, whether read on the first launch or through `AdtoPasteButton`, earns credit only while its click is recent: 7 days by default, set per app as the **Pasted-link and Meta window** on the Apps page (1 to 720 hours). A link copied weeks ago, or re-shared as text, still opens its content in the app through `routing`, but the install counts as organic with the flag `stale_clipboard`; when the app blocks that rule it does not route either. A late paste of such a link answers `claim: rejected`, `claimReason: stale_click`. Store referrers are not limited this way.
 
 
 <Aside type="note" title="Which signal wins">

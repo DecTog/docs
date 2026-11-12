@@ -33,7 +33,7 @@ migration touches three docs pages. (2026-10-13)
 **4. No backward compatibility before the first public release.** Until then
 nobody integrated AdTo, so response shapes, SDK methods and the schema
 changed freely. *Rejected:* shims, v2 routes and deprecation periods before
-there was a user to protect. Ended with flutter_dectog 1.0.0 on pub.dev
+there was a user to protect. Ended with flutter_adto 1.0.0 on pub.dev
 (2026-11-04): API changes now keep the released SDKs working, and schema
 changes come as new migrations.
 
@@ -45,7 +45,7 @@ well-formed inbound `x-request-id`, else Cloudflare's `cf-ray`, else a UUID.
 parse by text.
 
 **6. HEAD is a bot; QA taps are not clicks.** A HEAD to a link answers the
-social preview page and records nothing; `x-dectog-no-track: 1` or `?dtg_nt=1`
+social preview page and records nothing; `x-adto-no-track: 1` or `?adto_nt=1`
 routes like a real tap without a row. *Rejected:* counting link checkers and
 uptime monitors as visitors.
 
@@ -61,7 +61,7 @@ hashed IP; reset requests 5 per IP and 3 per address. *Rejected:* a per-account
 lockout, which lets anyone lock a user out by failing on purpose.
 
 **9. `setEnabled` replaces `optOut`.** One persisted switch, and
-`DectogConfig(enabled: false)` to start off until consent. While off the SDK
+`AdtoConfig(enabled: false)` to start off until consent. While off the SDK
 makes no request of its own and reads no pasteboard; it holds events on the
 device and the launch link's report in memory, and turning it on sends them and
 registers an install that a disabled launch skipped. A revoke drops the held
@@ -69,8 +69,8 @@ link reports, not the held events.
 *Rejected:* keeping `optOut`, which never stopped clicks or the install, next to
 a second consent API.
 
-**10. Scheme links name their link in `dtg_l`.** Every custom-scheme URI the
-server builds ends with `dtg_l=<username>/<slug>`, and the SDK reads the link
+**10. Scheme links name their link in `adto_l`.** Every custom-scheme URI the
+server builds ends with `adto_l=<username>/<slug>`, and the SDK reads the link
 from it. *Rejected:* reading username and slug from the URI's shape, which turned
 an app route like `myapp://products/42` into user `products`, slug `42`.
 
@@ -96,14 +96,14 @@ window was 0 shows no delta. *Rejected:* reporting +100%.
 ## Settled for deploying and integrating
 
 **15. Two kinds of key; the account key stays on `users` (2026-10-14).** Apps
-ship SDK keys (`dtg_pub_…`, table `api_keys`) that cannot change links unless
-created with `links:write`; servers use the account key (`dtg_…`), which keeps
+ship SDK keys (`adto_pub_…`, table `api_keys`) that cannot change links unless
+created with `links:write`; servers use the account key (`adto_…`), which keeps
 every scope. *Rejected:* moving the account key into `api_keys`, which needs a
 rebuild of the `users` table (its hash column is `UNIQUE`) on a production
 database for no user-visible gain; and one key for everything, which put a
 link-deleting credential in every app binary.
-*Note (2026-10-15):* there are now three kinds: site keys (`dtg_site_…`)
-are `api_keys` rows of kind `site` that web pages carry for `dectog.js`, limited
+*Note (2026-10-15):* there are now three kinds: site keys (`adto_site_…`)
+are `api_keys` rows of kind `site` that web pages carry for `adto.js`, limited
 to the two web routes and the origins each key lists.
 
 **16. One contract table generates the spec and the route index.** Every
@@ -166,10 +166,10 @@ change) and incrementing them on every write (a written row per tap, and drift
 whenever a claim, refund or exchange rate changes a row later).
 
 **22. The web pixel keeps a first-party cookie and asks for consent where the
-law does.** `dectog.js` stores its click id in a 30-day
-first-party cookie, waits for `dectog.consent(true)` in the EU and EEA, the UK
+law does.** `adto.js` stores its click id in a 30-day
+first-party cookie, waits for `adto.consent(true)` in the EU and EEA, the UK
 and Switzerland, treats Global Privacy Control as a no, and uses its own key
-kind (`dtg_site_`), one per account. *Rejected:* `sessionStorage`, which loses
+kind (`adto_site_`), one per account. *Rejected:* `sessionStorage`, which loses
 the click when the visitor comes back in a new tab, and consent in the EU only.
 *Note (2026-10-15):* an account can hold up to 10 active site keys, each with
 its own list of origins.
@@ -194,11 +194,11 @@ live totals.
 
 ## Settled for the ecosystem and ad networks (2026-10-15)
 
-**26. Only `dec_*` parameters survive a deferred install.**
-A browser tap stores its `dec_*` and `utm_*` values and nothing else, so those
+**26. Only `adto_*` parameters survive a deferred install.**
+A browser tap stores its `adto_*` and `utm_*` values and nothing else, so those
 are all the install verdict can return (`click_params`). On a warm open the app
 reads the opened URL itself (`click.queryParameters`, from `originalUrl`); a
-route that must also survive the trip through the store goes in `dec_deeplink`
+route that must also survive the trip through the store goes in `adto_deeplink`
 (`products/42`), which works on both paths. *Rejected:* keeping the tapped
 URL's other parameters on the click to return them after the install: the click
 would store whatever a visitor's URL holds, personal data included, and an app
@@ -228,7 +228,7 @@ stay; the storage changed, see 32: one row per session instead of an event
 row, and eight index rows, per screen.
 
 **29. Each SDK keeps its logic in its own language; native code is shared as
-source.** `flutter_dectog` (Dart) and `react-native-dectog` (TypeScript)
+source.** `flutter_adto` (Dart) and `react-native-adto` (TypeScript)
 each implement the attribution logic and sit on thin native layers, and the
 native reads (store referrers, pasteboard, paste control, Keychain id, install
 dates) live once, in framework-free Kotlin and Swift files both bridges call;
@@ -238,7 +238,7 @@ SDK keep the implementations equal. The React Native port took about 4,000
 lines of TypeScript and a 400-line bridge, with no native code of its own.
 Native iOS and Android SDKs, when built, are ports on the same terms: Swift and
 Kotlin logic held to the same fixtures, calling the same shared files directly.
-*Rejected:* standalone native SDKs (`AdToKit`, `dectog-android`) that the
+*Rejected:* standalone native SDKs (`AdToKit`, `adto-android`) that the
 Flutter and React Native packages wrap, Grovs' shape: every fix would wait for
 a native release and a wrapper release (R19), the Dart and TypeScript tests
 would only test bridges, and two of the four implementations would be thrown

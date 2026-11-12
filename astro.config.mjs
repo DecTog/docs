@@ -15,7 +15,7 @@ export default defineConfig({
 	// descriptions may still link the old URLs.
 	redirects: {
 		'/api/install-webhook/': '/api/webhooks/',
-		'/start/what-dectog-does-not-do/': '/start/what-adto-does-not-do/',
+		'/start/what-adto-does-not-do/': '/start/what-adto-does-not-do/',
 		'/self-hosting/privacy-and-data/': '/guides/privacy-and-data/',
 		'/self-hosting/scheduled-jobs-and-retention/': '/guides/scheduled-jobs-and-retention/',
 		'/self-hosting/attribution-internals/': '/start/attribution-internals/',
@@ -78,8 +78,8 @@ export default defineConfig({
 					description,
 					details: [
 						'AdTo is a hosted deep-linking and install-attribution service: short links that open an installed app or route visitors through the app stores, deferred deep linking for new installs, post-install events and a real-time dashboard.',
-						'The site lives at https://adto.app (API at https://app.adto.app, links on `{username}.adto.app`). The Flutter SDK `flutter_dectog` and the React Native SDK `react-native-dectog` are MIT; their 1.0.x defaults are the old DecTog service, so AdTo apps set `baseUrl: https://app.adto.app` and `linkRootDomain: adto.app`.',
-						'These pages describe the behaviour of flutter_dectog 1.0.x, react-native-dectog 1.0.x and the AdTo service.',
+						'The site lives at https://adto.app (API at https://app.adto.app, links on `{username}.adto.app`). The Flutter SDK `flutter_adto` and the React Native SDK `react-native-adto` are MIT and default to those hosts.',
+						'These pages describe the behaviour of flutter_adto 1.0.x, react-native-adto 1.0.x and the AdTo service.',
 					].join('\n\n'),
 					optionalLinks: [
 						{
@@ -90,12 +90,12 @@ export default defineConfig({
 						{
 							label: 'Flutter SDK agent reference',
 							url: 'https://raw.githubusercontent.com/ad-to/flutter_adto/main/llms.txt',
-							description: 'llms.txt shipped inside the flutter_dectog package: types, link URLs, routing and init.',
+							description: 'llms.txt shipped inside the flutter_adto package: types, link URLs, routing and init.',
 						},
 						{
 							label: 'React Native SDK agent reference',
 							url: 'https://raw.githubusercontent.com/ad-to/react-native-adto/main/llms.txt',
-							description: 'llms.txt shipped inside the react-native-dectog package: types, link URLs, setup and init.',
+							description: 'llms.txt shipped inside the react-native-adto package: types, link URLs, setup and init.',
 						},
 						{
 							label: 'SDKs on GitHub',

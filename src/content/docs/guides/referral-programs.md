@@ -10,7 +10,7 @@ A referral program needs three things: a link that names the user who shares it,
 ## 1. Give each user their referral link
 
 ```dart
-final link = await dectog.createReferralLink(customerId: currentUser.id);
+final link = await adto.createReferralLink(customerId: currentUser.id);
 share(link.url); // e.g. https://acme.adto.app/r-3fa94c1b2e
 ```
 
@@ -20,13 +20,13 @@ From a server, the same call is `POST /api/v1/referral-links` with `{"customer_i
 
 ### Or: one link with the referrer in the URL
 
-If your backend already builds share links, Adjust-style, skip the call: add the user's id to any permanent link as `dec_referrer`, with whatever else the tap needs.
+If your backend already builds share links, Adjust-style, skip the call: add the user's id to any permanent link as `adto_referrer`, with whatever else the tap needs.
 
 ```
-https://acme.adto.app/invite?dec_referrer=1042&dec_label=eyJpIjoxMDQyfQ%3D%3D&dec_fallback=https%3A%2F%2Facme.com%2F
+https://acme.adto.app/invite?adto_referrer=1042&adto_label=eyJpIjoxMDQyfQ%3D%3D&adto_fallback=https%3A%2F%2Facme.com%2F
 ```
 
-Everything below works the same: the install gets `referrerCustomerId` `"1042"` (and the label as `install.clickParams?.label`), and the signup records the referral and sends `referral.converted`. The difference is trust. A referral link's customer is fixed on the server; a `dec_referrer` is whatever the URL says, so anyone can edit it to name someone else. The referral [fraud rules](#5-watch-for-self-referrals) still apply.
+Everything below works the same: the install gets `referrerCustomerId` `"1042"` (and the label as `install.clickParams?.label`), and the signup records the referral and sends `referral.converted`. The difference is trust. A referral link's customer is fixed on the server; a `adto_referrer` is whatever the URL says, so anyone can edit it to name someone else. The referral [fraud rules](#5-watch-for-self-referrals) still apply.
 
 ## 2. The friend installs and signs up
 
@@ -48,16 +48,16 @@ An install records at most one referral. A user who identifies with the referrer
 The install result names the referrer. `install.link?.referrerCustomerId` is the customer whose referral link brought the install, and null for any other link. It arrives in `onAppInstalled` on the first launch, and `getAttributionData()` returns it on every later launch:
 
 ```dart
-final install = await dectog.getAttributionData();
+final install = await adto.getAttributionData();
 final referrer = install?.link?.referrerCustomerId; // "u_1042", or null
 if (referrer != null && !install!.isReinstall) {
   showInvitedBy(referrer); // look the name up in your own backend
 }
 ```
 
-React Native reads the same field: `(await dectog.getAttributionData())?.link?.referrerCustomerId`.
+React Native reads the same field: `(await adto.getAttributionData())?.link?.referrerCustomerId`.
 
-On a referral link the server sets it from the link, so nothing in the tapped URL can change it: a `dec_label`, a `dec_referrer` or any other parameter added to the link does not. On any other link it is the tap's `dec_referrer`, or null. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
+On a referral link the server sets it from the link, so nothing in the tapped URL can change it: a `adto_label`, a `adto_referrer` or any other parameter added to the link does not. On any other link it is the tap's `adto_referrer`, or null. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
 
 Use it for the screen, not the reward: a modified app can show anything, so grant rewards from the webhook below.
 

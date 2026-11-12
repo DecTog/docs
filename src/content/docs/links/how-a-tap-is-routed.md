@@ -26,7 +26,7 @@ A link such as `https://acme.adto.app/welcome` is served by the redirect engine.
 | 3 | The link is paused | `410` "Link paused" page, for bots as well, **no click recorded** |
 | 4 | The link has expired: a temporary link's `expires_at`, or a permanent link's when it has one, has passed | `302` to the link's expired URL when it has one, else the `410` "Link expired" page; for bots as well, **no click recorded** |
 | 5 | The request is a `HEAD`, or the user agent is a bot | `200` social preview page, **no click recorded**. See [Social previews and the QR page](/links/social-previews-and-qr/). |
-| 6 | Safari's Mac user agent without `_ipad` in the URL, and the link's app (the link's app, or the account's default, oldest one) is set up for iOS: a bundle ID, an App Store URL or an iOS scheme | `200` touch check, **no click recorded**. The page goes straight on to the same URL with `_ipad=1` when the browser reports touch (an iPad asking for desktop sites) or `_ipad=0` (a Mac), plus the referring page's origin as `_ref` and, when the request carried the no-track header, `dtg_nt=1`; that request continues below. |
+| 6 | Safari's Mac user agent without `_ipad` in the URL, and the link's app (the link's app, or the account's default, oldest one) is set up for iOS: a bundle ID, an App Store URL or an iOS scheme | `200` touch check, **no click recorded**. The page goes straight on to the same URL with `_ipad=1` when the browser reports touch (an iPad asking for desktop sites) or `_ipad=0` (a Mac), plus the referring page's origin as `_ref` and, when the request carried the no-track header, `adto_nt=1`; that request continues below. |
 | 7 | Otherwise | A click row is built. The app is the link's app, or the account's default (oldest) app. |
 | 8 | The user agent is iOS or Android | The mobile chain below |
 | 9 | Anything else, or a mobile visitor with no destination at all | The shared tail below |
@@ -37,7 +37,7 @@ An archived link routes like any other. See [Links: pause, expire, archive and d
 
 ## The click row
 
-The click gets a 16-character id (the `dtg_click` value), `source: web`, the link kind, device type, OS (the Android major version comes from the client hint when present; the iOS version from Safari's `Version/` token, because Safari 26 and later freeze the OS token at 18.6 or 18.7, and an 18.6 or later OS token without one, as in-app browsers send, is stored without a version), the iOS minor version from the same `Version/` token, browser, device model (from the `Sec-CH-UA-Model` hint or a WebView `Build/` token), the user agent (512 characters), `Accept-Language` (128 characters), country, region, city and ASN from Cloudflare, the salted IP hash plus the raw IP (unless the deployment sets `STORE_RAW_IP=0`), the referring page's origin (null when the referrer is AdTo itself), the `utm_*` values and the `dec_*` tracking values. The interstitial and tap-to-store pages add the screen size, pixel ratio, touch points and connection type later, with the device's text size (iOS and iPadOS only), dark mode, Increase Contrast and Reduce Motion settings and its UTC offset. No CPU architecture is recorded: no phone browser sends one. Permanent links also increment their lifetime click counter; temporary links have none.
+The click gets a 16-character id (the `adto_click` value), `source: web`, the link kind, device type, OS (the Android major version comes from the client hint when present; the iOS version from Safari's `Version/` token, because Safari 26 and later freeze the OS token at 18.6 or 18.7, and an 18.6 or later OS token without one, as in-app browsers send, is stored without a version), the iOS minor version from the same `Version/` token, browser, device model (from the `Sec-CH-UA-Model` hint or a WebView `Build/` token), the user agent (512 characters), `Accept-Language` (128 characters), country, region, city and ASN from Cloudflare, the salted IP hash plus the raw IP (unless the deployment sets `STORE_RAW_IP=0`), the referring page's origin (null when the referrer is AdTo itself), the `utm_*` values and the `adto_*` tracking values. The interstitial and tap-to-store pages add the screen size, pixel ratio, touch points and connection type later, with the device's text size (iOS and iPadOS only), dark mode, Increase Contrast and Reduce Motion settings and its UTC offset. No CPU architecture is recorded: no phone browser sends one. Permanent links also increment their lifetime click counter; temporary links have none.
 
 ## Which value applies
 
@@ -45,7 +45,7 @@ Each routing field can come from several places. For one tap the first one that 
 
 | # | Source | Fields it can set |
 |---|---|---|
-| 1 | The tapped URL's `dec_*` parameters | the custom redirect (`dec_redirect`, `dec_redirect_<os>`), the desktop fallback (`dec_fallback`), the in-app route (`dec_deeplink`), the tracking values. See [URL parameters](/links/url-parameters/). |
+| 1 | The tapped URL's `adto_*` parameters | the custom redirect (`adto_redirect`, `adto_redirect_<os>`), the desktop fallback (`adto_fallback`), the in-app route (`adto_deeplink`), the tracking values. See [URL parameters](/links/url-parameters/). |
 | 2 | The link's first matching geo or language rule | `target`, `redirect_url`, `fallback_url`, the iOS and Android deep-link paths. See [Geo and language routing](#geo-and-language-routing). |
 | 3 | The link | every routing field, the tracking defaults and UTM values, the tap-to-store page, the interstitial and the click id on web destinations |
 | 4 | The link's template, for each field the link leaves empty | the target, redirect and fallback URLs, the deep-link paths, the social preview, the tracking defaults and UTM values, the tap-to-store page, the interstitial and the click id on web destinations. See [Templates](/api/links/#templates). |
@@ -58,7 +58,7 @@ The tapped URL's own `utm_*` beat the link's on the click row; the link's UTM va
 
 A permanent link can carry up to 20 rules (`routing_rules`; the **Geo and language routing** block in the link drawer). A rule names countries (ISO 3166 two-letter codes, from Cloudflare's view of the visitor), languages (the primary tag of the browser's first `Accept-Language` entry, such as `de` for `de-AT`), or both, and the link fields it replaces. Rules are tried in order; the first whose every condition matches stands in for the link's own values of the fields it sets, for that tap only. A tap that matches no rule is routed exactly as without rules: a rule never blocks a visitor. Bots and link unfurlers see the link's own preview and target.
 
-A rule's iOS or Android deep-link path for the tap's platform is also stored on the click, so an install that click brings receives it as `deep_link` (unless the URL had a `dec_deeplink`).
+A rule's iOS or Android deep-link path for the tap's platform is also stored on the click, so an install that click brings receives it as `deep_link` (unless the URL had a `adto_deeplink`).
 
 A rule can also hold for a time or for a share of visitors:
 
@@ -73,14 +73,14 @@ The server resolves one destination for a visitor without the app. The first non
 
 | # | Candidate | Notes |
 |---|---|---|
-| 1 | A custom redirect whose host is a store, re-tagged | Custom redirect means, in order: `dec_redirect_ios` / `dec_redirect_android`, then `dec_redirect`, then a matching rule's `redirect_url`, then the link's **If the app isn't installed (mobile) > Custom URL** (`redirect_url`). Store hosts are `apple.com` and its subdomains on iOS; `play.google.com` and the Huawei, Samsung and Xiaomi store hosts on Android. The attribution tag is added. |
+| 1 | A custom redirect whose host is a store, re-tagged | Custom redirect means, in order: `adto_redirect_ios` / `adto_redirect_android`, then `adto_redirect`, then a matching rule's `redirect_url`, then the link's **If the app isn't installed (mobile) > Custom URL** (`redirect_url`). Store hosts are `apple.com` and its subdomains on iOS; `play.google.com` and the Huawei, Samsung and Xiaomi store hosts on Android. The attribution tag is added. |
 | 2 | A custom redirect, verbatim | Any other custom redirect URL. Not an install path, so no tag. |
-| 3 | The tagged store URL | iOS: the app's App Store URL with `ct=dtg_click=<id>`. Android: the visitor's OEM store when configured, else the Play Store URL, with `referrer=dtg_click=<id>&dtg_l={username}/{slug}`. See [App stores and OEM routing](/links/app-stores-and-oem-routing/). |
+| 3 | The tagged store URL | iOS: the app's App Store URL with `ct=adto_click=<id>`. Android: the visitor's OEM store when configured, else the Play Store URL, with `referrer=adto_click=<id>&adto_l={username}/{slug}`. See [App stores and OEM routing](/links/app-stores-and-oem-routing/). |
 | 4 | The **app's** Fallback URL | This outranks the link's own target on mobile. |
 | 5 | The link's target (its **Fallback URL**), or a matching rule's `target` | |
-| 6 | Nothing | The visitor falls through to the shared tail: `dec_fallback`, then the link's desktop fallback, then the QR page. |
+| 6 | Nothing | The visitor falls through to the shared tail: `adto_fallback`, then the link's desktop fallback, then the QR page. |
 
-A permanent link's deep-link paths and a `dec_deeplink` parameter do not change the destination; they only change the in-app route used by the intent bounce and the "Open in app" buttons.
+A permanent link's deep-link paths and a `adto_deeplink` parameter do not change the destination; they only change the in-app route used by the intent bounce and the "Open in app" buttons.
 
 ## Mobile: delivering it
 
@@ -101,10 +101,10 @@ With a destination in hand, the response depends on the app's settings and the b
 The bounce opens the installed app directly from Chrome when App Links verification has not happened yet, and lands everyone else on the store. It is used only when all of these hold: the device is Android; the app has both an **Android app scheme** and an **Android package**; the user agent contains `Chrome/` (Samsung Internet and Edge qualify); the user agent is not an in-app browser or WebView (`; wv)`, `FB_IAB`, `FB4A`, `FBAV`, `Instagram`); and a destination exists.
 
 ```text
-intent://{path or username/slug}?dtg_click=<id>#Intent;scheme={scheme};package={package};S.browser_fallback_url={encoded destination};end
+intent://{path or username/slug}?adto_click=<id>#Intent;scheme={scheme};package={package};S.browser_fallback_url={encoded destination};end
 ```
 
-`{path}` is `dec_deeplink`, else the link's **Android deep link path**. The SDK reads `dtg_click` from the opened URL and converts the web click into the app's own click instead of logging a second one. Verified App Links bypass the browser, and the server, entirely.
+`{path}` is `adto_deeplink`, else the link's **Android deep link path**. The SDK reads `adto_click` from the opened URL and converts the web click into the app's own click instead of logging a second one. Verified App Links bypass the browser, and the server, entirely.
 
 ### Facebook and Instagram on Android
 
@@ -112,11 +112,11 @@ Their in-app browsers open an installed app from an `intent://` URL but ignore i
 
 ### The interstitial page
 
-Turned on per app with **Mobile beacon interstitial**, and on or off for a single link under **Mobile landing pages** in the link drawer (`mobile_interstitial: true | false`; `null` follows the app). The page is titled "Opening the app…", carries `noindex`, and on load sends `{c, w, h, dpr, t, e, fs, cs, hc, rm, tz}` to `/_/collect`, which updates the click row once: the click id, the screen width and height, the pixel ratio, touch points and connection type, then the text size (`fs`, the computed px of `font: -apple-system-body`, sent only when the browser resolves the iOS system text style), the color scheme (`cs`, `dark` or `light`), Increase Contrast (`hc`, 1 or 0 from `prefers-contrast: more` or `no-preference`), Reduce Motion (`rm`, 1 or 0 from `prefers-reduced-motion`) and the UTC offset in minutes (`tz`). A key the browser cannot answer is left out; a value out of range is stored as null. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.adto.app/welcome?dtg_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
+Turned on per app with **Mobile beacon interstitial**, and on or off for a single link under **Mobile landing pages** in the link drawer (`mobile_interstitial: true | false`; `null` follows the app). The page is titled "Opening the app…", carries `noindex`, and on load sends `{c, w, h, dpr, t, e, fs, cs, hc, rm, tz}` to `/_/collect`, which updates the click row once: the click id, the screen width and height, the pixel ratio, touch points and connection type, then the text size (`fs`, the computed px of `font: -apple-system-body`, sent only when the browser resolves the iOS system text style), the color scheme (`cs`, `dark` or `light`), Increase Contrast (`hc`, 1 or 0 from `prefers-contrast: more` or `no-preference`), Reduce Motion (`rm`, 1 or 0 from `prefers-reduced-motion`) and the UTC offset in minutes (`tz`). A key the browser cannot answer is left out; a value out of range is stored as null. It then routes automatically: to the intent bounce after 450 ms when the bounce applies, otherwise to the destination after 300 ms. A custom scheme is never tried automatically. After 1.6 seconds it shows "Taking too long?" with an **Open app** button; that tap copies `https://acme.adto.app/welcome?adto_click=<id>` to the clipboard, tries the scheme URL when the app has one, and after 2 seconds goes to the destination if the page is still visible. Without JavaScript a plain **Continue** link remains. When iOS tap-to-store is also on, iPhone taps take the tap-to-store page instead, so the switch affects Android only.
 
 ### The iOS tap-to-store page
 
-Turned on per app with **iOS tap-to-store**, and on or off for a single link under **Mobile landing pages** in the link drawer (`ios_tap_to_store: true | false`; `null` follows the app), so a paid campaign link can show it while a support link opens the store directly. iOS has no install referrer and Safari only writes the pasteboard from a user gesture, so this page replaces the automatic redirect with one button. It is titled "Get {app name}" and shows **Get {app name}** plus, when the app has an iOS scheme, a secondary **Open in app** button. Inside the Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X in-app browsers, and only when a scheme exists, the heading becomes "Continue in the app" and **Open in app** comes first. The Get tap shows a "Link saved" notice, writes `https://acme.adto.app/welcome?dtg_click=<id>` to the pasteboard and opens the tagged store URL; a 600 ms safety timer opens the store even if the write never settles. **Open in app** only navigates to the scheme URL. There are no timers before the tap, and the same beacon as the interstitial fires on load. Without JavaScript the page shows an **Open the App Store** link.
+Turned on per app with **iOS tap-to-store**, and on or off for a single link under **Mobile landing pages** in the link drawer (`ios_tap_to_store: true | false`; `null` follows the app), so a paid campaign link can show it while a support link opens the store directly. iOS has no install referrer and Safari only writes the pasteboard from a user gesture, so this page replaces the automatic redirect with one button. It is titled "Get {app name}" and shows **Get {app name}** plus, when the app has an iOS scheme, a secondary **Open in app** button. Inside the Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X in-app browsers, and only when a scheme exists, the heading becomes "Continue in the app" and **Open in app** comes first. The Get tap shows a "Link saved" notice, writes `https://acme.adto.app/welcome?adto_click=<id>` to the pasteboard and opens the tagged store URL; a 600 ms safety timer opens the store even if the write never settles. **Open in app** only navigates to the scheme URL. There are no timers before the tap, and the same beacon as the interstitial fires on load. Without JavaScript the page shows an **Open the App Store** link.
 
 ### Client hints and hint-less Chromium
 
@@ -128,8 +128,8 @@ Desktop visitors, and mobile visitors with no destination, take this chain. The 
 
 | # | Candidate |
 |---|---|
-| 1 | `dec_redirect_macos`, `dec_redirect_windows` or `dec_redirect_linux` for the visitor's OS, else `dec_redirect` |
-| 2 | `dec_fallback` |
+| 1 | `adto_redirect_macos`, `adto_redirect_windows` or `adto_redirect_linux` for the visitor's OS, else `adto_redirect` |
+| 2 | `adto_fallback` |
 | 3 | A matching rule's `fallback_url`, else the link's **If the app can't open the link (desktop) > Custom URL** (`fallback_url`) |
 | 4 | The app's Fallback URL |
 | 5 | The branded QR page |
@@ -161,10 +161,10 @@ The QR page, the interstitial, the tap-to-store page and the error pages share t
 |---|---|
 | `HEAD` or bot user agent | None |
 | 404, 410, unknown username | None |
-| `x-dectog-no-track: 1` header or `?dtg_nt=1` on the link | None. Routing is exactly that of a real tap; use it for QA taps and uptime monitors. The parameter never reaches the destination. |
+| `x-adto-no-track: 1` header or `?adto_nt=1` on the link | None. Routing is exactly that of a real tap; use it for QA taps and uptime monitors. The parameter never reaches the destination. |
 | Tap-to-store page, interstitial page (also the Facebook and Instagram one), intent bounce | Written before the response is sent |
 | Hint-less Chromium plain redirect | None on the first request; the hinted retry writes it |
 | Every other redirect and the QR page | Written in the background after the response |
 | A verified Universal Link or App Link opening the installed app | The browser never contacts the server. The SDK reports the open as a click with `source: mobile_app` and as an app open. |
 
-Each tap nets at most one click: when the SDK reports a click that carries a `dtg_click` id the server already has, the existing web row is converted to `source: mobile_app` instead of inserting another. A web click that was never written can still be recreated from the store referrer at install time; see [How attribution works](/start/how-attribution-works/).
+Each tap nets at most one click: when the SDK reports a click that carries a `adto_click` id the server already has, the existing web row is converted to `source: mobile_app` instead of inserting another. A web click that was never written can still be recreated from the store referrer at install time; see [How attribution works](/start/how-attribution-works/).

@@ -20,8 +20,8 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 
 | Chip | Value | Meaning | What to do |
 |---|---|---|---|
-| referrer delivered | `ok` | The store handed back a referrer. If it carried `dtg_click`, the install is matched at `guaranteed`. If not, the install came through the store without an AdTo redirect and the ladder moved on. | Nothing, unless `ok` installs are organic: check that the tap went through a tagged store URL (below). |
-| store reported organic | `organic` | Google Play returned its organic marker or an empty referrer. The install did not come through a tagged store link. | Check the path the tap took. The QR page's store buttons are untagged, a custom `redirect_url` or `dec_redirect` to a non-store host is never tagged, and custom vivo store URLs are never tagged. |
+| referrer delivered | `ok` | The store handed back a referrer. If it carried `adto_click`, the install is matched at `guaranteed`. If not, the install came through the store without an AdTo redirect and the ladder moved on. | Nothing, unless `ok` installs are organic: check that the tap went through a tagged store URL (below). |
+| store reported organic | `organic` | Google Play returned its organic marker or an empty referrer. The install did not come through a tagged store link. | Check the path the tap took. The QR page's store buttons are untagged, a custom `redirect_url` or `adto_redirect` to a non-store host is never tagged, and custom vivo store URLs are never tagged. |
 | store too old for the API | `feature_not_supported` | The Play Store on the device does not support the Install Referrer API. Final. | Nothing. The fingerprint still runs. |
 | store service unavailable | `service_unavailable` | No connection to the Play Store service after up to three connection attempts, 3 seconds apart. | The SDK asks again on up to five later launches and sends a late claim; `onAppInstalled` emits the upgraded verdict. |
 | developer error | `developer_error` | Play rejected the call after every retry. | Check that the installed build has the Install Referrer client available and is not stripped by your build tooling. |
@@ -37,7 +37,7 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 ### The click was never recorded
 
 - Bots and link unfurlers get the preview page and no click: any user agent containing `bot` (as a word), `crawler`, `spider`, `preview`, `fetcher`, `monitor`, `headless`, `whatsapp` or the named social crawlers. A plain `curl` is not on the list: it records a click.
-- Hint-less Chromium: the first request from a mobile Chromium browser that sends `Sec-CH-UA-Mobile: ?1` without a `Sec-CH-UA-Model` header, has no `Build/` token in its user agent and no in-app marker, gets a 302 with `Critical-CH` and records nothing. Chrome retries with the hint and the retry records the click. A client that never retries leaves no click row. The install can still be matched: the Play and OEM store referrers carry `dtg_l=<username>/<slug>`, and the server synthesizes the click from it. With the mobile interstitial on, the same happens through a one-shot self-redirect carrying `?_ch=1`.
+- Hint-less Chromium: the first request from a mobile Chromium browser that sends `Sec-CH-UA-Mobile: ?1` without a `Sec-CH-UA-Model` header, has no `Build/` token in its user agent and no in-app marker, gets a 302 with `Critical-CH` and records nothing. Chrome retries with the hint and the retry records the click. A client that never retries leaves no click row. The install can still be matched: the Play and OEM store referrers carry `adto_l=<username>/<slug>`, and the server synthesizes the click from it. With the mobile interstitial on, the same happens through a one-shot self-redirect carrying `?_ch=1`.
 - In-app browsers (Facebook, Instagram and WebViews on Android) never take the hint path and never get the intent bounce. They get a plain 302 to the tagged store URL, so referrer attribution still works for them.
 - The demo seed's installs carry no IP hash and never fingerprint-match. Its attributed installs are all Android referrer matches and its organic ones all iOS. Do not judge the fingerprint with the demo account.
 
@@ -58,17 +58,17 @@ Testing on an emulator or a debug build? **Emulator** flags every simulator inst
 ### iOS specifics
 
 - The pasteboard read is on by default. It only attributes when the link was on the pasteboard: turn on iOS tap-to-store (Apps, Advanced) so the "Get the app" button copies the link before opening the App Store. See [Deterministic attribution](/sdk/deterministic-attribution/).
-- On iOS 16 and later the read shows the system "Allow paste from …?" alert when the pasteboard holds a URL. A user who declines leaves the install on the fingerprint. `willShowPasteboardPrompt()` tells you in advance; `DectogPasteButton` lets the user paste later and sends a late claim.
+- On iOS 16 and later the read shows the system "Allow paste from …?" alert when the pasteboard holds a URL. A user who declines leaves the install on the fingerprint. `willShowPasteboardPrompt()` tells you in advance; `AdtoPasteButton` lets the user paste later and sends a late claim.
 - Simulators cannot install from the App Store and do not open Universal Links. Test on a device.
 
 ### Check the SDK side
 
-- `onAppInstalled` emits once per install, plus once more when a late claim upgrades the verdict. `currentAppInstall` holds the latest verdict. To retest, uninstall the app; on Android `adb shell pm clear <package>` also works. The SDK keeps its state in `.dectog_install.json` in a backup-excluded directory and validates it against the package's first-install time, so a restored backup does not suppress a real install.
+- `onAppInstalled` emits once per install, plus once more when a late claim upgrades the verdict. `currentAppInstall` holds the latest verdict. To retest, uninstall the app; on Android `adb shell pm clear <package>` also works. The SDK keeps its state in `.adto_install.json` in a backup-excluded directory and validates it against the package's first-install time, so a restored backup does not suppress a real install.
 - Set `enableDebugLogging: true` and look for the install POST. A 401 means the key was regenerated or is wrong; the server's four 401 bodies are listed under [Automation and agents](/guides/automation-and-agents/). A 429 is retried after `Retry-After` (up to 10 seconds in-process, otherwise on the next launch).
 
 ## Check the app against the dashboard
 
-Call `FlutterDectog().diagnostics()` from a debug build. It reads the app's record from the server and reports a bundle ID or package that differs, an iOS URL scheme missing from `Info.plist`, and on Android 12 and newer each link host the system has not verified for App Links (`none` means verification failed or never ran). With `enableDebugLogging` the warnings are also printed.
+Call `FlutterAdto().diagnostics()` from a debug build. It reads the app's record from the server and reports a bundle ID or package that differs, an iOS URL scheme missing from `Info.plist`, and on Android 12 and newer each link host the system has not verified for App Links (`none` means verification failed or never ran). With `enableDebugLogging` the warnings are also printed.
 
 ## App Links do not verify (Android)
 
@@ -99,7 +99,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 - The domain is not verified for the installed build: see the two sections above.
 - The tap came from an in-app browser. Android in-app browsers and WebViews get a plain 302 to the store, never the intent bounce. On iOS the tap-to-store page leads with "Open in app" inside Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X when the app has an iOS scheme; otherwise the visitor gets the store.
 - The visitor is on a desktop user agent. Desktop never redirects to the target; it gets the QR page or a fallback URL. An iPad asks for desktop sites with a Mac user agent; its Safari tap counts as iOS only when the link's app is set up for iOS (a bundle ID, App Store URL or iOS scheme). See [How a tap is routed](/links/how-a-tap-is-routed/).
-- The SDK reports `Invalid AdTo URL format`: the tapped host does not match `baseUrl` and `linkRootDomain`. For AdTo set `baseUrl: 'https://app.adto.app'` and `linkRootDomain: 'adto.app'`: the released SDKs default to the old DecTog service.
+- The SDK reports `Invalid AdTo URL format`: the tapped host does not match `baseUrl` and `linkRootDomain`. For AdTo leave both unset: the SDKs default to `https://app.adto.app` and `adto.app`.
 - The app has no store URL: a phone without the app goes to the app's fallback URL, then the link target, then the QR page. Add the store URLs on the Apps page.
 
 ## 429 Too Many Requests

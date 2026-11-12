@@ -11,7 +11,7 @@ Report privately, never in a public issue: through GitHub's private vulnerabilit
 
 ## Dependencies and builds
 
-What holds today, in the server (`dectog`), the Flutter SDK (`flutter_dectog`) and this site:
+What holds today, in the server (`adto`), the Flutter SDK (`flutter_adto`) and this site:
 
 | | Server | SDK | Docs |
 |---|---|---|---|

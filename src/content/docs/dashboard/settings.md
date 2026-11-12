@@ -40,9 +40,9 @@ Plan changes are recorded in the [audit log](#audit-log), by **AdTo**.
 
 ## Account key
 
-The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `dtg_` followed by 32 lowercase hex characters, 36 characters in total. Only owners see this card.
+The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `adto_` followed by 32 lowercase hex characters, 36 characters in total. Only owners see this card.
 
-The key is shown once: on the "Account created" screen after sign-up, and right after **Regenerate**. AdTo keeps only its SHA-256 and its first 8 characters, so the card shows those characters followed by dots, for example `dtg_3f9a••••••••••••••••••••••••••••`, and nobody, AdTo included, can show the key again.
+The key is shown once: on the "Account created" screen after sign-up, and right after **Regenerate**. AdTo keeps only its SHA-256 and its first 8 characters, so the card shows those characters followed by dots, for example `adto_3f9a••••••••••••••••••••••••••••`, and nobody, AdTo included, can show the key again.
 
 | Action | What happens |
 |---|---|
@@ -53,7 +53,7 @@ Hint under the key: "Full access, including creating and deleting links: use it 
 
 ## SDK keys
 
-The keys your apps ship with, `dtg_pub_` followed by 32 hex characters. Anyone can extract a key from an app build, so an SDK key can only register installs, report clicks, events and opens, pull the attribution verdict, read links and create temporary links. Creating, changing or deleting links needs a key created with **Allow creating and changing links (links:write)**. See [Authentication](/api/overview/#authentication) for the scopes route by route.
+The keys your apps ship with, `adto_pub_` followed by 32 hex characters. Anyone can extract a key from an app build, so an SDK key can only register installs, report clicks, events and opens, pull the attribution verdict, read links and create temporary links. Creating, changing or deleting links needs a key created with **Allow creating and changing links (links:write)**. See [Authentication](/api/overview/#authentication) for the scopes route by route.
 
 A new account starts with one SDK key, "App key". The card lists every key with its name, the full key, its scope chips, when it was created and last used (stamped at most once an hour), and **Copy** and **Revoke** buttons. Revoked keys stay listed, greyed out, with the date.
 
@@ -81,7 +81,7 @@ Both forms are explained in [Concepts](/start/concepts/).
 
 ## Site keys
 
-Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name and the sites allowed to use it (origins such as `https://shop.example.com`, one per line). Each key shows its sites, when it was last used, the `<script>` snippet with **Copy snippet**, **Sites** to change the list and **Revoke**. A site key is public by design; it works only from its sites and only records leads, purchases and custom events.
+Keys for [`adto.js`](/sdk/web/) on your website. **New site key** takes a name and the sites allowed to use it (origins such as `https://shop.example.com`, one per line). Each key shows its sites, when it was last used, the `<script>` snippet with **Copy snippet**, **Sites** to change the list and **Revoke**. A site key is public by design; it works only from its sites and only records leads, purchases and custom events.
 
 ## Custom domain
 
@@ -123,12 +123,10 @@ Entries are numbered 1, 2, 3… and are never changed or removed. **Check for ga
 A code block you can paste into your app:
 
 ```dart
-await dectog.initialize(DectogConfig(
-  apiKey: 'dtg_pub_…',
-  baseUrl: 'https://app.adto.app',
-  linkRootDomain: 'adto.app',
+await adto.initialize(AdtoConfig(
+  apiKey: 'adto_pub_…',
 ));
 ```
 
-The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". `baseUrl` and `linkRootDomain` name AdTo's hosts. Keep both: the released SDKs default to the old DecTog service. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". The SDKs default to AdTo's hosts, so the snippet names `baseUrl` and `linkRootDomain` only when this server's differ. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 

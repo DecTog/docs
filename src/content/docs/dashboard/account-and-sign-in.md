@@ -31,9 +31,9 @@ A footer line reads "Your account gets its own link subdomain and API key." Ever
 | **Forgot password?** | Opens the reset form described below. |
 | **Sign in with Google** | Shown when the deployment has Google sign-in configured. |
 
-The session is a cookie named `dectog_session` holding a signed token that expires 30 days after sign-in whatever the checkbox; the checkbox only decides whether the browser keeps the cookie across restarts. **Log out** (the icon in the sidebar footer) deletes the cookie and returns to the login page; sessions open in other browsers keep running until their token expires. Two things end every session at once, in every browser: [resetting the password](#forgot-and-reset-password) and [connecting Google](#connect-google).
+The session is a cookie named `adto_session` holding a signed token that expires 30 days after sign-in whatever the checkbox; the checkbox only decides whether the browser keeps the cookie across restarts. **Log out** (the icon in the sidebar footer) deletes the cookie and returns to the login page; sessions open in other browsers keep running until their token expires. Two things end every session at once, in every browser: [resetting the password](#forgot-and-reset-password) and [connecting Google](#connect-google).
 
-Local development builds also show "Demo account: demo@dectog.local · demo1234" under the form; the hosted service does not.
+Local development builds also show "Demo account: demo@adto.local · demo1234" under the form; the hosted service does not.
 
 ## Sign in with Google
 

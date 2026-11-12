@@ -23,7 +23,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
 
    The username is your link subdomain. Every link you create is `https://acme.adto.app/{slug}`, and the hint under the field reads "Your links live on acme.adto.app". There is no way to rename an account later.
 
-   Click **Create Account**. The next screen says "Account created" and shows two keys: **SDK key, for your app** (`dtg_pub_` and 32 hex characters), which goes into the SDK, and **Account key, for servers and scripts** (`dtg_` and 32 hex characters), which never goes into an app. Copy the account key now: it is shown only this once (**Settings** can replace it). The SDK key stays listed under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
+   Click **Create Account**. The next screen says "Account created" and shows two keys: **SDK key, for your app** (`adto_pub_` and 32 hex characters), which goes into the SDK, and **Account key, for servers and scripts** (`adto_` and 32 hex characters), which never goes into an app. Copy the account key now: it is shown only this once (**Settings** can replace it). The SDK key stays listed under **Settings**. **Sign up with Google** does the same after asking you to choose a username. If the Sign up tab is missing, or the server answers `Signup is currently closed`, signups are disabled on that deployment.
 
 2. ## Register the app
 
@@ -79,42 +79,39 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
 
 4. ## Add the SDK
 
-   The SDK is `flutter_dectog` 1.0.x. It needs Flutter 3.29 or newer (Dart 3.7), iOS 15 and Android 7 (API 24).
+   The SDK is `flutter_adto` 1.0.x. It needs Flutter 3.29 or newer (Dart 3.7), iOS 15 and Android 7 (API 24).
 
    ```bash
-   flutter pub add flutter_dectog
+   flutter pub add flutter_adto
    ```
 
    Initialize it once at startup with your SDK key, then listen to links and to the install verdict:
 
    ```dart title="lib/main.dart"
-   import 'package:flutter_dectog/flutter_dectog.dart';
+   import 'package:flutter_adto/flutter_adto.dart';
 
-   final dectog = FlutterDectog();
+   final adto = FlutterAdto();
 
-   Future<void> initDectog() async {
-     await dectog.initialize(DectogConfig(
-       apiKey: 'dtg_pub_your_sdk_key', // Dashboard > Settings > SDK keys
-       // The SDK's defaults are the old DecTog service: name AdTo's hosts
-       baseUrl: 'https://app.adto.app',
-       linkRootDomain: 'adto.app',
+   Future<void> initAdto() async {
+     await adto.initialize(AdtoConfig(
+       apiKey: 'adto_pub_your_sdk_key', // Dashboard > Settings > SDK keys
      ));
 
      // A link opened the running app (Universal Link, App Link or your scheme).
-     dectog.onLinkClick.listen((click) {
-       final route = click.clickParams?.deepLink; // dec_deeplink on the URL, if any
+     adto.onLinkClick.listen((click) {
+       final route = click.clickParams?.deepLink; // adto_deeplink on the URL, if any
        final target = click.targetUrl;            // the link's fallback URL
        print('${click.username}/${click.slug} route=$route target=$target');
      });
 
      // The link that launched the app. Delivered once per process.
-     final initial = await dectog.getInitialLink();
+     final initial = await adto.getInitialLink();
      if (initial != null) {
        print('Launched by ${initial.originalUrl}');
      }
 
      // The install verdict: on first launch, and again when a late signal upgrades it.
-     dectog.onAppInstalled.listen((install) {
+     adto.onAppInstalled.listen((install) {
        final route = install.routing?.deepLink ?? install.deepLink;
        if (route != null) {
          // Medium confidence or better: route the new user to the content they tapped.
@@ -144,7 +141,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
 
    Click **Create link**. The list now shows `/welcome`; the copy icon next to it copies `https://acme.adto.app/welcome`. **Advanced options** on the same form hold the per-platform deep-link paths, the Tracking defaults and the custom mobile and desktop destinations, all described in [How a tap is routed](/links/how-a-tap-is-routed/).
 
-   You can also create links from code: `dectog.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your account key and the request signature described in [REST API overview](/api/overview/).
+   You can also create links from code: `adto.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your account key and the request signature described in [REST API overview](/api/overview/).
 
 6. ## Test an install
 
@@ -152,7 +149,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
 
    <Tabs>
      <TabItem label="Android">
-       1. Open `https://acme.adto.app/welcome` in Chrome on the phone. AdTo sends it to the Play Store with `referrer=dtg_click=<id>&dtg_l=acme/welcome` on the store URL.
+       1. Open `https://acme.adto.app/welcome` in Chrome on the phone. AdTo sends it to the Play Store with `referrer=adto_click=<id>&adto_l=acme/welcome` on the store URL.
        2. Install the app from the store and open it.
        3. `onAppInstalled` emits a verdict with `matched: true`, `matchSource: 'referrer'`, `referrerSource: 'google_play'` and `matchConfidence: 'guaranteed'`.
 
@@ -160,7 +157,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
      </TabItem>
      <TabItem label="iOS">
        1. On the Apps page, turn on **iOS tap-to-store** under Advanced and save.
-       2. Open the link in Safari on the iPhone and tap **Get \{app name\}**. The page copies `https://acme.adto.app/welcome?dtg_click=<id>` to the pasteboard and opens the App Store.
+       2. Open the link in Safari on the iPhone and tap **Get \{app name\}**. The page copies `https://acme.adto.app/welcome?adto_click=<id>` to the pasteboard and opens the App Store.
        3. Install the app (App Store or TestFlight) and open it. On iOS 16 and later the system asks to allow the paste; accept it.
        4. `onAppInstalled` emits `matched: true`, `matchSource: 'clipboard'` and `matchConfidence: 'guaranteed'`.
 
