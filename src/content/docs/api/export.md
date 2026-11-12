@@ -2,7 +2,7 @@
 title: Export raw data
 description: Page through your clicks, installs, app opens and events with the account key, download them as CSV from the dashboard, and how exports past 50,000 rows become a file in an R2 bucket.
 sidebar:
-  order: 6
+  order: 7
 ---
 
 Your clicks, installs, app opens and events are yours to take elsewhere: a warehouse, a spreadsheet, another attribution tool. There are two ways out.

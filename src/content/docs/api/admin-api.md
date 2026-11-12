@@ -2,7 +2,7 @@
 title: Admin API
 description: The cookie-session routes the dashboard uses, listed for reference. Not a stable contract.
 sidebar:
-  order: 7
+  order: 8
 ---
 
 :::caution[Not a stable contract]
