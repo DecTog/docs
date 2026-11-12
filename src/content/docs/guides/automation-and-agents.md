@@ -57,6 +57,7 @@ The AdTo plugin for Claude Code bundles the same server with four skills: links 
 | `retention` | Day 1, 7 and 30 retention and weekly cohorts, optionally of one link, campaign or platform. Account key only. |
 | `analytics` | Clicks, first installs, reinstalls, opens, leads and revenue over a window, by day (by hour for `24h`), by one or two dimensions, or as totals, with filters that keep or drop values. The [analytics query](/api/admin-api/#analytics) as a tool. Account key only. |
 | `list_apps` | Your apps with their store and platform identifiers, without secrets. Account key only. |
+| `create_app`, `update_app` | Register an app, or change some of its fields (bundle ids, store links, signing fingerprints, social preview), through [`/api/v1/apps`](/api/apps/); its well-known files are served at once. Account key only. |
 | `setup_status` | The [setup checklist](/dashboard/apps/) of one app, including the Apple and Google rules for the well-known files. Account key only. |
 | `get_flutter_snippet` | The `pubspec.yaml` line and the `initialize()` call, filled with one of your SDK keys and your base URL. Account key only. |
 

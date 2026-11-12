@@ -2,7 +2,7 @@
 title: Well-known files, SEO and routing
 description: How the worker serves the Apple and Android association files, robots.txt, the sitemap and blog post previews, and which host and path reaches which handler.
 sidebar:
-  order: 8
+  order: 9
 ---
 
 AdTo answers the site (`adto.app`), the dashboard (`dashboard.adto.app`), the API (`api.adto.app`) and every account host (`<username>.adto.app`). This page lists what each host and path does.
