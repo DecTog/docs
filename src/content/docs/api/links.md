@@ -67,12 +67,12 @@ Every permanent-link route returns the full object, including fields you never s
 | `created_at`, `updated_at` | string or null | ISO 8601 UTC. `updated_at` stays `null` until the first `PUT`. |
 | `metadata` | JSON or null | Your own data. Delivered to the app on attributed installs as `custom_params` and inside `link.metadata`. |
 | `og_title`, `og_description`, `og_image_url` | string or null | Social preview overrides for bots and unfurlers. Fall back to the app's values. See [Social previews and QR](/links/social-previews-and-qr/). |
-| `ios_deep_link_path`, `android_deep_link_path` | string or null | The app route a custom-scheme open uses on that platform: `scheme://<path>?dtg_l=<username>/<slug>` instead of `scheme://<username>/<slug>?dtg_l=…`. Stored without a leading slash. |
+| `ios_deep_link_path`, `android_deep_link_path` | string or null | The app route a custom-scheme open uses on that platform: `scheme://<path>?adto_l=<username>/<slug>` instead of `scheme://<username>/<slug>?adto_l=…`. Stored without a leading slash. |
 | `redirect_url` | string or null | Mobile visitors without the app go here instead of the store. A store URL here is still tagged with the click id. |
 | `fallback_url` | string or null | Where desktop visitors go instead of the QR page, and the last mobile fallback. |
-| `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `dec_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
+| `label`, `campaign`, `adgroup`, `creative` | string or null | Tracking defaults copied onto every click of this link. A `adto_<field>` query parameter on the tapped URL wins for that tap. See [URL parameters](/links/url-parameters/). |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | This link's iOS tap-to-store page and mobile interstitial. `null` follows the app's setting. See [How a tap is routed](/links/how-a-tap-is-routed/#mobile-delivering-it). |
-| `append_click_id` | boolean or null | Whether the link adds `dtg_click` to its web destinations, for [`adto.js`](/sdk/web/). `null` is off, or the template's value. |
+| `append_click_id` | boolean or null | Whether the link adds `adto_click` to its web destinations, for [`adto.js`](/sdk/web/). `null` is off, or the template's value. |
 | `routing_rules` | array or null | Geo and language rules, first match wins. See [Geo and language rules](#geo-and-language-rules). |
 | `template_id` | string or null | The [template](#templates) whose values fill every field this link leaves empty. The fields above are the link's own. |
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` | string or null | Added to the link's web destinations and stored on clicks whose URL has none. See [Link-level UTM values](/links/url-parameters/#link-level-utm-values). |
@@ -107,7 +107,7 @@ Every permanent-link route returns the full object, including fields you never s
 | `redirect_url`, `fallback_url` | string | no | http(s) URLs. `""` stores `null`. |
 | `label`, `campaign`, `adgroup`, `creative` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
 | `ios_tap_to_store`, `mobile_interstitial` | boolean or null | no | `true` or `false` overrides the app's setting for this link; `null` or absent follows it. Anything else answers `400 Invalid ios_tap_to_store: must be true, false or null (follow the app)`. |
-| `append_click_id` | boolean or null | no | `true` adds `dtg_click=<click id>` to the link's web destinations (never stores, MMP links or schemes); `false` or `null` does not. A template can set it. Anything else answers `400 Invalid append_click_id: must be true, false or null`. |
+| `append_click_id` | boolean or null | no | `true` adds `adto_click=<click id>` to the link's web destinations (never stores, MMP links or schemes); `false` or `null` does not. A template can set it. Anything else answers `400 Invalid append_click_id: must be true, false or null`. |
 | `routing_rules` | array or null | no | Up to 20 rules; `null` or `[]` stores none. See below. |
 | `template_id` | string | no | One of your templates; anything else answers `400 Unknown template_id`. When `app_id` is absent, the template's app applies. |
 | `utm_source` … `utm_content` | string | no | Trimmed; at most 255 characters; no control characters. `""` stores `null`. |
@@ -229,7 +229,7 @@ adto PUT /api/v1/links/spring-sale '{"target": null, "label": "launch-week"}'
 
 ## Geo and language rules
 
-A rule replaces some of the link's fields for taps from given countries or browser languages. Rules are tried in order and the first match wins; a tap no rule matches is routed as usual, and the URL's `dec_*` parameters still win over a rule. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
+A rule replaces some of the link's fields for taps from given countries or browser languages. Rules are tried in order and the first match wins; a tap no rule matches is routed as usual, and the URL's `adto_*` parameters still win over a rule. See [How a tap is routed](/links/how-a-tap-is-routed/#geo-and-language-routing).
 
 | Rule field | Type | Rules |
 |---|---|---|

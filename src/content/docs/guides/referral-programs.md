@@ -20,13 +20,13 @@ From a server, the same call is `POST /api/v1/referral-links` with `{"customer_i
 
 ### Or: one link with the referrer in the URL
 
-If your backend already builds share links, Adjust-style, skip the call: add the user's id to any permanent link as `dec_referrer`, with whatever else the tap needs.
+If your backend already builds share links, Adjust-style, skip the call: add the user's id to any permanent link as `adto_referrer`, with whatever else the tap needs.
 
 ```
-https://acme.adto.app/invite?dec_referrer=1042&dec_label=eyJpIjoxMDQyfQ%3D%3D&dec_fallback=https%3A%2F%2Facme.com%2F
+https://acme.adto.app/invite?adto_referrer=1042&adto_label=eyJpIjoxMDQyfQ%3D%3D&adto_fallback=https%3A%2F%2Facme.com%2F
 ```
 
-Everything below works the same: the install gets `referrerCustomerId` `"1042"` (and the label as `install.clickParams?.label`), and the signup records the referral and sends `referral.converted`. The difference is trust. A referral link's customer is fixed on the server; a `dec_referrer` is whatever the URL says, so anyone can edit it to name someone else. The referral [fraud rules](#5-watch-for-self-referrals) still apply.
+Everything below works the same: the install gets `referrerCustomerId` `"1042"` (and the label as `install.clickParams?.label`), and the signup records the referral and sends `referral.converted`. The difference is trust. A referral link's customer is fixed on the server; a `adto_referrer` is whatever the URL says, so anyone can edit it to name someone else. The referral [fraud rules](#5-watch-for-self-referrals) still apply.
 
 ## 2. The friend installs and signs up
 
@@ -57,7 +57,7 @@ if (referrer != null && !install!.isReinstall) {
 
 React Native reads the same field: `(await adto.getAttributionData())?.link?.referrerCustomerId`.
 
-On a referral link the server sets it from the link, so nothing in the tapped URL can change it: a `dec_label`, a `dec_referrer` or any other parameter added to the link does not. On any other link it is the tap's `dec_referrer`, or null. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
+On a referral link the server sets it from the link, so nothing in the tapped URL can change it: a `adto_label`, a `adto_referrer` or any other parameter added to the link does not. On any other link it is the tap's `adto_referrer`, or null. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
 
 Use it for the screen, not the reward: a modified app can show anything, so grant rewards from the webhook below.
 

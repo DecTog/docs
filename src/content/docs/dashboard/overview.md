@@ -64,7 +64,7 @@ Each bar stacks first installs and, lighter on top, reinstalls. The label above 
 - The chart shows the top 8 buckets, sorted by first installs, then reinstalls.
 - The tooltip adds **Flagged for fraud** when any: first installs from a tap on that campaign that tripped a [fraud rule](/start/fraud-rules/), whether credited or not. An install whose credit a blocked rule withheld is counted under `Organic` for installs but under its tap's campaign here, so a campaign that only draws fraud still shows it.
 
-This chart reads the `utm_campaign` parameter on the URL people tapped. It does not read the **Campaign** field in a link's Tracking section, nor `dec_campaign`. Those values are stored on the click and returned to the app, but they do not feed this chart. See [URL parameters](/links/url-parameters/).
+This chart reads the `utm_campaign` parameter on the URL people tapped. It does not read the **Campaign** field in a link's Tracking section, nor `adto_campaign`. Those values are stored on the click and returned to the app, but they do not feed this chart. See [URL parameters](/links/url-parameters/).
 
 ### Installs by source
 

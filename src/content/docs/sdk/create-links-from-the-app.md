@@ -34,7 +34,7 @@ Only `slug` is required. Every other parameter is optional and omitted from the 
 | `fallbackUrl` | `http(s)` URL for desktop visitors. |
 | `ogTitle`, `ogDescription` | At most 150 characters. |
 | `ogImageUrl` | An `http(s)` URL. |
-| `label`, `campaign`, `adgroup`, `creative` | At most 255 characters, no control characters. Stored on every click of the link unless a `dec_*` parameter on the tapped URL overrides it. |
+| `label`, `campaign`, `adgroup`, `creative` | At most 255 characters, no control characters. Stored on every click of the link unless a `adto_*` parameter on the tapped URL overrides it. |
 | `metadata` | Any JSON map. It comes back as `customParameters` on attributed installs. |
 
 The call returns the created `AdtoLink` (HTTP 201). Its `url` is the link to share, `clickCount` starts at 0.

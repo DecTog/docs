@@ -12,7 +12,7 @@ AdTo has two app SDKs on one contract: `flutter_adto`, the reference implementat
 | What | Source | Why |
 |---|---|---|
 | Golden wire fixtures | `adto/apps/worker/test/fixtures/wire/` | Every v1 response the server sends, held to its shape by the server's own test. Each SDK parses all of them in a test that fails when a new fixture appears unparsed. |
-| Link-URL cases | `flutter_adto/test/fixtures/url-cases.json` | Which URLs are AdTo links and which are not: subdomain, path and custom-domain forms, `dtg_l` scheme links, development forms, and the shapes that must be rejected. Each SDK runs every case. |
+| Link-URL cases | `flutter_adto/test/fixtures/url-cases.json` | Which URLs are AdTo links and which are not: subdomain, path and custom-domain forms, `adto_l` scheme links, development forms, and the shapes that must be rejected. Each SDK runs every case. |
 | Native reads | `flutter_adto/android/src/main/kotlin/app/adto/core/`, and `AdtoDevice.swift`, `AdtoKeychain.swift`, `AdtoInstallDates.swift`, `AdtoPasteTargetView.swift` | The store install referrers, the pasteboard, the paste control, the Keychain device id, the install dates. They import no framework, so an SDK maps its own bridge onto them instead of rewriting them (design decision R19: shared native code stays source, never an opaque binary). |
 | The iOS privacy manifest | `flutter_adto/ios/.../PrivacyInfo.xcprivacy` | The same reads, so the same declarations. |
 
@@ -26,7 +26,7 @@ Each behaviour the Flutter SDK's harness test (`test/sdk_harness_test.dart`) che
 
 ## Identity
 
-A port sends `x-dectog-sdk: <name>/<version>` on every signed call (`react-native-adto/1.0.0`); the server stores it on installs, events and clicks, the Overview lists the builds in use, and `MIN_SDK_VERSION` can name a minimum per SDK. It sends `app_platform` on the install (`flutter`, `react_native`).
+A port sends `x-adto-sdk: <name>/<version>` on every signed call (`react-native-adto/1.0.0`); the server stores it on installs, events and clicks, the Overview lists the builds in use, and `MIN_SDK_VERSION` can name a minimum per SDK. It sends `app_platform` on the install (`flutter`, `react_native`).
 
 ## Where to start
 

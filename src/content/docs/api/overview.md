@@ -36,16 +36,16 @@ The REST API under `/api/v1` is what the Flutter SDK talks to, and what you use 
 Every `/api/v1` route except `resolve` requires a key as a Bearer token:
 
 ```http
-Authorization: Bearer dtg_pub_0123456789abcdef0123456789abcdef
+Authorization: Bearer adto_pub_0123456789abcdef0123456789abcdef
 ```
 
 There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/settings/). Settings shows SDK and site keys again; the account key is shown only once, when it is created or regenerated:
 
 | Key | Looks like | Use it in | Scopes |
 |---|---|---|---|
-| **SDK key** | `dtg_pub_` and 32 hex characters | The apps you ship. Anyone can extract it from a build. | `sdk` (installs, claims, clicks, events, opens, the attribution pull), `temp_links`, `links:read`; plus `links:write` only for a key created with that option |
-| **Site key** | `dtg_site_` and 32 hex characters | Your web pages, with [`adto.js`](/sdk/web/). Public. | Only the two web routes, from the origins it lists |
-| **Account key** | `dtg_` and 32 hex characters | Your servers and scripts. Never in an app. | Everything, including creating, changing and deleting links, and the only key that can [export raw rows](/api/export/) |
+| **SDK key** | `adto_pub_` and 32 hex characters | The apps you ship. Anyone can extract it from a build. | `sdk` (installs, claims, clicks, events, opens, the attribution pull), `temp_links`, `links:read`; plus `links:write` only for a key created with that option |
+| **Site key** | `adto_site_` and 32 hex characters | Your web pages, with [`adto.js`](/sdk/web/). Public. | Only the two web routes, from the origins it lists |
+| **Account key** | `adto_` and 32 hex characters | Your servers and scripts. Never in an app. | Everything, including creating, changing and deleting links, and the only key that can [export raw rows](/api/export/) |
 
 | Scope | Routes |
 |---|---|
@@ -65,8 +65,8 @@ Every authenticated `/api/v1` request must also carry a signature that binds the
 
 | Header | Value |
 |---|---|
-| `x-dectog-timestamp` | The current Unix time in **whole seconds**, as a decimal string. Fractions or non-numeric values are rejected. |
-| `x-dectog-signature` | `v1=` followed by the lowercase hex HMAC described below. The comparison is exact: uppercase hex, whitespace or a missing `v1=` prefix fail. |
+| `x-adto-timestamp` | The current Unix time in **whole seconds**, as a decimal string. Fractions or non-numeric values are rejected. |
+| `x-adto-signature` | `v1=` followed by the lowercase hex HMAC described below. The comparison is exact: uppercase hex, whitespace or a missing `v1=` prefix fail. |
 
 What is signed:
 
@@ -90,7 +90,7 @@ signature = HMAC-SHA256( key = the API key, message = "<timestamp>.<sha256hex(ra
 
 ### Worked example
 
-With the key `dtg_0123456789abcdef0123456789abcdef`, the timestamp `1760263200` and this exact body (no trailing newline):
+With the key `adto_0123456789abcdef0123456789abcdef`, the timestamp `1760263200` and this exact body (no trailing newline):
 
 ```text
 {"slug":"spring-sale","target":"https://shop.example.com/sale"}
@@ -100,7 +100,7 @@ With the key `dtg_0123456789abcdef0123456789abcdef`, the timestamp `1760263200` 
 |---|---|
 | `sha256hex(body)` | `7468e8047a020694d8d57a0624e98ff1d867571f7b4c343053d9f4a99d193478` |
 | message | `1760263200.7468e8047a020694d8d57a0624e98ff1d867571f7b4c343053d9f4a99d193478` |
-| `x-dectog-signature` | `v1=a3d6b8723a69d7101b01d2842d9a9bb38ec752b011c4865015890433c9f449c7` |
+| `x-adto-signature` | `v1=a3d6b8723a69d7101b01d2842d9a9bb38ec752b011c4865015890433c9f449c7` |
 
 For a `GET` with the same key and timestamp the body hash is the SHA-256 of the empty string, `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, and the header is `v1=6fbbe17e676c07b8f74aa49c22de054da6f0aa5997501f453399428508e6d328`. Use these values to check a port of the signing code.
 
@@ -109,7 +109,7 @@ For a `GET` with the same key and timestamp the body hash is the SHA-256 of the 
 The helper below computes the signature with `openssl` and works in bash and zsh. It is the `adto` command used in the examples on the other API pages.
 
 ```bash title="A signed curl helper"
-export ADTO_API_KEY=dtg_0123456789abcdef0123456789abcdef
+export ADTO_API_KEY=adto_0123456789abcdef0123456789abcdef
 export ADTO_API=https://app.adto.app
 
 # adto <METHOD> <path> [JSON body]
@@ -124,8 +124,8 @@ adto() {
   curl -sS --fail-with-body -X "$method" "$ADTO_API$route" \
     -H "Authorization: Bearer $ADTO_API_KEY" \
     -H 'Content-Type: application/json' \
-    -H "x-dectog-timestamp: $ts" \
-    -H "x-dectog-signature: v1=$sig" \
+    -H "x-adto-timestamp: $ts" \
+    -H "x-adto-signature: v1=$sig" \
     "${data[@]}"
 }
 ```
@@ -154,8 +154,8 @@ export function adtoHeaders(apiKey, rawBody = "") {
   return {
     authorization: `Bearer ${apiKey}`,
     "content-type": "application/json",
-    "x-dectog-timestamp": ts,
-    "x-dectog-signature": `v1=${sig}`,
+    "x-adto-timestamp": ts,
+    "x-adto-signature": `v1=${sig}`,
   };
 }
 ```
@@ -170,7 +170,7 @@ export function adtoHeaders(apiKey, rawBody = "") {
 
 ## SDK identity
 
-SDKs also send `x-dectog-sdk: <name>/<version>`: `flutter_adto/1.0.0`, `react-native-adto/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
+SDKs also send `x-adto-sdk: <name>/<version>`: `flutter_adto/1.0.0`, `react-native-adto/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `AdtoSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
 
 ## Rate limits
 
@@ -200,7 +200,7 @@ If the rate-limit counter cannot be written (a database or binding failure), the
 
 | Prefix | `access-control-allow-origin` | Other headers |
 |---|---|---|
-| `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-dectog-timestamp, x-dectog-signature, x-dectog-sdk, x-request-id`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS`; `access-control-expose-headers: x-request-id` |
+| `/api/v1/*` (including `resolve`) | `*` | `access-control-allow-headers: authorization, content-type, x-adto-timestamp, x-adto-signature, x-adto-sdk, x-request-id`; `access-control-allow-methods: GET, POST, PUT, DELETE, OPTIONS`; `access-control-expose-headers: x-request-id` |
 | `/api/admin/*` | `WEB_URL` (`https://app.adto.app`) | `access-control-allow-credentials: true`; `vary: Origin`; `access-control-allow-headers: authorization, content-type, x-request-id`; same methods; `access-control-expose-headers: x-request-id` |
 
 `OPTIONS` on any `/api/*` path answers `204`. The v1 API never uses cookies, so browser clients only need the headers above.
@@ -259,7 +259,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 { "ok": true, "service": "adto", "version": "v1", "host": "app.adto.app" }
 ```
 
-`host` echoes the request's Host header. Use it for uptime checks instead of a link URL. A tap check on a real link should send `x-dectog-no-track: 1` so it is not counted.
+`host` echoes the request's Host header. Use it for uptime checks instead of a link URL. A tap check on a real link should send `x-adto-no-track: 1` so it is not counted.
 
 `GET /readyz` is the readiness check. It runs `SELECT 1` against the database and compares the migrations it has applied with the ones bundled into this build:
 

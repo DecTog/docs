@@ -1,6 +1,6 @@
 ---
 title: Migrate from Branch, Adjust or AppsFlyer
-description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to AdTo links, dec_* parameters, the SDK verdict and the webhooks, with a plain list of what AdTo does not do.
+description: Concept-by-concept mapping from Branch, Adjust and AppsFlyer to AdTo links, adto_* parameters, the SDK verdict and the webhooks, with a plain list of what AdTo does not do.
 sidebar:
   order: 2
 ---
@@ -17,27 +17,27 @@ Every install report returns one `AdtoAppInstallResponse`. This table places the
 | The install came from a link (Branch `+clicked_branch_link`, AppsFlyer `af_status: Non-organic`, Adjust attribution with a tracker) | `matched: true`, `type: 'non-organic'`. `matched` is attribution credit. It is granted only at `matchConfidence` `guaranteed` or `high`. |
 | Deterministic match (Branch `+match_guaranteed`) | `matchConfidence: 'guaranteed'`, `matchSource` `referrer` or `clipboard`, and `referrerSource` naming the store: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo` or `meta`. |
 | Probabilistic match (AppsFlyer "probabilistic modeling", Branch "fingerprint") | `matchSource: 'fingerprint'`. `high` is credited. `medium` is not credited but returns a `routing` candidate (`slug`, `deepLink`, `clickParams`, `confidence`). `low` returns nothing. |
-| Deferred deep link (Branch `$deeplink_path`, Adjust deferred deep link callback, AppsFlyer `deep_link_value`) | `install.deepLink` (the `dec_deeplink` of the tapped URL) or `install.routing?.deepLink`. For the link's stored path call `adto.resolveLink(username, slug)` and read `deepLinkPath`, the running platform's. |
+| Deferred deep link (Branch `$deeplink_path`, Adjust deferred deep link callback, AppsFlyer `deep_link_value`) | `install.deepLink` (the `adto_deeplink` of the tapped URL) or `install.routing?.deepLink`. For the link's stored path call `adto.resolveLink(username, slug)` and read `deepLinkPath`, the running platform's. |
 | First session (Branch `+is_first_session`, AppsFlyer `is_first_launch`) | The `onAppInstalled` emission itself. `installState` is `install`, `reinstall` or `update`. App updates never run the fingerprint. Reinstalls run the full ladder and carry `isReinstall: true`; the dashboard leaves them out of the Installs KPI and the per-link counts. |
 | Referring link (Branch `~referring_link`) | `install.link?.url` and `install.slug` |
 | Who invited the user (AppsFlyer `af_referrer_customer_id` or `deep_link_sub2`, Adjust `clickLabel` from `adj_label`, a Branch custom key such as `referring_user_id`) | `install.link?.referrerCustomerId`, from a link made by `createReferralLink`. The server reads it from the link, so editing the tapped URL cannot change it. See [Referral programs](/guides/referral-programs/). |
-| Campaign fields (Branch `~campaign`, `~channel`, `~feature`, `~tags`; Adjust `campaign`, `adgroup`, `creative`, `label`; AppsFlyer `pid`, `c`, `af_adset`, `af_ad`, `af_channel`) | The link's Tracking fields `label`, `campaign`, `adgroup`, `creative`, overridden per tap by `dec_label`, `dec_campaign`, `dec_adgroup`, `dec_creative`, plus `dec_tracker`. Returned as `install.clickParams`. `utm_*` is stored as well and feeds the Overview charts. |
+| Campaign fields (Branch `~campaign`, `~channel`, `~feature`, `~tags`; Adjust `campaign`, `adgroup`, `creative`, `label`; AppsFlyer `pid`, `c`, `af_adset`, `af_ad`, `af_channel`) | The link's Tracking fields `label`, `campaign`, `adgroup`, `creative`, overridden per tap by `adto_label`, `adto_campaign`, `adto_adgroup`, `adto_creative`, plus `adto_tracker`. Returned as `install.clickParams`. `utm_*` is stored as well and feeds the Overview charts. |
 | Custom link data (Branch link data, AppsFlyer `deep_link_sub1` to `deep_link_sub10`) | Link `metadata` (any JSON), returned as `install.customParameters` |
 | Identity (Branch `setIdentity`, AppsFlyer `setCustomerUserId`) | `adto.identify(customerId: ..., name: ..., email: ..., phone: ...)`; `adto.logout()` forgets it |
 | Events (Branch `BranchEvent`, Adjust event tokens, AppsFlyer `logEvent` with `af_revenue`) | `adto.trackConversion(revenue: ..., currency: ...)` and `adto.trackEvent(name)`. The first `identify` of a new customer on a fresh install records the signup lead. See [Events](/sdk/events/). |
 | Attribution read-back (AppsFlyer `onConversionDataSuccess`, Adjust attribution callback) | `onAppInstalled`, `currentAppInstall`, and `getAttributionData()`, which re-pulls `GET /api/v1/attribution` after a restart |
 | Server postback (Branch webhooks, Adjust callbacks, AppsFlyer Push API) | [Webhooks](/api/webhooks/): `app.installed`, `app.install_updated`, `event.conversion`, `event.lead`, `app.opened`, `referral.converted`, link changes and, opt-in, `click.recorded`. HMAC-SHA256 signed, logged, retried for about a day. |
-| Request signing (AppsFlyer `af_sig`) | Every SDK call carries `x-dectog-timestamp` and `x-dectog-signature`. Unsigned requests get 401. |
+| Request signing (AppsFlyer `af_sig`) | Every SDK call carries `x-adto-timestamp` and `x-adto-signature`. Unsigned requests get 401. |
 
 ## Branch
 
 | Branch | AdTo |
 |---|---|
 | Quick Link `https://xyz.app.link/abc` | `https://{username}.adto.app/{slug}`, created on the Links page or with `POST /api/v1/links` |
-| `$deeplink_path`, `$ios_deeplink_path`, `$android_deeplink_path` | `ios_deep_link_path` and `android_deep_link_path` on the link; `dec_deeplink` per tap |
+| `$deeplink_path`, `$ios_deeplink_path`, `$android_deeplink_path` | `ios_deep_link_path` and `android_deep_link_path` on the link; `adto_deeplink` per tap |
 | `$fallback_url` | The link's `target` is the last mobile fallback, after the app's `fallback_url` |
-| `$desktop_url` | The link's `fallback_url`, or `dec_fallback` per tap. The default is the branded QR page. |
-| `$ios_url`, `$android_url` | `dec_redirect_ios` and `dec_redirect_android` per tap; the link's `redirect_url` for both platforms |
+| `$desktop_url` | The link's `fallback_url`, or `adto_fallback` per tap. The default is the branded QR page. |
+| `$ios_url`, `$android_url` | `adto_redirect_ios` and `adto_redirect_android` per tap; the link's `redirect_url` for both platforms |
 | `$og_title`, `$og_description`, `$og_image_url` | `og_title`, `og_description`, `og_image_url` on the link, with the app's values as defaults |
 | `$web_only`, `$uri_redirect_mode` | No equivalent |
 | NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`AdtoCollection.pasteboard`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `AdtoPasteButton` renders `UIPasteControl` for late pastes. |
@@ -48,15 +48,15 @@ Every install report returns one `AdtoAppInstallResponse`. This table places the
 
 ## Adjust
 
-Adjust's tracker URL parameters keep their names in AdTo with a `dec_` prefix.
+Adjust's tracker URL parameters keep their names in AdTo with a `adto_` prefix.
 
 | Adjust | AdTo |
 |---|---|
-| Tracker `https://app.adjust.com/<token>` | A link. `dec_tracker` records a tracker name per tap; it has no routing effect. |
-| `campaign`, `adgroup`, `creative`, `label` | `dec_campaign`, `dec_adgroup`, `dec_creative`, `dec_label`, falling back to the link's Tracking defaults |
-| `deep_link` | `dec_deeplink` |
-| `redirect`, `redirect_ios`, `redirect_android`, `redirect_macos`, `redirect_windows` | `dec_redirect`, `dec_redirect_ios`, `dec_redirect_android`, `dec_redirect_macos`, `dec_redirect_windows`, plus `dec_redirect_linux` |
-| `fallback` | `dec_fallback` |
+| Tracker `https://app.adjust.com/<token>` | A link. `adto_tracker` records a tracker name per tap; it has no routing effect. |
+| `campaign`, `adgroup`, `creative`, `label` | `adto_campaign`, `adto_adgroup`, `adto_creative`, `adto_label`, falling back to the link's Tracking defaults |
+| `deep_link` | `adto_deeplink` |
+| `redirect`, `redirect_ios`, `redirect_android`, `redirect_macos`, `redirect_windows` | `adto_redirect`, `adto_redirect_ios`, `adto_redirect_android`, `adto_redirect_macos`, `adto_redirect_windows`, plus `adto_redirect_linux` |
+| `fallback` | `adto_fallback` |
 | `AdjustAttribution` (`trackerToken`, `trackerName`, `campaign`, `adgroup`, `creative`, `clickLabel`) | `install.clickParams` (`tracker`, `campaign`, `adgroup`, `creative`, `label`), `install.slug`, `install.link` |
 | Deferred deep link callback | `onAppInstalled` with `deepLink` or `routing` |
 | LinkMe | The pasteboard read plus the iOS tap-to-store page |
@@ -72,12 +72,12 @@ Adjust's tracker URL parameters keep their names in AdTo with a `dec_` prefix.
 | AppsFlyer | AdTo |
 |---|---|
 | OneLink `https://xyz.onelink.me/abc/...` | `https://{username}.adto.app/{slug}` |
-| `af_dp`, `deep_link_value` | `dec_deeplink` per tap; `ios_deep_link_path` and `android_deep_link_path` on the link |
-| `deep_link_sub1` to `deep_link_sub10` | Link `metadata` (returned as `customParameters`), or the `dec_*` tracking fields |
-| `af_web_dp` | The link's `fallback_url` or `dec_fallback` |
-| `af_ios_url`, `af_android_url` | `dec_redirect_ios`, `dec_redirect_android`, or the link's `redirect_url` |
-| `af_r` | `dec_redirect` |
-| `pid`, `c`, `af_adset`, `af_ad`, `af_channel` | `utm_source` and `utm_campaign` (the Overview charts group by these) plus `dec_label`, `dec_campaign`, `dec_adgroup`, `dec_creative` |
+| `af_dp`, `deep_link_value` | `adto_deeplink` per tap; `ios_deep_link_path` and `android_deep_link_path` on the link |
+| `deep_link_sub1` to `deep_link_sub10` | Link `metadata` (returned as `customParameters`), or the `adto_*` tracking fields |
+| `af_web_dp` | The link's `fallback_url` or `adto_fallback` |
+| `af_ios_url`, `af_android_url` | `adto_redirect_ios`, `adto_redirect_android`, or the link's `redirect_url` |
+| `af_r` | `adto_redirect` |
+| `pid`, `c`, `af_adset`, `af_ad`, `af_channel` | `utm_source` and `utm_campaign` (the Overview charts group by these) plus `adto_label`, `adto_campaign`, `adto_adgroup`, `adto_creative` |
 | Unified Deep Linking (`subscribeForDeepLink`, `DeepLinkResult`) | `onLinkClick` for direct opens; `onAppInstalled.routing` and `deepLink` for deferred opens |
 | Conversion data (`onConversionDataSuccess`: `af_status`, `is_first_launch`, `media_source`, `campaign`) | `onAppInstalled`: `type`, `matched`, `matchSource`, `matchConfidence`, `clickParams`; `getAttributionData()` on later launches |
 | `setDeepLinkTimeout` | `installReferrerTimeout` (default 5 seconds) plus late claims |
@@ -102,7 +102,7 @@ A migration is safer when both tools see the same traffic for a few weeks. Keep 
 | `*.sng.link` (Singular) | the same |
 | `app.adjust.com`, `adj.st` (Adjust) | the same |
 
-A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme links and other hosts are never changed. The click id is the 16-character `dtg_click` value that names the click in AdTo, so an install the MMP attributes can be looked up on the AdTo side by it. Whether the MMP keeps the `clickid` parameter in its raw data depends on the link and partner settings in its own dashboard; check one test install there before relying on it. The store redirect then belongs to the MMP's link, so AdTo's own install match for those taps falls back to the store referrer the MMP passes on, or to the fingerprint.
+A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme links and other hosts are never changed. The click id is the 16-character `adto_click` value that names the click in AdTo, so an install the MMP attributes can be looked up on the AdTo side by it. Whether the MMP keeps the `clickid` parameter in its raw data depends on the link and partner settings in its own dashboard; check one test install there before relying on it. The store redirect then belongs to the MMP's link, so AdTo's own install match for those taps falls back to the store referrer the MMP passes on, or to the fingerprint.
 
 ## How attribution differs
 

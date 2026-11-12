@@ -40,9 +40,7 @@ export function pageFrom(source, { repo, frontmatter }) {
   const body = source
     .replace(/^<!--[\s\S]*?-->\s*/, '')
     .replace(/^# .+\n+/, '')
-    // The SDKs' own docs may still name the old host until their rename ships
-    .replaceAll('](https://docs.adto.app/', '](/')
-    .replaceAll('](https://docs.dectog.com/', '](/');
+    .replaceAll('](https://docs.adto.app/', '](/');
   return `${frontmatter}\n\n<!-- Generated from ${repo}/doc/api-reference.md by npm run sync:sdk-reference. Edit it there. -->\n\n${body.trimEnd()}\n`;
 }
 

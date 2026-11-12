@@ -16,7 +16,7 @@ A temporary link is a slug with an expiry. It routes like a permanent link until
 | App | The link's app, else the default app | Always the account's default (oldest) app |
 | Target | Optional; `null` inherits the app's fallback URL | Same |
 | Deep-link paths, custom mobile redirect, custom desktop fallback, Tracking defaults | Yes | No |
-| `dec_*` and `utm_*` on the shared URL | Applied | Applied the same way, except that the tracking values have no link defaults to fall back to |
+| `adto_*` and `utm_*` on the shared URL | Applied | Applied the same way, except that the tracking values have no link defaults to fall back to |
 | Social preview | Per link, else the app's | Per link, else the app's |
 | Lifetime click counter | `click_count` | None (`null` in the resolve response) |
 | Per-link numbers in the Links list | Clicks, installs, opens, leads, revenue | Only the expiry |
@@ -50,7 +50,7 @@ Slugs share one namespace: a temporary link cannot take a permanent link's slug 
 
 ## Routing
 
-A tap follows the normal engine with the default app's store URLs, schemes, interstitial and tap-to-store settings, and its fallback URL. Because a temporary link has no deep-link paths, scheme and intent URLs open `scheme://acme/{slug}` unless the shared URL carries `dec_deeplink`. There is no per-link mobile redirect or desktop fallback, so on desktop the chain is `dec_redirect_<os>` or `dec_redirect`, then `dec_fallback`, the app's fallback URL, then the QR page. See [How a tap is routed](/links/how-a-tap-is-routed/).
+A tap follows the normal engine with the default app's store URLs, schemes, interstitial and tap-to-store settings, and its fallback URL. Because a temporary link has no deep-link paths, scheme and intent URLs open `scheme://acme/{slug}` unless the shared URL carries `adto_deeplink`. There is no per-link mobile redirect or desktop fallback, so on desktop the chain is `adto_redirect_<os>` or `adto_redirect`, then `adto_fallback`, the app's fallback URL, then the QR page. See [How a tap is routed](/links/how-a-tap-is-routed/).
 
 Installs attribute to temporary links like to permanent ones. The verdict then carries `username` and `slug` but no `link` object, and `custom_params` is `null`, because temporary links have no metadata.
 

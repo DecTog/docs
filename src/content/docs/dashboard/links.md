@@ -37,11 +37,11 @@ Hint: "Optional app route this link opens — the path becomes the URI (e.g. sch
 
 Server rules for both paths: at most 512 characters; no `:`, whitespace, `#`, `;` or control characters, so no full URLs; a leading `/` is removed. The errors read `Invalid ios_deep_link_path: must be a relative path, not a full URL (no ":": no scheme, no spaces, no "#"/";")` and `Invalid ios_deep_link_path: deep link path is too long (max 512 chars)`, or the same with `android_deep_link_path`.
 
-A `dec_deeplink` parameter on the tapped URL replaces the saved path for that tap; see [URL parameters](/links/url-parameters/).
+A `adto_deeplink` parameter on the tapped URL replaces the saved path for that tap; see [URL parameters](/links/url-parameters/).
 
 #### Tracking · label, campaign, adgroup, creative
 
-Hint: "Saved on every click of this link and returned to your app after install. Override any of them per share by adding ?dec_campaign=… (or dec_label, dec_adgroup, dec_creative) to the link URL."
+Hint: "Saved on every click of this link and returned to your app after install. Override any of them per share by adding ?adto_campaign=… (or adto_label, adto_adgroup, adto_creative) to the link URL."
 
 | Field | Placeholder | Rules |
 |---|---|---|
@@ -50,7 +50,7 @@ Hint: "Saved on every click of this link and returned to your app after install.
 | **Adgroup** | `instagram_stories` | Same. |
 | **Creative** | `video_15s` | Same. |
 
-These values are stored on every click of the link, can be overridden per tap with `dec_label`, `dec_campaign`, `dec_adgroup` and `dec_creative`, and come back to the app in the install verdict and in the `app.installed` webhook. They do not feed the Overview's campaign and source charts, which read `utm_campaign` and `utm_source`; see [Overview](/dashboard/overview/).
+These values are stored on every click of the link, can be overridden per tap with `adto_label`, `adto_campaign`, `adto_adgroup` and `adto_creative`, and come back to the app in the install verdict and in the `app.installed` webhook. They do not feed the Overview's campaign and source charts, which read `utm_campaign` and `utm_source`; see [Overview](/dashboard/overview/).
 
 #### If the app isn't installed (mobile)
 
@@ -129,7 +129,7 @@ Empty states: "No permanent links yet.", "No temporary links. Pick an expiry whe
 
 ### Template and tracking
 
-Permanent links only. **Template** (when the account has templates) picks the link's template or **None**; an empty field below then shows the template's value as its placeholder, followed by "(template)". Below it, the label, campaign, adgroup and creative from the create form, and the link's **UTM source**, **UTM medium**, **UTM campaign**, **UTM term** and **UTM content** (added to its web destinations; see [Link-level UTM values](/links/url-parameters/#link-level-utm-values)), each up to 255 characters, then **Add the click id to website destinations**, which adds `dtg_click` to the link's web URLs (never a store or an app scheme) for [`adto.js`](/sdk/web/) on that site. **Save template and tracking** sends them all; an emptied field clears the stored value. The button is followed by "Saved" or the server's error.
+Permanent links only. **Template** (when the account has templates) picks the link's template or **None**; an empty field below then shows the template's value as its placeholder, followed by "(template)". Below it, the label, campaign, adgroup and creative from the create form, and the link's **UTM source**, **UTM medium**, **UTM campaign**, **UTM term** and **UTM content** (added to its web destinations; see [Link-level UTM values](/links/url-parameters/#link-level-utm-values)), each up to 255 characters, then **Add the click id to website destinations**, which adds `adto_click` to the link's web URLs (never a store or an app scheme) for [`adto.js`](/sdk/web/) on that site. **Save template and tracking** sends them all; an emptied field clears the stored value. The button is followed by "Saved" or the server's error.
 
 ### Expiry
 

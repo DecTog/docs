@@ -30,10 +30,10 @@ Every delivery is a POST of the same envelope:
 | Header | Value |
 |---|---|
 | `content-type` | `application/json` |
-| `x-dectog-event` | The event name, as in the body. |
-| `x-dectog-event-id` | The `event_id`, as in the body. |
-| `x-dectog-signature` | `sha256=<hex>` where hex is HMAC-SHA256 of the **raw request body** keyed with your secret, lowercase. |
-| `x-dectog-timestamp` | Unix seconds when the request was built. |
+| `x-adto-event` | The event name, as in the body. |
+| `x-adto-event-id` | The `event_id`, as in the body. |
+| `x-adto-signature` | `sha256=<hex>` where hex is HMAC-SHA256 of the **raw request body** keyed with your secret, lowercase. |
+| `x-adto-timestamp` | Unix seconds when the request was built. |
 
 `event_id` is the same on every attempt and on a manual resend: deduplicate on it. `attempt` counts from 1. The signature covers the body bytes only. Verify against the raw bytes exactly as received, before any JSON parsing or re-serialization.
 
@@ -155,7 +155,7 @@ The dashboard uses these session routes; see [Admin API](/api/admin-api/#webhook
 
 ## Verifying the signature
 
-All three snippets compute `sha256=` + HMAC-SHA256(secret, raw body) and compare it in constant time with the `x-dectog-signature` header. They produce identical values for identical input.
+All three snippets compute `sha256=` + HMAC-SHA256(secret, raw body) and compare it in constant time with the `x-adto-signature` header. They produce identical values for identical input.
 
 ```js title="Node (Express)"
 import express from "express";
@@ -175,7 +175,7 @@ const app = express();
 
 // Keep the raw bytes: express.json() would re-serialize and break the check.
 app.post("/adto/events", express.raw({ type: "application/json" }), (req, res) => {
-  if (!verifyAdtoSignature(req.body, req.get("x-dectog-signature"))) {
+  if (!verifyAdtoSignature(req.body, req.get("x-adto-signature"))) {
     return res.status(401).end();
   }
   const delivery = JSON.parse(req.body.toString("utf8"));
@@ -204,7 +204,7 @@ def verify_adto_signature(raw_body: bytes, signature_header: str | None) -> bool
 
 @app.post("/adto/events")
 def adto_events():
-    if not verify_adto_signature(request.get_data(), request.headers.get("x-dectog-signature")):
+    if not verify_adto_signature(request.get_data(), request.headers.get("x-adto-signature")):
         abort(401)
     delivery = request.get_json(force=True)
     # dedupe on delivery["event_id"], then handle delivery["event"] and delivery["data"]

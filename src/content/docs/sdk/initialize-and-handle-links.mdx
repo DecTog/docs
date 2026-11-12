@@ -17,7 +17,7 @@ import 'package:flutter_adto/flutter_adto.dart';
 final adto = FlutterAdto();
 
 await adto.initialize(AdtoConfig(
-  apiKey: 'dtg_pub_your_sdk_key',
+  apiKey: 'adto_pub_your_sdk_key',
 ));
 ```
 
@@ -41,7 +41,7 @@ Rules:
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. |
+| `apiKey` | `String` | required | An SDK key (`adto_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. |
 | `baseUrl` | `String?` | `null` → `https://app.adto.app` | API base URL. Trailing slashes are stripped. |
 | `linkRootDomain` | `String?` | `null` → `adto.app` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). |
 | `linkDomains` | `List<String>` | `[]` | Your [custom link domains](/links/custom-domains/), like `go.yourbrand.com`: `https://go.yourbrand.com/{slug}` is a link of your account. The SDK also learns the active domain from the server after its first answer; listing it covers a link that opens the app on its very first start. |
@@ -75,8 +75,8 @@ An incoming URL is an AdTo link when it matches one of these forms. `baseHost` i
 | `https://{domain}/{slug}`, for a host in `linkDomains` or the custom domain the server names | `https://go.yourbrand.com/launch` | Your [custom link domain](/links/custom-domains/). The link belongs to the key's own account, which the SDK reads from the server. `{domain}/r/{username}/{slug}` works too. A host equal to `baseHost` or under `root` is never a custom domain. |
 | `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
 | any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |
-| any non-http(s) scheme whose query carries `dtg_l={username}/{slug}` | `myapp://products/42?dtg_click=…&dtg_l=acme/launch` | Custom-scheme opens and the Android `intent://` bounce. The host and path are the app's own route; the link comes from `dtg_l`. |
-| `dectog://{username}/{slug}` | `dectog://acme/launch` | Development only: the `adto` scheme without a tag. |
+| any non-http(s) scheme whose query carries `adto_l={username}/{slug}` | `myapp://products/42?adto_click=…&adto_l=acme/launch` | Custom-scheme opens and the Android `intent://` bounce. The host and path are the app's own route; the link comes from `adto_l`. |
+| `adto://{username}/{slug}` | `adto://acme/launch` | Development only: the `adto` scheme without a tag. |
 
 For https forms only the first path segment is read as the slug; the rest of the path, the query and the fragment are kept on `originalUrl`. URLs that match none of these forms are still emitted (see below) but carry an error.
 
@@ -100,7 +100,7 @@ void _handleLink(AdtoLinkClick click) {
   }
   // click.username and click.slug come from the URL itself.
   // click.linkResolution is set when the public resolve call succeeded.
-  final route = click.clickParams?.deepLink            // dec_deeplink on the opened URL
+  final route = click.clickParams?.deepLink            // adto_deeplink on the opened URL
       ?? click.linkResolution?.deepLinkPath            // the link's stored in-app route
       ?? click.linkResolution?.target;                 // the link's web target (may be null)
   _navigate(slug: click.slug, route: route);
@@ -115,7 +115,7 @@ What a `AdtoLinkClick` carries:
 | `username`, `slug` | Parsed from the URL; `'unknown'` when parsing failed. |
 | `linkResolution` | The public `GET /api/v1/resolve/{username}/{slug}` answered. It is `null` when the request failed; the click and the open were still reported. |
 | `error` | The URL is not an AdTo link (`Invalid AdTo URL format`), processing failed, or the SDK was not initialized. |
-| `clickParams` (getter) | The URL carries `dec_*` parameters. `deepLink` is the raw `dec_deeplink` value as it appeared in the URL. |
+| `clickParams` (getter) | The URL carries `adto_*` parameters. `deepLink` is the raw `adto_deeplink` value as it appeared in the URL. |
 | `isResolved`, `targetUrl`, `linkType` (getters) | Convenience views on `linkResolution`. |
 
 The `AdtoLinkClickX` extension adds `queryParameters`, `queryParameter(key)`, `path`, `host`, `scheme` and `fragment`, all read from `originalUrl`. `AdtoLinkResolution` is described on the [API reference](/sdk/api-reference/); its `target` is `null` when the link inherits the app's fallback URL.
@@ -140,13 +140,13 @@ OAuth and social-login callbacks that open the app through `app_links` are neith
 
 For every recognized link the SDK sends, without blocking your handler:
 
-- `POST /api/v1/clicks` with the slug, `is_mobile_app: true`, platform, language, `client_click_time` (when the URL reached the device), the opened URL's `utm_*` and `dec_*` values, the device id and model with the device tier, and on Android the launching package (`launch_referrer`). When the URL carries `dtg_click` from an `intent://` bounce, the server converts the existing web click row (if it is less than 24 hours old) instead of inserting a second one.
+- `POST /api/v1/clicks` with the slug, `is_mobile_app: true`, platform, language, `client_click_time` (when the URL reached the device), the opened URL's `utm_*` and `adto_*` values, the device id and model with the device tier, and on Android the launching package (`launch_referrer`). When the URL carries `adto_click` from an `intent://` bounce, the server converts the existing web click row (if it is less than 24 hours old) instead of inserting a second one.
 - `POST /api/v1/app-opens`, which feeds the per-link Opens count and `lastOpen` on attribution re-pulls. Skipped when the user opted out.
 
 Neither call is retried, and a failure never affects the emitted click.
 
 <Aside title="Scheme opens with a deep-link path">
-A link that has a deep-link path opens as `{scheme}://{path}?…&dtg_l={username}/{slug}` on Android and iOS. The SDK names the link from `dtg_l`, never from the path, so `username`, `slug` and `linkResolution` are right, and `originalUrl` carries your app's own route (`{scheme}://{path}`) for your router.
+A link that has a deep-link path opens as `{scheme}://{path}?…&adto_l={username}/{slug}` on Android and iOS. The SDK names the link from `adto_l`, never from the path, so `username`, `slug` and `linkResolution` are right, and `originalUrl` carries your app's own route (`{scheme}://{path}`) for your router.
 </Aside>
 
 ## Links tapped inside your app

@@ -74,7 +74,7 @@ It reports each page route the navigator shows, after a push, a replace or a pop
 
 ## Queue, flush, logout
 
-Events are appended to `.dectog_event_queue.jsonl` in the SDK's backup-excluded directory and delivered at least once:
+Events are appended to `.adto_event_queue.jsonl` in the SDK's backup-excluded directory and delivered at least once:
 
 | Rule | Value |
 |---|---|
@@ -117,7 +117,7 @@ The SDK only produces `identify`, `conversion` and `custom` events (`lead` is ac
 
 The server denormalizes `matched_slug` when it stores an event: from the batch's `install_id` when that install was credited, else from the device's latest credited install. Events from organic installs carry no `matched_slug`; they count for a link only when one re-opened the app within the re-engagement window (below), and otherwise appear only in account-wide totals. The Customers page shows each customer's events (latest 200) next to the link that brought them in; see [Customers](/dashboard/customers/).
 
-When an AdTo link opens the already-installed app, the SDK remembers it (`slug`, click id, time) and stamps every later event with `open_slug`, `open_click_id` and `open_at`, plus a `session_id` that is new for every app process. An open the server refuses (the link is paused, expired, deleted or unknown: `/api/v1/app-opens` answers 404 or 410) is not remembered: the open before it stands. A `dtg_click` in the link that is not a click id is never kept or sent. An event within the re-engagement window after that open (7 days by default, set per app on the Apps page) counts for the re-opening link instead of the link that brought the install. The window is applied when the dashboard reads the numbers, so changing it changes past credit too.
+When an AdTo link opens the already-installed app, the SDK remembers it (`slug`, click id, time) and stamps every later event with `open_slug`, `open_click_id` and `open_at`, plus a `session_id` that is new for every app process. An open the server refuses (the link is paused, expired, deleted or unknown: `/api/v1/app-opens` answers 404 or 410) is not remembered: the open before it stands. A `adto_click` in the link that is not a click id is never kept or sent. An event within the re-engagement window after that open (7 days by default, set per app on the Apps page) counts for the re-opening link instead of the link that brought the install. The window is applied when the dashboard reads the numbers, so changing it changes past credit too.
 
 ## Turning collection off
 

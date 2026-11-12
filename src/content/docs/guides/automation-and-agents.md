@@ -9,7 +9,7 @@ Everything the Flutter SDK does with links, a script or an AI agent can do too. 
 
 ## What you need
 
-- Your account key from Settings. It starts with `dtg_` and is followed by 32 hex characters, and has every scope. Scripts use it; apps use SDK keys (`dtg_pub_…`), which cannot change links. Regenerating it invalidates the old key immediately. See [Settings](/dashboard/settings/).
+- Your account key from Settings. It starts with `adto_` and is followed by 32 hex characters, and has every scope. Scripts use it; apps use SDK keys (`adto_pub_…`), which cannot change links. Regenerating it invalidates the old key immediately. See [Settings](/dashboard/settings/).
 - Every `/api/v1` call except `GET /api/v1/resolve/{username}/{slug}` needs `Authorization: Bearer <key>` and a request signature.
 - `curl` 7.76 or newer (for `--fail-with-body`), `openssl` and `jq`.
 
@@ -66,8 +66,8 @@ The link and attribution tools call the matching `/api/v1` route with your key, 
 
 The signature scheme is the one the SDK uses:
 
-- `x-dectog-timestamp`: whole Unix seconds, within 1800 seconds of the server clock.
-- `x-dectog-signature`: `v1=<hex>` where `hex = HMAC-SHA256(key = your key, message = "<timestamp>.<sha256hex(raw body)>")`.
+- `x-adto-timestamp`: whole Unix seconds, within 1800 seconds of the server clock.
+- `x-adto-signature`: `v1=<hex>` where `hex = HMAC-SHA256(key = your key, message = "<timestamp>.<sha256hex(raw body)>")`.
 - `GET` and `HEAD` sign the empty string. For other methods the body you send must be byte-for-byte the string you hashed.
 
 This helper does it in bash. It was checked against the server's verification code.
@@ -75,7 +75,7 @@ This helper does it in bash. It was checked against the server's verification co
 ```bash title="adto.sh"
 # Usage: source adto.sh; adto_call METHOD PATH [JSON_BODY]
 # Prints the response body. Exits non-zero on HTTP 4xx/5xx (the body is still printed).
-: "${ADTO_API_KEY:?set ADTO_API_KEY to your dtg_ key}"
+: "${ADTO_API_KEY:?set ADTO_API_KEY to your adto_ key}"
 ADTO_API="${ADTO_API:-https://app.adto.app}"
 
 adto_call() {
@@ -86,8 +86,8 @@ adto_call() {
   sig=$(printf '%s' "$ts.$body_hash" | openssl dgst -sha256 -hmac "$ADTO_API_KEY" | sed 's/^.* //')
   curl -sS --fail-with-body -X "$method" "$ADTO_API$path" \
     -H "Authorization: Bearer $ADTO_API_KEY" \
-    -H "x-dectog-timestamp: $ts" \
-    -H "x-dectog-signature: v1=$sig" \
+    -H "x-adto-timestamp: $ts" \
+    -H "x-adto-signature: v1=$sig" \
     -H 'Content-Type: application/json' \
     ${body:+--data-binary "$body"}
 }
@@ -214,7 +214,7 @@ url=$(adto_call GET /api/v1/links/spring-sale | jq -r .url)
 qrencode -o spring-sale.png "$url"
 ```
 
-Append `utm_*` or `dec_*` parameters to the encoded URL if you want them on the scan. See [Social previews and QR](/links/social-previews-and-qr/).
+Append `utm_*` or `adto_*` parameters to the encoded URL if you want them on the scan. See [Social previews and QR](/links/social-previews-and-qr/).
 
 ## Public resolve
 

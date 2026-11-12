@@ -45,12 +45,12 @@ Matching is case-insensitive. A device with no recognizable brand goes to Google
 
 | Store | Parameter added | Value |
 |---|---|---|
-| App Store | `ct` | `dtg_click=<click id>` |
-| Google Play and every OEM store | `referrer` | `dtg_click=<click id>&dtg_l={username}/{slug}`, URL-encoded as one value |
+| App Store | `ct` | `adto_click=<click id>` |
+| Google Play and every OEM store | `referrer` | `adto_click=<click id>&adto_l={username}/{slug}`, URL-encoded as one value |
 
-Tagging replaces any `ct` or `referrer` parameter already present on the configured URL. The `dtg_l` part names the link, so an install can be attributed from the referrer alone even when the web click was never recorded.
+Tagging replaces any `ct` or `referrer` parameter already present on the configured URL. The `adto_l` part names the link, so an install can be attributed from the referrer alone even when the web click was never recorded.
 
-A custom mobile redirect (`dec_redirect_<platform>`, `dec_redirect`, or the link's **If the app isn't installed (mobile) > Custom URL**) is tagged the same way, but only when its host is a store: `apple.com` or a subdomain on iOS; `play.google.com` or one of the Huawei, Samsung or Xiaomi hosts above on Android. Any other URL is used verbatim. Because the vivo store has no host list, a custom vivo URL is never tagged; only the app's **vivo store URL** field is.
+A custom mobile redirect (`adto_redirect_<platform>`, `adto_redirect`, or the link's **If the app isn't installed (mobile) > Custom URL**) is tagged the same way, but only when its host is a store: `apple.com` or a subdomain on iOS; `play.google.com` or one of the Huawei, Samsung or Xiaomi hosts above on Android. Any other URL is used verbatim. Because the vivo store has no host list, a custom vivo URL is never tagged; only the app's **vivo store URL** field is.
 
 :::note[The App Store tag is not an attribution path]
 Apple's `ct` parameter is an App Store Connect campaign token. It only works when paired with a `pt` provider token, and even then the data lands in App Store Connect, never in AdTo. iOS installs become deterministic through [iOS tap-to-store](/links/how-a-tap-is-routed/) and the SDK's pasteboard read, or through Apple Search Ads; otherwise the fingerprint decides. See [How attribution works](/start/how-attribution-works/).
@@ -58,7 +58,7 @@ Apple's `ct` parameter is an App Store Connect campaign token. It only works whe
 
 ## How the SDK reads the referrer back
 
-On the first launch the Flutter SDK reads the install referrer natively and sends it with the install registration. Google Play URL-decodes the `referrer` value and returns the exact string `dtg_click=<id>&dtg_l=acme/welcome`.
+On the first launch the Flutter SDK reads the install referrer natively and sends it with the install registration. Google Play URL-decodes the `referrer` value and returns the exact string `adto_click=<id>&adto_l=acme/welcome`.
 
 | Store | Reader | What the host app adds |
 |---|---|---|
@@ -77,5 +77,5 @@ Only Google Play documents its `referrer` parameter. The OEM stores are tagged t
 ## What is not tagged
 
 - The store buttons on the desktop QR page link to the plain App Store and Play Store URLs. A scan of the QR code is a new tap on the link and gets its own tag; a click on those buttons does not.
-- The "Open in app" buttons on the QR page carry no `dtg_click`; the interstitial, tap-to-store and intent-bounce URLs do.
+- The "Open in app" buttons on the QR page carry no `adto_click`; the interstitial, tap-to-store and intent-bounce URLs do.
 - A verified Universal Link or App Link never reaches the server, so nothing is tagged; the SDK reports the open directly.

@@ -21,7 +21,7 @@ Both leave out the raw network identifiers: the IP (raw or hashed) and the user 
 | `GET /api/v1/app-opens` | Every time a link opened the installed app |
 | `GET /api/v1/events` | Every event, with the link it counts for (`credited_slug`) |
 
-These routes need the **account key** (`dtg_…`): an SDK key ships inside your app, so it answers `403` with code `account_key_required`. Sign the request like any other v1 call ([Request signing](/api/overview/#request-signing)); a GET signs the empty body.
+These routes need the **account key** (`adto_…`): an SDK key ships inside your app, so it answers `403` with code `account_key_required`. Sign the request like any other v1 call ([Request signing](/api/overview/#request-signing)); a GET signs the empty body.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -72,7 +72,7 @@ JSON columns (`link_params`, `fraud_flags`, `blocked_by`, `metadata`) arrive par
 
 It is a session route: the dashboard's **Export CSV** button and **Raw rows** menu call it. The file starts with a UTF-8 byte order mark so Excel reads accents right, separates rows with CRLF, and quotes a field holding a comma, a quote or a line break. A text that starts with `=`, `+`, `-` or `@` gets a leading `'`, so a spreadsheet shows a campaign called `=HYPERLINK(…)` instead of running it. Numbers are left alone.
 
-Up to 50,000 rows (`EXPORT_STREAM_MAX_ROWS`) stream back at once, with the row count in `x-dectog-rows`.
+Up to 50,000 rows (`EXPORT_STREAM_MAX_ROWS`) stream back at once, with the row count in `x-adto-rows`.
 
 ### Larger exports
 

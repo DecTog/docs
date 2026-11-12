@@ -57,7 +57,7 @@ Subtitle: "Set by identify(). A later call replaces each field it sends; fields 
 | **First seen** | When the customer record was created. |
 | **Last identified** | The last time an `identify` touched the record. |
 | **First event**, **Last event** | From the customer's events. |
-| **Referred by** | The customer whose referral this customer's signup recorded, and the link, such as `1042 via /invite`. The id opens that customer's page; it is plain text when the app has never identified that id (a `dec_referrer` can name anyone); a **rejected** chip when a referral rule the app blocks hit, and the referral's fraud flags. When the install's link or tap named a referrer but the signup recorded no referral, the referrer shows muted with a **not credited** chip and the reason under it: the device had the app before (a reinstall), the user already had the app and updated it to a build with AdTo (an app update), the customer existed before the install, they signed up more than 30 days after it, a blocked fraud rule withheld the install's credit, the link named the customer themself, or another customer signed up on the install first (an install credits one referral). See [Referral programs](/guides/referral-programs/#2-the-friend-installs-and-signs-up). |
+| **Referred by** | The customer whose referral this customer's signup recorded, and the link, such as `1042 via /invite`. The id opens that customer's page; it is plain text when the app has never identified that id (a `adto_referrer` can name anyone); a **rejected** chip when a referral rule the app blocks hit, and the referral's fraud flags. When the install's link or tap named a referrer but the signup recorded no referral, the referrer shows muted with a **not credited** chip and the reason under it: the device had the app before (a reinstall), the user already had the app and updated it to a build with AdTo (an app update), the customer existed before the install, they signed up more than 30 days after it, a blocked fraud rule withheld the install's credit, the link named the customer themself, or another customer signed up on the install first (an install credits one referral). See [Referral programs](/guides/referral-programs/#2-the-friend-installs-and-signs-up). |
 | **Referred** | The customers this customer referred, up to 50, newest first, each with its **rejected** chip and fraud flags. Each id opens that customer's page. |
 | **Devices** | Up to 20 distinct device IDs seen on the customer's events, plus the install's device. |
 
@@ -77,8 +77,8 @@ Subtitle: "The link click that led to this customer's install. Open install show
 | **Click device** | The click's device type, OS and browser, such as `android · Android 14 · Chrome`. |
 | **Referrer** | The origin of the page that sent the click. |
 | **UTM** | The click's `utm_*` parameters, as `source=… · medium=… · campaign=…`. |
-| **Link params** | The tracking values stored on the click, as `label=… · campaign=… · adgroup=… · creative=… · tracker=…`, from the link's Tracking fields or `dec_*` overrides. |
-| **Deep link** | The `dec_deeplink` route the click carried. |
+| **Link params** | The tracking values stored on the click, as `label=… · campaign=… · adgroup=… · creative=… · tracker=…`, from the link's Tracking fields or `adto_*` overrides. |
+| **Deep link** | The `adto_deeplink` route the click carried. |
 | **Click IP** | The raw IP address of the click; `—` when the deployment sets `STORE_RAW_IP=0`. |
 | **Fraud flags** | A chip per [fraud rule](/start/fraud-rules/) the install tripped, such as **Emulator** or **Reused tap**: amber when the rule only flags, red when a rule the app blocks acted on it. Hovering a chip explains the rule. |
 

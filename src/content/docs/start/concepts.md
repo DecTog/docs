@@ -11,7 +11,7 @@ AdTo is small. Everything in the dashboard, the API and the SDK maps onto the ha
 
 An account is one tenant, one username and one link subdomain. The username is the first label of every link URL (`https://acme.adto.app/welcome` belongs to the account `acme`) and the value the SDK and the verdict call `username`. It cannot be renamed, and an account cannot be deleted from the dashboard.
 
-Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. A third kind, the site key (`dtg_site_` and 32 hex characters), sits in your web pages for [`adto.js`](/sdk/web/) and works only from the origins it lists. All three kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
+Each account has an account key (`adto_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`adto_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. A third kind, the site key (`adto_site_` and 32 hex characters), sits in your web pages for [`adto.js`](/sdk/web/) and works only from the origins it lists. All three kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
 
 Everything an account stores is scoped to it. There is no cross-account view. Several people can work in one account, each with a team role: owner, member or viewer. Beyond the account, the only privilege is the platform owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
 
@@ -54,7 +54,7 @@ An account with an active [custom domain](/links/custom-domains/) gets `https://
 
 Three request forms reach the redirect engine on any deployment: `/{slug}` on a tenant subdomain or a custom domain (exactly one path segment), `/r/{username}/{slug}` on any host (on a custom domain only for its own account), and `/?user={username}/{slug}` on any host except the dashboard host and custom domains. The SDK recognizes all three when a link opens the app.
 
-When an app is opened through a custom scheme, the URL is `scheme://{username}/{slug}`, or `scheme://{path}` when the link (or a `dec_deeplink` parameter) sets a deep-link path for that platform. Either way the query ends with `dtg_l={username}/{slug}`, which names the link: the SDK reads the link from that tag, because a path such as `products/42` cannot be told apart from a username and slug by its shape.
+When an app is opened through a custom scheme, the URL is `scheme://{username}/{slug}`, or `scheme://{path}` when the link (or a `adto_deeplink` parameter) sets a deep-link path for that platform. Either way the query ends with `adto_l={username}/{slug}`, which names the link: the SDK reads the link from that tag, because a path such as `products/42` cannot be told apart from a username and slug by its shape.
 
 ## Clicks
 
@@ -62,10 +62,10 @@ A click is one recorded tap on a link. Two sources exist:
 
 | `source` | Recorded by | When |
 |---|---|---|
-| `web` | The redirect engine | A browser tap that reached the server and was not a bot. Carries device type, OS, browser, client hints, geo and ASN from Cloudflare, the salted IP hash, the referring origin, `utm_*` and the `dec_*` tracking values. |
+| `web` | The redirect engine | A browser tap that reached the server and was not a bot. Carries device type, OS, browser, client hints, geo and ASN from Cloudflare, the salted IP hash, the referring origin, `utm_*` and the `adto_*` tracking values. |
 | `mobile_app` | The SDK, through `POST /api/v1/clicks` | A link opened the app directly (a verified Universal Link or App Link never touches the server), or an `intent://` bounce delivered the web click id to the app, in which case the existing web row is converted instead of inserting a second one. |
 
-Bots and link unfurlers get a preview page and no click. Each click has a 16-character id; it rides on store URLs as `dtg_click=<id>` and is what makes an install deterministic. A click can be credited to at most one install.
+Bots and link unfurlers get a preview page and no click. Each click has a 16-character id; it rides on store URLs as `adto_click=<id>` and is what makes an install deterministic. A click can be credited to at most one install.
 
 ## Installs, verdicts and claims
 
@@ -79,7 +79,7 @@ An install is the first launch of the app on a device, registered once by the SD
 | `referrer_source` | Which deterministic reader won: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo` or `meta`. |
 | `match_confidence` | `guaranteed`, `high`, `medium`, `low` or `null`. |
 | `routing` | A route the app may open even without credit: present whenever the install is matched, and at `medium` confidence with `matched: false`. |
-| `username`, `slug`, `link`, `click_params`, `deep_link`, `clicked_at` | The matched link and the click's `dec_*` values. `link` is only present for permanent links. |
+| `username`, `slug`, `link`, `click_params`, `deep_link`, `clicked_at` | The matched link and the click's `adto_*` values. `link` is only present for permanent links. |
 | `is_reinstall`, `install_state` | Reinstall detection (same device seen before, or the SDK's own classification) and the client's `install` / `reinstall` / `update` classification. |
 | `fraud_flags` | [Fraud rule](/start/fraud-rules/) hits such as `emulator` or `click_reuse`. |
 | `apple_search_ads` | Always present; `null` until the SDK ever sent an AdServices token. |
@@ -100,7 +100,7 @@ See [Events](/sdk/events/) and [Events and attribution](/api/events-and-attribut
 
 ## Webhooks
 
-An account can have any number of webhooks, each taking one app's events or every app's. The server POSTs the events a webhook is subscribed to: `app.installed` for every first-launch verdict and `app.install_updated` when a claim upgrades it, conversions and leads, app opens, referrals, link changes and, opt-in, every tap. The body is the envelope `{event_id, event, created_at, attempt, data}`, signed with `x-dectog-signature: sha256=<HMAC-SHA256 of the raw body>`. Every delivery is logged, and a failed one is retried for about a day. See [Webhooks](/api/webhooks/).
+An account can have any number of webhooks, each taking one app's events or every app's. The server POSTs the events a webhook is subscribed to: `app.installed` for every first-launch verdict and `app.install_updated` when a claim upgrades it, conversions and leads, app opens, referrals, link changes and, opt-in, every tap. The body is the envelope `{event_id, event, created_at, attempt, data}`, signed with `x-adto-signature: sha256=<HMAC-SHA256 of the raw body>`. Every delivery is logged, and a failed one is retried for about a day. See [Webhooks](/api/webhooks/).
 
 ## Where things live
 

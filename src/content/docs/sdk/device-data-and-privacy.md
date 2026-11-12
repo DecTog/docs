@@ -14,12 +14,12 @@ The SDK sends data in tiers. `AdtoConfig.collect` names what a build collects; t
 ```dart
 // Defaults: the device tier, the pasteboard (iOS) and OEM referrers as the
 // dashboard sets them, no Apple Search Ads token, no advertising id.
-const AdtoConfig(apiKey: 'dtg_pub_…');
+const AdtoConfig(apiKey: 'adto_pub_…');
 
 // Fewer signals: only the store referrers; no device tier, no pasteboard.
 // To wait for consent, pass enabled: false instead (see Waiting for consent).
 const AdtoConfig(
-  apiKey: 'dtg_pub_…',
+  apiKey: 'adto_pub_…',
   collect: {AdtoCollection.oemReferrers},
 );
 ```
@@ -92,7 +92,7 @@ With the probabilistic match on, a tap through the interstitial or tap-to-store 
 
 ### In-app clicks and opens
 
-Every recognized link open sends the slug, the opened URL's `utm_*` and `dec_*` values, platform, OS version, language, the device id and model (device tier only) and, on Android, the launching package. The rest of the URL (other query parameters, the fragment) stays on the device. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+Every recognized link open sends the slug, the opened URL's `utm_*` and `adto_*` values, platform, OS version, language, the device id and model (device tier only) and, on Android, the launching package. The rest of the URL (other query parameters, the fragment) stays on the device. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 
 ## The device identifier
 
@@ -113,7 +113,7 @@ import 'package:flutter_adto_adid/flutter_adto_adid.dart';
 
 await AdtoAdId.requestTracking(); // iOS: the ATT prompt, once
 await FlutterAdto().initialize(const AdtoConfig(
-  apiKey: 'dtg_pub_…',
+  apiKey: 'adto_pub_…',
   advertisingIdProvider: AdtoAdId.provider,
 ));
 ```
@@ -197,15 +197,15 @@ Everything the SDK persists lives in one private, backup-excluded directory:
 
 | File | Contents |
 |---|---|
-| `.dectog_install.json` | The install sentinel: attempt id, status, attempts, timestamps, server install id, referrer and Apple Search Ads delivery flags |
-| `.dectog_sdk_state.json` | Customer id, the last identify fingerprint, the `enabled` flag, the install id |
-| `.dectog_event_queue.jsonl` | Queued events, one JSON object per line |
+| `.adto_install.json` | The install sentinel: attempt id, status, attempts, timestamps, server install id, referrer and Apple Search Ads delivery flags |
+| `.adto_sdk_state.json` | Customer id, the last identify fingerprint, the `enabled` flag, the install id |
+| `.adto_event_queue.jsonl` | Queued events, one JSON object per line |
 
 Uninstalling the app removes all three. A restored backup never contains them, so a restored app registers as a fresh install.
 
 ## Transport
 
-Every authenticated call carries the API key as a Bearer token plus an HMAC-SHA256 signature over the timestamp and the body (`x-dectog-timestamp`, `x-dectog-signature: v1=<hex>`), a `User-Agent` of `DectogSDK/<version> (<platform>)`, and a 30-second timeout. The server rejects unsigned requests and timestamps more than 30 minutes off. Requests are plain HTTPS to `effectiveBaseUrl`; the public resolve call is the only unsigned one.
+Every authenticated call carries the API key as a Bearer token plus an HMAC-SHA256 signature over the timestamp and the body (`x-adto-timestamp`, `x-adto-signature: v1=<hex>`), a `User-Agent` of `AdtoSDK/<version> (<platform>)`, and a 30-second timeout. The server rejects unsigned requests and timestamps more than 30 minutes off. Requests are plain HTTPS to `effectiveBaseUrl`; the public resolve call is the only unsigned one.
 
 ## Retention on the server
 

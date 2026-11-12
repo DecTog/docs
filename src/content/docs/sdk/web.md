@@ -9,13 +9,13 @@ Your links also send people to your website: the desktop QR page's website link,
 
 ## Set it up
 
-1. **Turn on the click id for those links.** In the link drawer, under Template and tracking, tick **Add the click id to website destinations** (`append_click_id: true` in the API, or in a template). The link then adds `dtg_click=<click id>` to its web destinations; never to an App Store or Play URL, an AppsFlyer, Adjust or Singular link, or an app scheme. A URL that already has `dtg_click` keeps it.
-2. **Create a site key.** In **Settings > Site keys**, list the origins of your site, like `https://shop.example.com` (scheme, host and port; no path), and select **New site key**. A site key (`dtg_site_…`) is public: it sits in your page source, works only from the origins you listed, and can only record leads, purchases and custom events. It is not an SDK key and not the account key.
+1. **Turn on the click id for those links.** In the link drawer, under Template and tracking, tick **Add the click id to website destinations** (`append_click_id: true` in the API, or in a template). The link then adds `adto_click=<click id>` to its web destinations; never to an App Store or Play URL, an AppsFlyer, Adjust or Singular link, or an app scheme. A URL that already has `adto_click` keeps it.
+2. **Create a site key.** In **Settings > Site keys**, list the origins of your site, like `https://shop.example.com` (scheme, host and port; no path), and select **New site key**. A site key (`adto_site_…`) is public: it sits in your page source, works only from the origins you listed, and can only record leads, purchases and custom events. It is not an SDK key and not the account key.
 3. **Add the script** to every page, before your own code that calls it:
 
 ```html
 <script>window.adto = window.adto || [];</script>
-<script src="https://app.adto.app/adto.js" data-site-key="dtg_site_0123456789abcdef0123456789abcdef" async></script>
+<script src="https://app.adto.app/adto.js" data-site-key="adto_site_0123456789abcdef0123456789abcdef" async></script>
 ```
 
 The snippet in Settings has the right host. The script is about 2 KB gzipped and has no dependencies. A site with a Content-Security-Policy needs that host in `script-src` and `connect-src`.
@@ -37,7 +37,7 @@ adto.track('viewed_pricing');                                // a custom event
 
 The second argument also takes `customer_id`, `metadata` (an object) and `event_id`. Pass `order_id` for every purchase: it becomes the event's id (`order-<order_id>`), so a reloaded thank-you page or a second tab never counts the order twice. Calls made before the script loaded wait in `window.adto` when the page pushes them as `window.adto.push(['track', 'signup'])`; the first line of the snippet makes that possible, and the snippet Settings copies has it. `push` keeps working once the script has loaded, so a page can use it for every call.
 
-The event counts for the link of the click in `dtg_click` when the visitor landed with one (from the URL, else from the cookie), with that tap's country, campaign and UTM values in analytics. An event without a click, or with another account's click id, is stored without a link. Webhooks deliver leads and conversions as `event.lead` and `event.conversion` with `source: "web"`.
+The event counts for the link of the click in `adto_click` when the visitor landed with one (from the URL, else from the cookie), with that tap's country, campaign and UTM values in analytics. An event without a click, or with another account's click id, is stored without a link. Webhooks deliver leads and conversions as `event.lead` and `event.conversion` with `source: "web"`.
 
 ## Consent
 
@@ -49,13 +49,13 @@ The event counts for the link of the click in `dtg_click` when the visitor lande
 | `required` | Always waits for `adto.consent(true)`. |
 | `granted` | Your page already has consent; it starts at once. |
 
-Call `adto.consent(true)` or `adto.consent(false)` from your consent banner. The answer is remembered in `dtg_consent` for a year; `false` also deletes the click cookie and drops anything queued. A browser that sends Global Privacy Control (Brave does by default) counts as no until the page calls `adto.consent(true)`. The server enforces the same rule: from a consent country, or with a `Sec-GPC: 1` header, an event without `consent: true` is answered `202` and not stored.
+Call `adto.consent(true)` or `adto.consent(false)` from your consent banner. The answer is remembered in `adto_consent` for a year; `false` also deletes the click cookie and drops anything queued. A browser that sends Global Privacy Control (Brave does by default) counts as no until the page calls `adto.consent(true)`. The server enforces the same rule: from a consent country, or with a `Sec-GPC: 1` header, an event without `consent: true` is answered `202` and not stored.
 
 | Cookie | Holds | Lifetime |
 |---|---|---|
-| `dtg_click` | The click id the visitor landed with | 30 days |
-| `dtg_consent` | `1` or `0` | 365 days |
-| `dtg_banner` | `closed`, when the visitor closed the app banner | 30 days |
+| `adto_click` | The click id the visitor landed with | 30 days |
+| `adto_consent` | `1` or `0` | 365 days |
+| `adto_banner` | `closed`, when the visitor closed the app banner | 30 days |
 
 All three are first-party, `SameSite=Lax`, and `Secure` on https pages. Web events never store an IP address; the server only hashes it for the rate limit.
 

@@ -28,7 +28,7 @@ AdTo tries deterministic signals first: the store install referrer on Android, t
 
 - **No multi-touch.** Each install is credited to at most one click, and each event to one link: the link that last re-opened the app, inside its app's re-engagement window (7 days by default), else the install's link. A user who reinstalls is matched again like any install, carries `is_reinstall: true` and is left out of the Installs count.
 - **No uninstall tracking.**
-- **Only `dec_*` parameters survive an install.** Other query parameters on a shared link are not stored, so they do not come back after a deferred install; carry an in-app route in `dec_deeplink`. See [URL parameters](/links/url-parameters/#your-own-parameters).
+- **Only `adto_*` parameters survive an install.** Other query parameters on a shared link are not stored, so they do not come back after a deferred install; carry an in-app route in `adto_deeplink`. See [URL parameters](/links/url-parameters/#your-own-parameters).
 
 ## Analytics and data
 

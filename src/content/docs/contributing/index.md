@@ -22,7 +22,7 @@ AdTo is a hosted service. Its server, dashboard and website (`ad-to/adto`) are p
 | `lib/flutter_adto.dart` | The public entry point |
 | `lib/src/adto_impl.dart` | `FlutterAdto`: initialization, link handling, install registration, claims, events, link CRUD |
 | `lib/src/models/` | `AdtoConfig`, `AdtoLink`, `AdtoTempLink`, `AdtoLinkResolution`, `AdtoLinkClick`, `AdtoAppInstallRequest`, `AdtoAppInstallResponse`, `AdtoClickParams`, `AdtoError` |
-| `lib/src/services/` | Device identity and hardware, the install referrer service, the install state store (the `.dectog_install.json` sentinel), the event queue, request signing, the retry policy, the sensitive-URL filter, the link deduper |
+| `lib/src/services/` | Device identity and hardware, the install referrer service, the install state store (the `.adto_install.json` sentinel), the event queue, request signing, the retry policy, the sensitive-URL filter, the link deduper |
 | `lib/src/widgets/adto_paste_button.dart` | `AdtoPasteButton` |
 | `android/src/main/kotlin/app/adto/core/` | The framework-free Android reads every AdTo SDK shares as source: `AdtoDevice.kt` (device id, carrier, package and launch info, Meta referrer, App Links state), `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
 | `android/src/main/kotlin/app/adto/flutter_adto/` | `AdtoIdentifiersPlugin.kt`, which maps the method channel onto `app.adto.core` |

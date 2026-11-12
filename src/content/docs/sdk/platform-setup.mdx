@@ -121,7 +121,7 @@ Every path on the domain is claimed (`/*`). The `webcredentials` block lists the
 
 An app with a package but no saved fingerprints appears with `"sha256_cert_fingerprints": []`, which never verifies. When no app has a package, the file answers `404 {"error":{"code":"not_found","message":"Configuration not found"}}`.
 
-**Until verification succeeds, taps still open the app.** When the app record has both an Android scheme and a package, the link service answers a Chrome-family browser with an `intent://` redirect that carries your scheme and package, with the store as the browser fallback. The app then receives `{scheme}://{username}/{slug}?dtg_click={id}` (or `{scheme}://{deep-link-path}?dtg_click={id}` for links with an Android deep-link path). The bounce is skipped for in-app browsers and for browsers whose user agent carries no `Chrome/` token; those get a plain redirect. Details are on [How a tap is routed](/links/how-a-tap-is-routed/).
+**Until verification succeeds, taps still open the app.** When the app record has both an Android scheme and a package, the link service answers a Chrome-family browser with an `intent://` redirect that carries your scheme and package, with the store as the browser fallback. The app then receives `{scheme}://{username}/{slug}?adto_click={id}` (or `{scheme}://{deep-link-path}?adto_click={id}` for links with an Android deep-link path). The bounce is skipped for in-app browsers and for browsers whose user agent carries no `Chrome/` token; those get a plain redirect. Details are on [How a tap is routed](/links/how-a-tap-is-routed/).
 
 </TabItem>
 </Tabs>
@@ -155,12 +155,12 @@ A custom scheme is optional. Save it in the app record (`myapp`, without `://`) 
 
 How AdTo uses it:
 
-- A link without a deep-link path opens `myapp://{username}/{slug}?dtg_l={username}/{slug}`. A link with a deep-link path opens `myapp://{path}?dtg_l={username}/{slug}`, so the path's first segment becomes the URI authority. The `dtg_l` tag (after `dtg_click` when present) is how the SDK knows which link it was. Universal Links and App Links always deliver the `https://{username}.adto.app/{slug}` form instead.
+- A link without a deep-link path opens `myapp://{username}/{slug}?adto_l={username}/{slug}`. A link with a deep-link path opens `myapp://{path}?adto_l={username}/{slug}`, so the path's first segment becomes the URI authority. The `adto_l` tag (after `adto_click` when present) is how the SDK knows which link it was. Universal Links and App Links always deliver the `https://{username}.adto.app/{slug}` form instead.
 - On iOS a scheme only opens from a direct user tap, such as the "Open in app" buttons on AdTo's pages. A server redirect to a scheme never launches an iOS app; Universal Links are the only automatic mechanism.
 - On Android the scheme, together with the package, enables the `intent://` bounce described above.
 
 <Aside type="note" title="Scheme URLs and the SDK's parser">
-The SDK reads the link from `dtg_l`, never from the URL's shape, so `myapp://products/42?…&dtg_l=acme/launch` reports `acme` / `launch` and your app routes on the path from `AdtoLinkClick.originalUrl`. A scheme URL without `dtg_l`, such as your app's own `myapp://products/42` from elsewhere, is not an AdTo link: it is emitted with an error and nothing is logged. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+The SDK reads the link from `adto_l`, never from the URL's shape, so `myapp://products/42?…&adto_l=acme/launch` reports `acme` / `launch` and your app routes on the path from `AdtoLinkClick.originalUrl`. A scheme URL without `adto_l`, such as your app's own `myapp://products/42` from elsewhere, is not an AdTo link: it is emitted with an error and nothing is logged. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 </Aside>
 
 ## Verify from the dashboard

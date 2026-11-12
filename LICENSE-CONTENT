@@ -1,11 +1,11 @@
-DecTog documentation content licence
+AdTo documentation content licence
 ====================================
 
 The documentation content in this repository (everything under src/content,
 including prose, tables and images) is licensed under the Creative Commons
 Attribution 4.0 International licence (CC BY 4.0), reproduced below.
 
-Attribution: "DecTog documentation, https://docs.dectog.com".
+Attribution: "AdTo documentation, https://docs.adto.app".
 
 Code samples embedded in the documentation may also be used under the MIT
 licence in the LICENSE file. The site itself (configuration, components and

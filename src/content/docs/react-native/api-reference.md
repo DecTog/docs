@@ -31,8 +31,8 @@ type AdtoConfig = {
 
 | Member | Default | Meaning |
 |---|---|---|
-| `apiKey` | required | An SDK key (`dtg_pub_…`, dashboard Settings → SDK keys). Never ship the account key (`dtg_…`): it can delete links. |
-| `baseUrl` | `https://app.adto.app` | The API base. An account on the old DecTog service sets `https://app.dectog.com` (and `linkRootDomain: 'dectog.com'`). |
+| `apiKey` | required | An SDK key (`adto_pub_…`, dashboard Settings → SDK keys). Never ship the account key (`adto_…`): it can delete links. |
+| `baseUrl` | `https://app.adto.app` | The API base. |
 | `linkRootDomain` | `adto.app` without `baseUrl`, else the `baseUrl` host | The root tenant link hosts hang off: `{username}.<root>/{slug}`. |
 | `linkDomains` | `[]` | The account's custom link domains (`go.yourbrand.com`). The SDK also learns the active one from the server. |
 | `enableDebugLogging` | `false` | Log what the SDK does with `console.log`. |
@@ -81,7 +81,7 @@ Without `collect`: the device tier on, the pasteboard and OEM referrers as set o
 
 `type AdtoSubscription = { remove(): void }`
 
-Link URLs the SDK recognises: `https://{username}.{root}/{slug}`, `{baseHost}/r/{username}/{slug}`, a custom link domain `https://{domain}/{slug}`, any custom-scheme URL carrying `dtg_l={username}/{slug}` (the host and path are then the app's own route), and, for development, `dectog://{username}/{slug}` and `https://localhost:3000?user={username}/{slug}`. OAuth and social-login callbacks (`fb<id>://`, `com.googleusercontent.apps.…`, anything carrying `access_token` or `id_token`) are never reported or emitted.
+Link URLs the SDK recognises: `https://{username}.{root}/{slug}`, `{baseHost}/r/{username}/{slug}`, a custom link domain `https://{domain}/{slug}`, any custom-scheme URL carrying `adto_l={username}/{slug}` (the host and path are then the app's own route), and, for development, `adto://{username}/{slug}` and `https://localhost:3000?user={username}/{slug}`. OAuth and social-login callbacks (`fb<id>://`, `com.googleusercontent.apps.…`, anything carrying `access_token` or `id_token`) are never reported or emitted.
 
 ## Link management
 
@@ -141,10 +141,10 @@ The SDK queues events durably (at most 1000, batches of 100, an event over 32 KB
 | `error` | `AdtoError \| null` | Why it could not be processed. |
 | `linkResolution` | `AdtoLinkResolution \| null` | The link as the server describes it, when it resolved. |
 | `inApp` | `boolean` | Passed to `handleUrl`. |
-| `clickParams` | `AdtoClickParams \| null` | The `dec_*` values of `originalUrl`. |
-| `queryParameters` | `Record<string, string>` | Every query parameter of `originalUrl`, for the app's own keys. Only `dec_*` values survive a deferred install. |
+| `clickParams` | `AdtoClickParams \| null` | The `adto_*` values of `originalUrl`. |
+| `queryParameters` | `Record<string, string>` | Every query parameter of `originalUrl`, for the app's own keys. Only `adto_*` values survive a deferred install. |
 
-`AdtoClickParams`: `deepLink` (`dec_deeplink`: the in-app route; on a warm open the raw value), `label`, `campaign`, `adgroup`, `creative`, `tracker`.
+`AdtoClickParams`: `deepLink` (`adto_deeplink`: the in-app route; on a warm open the raw value), `label`, `campaign`, `adgroup`, `creative`, `tracker`.
 
 `isResolved(click)`: whether the click resolved with no error.
 
@@ -164,7 +164,7 @@ The SDK queues events durably (at most 1000, batches of 100, an event over 32 KB
 | `clickedAt` | `Date \| null` | When the credited link was tapped. |
 | `link` | `AdtoAppInstallLink \| null` | `slug`, `target`, `url`, `createdAt`, `metadata` of a credited permanent link, and `referrerCustomerId`: the customer whose referral link brought the install, else null (set by the server from the link, never from the tapped URL). |
 | `customParameters` | `object \| null` | The permanent link's metadata. |
-| `clickParams` | `AdtoClickParams \| null` | The credited click's `dec_*` values. |
+| `clickParams` | `AdtoClickParams \| null` | The credited click's `adto_*` values. |
 | `deepLink` | `string \| null` | The route to open. |
 | `routing` | `AdtoDeferredRoute \| null` | A medium-confidence candidate to route to without credit: `username`, `slug`, `deepLink`, `clickParams`, `confidence`, `clickedAt`. |
 | `fraudFlags` | `string[]` | Fraud rules the install tripped. |
@@ -204,4 +204,4 @@ type AdtoPasteButtonProps = {
 
 ## Package version
 
-`SDK_VERSION` is the package version. Every signed call sends `x-dectog-sdk: react-native-adto/<version>`, which the server stores on installs, events and clicks.
+`SDK_VERSION` is the package version. Every signed call sends `x-adto-sdk: react-native-adto/<version>`, which the server stores on installs, events and clicks.

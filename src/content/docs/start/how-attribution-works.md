@@ -13,8 +13,8 @@ A tap on `https://acme.adto.app/welcome` records a click with a 16-character id 
 
 | Platform | Carrier of the click id |
 |---|---|
-| Android, to Google Play or an OEM store | The store URL's `referrer` parameter: `dtg_click=<id>&dtg_l=acme/welcome`. The store hands the string back to the app after the install. |
-| iOS, with **iOS tap-to-store** on | The "Get the app" tap copies `https://acme.adto.app/welcome?dtg_click=<id>` to the pasteboard, then opens the App Store. |
+| Android, to Google Play or an OEM store | The store URL's `referrer` parameter: `adto_click=<id>&adto_l=acme/welcome`. The store hands the string back to the app after the install. |
+| iOS, with **iOS tap-to-store** on | The "Get the app" tap copies `https://acme.adto.app/welcome?adto_click=<id>` to the pasteboard, then opens the App Store. |
 | iOS, without tap-to-store | Nothing. Apple's `ct` tag is set on the store URL for App Store Connect, but it never reaches AdTo. |
 | Any mobile tap, through the interstitial or tap-to-store page | The page also beacons the screen profile onto the click, which sharpens the fingerprint, and a few device settings, which are recorded for no points (see [Signals recorded for no points](#signals-recorded-for-no-points)). |
 
@@ -39,7 +39,7 @@ The server walks the signals in this order and stops at the first one that names
 | Step | Signal | `match_source` | `match_confidence` | Result |
 |---|---|---|---|---|
 | 1 | Install referrer from Google Play or an OEM store (`referrer_source` names the store) | `referrer` | `guaranteed` | Credited |
-| 2 | Copied link or paste: the pasteboard URL carries `dtg_click` | `clipboard` | `guaranteed` | Credited |
+| 2 | Copied link or paste: the pasteboard URL carries `adto_click` | `clipboard` | `guaranteed` | Credited |
 | 3 | Meta on-device referrer | `referrer` (`referrer_source: meta`) | `guaranteed` | Credited |
 | 4 | Fingerprint over recent mobile web clicks from the same hashed IP and device family | `fingerprint` | `high` | Credited |
 | 4 | Same, with a unique but weak best candidate | `null` | `medium` | Routed, not credited |
@@ -49,7 +49,7 @@ The server walks the signals in this order and stops at the first one that names
 Two rules hold throughout:
 
 - **One install per click.** A click credited to another device's install is skipped, and the ladder moves on to the next signal. Only when nothing later matches does the install end up organic with the fraud flag `click_reuse`. A click credited to an earlier install of the *same* device returns that install's verdict instead of creating a new one.
-- **A referrer is proof of the tap.** If the click row never existed (a tap whose click was lost, see [when the click is recorded](/links/how-a-tap-is-routed/)), the server creates it from the `dtg_l=username/slug` part of the referrer and still credits the install deterministically.
+- **A referrer is proof of the tap.** If the click row never existed (a tap whose click was lost, see [when the click is recorded](/links/how-a-tap-is-routed/)), the server creates it from the `adto_l=username/slug` part of the referrer and still credits the install deterministically.
 
 When a deterministic signal decides, the fingerprint still runs in the background and records whether it would have picked the same click. That shadow match is the "Fingerprint accuracy" figure on the Overview.
 

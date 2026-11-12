@@ -40,9 +40,9 @@ Plan changes are recorded in the [audit log](#audit-log), by **AdTo**.
 
 ## Account key
 
-The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `dtg_` followed by 32 lowercase hex characters, 36 characters in total. Only owners see this card.
+The key your servers and scripts authenticate with. It has every scope, including creating, changing and deleting links, so it never goes into an app: apps get an [SDK key](#sdk-keys). It is `adto_` followed by 32 lowercase hex characters, 36 characters in total. Only owners see this card.
 
-The key is shown once: on the "Account created" screen after sign-up, and right after **Regenerate**. AdTo keeps only its SHA-256 and its first 8 characters, so the card shows those characters followed by dots, for example `dtg_3f9a••••••••••••••••••••••••••••`, and nobody, AdTo included, can show the key again.
+The key is shown once: on the "Account created" screen after sign-up, and right after **Regenerate**. AdTo keeps only its SHA-256 and its first 8 characters, so the card shows those characters followed by dots, for example `adto_3f9a••••••••••••••••••••••••••••`, and nobody, AdTo included, can show the key again.
 
 | Action | What happens |
 |---|---|
@@ -53,7 +53,7 @@ Hint under the key: "Full access, including creating and deleting links: use it 
 
 ## SDK keys
 
-The keys your apps ship with, `dtg_pub_` followed by 32 hex characters. Anyone can extract a key from an app build, so an SDK key can only register installs, report clicks, events and opens, pull the attribution verdict, read links and create temporary links. Creating, changing or deleting links needs a key created with **Allow creating and changing links (links:write)**. See [Authentication](/api/overview/#authentication) for the scopes route by route.
+The keys your apps ship with, `adto_pub_` followed by 32 hex characters. Anyone can extract a key from an app build, so an SDK key can only register installs, report clicks, events and opens, pull the attribution verdict, read links and create temporary links. Creating, changing or deleting links needs a key created with **Allow creating and changing links (links:write)**. See [Authentication](/api/overview/#authentication) for the scopes route by route.
 
 A new account starts with one SDK key, "App key". The card lists every key with its name, the full key, its scope chips, when it was created and last used (stamped at most once an hour), and **Copy** and **Revoke** buttons. Revoked keys stay listed, greyed out, with the date.
 
@@ -124,7 +124,7 @@ A code block you can paste into your app:
 
 ```dart
 await adto.initialize(AdtoConfig(
-  apiKey: 'dtg_pub_…',
+  apiKey: 'adto_pub_…',
 ));
 ```
 

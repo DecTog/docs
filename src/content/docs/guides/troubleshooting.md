@@ -20,8 +20,8 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 
 | Chip | Value | Meaning | What to do |
 |---|---|---|---|
-| referrer delivered | `ok` | The store handed back a referrer. If it carried `dtg_click`, the install is matched at `guaranteed`. If not, the install came through the store without an AdTo redirect and the ladder moved on. | Nothing, unless `ok` installs are organic: check that the tap went through a tagged store URL (below). |
-| store reported organic | `organic` | Google Play returned its organic marker or an empty referrer. The install did not come through a tagged store link. | Check the path the tap took. The QR page's store buttons are untagged, a custom `redirect_url` or `dec_redirect` to a non-store host is never tagged, and custom vivo store URLs are never tagged. |
+| referrer delivered | `ok` | The store handed back a referrer. If it carried `adto_click`, the install is matched at `guaranteed`. If not, the install came through the store without an AdTo redirect and the ladder moved on. | Nothing, unless `ok` installs are organic: check that the tap went through a tagged store URL (below). |
+| store reported organic | `organic` | Google Play returned its organic marker or an empty referrer. The install did not come through a tagged store link. | Check the path the tap took. The QR page's store buttons are untagged, a custom `redirect_url` or `adto_redirect` to a non-store host is never tagged, and custom vivo store URLs are never tagged. |
 | store too old for the API | `feature_not_supported` | The Play Store on the device does not support the Install Referrer API. Final. | Nothing. The fingerprint still runs. |
 | store service unavailable | `service_unavailable` | No connection to the Play Store service after up to three connection attempts, 3 seconds apart. | The SDK asks again on up to five later launches and sends a late claim; `onAppInstalled` emits the upgraded verdict. |
 | developer error | `developer_error` | Play rejected the call after every retry. | Check that the installed build has the Install Referrer client available and is not stripped by your build tooling. |
@@ -37,7 +37,7 @@ Each chip is the result of the SDK's install-referrer read on Android. Amber chi
 ### The click was never recorded
 
 - Bots and link unfurlers get the preview page and no click: any user agent containing `bot` (as a word), `crawler`, `spider`, `preview`, `fetcher`, `monitor`, `headless`, `whatsapp` or the named social crawlers. A plain `curl` is not on the list: it records a click.
-- Hint-less Chromium: the first request from a mobile Chromium browser that sends `Sec-CH-UA-Mobile: ?1` without a `Sec-CH-UA-Model` header, has no `Build/` token in its user agent and no in-app marker, gets a 302 with `Critical-CH` and records nothing. Chrome retries with the hint and the retry records the click. A client that never retries leaves no click row. The install can still be matched: the Play and OEM store referrers carry `dtg_l=<username>/<slug>`, and the server synthesizes the click from it. With the mobile interstitial on, the same happens through a one-shot self-redirect carrying `?_ch=1`.
+- Hint-less Chromium: the first request from a mobile Chromium browser that sends `Sec-CH-UA-Mobile: ?1` without a `Sec-CH-UA-Model` header, has no `Build/` token in its user agent and no in-app marker, gets a 302 with `Critical-CH` and records nothing. Chrome retries with the hint and the retry records the click. A client that never retries leaves no click row. The install can still be matched: the Play and OEM store referrers carry `adto_l=<username>/<slug>`, and the server synthesizes the click from it. With the mobile interstitial on, the same happens through a one-shot self-redirect carrying `?_ch=1`.
 - In-app browsers (Facebook, Instagram and WebViews on Android) never take the hint path and never get the intent bounce. They get a plain 302 to the tagged store URL, so referrer attribution still works for them.
 - The demo seed's installs carry no IP hash and never fingerprint-match. Its attributed installs are all Android referrer matches and its organic ones all iOS. Do not judge the fingerprint with the demo account.
 
@@ -63,7 +63,7 @@ Testing on an emulator or a debug build? **Emulator** flags every simulator inst
 
 ### Check the SDK side
 
-- `onAppInstalled` emits once per install, plus once more when a late claim upgrades the verdict. `currentAppInstall` holds the latest verdict. To retest, uninstall the app; on Android `adb shell pm clear <package>` also works. The SDK keeps its state in `.dectog_install.json` in a backup-excluded directory and validates it against the package's first-install time, so a restored backup does not suppress a real install.
+- `onAppInstalled` emits once per install, plus once more when a late claim upgrades the verdict. `currentAppInstall` holds the latest verdict. To retest, uninstall the app; on Android `adb shell pm clear <package>` also works. The SDK keeps its state in `.adto_install.json` in a backup-excluded directory and validates it against the package's first-install time, so a restored backup does not suppress a real install.
 - Set `enableDebugLogging: true` and look for the install POST. A 401 means the key was regenerated or is wrong; the server's four 401 bodies are listed under [Automation and agents](/guides/automation-and-agents/). A 429 is retried after `Retry-After` (up to 10 seconds in-process, otherwise on the next launch).
 
 ## Check the app against the dashboard
