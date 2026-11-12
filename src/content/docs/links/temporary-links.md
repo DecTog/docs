@@ -29,7 +29,7 @@ Slugs share one namespace: a temporary link cannot take a permanent link's slug 
 |---|---|
 | Dashboard | **Links > New link**, then pick an **Expires** value other than **Never**: **5 min**, **1 hour**, **1 day** or **7 days**. The slug box reads `auto` and may stay empty. The button becomes **Create temporary link**, and the list switches to the **Temporary** tab. |
 | API | `POST /api/v1/temp-links` with `ttlSeconds` (a number; omitted means 900), an optional `slug`, an optional `target` and optional `og_*` fields. The admin route `POST /api/admin/temp-links` takes the same body. |
-| SDK | `dectog.createTempLink(target: ..., slug: ..., ttlSeconds: 3600)`; `ttlSeconds` defaults to 900. |
+| SDK | `adto.createTempLink(target: ..., slug: ..., ttlSeconds: 3600)`; `ttlSeconds` defaults to 900. |
 
 `ttlSeconds` is floored to a whole number and clamped to the range 60 to 2,592,000 (30 days). A value of `0` becomes the default of 900 seconds. A non-numeric value is rejected with `400 {"error":{"code":"invalid_request","message":"ttlSeconds must be a number"}}`. The response carries `expires_at` and `ttl_seconds`:
 

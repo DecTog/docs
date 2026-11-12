@@ -84,13 +84,13 @@ The site wears the adto.app identity on top of Starlight:
 
 - State behaviour, not intentions: numbers, limits, defaults and error strings come from the
   server and SDK source, and the page says which.
-- The footer on every page states the versions the docs apply to (`flutter_dectog` 1.0.x,
-  `react-native-dectog` 1.0.x, server migration `0001_schema`). When that changes, bump it in
+- The footer on every page states the versions the docs apply to (`flutter_adto` 1.0.x,
+  `react-native-adto` 1.0.x, server migration `0001_schema`). When that changes, bump it in
   `src/components/Footer.astro` and in the `starlightLlmsTxt` `details` in `astro.config.mjs`,
   which feed `llms.txt`.
 - `https://docs.adto.app/llms.txt` and `/llms-full.txt` are generated at build time for AI
   agents; `adto.app/SKILL.md` links to them.
-- `sdk/api-reference.md` is generated from `flutter_dectog/doc/api-reference.md`, which also
+- `sdk/api-reference.md` is generated from `flutter_adto/doc/api-reference.md`, which also
   builds the SDK's `llms.txt`. Edit it in the SDK repo, then run `npm run sync:sdk-reference`
   here (`-- --check` reports drift).
 

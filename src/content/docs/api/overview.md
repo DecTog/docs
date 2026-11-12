@@ -44,7 +44,7 @@ There are three kinds of key, all managed in [Dashboard: Settings](/dashboard/se
 | Key | Looks like | Use it in | Scopes |
 |---|---|---|---|
 | **SDK key** | `dtg_pub_` and 32 hex characters | The apps you ship. Anyone can extract it from a build. | `sdk` (installs, claims, clicks, events, opens, the attribution pull), `temp_links`, `links:read`; plus `links:write` only for a key created with that option |
-| **Site key** | `dtg_site_` and 32 hex characters | Your web pages, with [`dectog.js`](/sdk/web/). Public. | Only the two web routes, from the origins it lists |
+| **Site key** | `dtg_site_` and 32 hex characters | Your web pages, with [`adto.js`](/sdk/web/). Public. | Only the two web routes, from the origins it lists |
 | **Account key** | `dtg_` and 32 hex characters | Your servers and scripts. Never in an app. | Everything, including creating, changing and deleting links, and the only key that can [export raw rows](/api/export/) |
 
 | Scope | Routes |
@@ -84,7 +84,7 @@ signature = HMAC-SHA256( key = the API key, message = "<timestamp>.<sha256hex(ra
 | 401 | `invalid_api_key` | `Invalid API key` | The key is not one the server knows. |
 | 401 | `revoked_api_key` | `This API key was revoked` | An SDK key revoked in Settings. |
 | 403 | `insufficient_scope` | `This key does not have the <scope> scope` | An SDK key used on a route outside its scopes; the error carries `required_scope`. |
-| 401 | `signature_required` | `SDK request signature required (upgrade flutter_dectog)` | Either signature header is missing. |
+| 401 | `signature_required` | `SDK request signature required (upgrade flutter_adto)` | Either signature header is missing. |
 | 401 | `stale_timestamp` | `SDK request timestamp is stale or invalid` | The timestamp is not an integer or is more than 1,800 s from server time. |
 | 401 | `invalid_signature` | `Invalid SDK request signature` | The HMAC does not match (wrong key, wrong message, re-encoded body, uppercase hex). |
 
@@ -106,23 +106,23 @@ For a `GET` with the same key and timestamp the body hash is the SHA-256 of the 
 
 ### Signing with curl
 
-The helper below computes the signature with `openssl` and works in bash and zsh. It is the `dectog` command used in the examples on the other API pages.
+The helper below computes the signature with `openssl` and works in bash and zsh. It is the `adto` command used in the examples on the other API pages.
 
 ```bash title="A signed curl helper"
-export DECTOG_API_KEY=dtg_0123456789abcdef0123456789abcdef
-export DECTOG_API=https://app.adto.app
+export ADTO_API_KEY=dtg_0123456789abcdef0123456789abcdef
+export ADTO_API=https://app.adto.app
 
-# dectog <METHOD> <path> [JSON body]
-dectog() {
+# adto <METHOD> <path> [JSON body]
+adto() {
   local method=$1 route=$2 body=${3:-}
   local ts body_hash sig
   local -a data=()
   ts=$(date +%s)
   body_hash=$(printf '%s' "$body" | openssl dgst -sha256 | sed 's/^.* //')
-  sig=$(printf '%s' "$ts.$body_hash" | openssl dgst -sha256 -hmac "$DECTOG_API_KEY" | sed 's/^.* //')
+  sig=$(printf '%s' "$ts.$body_hash" | openssl dgst -sha256 -hmac "$ADTO_API_KEY" | sed 's/^.* //')
   [ -n "$body" ] && data=(--data-binary "$body")
-  curl -sS --fail-with-body -X "$method" "$DECTOG_API$route" \
-    -H "Authorization: Bearer $DECTOG_API_KEY" \
+  curl -sS --fail-with-body -X "$method" "$ADTO_API$route" \
+    -H "Authorization: Bearer $ADTO_API_KEY" \
     -H 'Content-Type: application/json' \
     -H "x-dectog-timestamp: $ts" \
     -H "x-dectog-signature: v1=$sig" \
@@ -131,12 +131,12 @@ dectog() {
 ```
 
 ```bash title="Create, list and delete a link"
-dectog POST /api/v1/links '{"slug":"spring-sale","target":"https://shop.example.com/sale","metadata":{"screen":"sale"}}'
+adto POST /api/v1/links '{"slug":"spring-sale","target":"https://shop.example.com/sale","metadata":{"screen":"sale"}}'
 # {"id":"6f1c2a0e-…","slug":"spring-sale","target":"https://shop.example.com/sale","url":"https://acme.adto.app/spring-sale",…}
 
-dectog GET /api/v1/links | jq -r '.data[] | "\(.slug)\t\(.click_count)\t\(.url)"'
+adto GET /api/v1/links | jq -r '.data[] | "\(.slug)\t\(.click_count)\t\(.url)"'
 
-dectog DELETE /api/v1/links/spring-sale
+adto DELETE /api/v1/links/spring-sale
 # {"success":true}
 ```
 
@@ -147,7 +147,7 @@ The same computation in Node:
 ```js
 import { createHash, createHmac } from "node:crypto";
 
-export function dectogHeaders(apiKey, rawBody = "") {
+export function adtoHeaders(apiKey, rawBody = "") {
   const ts = Math.floor(Date.now() / 1000).toString();
   const bodyHash = createHash("sha256").update(rawBody).digest("hex");
   const sig = createHmac("sha256", apiKey).update(`${ts}.${bodyHash}`).digest("hex");
@@ -170,7 +170,7 @@ export function dectogHeaders(apiKey, rawBody = "") {
 
 ## SDK identity
 
-SDKs also send `x-dectog-sdk: <name>/<version>`: `flutter_dectog/1.0.0`, `react-native-dectog/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
+SDKs also send `x-dectog-sdk: <name>/<version>`: `flutter_adto/1.0.0`, `react-native-adto/1.0.0`. The server stores it as `sdk_name` and `sdk_version` on the install, on each event and on in-app clicks, and the Overview lists the versions in use. Without the header it reads the `DectogSDK/<version>` token of the User-Agent. Scripts and servers need not send either.
 
 ## Rate limits
 
@@ -256,7 +256,7 @@ The route pages quote errors as `{"error": {"code", "message"}}` and leave out `
 `GET /healthz` needs no authentication, is not rate limited, and answers on every host:
 
 ```json
-{ "ok": true, "service": "dectog", "version": "v1", "host": "app.adto.app" }
+{ "ok": true, "service": "adto", "version": "v1", "host": "app.adto.app" }
 ```
 
 `host` echoes the request's Host header. Use it for uptime checks instead of a link URL. A tap check on a real link should send `x-dectog-no-track: 1` so it is not counted.

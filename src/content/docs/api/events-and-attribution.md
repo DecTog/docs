@@ -93,7 +93,7 @@ The per-event errors in `rejected`:
 Every stored event carries `matched_slug`, the slug of the link that brought the install, so per-link leads and revenue need no join at read time. Per-link numbers credit an event to `open_slug` instead when it happened within the re-engagement window after that open: the window of the re-opening link's app (`reengagement_window_hours`, the default app's for a link bound to none), else `REENGAGEMENT_WINDOW_HOURS` (default 168 hours). It is resolved per event: through `install_id` when the batch names one (only if that install is matched; there is no fallback to the device for an organic `install_id`), else through the device's latest matched install. The request's raw IP is stored on the event row unless the deployment sets `STORE_RAW_IP=0`.
 
 ```bash title="Identify a user and record a purchase"
-dectog POST /api/v1/events '{
+adto POST /api/v1/events '{
   "device_id": "4b1d8c3e9f2a",
   "install_id": "3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f",
   "events": [
@@ -149,7 +149,7 @@ Returns the stored verdict for a device or an install, so an app can recover it 
 `last_open` is always present: `{"username", "slug", "click_id", "opened_at"}` for the latest app open reported for this device (the query's `device_id`, or the install's own) or for this install id, else `null`.
 
 ```bash title="Re-pull the verdict without a device id"
-dectog GET '/api/v1/attribution?install_id=3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f'
+adto GET '/api/v1/attribution?install_id=3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f'
 ```
 
 ## POST /api/v1/device-ping

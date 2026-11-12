@@ -35,14 +35,14 @@ The answer is `{data, next_cursor}`: rows in the order they were recorded (time,
 ```bash title="Every click since the start of October, as JSON lines"
 cursor=""
 while :; do
-  page=$(dectog GET "/api/v1/clicks?since=2026-10-01T00:00:00Z&limit=1000${cursor:+&cursor=$cursor}")
+  page=$(adto GET "/api/v1/clicks?since=2026-10-01T00:00:00Z&limit=1000${cursor:+&cursor=$cursor}")
   echo "$page" | jq -c '.data[]'
   cursor=$(echo "$page" | jq -r '.next_cursor // empty')
   [ -z "$cursor" ] && break
 done
 ```
 
-`dectog` is the signed curl helper from [Request signing](/api/overview/#request-signing), with `DECTOG_API_KEY` set to the account key; the same page has the headers in Node.
+`adto` is the signed curl helper from [Request signing](/api/overview/#request-signing), with `ADTO_API_KEY` set to the account key; the same page has the headers in Node.
 
 To keep a copy current, remember the time of the last row you stored and ask with `since` set to it on the next run. Rows with that exact time come again; skip the ids you already have.
 

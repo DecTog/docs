@@ -9,40 +9,40 @@ AdTo is a hosted service. Its server, dashboard and website (`ad-to/adto`) are p
 
 | Repository | Contents | License |
 |---|---|---|
-| `ad-to/flutter_adto` | The Flutter SDK, the `flutter_dectog` package ([on pub.dev](https://pub.dev/packages/flutter_dectog)) | MIT |
-| `ad-to/react-native-adto` | The React Native and Expo SDK, the `react-native-dectog` package (not yet published on npm) | MIT |
+| `ad-to/flutter_adto` | The Flutter SDK, the `flutter_adto` package ([on pub.dev](https://pub.dev/packages/flutter_adto)) | MIT |
+| `ad-to/react-native-adto` | The React Native and Expo SDK, the `react-native-adto` package (not yet published on npm) | MIT |
 | `ad-to/docs` | This site | Content CC BY 4.0, site code MIT |
 
 ## Repository layout
 
-### `flutter_dectog` (SDK)
+### `flutter_adto` (SDK)
 
 | Path | What it is |
 |---|---|
-| `lib/flutter_dectog.dart` | The public entry point |
-| `lib/src/dectog_impl.dart` | `FlutterDectog`: initialization, link handling, install registration, claims, events, link CRUD |
-| `lib/src/models/` | `DectogConfig`, `DectogLink`, `DectogTempLink`, `DectogLinkResolution`, `DectogLinkClick`, `DectogAppInstallRequest`, `DectogAppInstallResponse`, `DectogClickParams`, `DectogError` |
+| `lib/flutter_adto.dart` | The public entry point |
+| `lib/src/adto_impl.dart` | `FlutterAdto`: initialization, link handling, install registration, claims, events, link CRUD |
+| `lib/src/models/` | `AdtoConfig`, `AdtoLink`, `AdtoTempLink`, `AdtoLinkResolution`, `AdtoLinkClick`, `AdtoAppInstallRequest`, `AdtoAppInstallResponse`, `AdtoClickParams`, `AdtoError` |
 | `lib/src/services/` | Device identity and hardware, the install referrer service, the install state store (the `.dectog_install.json` sentinel), the event queue, request signing, the retry policy, the sensitive-URL filter, the link deduper |
-| `lib/src/widgets/dectog_paste_button.dart` | `DectogPasteButton` |
-| `android/src/main/kotlin/app/dectog/core/` | The framework-free Android reads every AdTo SDK shares as source: `DectogDevice.kt` (device id, carrier, package and launch info, Meta referrer, App Links state), `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
-| `android/src/main/kotlin/app/dectog/flutter_dectog/` | `DectogIdentifiersPlugin.kt`, which maps the method channel onto `app.dectog.core` |
-| `ios/flutter_dectog/` | The Swift package. Framework-free, shared as source: `DectogDevice.swift`, `DectogInstallDates.swift`, `DectogKeychain.swift`, `DectogPasteTargetView.swift`; Flutter glue: `DectogIdentifiersPlugin.swift`, `DectogPasteControl.swift`. `ios/flutter_dectog.podspec` for CocoaPods hosts |
-| `example/` | Trails, the example app: shared links, invites and referrals, onboarding, `identify`, a demo purchase, screen views. Reads `env/dev.json` for `DECTOG_API_KEY`, `DECTOG_BASE_URL`, `DECTOG_LINK_ROOT_DOMAIN`; `example/site/` is its store-badges page |
+| `lib/src/widgets/adto_paste_button.dart` | `AdtoPasteButton` |
+| `android/src/main/kotlin/app/adto/core/` | The framework-free Android reads every AdTo SDK shares as source: `AdtoDevice.kt` (device id, carrier, package and launch info, Meta referrer, App Links state), `InstallReferrers.kt` (Play, Huawei, Samsung, Xiaomi and vivo readers), `Pasteboard.kt` |
+| `android/src/main/kotlin/app/adto/flutter_adto/` | `AdtoIdentifiersPlugin.kt`, which maps the method channel onto `app.adto.core` |
+| `ios/flutter_adto/` | The Swift package. Framework-free, shared as source: `AdtoDevice.swift`, `AdtoInstallDates.swift`, `AdtoKeychain.swift`, `AdtoPasteTargetView.swift`; Flutter glue: `AdtoIdentifiersPlugin.swift`, `AdtoPasteControl.swift`. `ios/flutter_adto.podspec` for CocoaPods hosts |
+| `example/` | Trails, the example app: shared links, invites and referrals, onboarding, `identify`, a demo purchase, screen views. Reads `env/dev.json` for `ADTO_API_KEY`, `ADTO_BASE_URL`, `ADTO_LINK_ROOT_DOMAIN`; `example/site/` is its store-badges page |
 | `test/` | Unit tests for the models, the referrer service, the state store, the event queue, signing, the retry policy, the URL parser and the paste button |
 | `doc/api-reference.md`, `llms.txt` | The API reference this site syncs, and the agent index generated from it (`dart run tool/gen_llms.dart`) |
 
-### `react-native-dectog` (SDK)
+### `react-native-adto` (SDK)
 
-A port of `flutter_dectog` on the same contract and fixtures; [Porting the SDK](/contributing/porting-the-sdk/) explains what it shares and what it reimplements.
+A port of `flutter_adto` on the same contract and fixtures; [Porting the SDK](/contributing/porting-the-sdk/) explains what it shares and what it reimplements.
 
 | Path | What it is |
 |---|---|
-| `src/Dectog.ts` | `DectogSdk` and the `Dectog` singleton: initialization, link handling, install registration, claims, events, link CRUD (the port of `lib/src/dectog_impl.dart`) |
+| `src/Adto.ts` | `AdtoSdk` and the `Adto` singleton: initialization, link handling, install registration, claims, events, link CRUD (the port of `lib/src/adto_impl.dart`) |
 | `src/internal/` | The services: install state, event queue, request signing with its own SHA-256 and HMAC, the retry policy, the URL parser, the link filter and deduper, the referrer and pasteboard gates |
-| `src/models/`, `src/config.ts`, `src/errors.ts` | The public types, `DectogConfig` and `DectogError` |
-| `src/navigation.ts`, `src/PasteButton.tsx` | `trackNavigation` for React Navigation and Expo Router, and `DectogPasteButton` |
-| `ios/Shared/`, `android/src/main/java/app/dectog/core/` | Copies of the shared native reads; `tool/sync_shared.sh --check` fails on any difference from `flutter_dectog` |
-| `ios/DectogModule.swift`, `android/.../reactnative/DectogModule.kt` | The Expo module: the bridge onto the shared reads |
+| `src/models/`, `src/config.ts`, `src/errors.ts` | The public types, `AdtoConfig` and `AdtoError` |
+| `src/navigation.ts`, `src/PasteButton.tsx` | `trackNavigation` for React Navigation and Expo Router, and `AdtoPasteButton` |
+| `ios/Shared/`, `android/src/main/java/app/adto/core/` | Copies of the shared native reads; `tool/sync_shared.sh --check` fails on any difference from `flutter_adto` |
+| `ios/AdtoModule.swift`, `android/.../reactnative/AdtoModule.kt` | The Expo module: the bridge onto the shared reads |
 | `plugin/src/` | The config plugin: associated domains, URL types, intent filters; `app.plugin.js` loads it |
 | `test/` | Jest suites against a fake native layer and a recording network; `test/fixtures/` are the shared wire fixtures and URL cases |
 | `example/` | An Expo app with the plugin configured; `expo prebuild` generates its native projects |
@@ -61,8 +61,8 @@ A port of `flutter_dectog` on the same contract and fixtures; [Porting the SDK](
 
 ```bash
 # SDKs
-cd flutter_dectog && flutter pub get && flutter analyze && flutter test
-cd react-native-dectog && npm ci && npm test && npm run typecheck && npm run sync:check
+cd flutter_adto && flutter pub get && flutter analyze && flutter test
+cd react-native-adto && npm ci && npm test && npm run typecheck && npm run sync:check
 
 # Docs
 cd docs && npm ci && npm run build            # fails on broken internal links
@@ -75,7 +75,7 @@ To try an SDK change end to end, run its example app against AdTo with an SDK ke
 - API keys are stored as a SHA-256 hash plus a prefix. The account key is shown once and kept no other way; SDK and site keys also keep an AES-GCM encrypted copy (keyed from `JWT_SECRET`) so Settings can show them again. Every SDK call is also HMAC-signed with the key.
 - Attribution: deterministic signals first (store referrers, Meta, pasteboard), then a scored, tenant-scoped fingerprint; one install per click; 24-hour window for candidates with a device model or a screen profile to compare with the install and 2 hours otherwise; credit only at high confidence, routing at medium, nothing on a tie between different links. See [Attribution internals](/start/attribution-internals/).
 - Privacy: hashed IPs (IPv6 at /64), raw rows deleted (or their personal columns blanked) on the retention schedule, ad identifiers in their own table and never joined to device data, and a vendor-scoped device id that survives a reinstall by default (`persistDeviceId` on iOS). See [Privacy and data](/guides/privacy-and-data/).
-- The name: AdTo means "Ads to app". Prose writes AdTo, one word with a capital A and a capital T; domains use `adto`; the packages keep their `dectog` names (`flutter_dectog`, `react-native-dectog`) and identifiers keep their language's casing (`FlutterDectog`, `DectogConfig`) until the renamed packages are released.
+- The name: AdTo means "Ads to app". Prose writes AdTo, one word with a capital A and a capital T; domains and packages use `adto` (`flutter_adto`, `react-native-adto`), and identifiers keep their language's casing (`FlutterAdto`, `AdtoConfig`).
 
 ## Proposing a change
 

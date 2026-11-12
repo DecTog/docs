@@ -81,7 +81,7 @@ Both forms are explained in [Concepts](/start/concepts/).
 
 ## Site keys
 
-Keys for [`dectog.js`](/sdk/web/) on your website. **New site key** takes a name and the sites allowed to use it (origins such as `https://shop.example.com`, one per line). Each key shows its sites, when it was last used, the `<script>` snippet with **Copy snippet**, **Sites** to change the list and **Revoke**. A site key is public by design; it works only from its sites and only records leads, purchases and custom events.
+Keys for [`adto.js`](/sdk/web/) on your website. **New site key** takes a name and the sites allowed to use it (origins such as `https://shop.example.com`, one per line). Each key shows its sites, when it was last used, the `<script>` snippet with **Copy snippet**, **Sites** to change the list and **Revoke**. A site key is public by design; it works only from its sites and only records leads, purchases and custom events.
 
 ## Custom domain
 
@@ -123,12 +123,10 @@ Entries are numbered 1, 2, 3… and are never changed or removed. **Check for ga
 A code block you can paste into your app:
 
 ```dart
-await dectog.initialize(DectogConfig(
+await adto.initialize(AdtoConfig(
   apiKey: 'dtg_pub_…',
-  baseUrl: 'https://app.adto.app',
-  linkRootDomain: 'adto.app',
 ));
 ```
 
-The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". `baseUrl` and `linkRootDomain` name AdTo's hosts. Keep both: the released SDKs default to the old DecTog service. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". The SDKs default to AdTo's hosts, so the snippet names `baseUrl` and `linkRootDomain` only when this server's differ. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 

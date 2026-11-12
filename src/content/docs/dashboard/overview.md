@@ -103,7 +103,7 @@ Empty state: "No events yet — call `identify` / `trackConversion` in the SDK."
 
 The top 8 device models among installs in the window that reported a model, with an install count. Models are stored lowercased. A model AdTo knows shows its marketing name with the code after it (`Samsung Galaxy S23 Ultra sm-s918b`, `iPhone 17 iphone18,3`), or the name alone when the SDK already sent the marketing name (`iPhone 17`); any other shows as `{model} · {manufacturer}`. Android names come from Google Play's supported-devices list, refreshed weekly for the models your installs report; iPhone names from a list in AdTo for the iPhone 8 to the iPhone 18 Pro Max. The count is first installs; when the model also had reinstalls the row adds `+{n} reinstalls`. App updates are left out.
 
-Empty state: "No device data yet — enable the device tier in the SDK (`DectogCollection.deviceTier`)." See [Device data and privacy](/sdk/device-data-and-privacy/).
+Empty state: "No device data yet — enable the device tier in the SDK (`AdtoCollection.deviceTier`)." See [Device data and privacy](/sdk/device-data-and-privacy/).
 
 ### Carriers (MCC/MNC)
 
@@ -129,7 +129,7 @@ The top 10 countries by clicks in the window, shown as a flag plus the two-lette
 
 ## Breakdown
 
-Below the charts, **Breakdown** puts every metric side by side for one dimension: clicks, installs (first installs), reinstalls, conversion, opens, leads, revenue and LTV (the net revenue to date of the window's first installs, per install: what an install from that source has been worth so far; app revenue only, since a website purchase has no install), per link, campaign, country, platform, OS, language, referrer, UTM value, app version, match source, routing rule (to compare A/B variants), page button (the button a visitor took on a link page) or event source (the app, the website through `dectog.js`, or a store) (the **By** menu). It covers the range selector's window, cut into days in your browser's time zone, and loads on its own rather than on the 15-second refresh.
+Below the charts, **Breakdown** puts every metric side by side for one dimension: clicks, installs (first installs), reinstalls, conversion, opens, leads, revenue and LTV (the net revenue to date of the window's first installs, per install: what an install from that source has been worth so far; app revenue only, since a website purchase has no install), per link, campaign, country, platform, OS, language, referrer, UTM value, app version, match source, routing rule (to compare A/B variants), page button (the button a visitor took on a link page) or event source (the app, the website through `adto.js`, or a store) (the **By** menu). It covers the range selector's window, cut into days in your browser's time zone, and loads on its own rather than on the 15-second refresh.
 
 - Click a value to keep only it. A chip appears above the table, "Country is GB"; click another value to add it to the chip.
 - Hover a row and click **−** to leave that value out instead: "Country is not US". A chip keeps values or leaves them out, not both; picking the other way for the same dimension replaces it.
@@ -210,7 +210,7 @@ Calls to the `/api/v1` API that the server refused as malformed (400, 413 or 422
 
 ### SDK versions in the wild
 
-A table of the SDK builds that reported in the window: the build (`flutter_dectog 1.0.0`), the **New installs** registered by it, the **Events** it sent, and when it was **Last seen**. New installs show what your current release ships; events show which older builds are still running. Up to 20 builds, most recently seen first. Empty: "No SDK build reported in this window."
+A table of the SDK builds that reported in the window: the build (`flutter_adto 1.0.0`), the **New installs** registered by it, the **Events** it sent, and when it was **Last seen**. New installs show what your current release ships; events show which older builds are still running. Up to 20 builds, most recently seen first. Empty: "No SDK build reported in this window."
 
 ### Empty and failed states
 

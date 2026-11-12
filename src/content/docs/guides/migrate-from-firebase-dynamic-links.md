@@ -71,16 +71,16 @@ Every `/api/v1` call except `resolve` is signed with an HMAC of the key it sends
 
 ## The Flutter plugin
 
-| `firebase_dynamic_links` | `flutter_dectog` |
+| `firebase_dynamic_links` | `flutter_adto` |
 |---|---|
-| `FirebaseDynamicLinks.instance.getInitialLink()` | `dectog.getInitialLink()` |
-| `FirebaseDynamicLinks.instance.onLink.listen(...)` | `dectog.onLinkClick.listen(...)` |
-| `PendingDynamicLinkData.link` (a `Uri`) | `DectogLinkClick`: `slug`, `username`, `linkResolution?.target`, `linkResolution?.deepLinkPath`, `clickParams` |
+| `FirebaseDynamicLinks.instance.getInitialLink()` | `adto.getInitialLink()` |
+| `FirebaseDynamicLinks.instance.onLink.listen(...)` | `adto.onLinkClick.listen(...)` |
+| `PendingDynamicLinkData.link` (a `Uri`) | `AdtoLinkClick`: `slug`, `username`, `linkResolution?.target`, `linkResolution?.deepLinkPath`, `clickParams` |
 | `PendingDynamicLinkData.utmParameters` | `click.queryParameters` and `click.queryParameter('utm_source')` on the tapped URL |
-| `getDynamicLink(uri)` | `dectog.resolveLink(username, slug)` |
-| `buildShortLink(DynamicLinkParameters(...))` | `dectog.createLink(slug: ..., target: ..., ...)` and `dectog.createTempLink(...)` |
+| `getDynamicLink(uri)` | `adto.resolveLink(username, slug)` |
+| `buildShortLink(DynamicLinkParameters(...))` | `adto.createLink(slug: ..., target: ..., ...)` and `adto.createTempLink(...)` |
 | `buildLink(...)` (long link) | No equivalent |
-| First open after an install from a link | `dectog.onAppInstalled`; `dectog.currentAppInstall` and `dectog.getAttributionData()` for later reads |
+| First open after an install from a link | `adto.onAppInstalled`; `adto.currentAppInstall` and `adto.getAttributionData()` for later reads |
 
 ```dart title="Before: firebase_dynamic_links"
 final data = await FirebaseDynamicLinks.instance.getInitialLink();
@@ -88,30 +88,28 @@ if (data != null) _open(data.link);
 FirebaseDynamicLinks.instance.onLink.listen((data) => _open(data.link));
 ```
 
-```dart title="After: flutter_dectog"
-import 'package:flutter_dectog/flutter_dectog.dart';
+```dart title="After: flutter_adto"
+import 'package:flutter_adto/flutter_adto.dart';
 
-final dectog = FlutterDectog();
+final adto = FlutterAdto();
 
 Future<void> start() async {
-  await dectog.initialize(DectogConfig(
-    apiKey: const String.fromEnvironment('DECTOG_API_KEY'),
-    baseUrl: 'https://app.adto.app',
-    linkRootDomain: 'adto.app',
+  await adto.initialize(AdtoConfig(
+    apiKey: const String.fromEnvironment('ADTO_API_KEY'),
   ));
 
-  dectog.onLinkClick.listen(_open);
-  final initial = await dectog.getInitialLink();
+  adto.onLinkClick.listen(_open);
+  final initial = await adto.getInitialLink();
   if (initial != null) _open(initial);
 
-  dectog.onAppInstalled.listen((install) {
+  adto.onAppInstalled.listen((install) {
     final route = install.routing?.deepLink ?? install.deepLink;
     if (route != null) _openRoute(route);         // medium confidence or better
     if (install.matched) _creditInstall(install); // guaranteed or high only
   });
 }
 
-void _open(DectogLinkClick click) {
+void _open(AdtoLinkClick click) {
   if (click.error != null) return;
   _openRoute(click.linkResolution?.deepLinkPath ?? click.slug);
 }
@@ -126,7 +124,7 @@ FDL matched a first open to a link with the Play Install Referrer on Android and
 AdTo's order is similar but broader:
 
 1. Android: the store redirect carries `referrer=dtg_click=<id>&dtg_l=<username>/<slug>`. The SDK reads the Play Install Referrer (and the Huawei, Samsung, Xiaomi and vivo store referrers) on first launch, retries transient errors, and sends a referrer that arrives later as a late claim.
-2. iOS: the SDK reads the pasteboard on first launch by default. The iOS tap-to-store page (Apps, Advanced) copies the link before opening the App Store. `DectogPasteButton` covers users who declined the iOS 16 paste alert.
+2. iOS: the SDK reads the pasteboard on first launch by default. The iOS tap-to-store page (Apps, Advanced) copies the link before opening the App Store. `AdtoPasteButton` covers users who declined the iOS 16 paste alert.
 3. Otherwise a server-side fingerprint over recent mobile web clicks assigns a confidence. `high` is credited (`matched: true`), `medium` only returns a `routing` candidate, `low` returns nothing.
 
 The link's `metadata` comes back as `customParameters`, the `dec_deeplink` of the tapped URL as `deepLink`. See [How attribution works](/start/how-attribution-works/) and [Deterministic attribution](/sdk/deterministic-attribution/).
@@ -174,7 +172,7 @@ The **AdTo columns** preset takes headers named like the [create fields](/api/li
 1. Sign up at `https://app.adto.app/login?tab=signup`. The username becomes your link subdomain; the SDK key and the account key are shown on the "Account created" screen. Settings lists the SDK key again; the account key is shown only that once, and **Regenerate** in Settings replaces it. See [Quickstart](/start/quickstart/).
 2. Register the app on the Apps page: package and SHA-256 fingerprints (include the Play App Signing key), bundle ID and Team ID, both store URLs, your custom scheme. Use the Verify buttons.
 3. Add `applinks:{username}.adto.app` to Associated Domains and an `autoVerify` intent filter for `{username}.adto.app`. Reinstall the app. See [Platform setup](/sdk/platform-setup/).
-4. Replace `firebase_dynamic_links` with `flutter_dectog` using the table above. Inject the SDK key (`dtg_pub_…`) at build time with `--dart-define`.
+4. Replace `firebase_dynamic_links` with `flutter_adto` using the table above. Inject the SDK key (`dtg_pub_…`) at build time with `--dart-define`.
 5. Recreate your links. If you exported them before the shutdown (Firebase's export came from [Google Takeout](https://firebase.google.com/support/guides/export-dynamic-links), one CSV per domain), the quickest way is to import that file: on the Links page, **Import CSV**, choose **Firebase Dynamic Links export** and pick it (see [Importing an FDL export](#importing-an-fdl-export)). From a script, send up to 100 links per call to `POST /api/v1/links/bulk`. Either way the old suffixes become the slugs, the former `link` destination the `target`, and its path the in-app route.
 6. Replace the old `page.link` URLs wherever they are published: those domains belong to Google and cannot be pointed at AdTo. A subdomain of your own that served FDL links, such as `links.yourbrand.com`, can move to AdTo as a [custom domain](/links/custom-domains/), where the deployment offers it.
 7. Test on a physical device: tap a link, install from the store, open the app, and check Overview and `onAppInstalled`. See [Testing](/sdk/testing/).

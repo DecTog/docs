@@ -49,7 +49,7 @@ Universal Links and App Links are per host, so the apps need the new host next t
 
 - **iOS:** add `applinks:go.yourbrand.com` to the Associated Domains, next to `applinks:yourname.adto.app`, in every entitlements file.
 - **Android:** add `<data android:host="go.yourbrand.com"/>` to the `autoVerify` intent filter that has your AdTo host.
-- **SDK:** list the domain in `DectogConfig(linkDomains: ['go.yourbrand.com'])`. The SDK also learns the active domain from the server, but only after its first answer; listing it covers a link that opens the app on its very first start.
+- **SDK:** list the domain in `AdtoConfig(linkDomains: ['go.yourbrand.com'])`. The SDK also learns the active domain from the server, but only after its first answer; listing it covers a link that opens the app on its very first start.
 
 Ship a build with these before you share links on the new domain: until then, taps on it open the browser and route through the stores like any other tap.
 

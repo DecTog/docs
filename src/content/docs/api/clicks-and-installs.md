@@ -106,7 +106,7 @@ Strings are trimmed and truncated to the stated length; empty strings become `nu
 | `referrer_click_server_ts`, `install_begin_server_ts` | epoch ms | Google's server-side pair. `referrer_click_server_ts` times a store-referrer match for `impossible_speed`, `click_injection` and `stale_referrer`, and dates synthesized clicks; `install_begin_server_ts` is when the download began, for `click_injection`. |
 | `install_version` | string, 64 | |
 | `google_play_instant` | boolean | Must be a JSON boolean; any other type stores `null`. |
-| `meta_referrer`, `meta_referrer_ts` | string 512, epoch ms | Meta's on-device install referrer. The SDK reads it when the app has a Facebook App ID: `DectogConfig.fbAppId`, else the `fb_app_id` saved on the Apps page, which the SDK gets from `GET /api/v1/sdk-config`. |
+| `meta_referrer`, `meta_referrer_ts` | string 512, epoch ms | Meta's on-device install referrer. The SDK reads it when the app has a Facebook App ID: `AdtoConfig.fbAppId`, else the `fb_app_id` saved on the Apps page, which the SDK gets from `GET /api/v1/sdk-config`. |
 | `meta_referrer_is_ct` | boolean | Click-through (`true`) or view-through (`false`). Stored only together with `meta_referrer`. |
 | `clipboard_url` | string, up to 2048 | An AdTo link found on the pasteboard. Only links of this account on this deployment are read: `https://<username>.<root>/<slug>`, `/r/<username>/<slug>` on the root domain or the public base host, a custom-scheme URL carrying `dtg_l=<username>/<slug>`, or the development form `dectog://<username>/<slug>`. A link of another account, `/r/` on any other host, or an untagged scheme URL is ignored. The slug is stored as `clipboard_slug`; the raw clipboard content is never stored. |
 | `asa_token` | string, 4096 | The Apple Search Ads attribution token from AdServices. |
@@ -258,7 +258,7 @@ Claims never run the fingerprint: a claim with no deterministic signal is `rejec
 An `asa_token` on a claim is accepted unless the row's status is already `resolved` or `no_attribution`; it sets the status back to `pending` with zero attempts and starts the round-trip, including on `unchanged` and `rejected` claims.
 
 ```bash title="A referrer that arrived on the third launch"
-dectog POST /api/v1/app-installs/3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f/claim '{
+adto POST /api/v1/app-installs/3d2b6c1e-8f0a-4b7c-9d2e-5a6b7c8d9e0f/claim '{
   "install_referrer": "dtg_click=4f1e9c2b7a3d5e6f&dtg_l=acme/spring-sale",
   "referrer_store": "google_play",
   "referrer_status": "ok",

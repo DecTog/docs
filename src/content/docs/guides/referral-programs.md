@@ -10,7 +10,7 @@ A referral program needs three things: a link that names the user who shares it,
 ## 1. Give each user their referral link
 
 ```dart
-final link = await dectog.createReferralLink(customerId: currentUser.id);
+final link = await adto.createReferralLink(customerId: currentUser.id);
 share(link.url); // e.g. https://acme.adto.app/r-3fa94c1b2e
 ```
 
@@ -48,14 +48,14 @@ An install records at most one referral. A user who identifies with the referrer
 The install result names the referrer. `install.link?.referrerCustomerId` is the customer whose referral link brought the install, and null for any other link. It arrives in `onAppInstalled` on the first launch, and `getAttributionData()` returns it on every later launch:
 
 ```dart
-final install = await dectog.getAttributionData();
+final install = await adto.getAttributionData();
 final referrer = install?.link?.referrerCustomerId; // "u_1042", or null
 if (referrer != null && !install!.isReinstall) {
   showInvitedBy(referrer); // look the name up in your own backend
 }
 ```
 
-React Native reads the same field: `(await dectog.getAttributionData())?.link?.referrerCustomerId`.
+React Native reads the same field: `(await adto.getAttributionData())?.link?.referrerCustomerId`.
 
 On a referral link the server sets it from the link, so nothing in the tapped URL can change it: a `dec_label`, a `dec_referrer` or any other parameter added to the link does not. On any other link it is the tap's `dec_referrer`, or null. It is there only when the install was credited (`matchConfidence` `guaranteed` or `high`), the same installs that can record a referral. A reinstall (`install.isReinstall`) never records one, so check it before promising a reward. `getAttributionData()` returns null while collection is off (`setEnabled(false)`).
 

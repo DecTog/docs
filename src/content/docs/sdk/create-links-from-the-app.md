@@ -5,12 +5,12 @@ sidebar:
   order: 8
 ---
 
-The SDK wraps the link endpoints of the REST API with the key you initialized it with. Reading links and temporary links works with any SDK key; creating, changing and deleting permanent links needs an SDK key created with **Allow creating and changing links (links:write)** in Settings, otherwise those calls fail with `DectogError.code == 'insufficient_scope'`. Everything here is authenticated and signed automatically; see [Links](/api/links/) for the wire format and the full validation rules.
+The SDK wraps the link endpoints of the REST API with the key you initialized it with. Reading links and temporary links works with any SDK key; creating, changing and deleting permanent links needs an SDK key created with **Allow creating and changing links (links:write)** in Settings, otherwise those calls fail with `AdtoError.code == 'insufficient_scope'`. Everything here is authenticated and signed automatically; see [Links](/api/links/) for the wire format and the full validation rules.
 
 ## Permanent links
 
 ```dart
-final link = await dectog.createLink(
+final link = await adto.createLink(
   slug: 'spring-sale',
   target: 'https://example.com/spring',   // optional: null inherits the app's fallback URL
   iosDeepLinkPath: 'products/42',
@@ -37,12 +37,12 @@ Only `slug` is required. Every other parameter is optional and omitted from the 
 | `label`, `campaign`, `adgroup`, `creative` | At most 255 characters, no control characters. Stored on every click of the link unless a `dec_*` parameter on the tapped URL overrides it. |
 | `metadata` | Any JSON map. It comes back as `customParameters` on attributed installs. |
 
-The call returns the created `DectogLink` (HTTP 201). Its `url` is the link to share, `clickCount` starts at 0.
+The call returns the created `AdtoLink` (HTTP 201). Its `url` is the link to share, `clickCount` starts at 0.
 
 ### Update
 
 ```dart
-await dectog.updateLink('spring-sale', campaign: 'summer', ogTitle: '');
+await adto.updateLink('spring-sale', campaign: 'summer', ogTitle: '');
 ```
 
 A `null` argument keeps the stored value; `''` clears a field (for `target`, clearing means "inherit the app's fallback URL"). `updateLink` takes every `createLink` parameter except `slug` and `appId`. `metadata` is sent only when you pass a map; to replace it pass the full map, there is no way to clear it to `null` from the SDK.
@@ -50,18 +50,18 @@ A `null` argument keeps the stored value; `''` clears a field (for `target`, cle
 ### Read and delete
 
 ```dart
-final page = await dectog.getLinks(limit: 50); // newest first
-final next = page.hasMore ? await dectog.getLinks(cursor: page.nextCursor) : null;
-final one = await dectog.getLink('spring-sale');
-await dectog.deleteLink('spring-sale');
+final page = await adto.getLinks(limit: 50); // newest first
+final next = page.hasMore ? await adto.getLinks(cursor: page.nextCursor) : null;
+final one = await adto.getLink('spring-sale');
+await adto.deleteLink('spring-sale');
 ```
 
-`deleteLink` stops the link and hides it: it answers 404 and leaves the lists, while its clicks and the installs, events and app opens attributed to it stay, and the dashboard can restore it. `deleteLink(slug, permanently: true)` also deletes that history, so the dashboard totals drop with it; that cannot be undone. An unknown or deleted slug answers 404 (`Link not found`) for `getLink`, `updateLink` and `deleteLink`. Pausing, expiring and archiving are done from the dashboard, the REST API or the MCP server; `DectogLink` reports them in `disabledAt`, `expiresAt`, `expiredUrl` and `archivedAt`.
+`deleteLink` stops the link and hides it: it answers 404 and leaves the lists, while its clicks and the installs, events and app opens attributed to it stay, and the dashboard can restore it. `deleteLink(slug, permanently: true)` also deletes that history, so the dashboard totals drop with it; that cannot be undone. An unknown or deleted slug answers 404 (`Link not found`) for `getLink`, `updateLink` and `deleteLink`. Pausing, expiring and archiving are done from the dashboard, the REST API or the MCP server; `AdtoLink` reports them in `disabledAt`, `expiresAt`, `expiredUrl` and `archivedAt`.
 
 ## Temporary links
 
 ```dart
-final temp = await dectog.createTempLink(
+final temp = await adto.createTempLink(
   target: 'https://example.com/live/42',
   ttlSeconds: 3600,                 // default 900
   ogTitle: 'Live now',
@@ -69,37 +69,37 @@ final temp = await dectog.createTempLink(
 print(temp.url);
 print(temp.expiresAt);
 
-await dectog.updateTempLink(temp.slug, ogTitle: 'Replay available');
-final again = await dectog.getTempLink(temp.slug);
-await dectog.deleteTempLink(temp.slug);
+await adto.updateTempLink(temp.slug, ogTitle: 'Replay available');
+final again = await adto.getTempLink(temp.slug);
+await adto.deleteTempLink(temp.slug);
 ```
 
 - `ttlSeconds` is clamped to 60 seconds to 30 days; `0` becomes 900. The SDK always sends an integer.
 - `slug` is optional. Without one the server generates `t_` followed by 10 hex characters. A given slug follows the permanent-link rules and shares the same namespace.
 - Temporary links take `target`, `ogTitle`, `ogDescription` and `ogImageUrl` only. They use the default app's routing and fallback, have no deep-link paths and no click counter.
-- After `expiresAt` a tap shows the 410 "Link expired" page (or goes to the link's expired URL), and `resolveLink` throws `DectogError` with code `link_expired`. A daily job deletes links expired for more than 24 hours that have no expired URL; their clicks are kept and the slug becomes free again, after which the link answers 404.
+- After `expiresAt` a tap shows the 410 "Link expired" page (or goes to the link's expired URL), and `resolveLink` throws `AdtoError` with code `link_expired`. A daily job deletes links expired for more than 24 hours that have no expired URL; their clicks are kept and the slug becomes free again, after which the link answers 404.
 
-`DectogTempLink` has `isExpired` and `timeUntilExpiration` getters computed on the device clock. See [Temporary links](/links/temporary-links/) for the dashboard side.
+`AdtoTempLink` has `isExpired` and `timeUntilExpiration` getters computed on the device clock. See [Temporary links](/links/temporary-links/) for the dashboard side.
 
 ## Resolve any link
 
 ```dart
-final res = await dectog.resolveLink('acme', 'spring-sale');
+final res = await adto.resolveLink('acme', 'spring-sale');
 print(res.type);         // 'permanent' or 'temporary'
 print(res.target);       // null when the link inherits the app's fallback URL
 print(res.deepLinkPath); // the in-app route for this platform, else the other's
 ```
 
-`resolveLink` calls the public `GET /api/v1/resolve/{username}/{slug}` endpoint without authentication, so it works for any account's links. The SDK uses it for every link open. Unknown links answer 404 (`Link not found`). The result is a `DectogLinkResolution`; `toDectogLink()` and `toDectogTempLink()` convert it when the type matches.
+`resolveLink` calls the public `GET /api/v1/resolve/{username}/{slug}` endpoint without authentication, so it works for any account's links. The SDK uses it for every link open. Unknown links answer 404 (`Link not found`). The result is a `AdtoLinkResolution`; `toAdtoLink()` and `toAdtoTempLink()` convert it when the type matches.
 
 ## Errors
 
-Every method throws a `DectogError`:
+Every method throws a `AdtoError`:
 
 ```dart
 try {
-  await dectog.createLink(slug: 'spring-sale', target: 'https://example.com');
-} on DectogError catch (e) {
+  await adto.createLink(slug: 'spring-sale', target: 'https://example.com');
+} on AdtoError catch (e) {
   switch (e.code) {
     case 'conflict':
       // Slug already exists; e.details?['slug'] names it.
@@ -126,7 +126,7 @@ try {
 | 409 | `Slug already exists` | The slug is taken by a permanent or temporary link; `details` carries `slug` |
 | 429 | | Rate limited; `details['retry_after_ms']` carries the `Retry-After` value |
 
-For API errors `e.type` is `DectogErrorType.api`, `e.statusCode` is the HTTP status, `e.code` the server's error code, `e.requestId` the request id, and `e.details` every field of the server's `error` object. Network failures and timeouts (30 seconds per request) throw `DectogErrorType.network` with no status code. Calling any of these methods before `initialize` throws `DectogErrorType.configuration`.
+For API errors `e.type` is `AdtoErrorType.api`, `e.statusCode` is the HTTP status, `e.code` the server's error code, `e.requestId` the request id, and `e.details` every field of the server's `error` object. Network failures and timeouts (30 seconds per request) throw `AdtoErrorType.network` with no status code. Calling any of these methods before `initialize` throws `AdtoErrorType.configuration`.
 
 :::note[Invalid social fields]
 `createLink`, `createTempLink`, `updateLink` and `updateTempLink` answer 400 for an `ogTitle` or `ogDescription` over 150 characters or a non-`http(s)` `ogImageUrl`.

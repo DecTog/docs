@@ -73,7 +73,7 @@ The cutoff is now minus 400 days. An account with a shorter window of its own (S
 
 First, for every account whose rollups are built through the cutoff's day, the clicks, installs, events and app opens older than the cutoff are deleted, except events with a `transaction_id` (purchases, renewals, refunds), which stay and are nulled as below, so a restored purchase still counts once and a refund finds its purchase. `frozen_through` becomes the cutoff's day: those days' totals now live only in `link_daily` and are never rebuilt (a later change of account currency converts them with each day's exchange rates instead). This is what keeps storage at about the retention window's worth of rows.
 
-Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. Each account's pass is on its own: one that fails is logged (`[dectog] retention: sweep failed`) and runs again the next day, and the others, and the purges in the table, still run. The sweep also runs when the day's rollup build failed, since it deletes only the days the rollups hold. Rows of accounts whose rollups are not that far yet are kept for aggregate analytics with their personal columns set to `NULL`, as below.
+Then `anonymiseExpiredDeviceData` runs one `db.batch`, so every statement commits or none does. Each account's pass is on its own: one that fails is logged (`[adto] retention: sweep failed`) and runs again the next day, and the others, and the purges in the table, still run. The sweep also runs when the day's rollup build failed, since it deletes only the days the rollups hold. Rows of accounts whose rollups are not that far yet are kept for aggregate analytics with their personal columns set to `NULL`, as below.
 
 ### What is deleted, nulled and kept
 

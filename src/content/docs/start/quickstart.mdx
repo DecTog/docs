@@ -79,42 +79,39 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
 
 4. ## Add the SDK
 
-   The SDK is `flutter_dectog` 1.0.x. It needs Flutter 3.29 or newer (Dart 3.7), iOS 15 and Android 7 (API 24).
+   The SDK is `flutter_adto` 1.0.x. It needs Flutter 3.29 or newer (Dart 3.7), iOS 15 and Android 7 (API 24).
 
    ```bash
-   flutter pub add flutter_dectog
+   flutter pub add flutter_adto
    ```
 
    Initialize it once at startup with your SDK key, then listen to links and to the install verdict:
 
    ```dart title="lib/main.dart"
-   import 'package:flutter_dectog/flutter_dectog.dart';
+   import 'package:flutter_adto/flutter_adto.dart';
 
-   final dectog = FlutterDectog();
+   final adto = FlutterAdto();
 
-   Future<void> initDectog() async {
-     await dectog.initialize(DectogConfig(
+   Future<void> initAdto() async {
+     await adto.initialize(AdtoConfig(
        apiKey: 'dtg_pub_your_sdk_key', // Dashboard > Settings > SDK keys
-       // The SDK's defaults are the old DecTog service: name AdTo's hosts
-       baseUrl: 'https://app.adto.app',
-       linkRootDomain: 'adto.app',
      ));
 
      // A link opened the running app (Universal Link, App Link or your scheme).
-     dectog.onLinkClick.listen((click) {
+     adto.onLinkClick.listen((click) {
        final route = click.clickParams?.deepLink; // dec_deeplink on the URL, if any
        final target = click.targetUrl;            // the link's fallback URL
        print('${click.username}/${click.slug} route=$route target=$target');
      });
 
      // The link that launched the app. Delivered once per process.
-     final initial = await dectog.getInitialLink();
+     final initial = await adto.getInitialLink();
      if (initial != null) {
        print('Launched by ${initial.originalUrl}');
      }
 
      // The install verdict: on first launch, and again when a late signal upgrades it.
-     dectog.onAppInstalled.listen((install) {
+     adto.onAppInstalled.listen((install) {
        final route = install.routing?.deepLink ?? install.deepLink;
        if (route != null) {
          // Medium confidence or better: route the new user to the content they tapped.
@@ -144,7 +141,7 @@ This page uses the hosted service: the dashboard and API live at `https://app.ad
 
    Click **Create link**. The list now shows `/welcome`; the copy icon next to it copies `https://acme.adto.app/welcome`. **Advanced options** on the same form hold the per-platform deep-link paths, the Tracking defaults and the custom mobile and desktop destinations, all described in [How a tap is routed](/links/how-a-tap-is-routed/).
 
-   You can also create links from code: `dectog.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your account key and the request signature described in [REST API overview](/api/overview/).
+   You can also create links from code: `adto.createLink(slug: 'welcome', target: 'https://example.com/welcome')` in the SDK, or `POST /api/v1/links` with your account key and the request signature described in [REST API overview](/api/overview/).
 
 6. ## Test an install
 

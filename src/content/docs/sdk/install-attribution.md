@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-On the first launch after installation the SDK registers the install with `POST /api/v1/app-installs`, and the server answers with a verdict: did an AdTo link bring this install, and if so, which one. The verdict is a `DectogAppInstallResponse`, delivered on `onAppInstalled` and kept in `currentAppInstall`.
+On the first launch after installation the SDK registers the install with `POST /api/v1/app-installs`, and the server answers with a verdict: did an AdTo link bring this install, and if so, which one. The verdict is a `AdtoAppInstallResponse`, delivered on `onAppInstalled` and kept in `currentAppInstall`.
 
 The server-side rules (the deterministic ladder, the fingerprint, fraud rules) are described on [How attribution works](/start/how-attribution-works/) and [Clicks and installs](/api/clicks-and-installs/). This page covers the SDK's side.
 
@@ -24,7 +24,7 @@ Later launches never register again. They may send late claims, and they do not 
 ## Reading the verdict
 
 ```dart
-dectog.onAppInstalled.listen((install) {
+adto.onAppInstalled.listen((install) {
   final route = install.routing?.deepLink ?? install.deepLink;
   if (route != null) _openRoute(route);           // medium confidence or better
   if (install.matched) _creditInstall(install);   // high or guaranteed only
@@ -69,7 +69,7 @@ A late claim is `POST /api/v1/app-installs/{installId}/claim` with a determinist
 |---|---|
 | `late_referrer` | The Android referrer was not definitive at registration time and became available later, in the same process (the native reader was still retrying) or on one of the next five launches. Also used for an Apple Search Ads token obtained on a later launch. |
 | `clipboard` | The iOS pasteboard alert was answered after the registration request had already left. |
-| `paste_control` | The user tapped a `DectogPasteButton` and the pasteboard held an AdTo link. |
+| `paste_control` | The user tapped a `AdtoPasteButton` and the pasteboard held an AdTo link. |
 
 Outcomes, as `claim` and `claimReason` on the returned verdict:
 
@@ -103,8 +103,8 @@ The SDK also sends `first_install_ts`: the package's `firstInstallTime` on Andro
 
 The install sentinel is the file `.dectog_install.json` (format version 2) in the SDK's private storage directory:
 
-- Android: `Context.getNoBackupFilesDir()/dectog/`, excluded from key/value backup and Auto Backup by the platform.
-- iOS: the Application Support directory, subfolder `dectog`, with `NSURLIsExcludedFromBackupKey` set on the folder.
+- Android: `Context.getNoBackupFilesDir()/adto/`, excluded from key/value backup and Auto Backup by the platform.
+- iOS: the Application Support directory, subfolder `adto`, with `NSURLIsExcludedFromBackupKey` set on the folder.
 
 A restored backup therefore never carries a `tracked` sentinel onto a fresh install, which would suppress the registration for good. As a second line of defense the file stores the package first-install time it was written with; a mismatch means the file came from a previous installation and it is discarded.
 

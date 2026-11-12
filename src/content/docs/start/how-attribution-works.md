@@ -25,8 +25,8 @@ If the app is already installed and the OS opens it directly, there is no instal
 On the first launch the SDK registers the install once (an idempotent `install_attempt_id` makes retries safe) with every deterministic signal it can read:
 
 - the Google Play install referrer, or the Huawei, Samsung, Xiaomi or vivo one, waiting at most 5 seconds (`installReferrerTimeout`);
-- the pasteboard, on iOS by default (`DectogCollection.pasteboard`), only when it holds a URL and only if that URL is an AdTo link for this deployment;
-- Meta's on-device install referrer on Android, when the app has a Facebook App ID (`DectogConfig.fbAppId`, else the one saved on the Apps page);
+- the pasteboard, on iOS by default (`AdtoCollection.pasteboard`), only when it holds a URL and only if that URL is an AdTo link for this deployment;
+- Meta's on-device install referrer on Android, when the app has a Facebook App ID (`AdtoConfig.fbAppId`, else the one saved on the Apps page);
 - the device tier (model, OS, language, screen, text size and Increase Contrast (iOS only), dark mode, Reduce Motion, connectivity, carrier), on by default, which the fingerprint needs;
 - the Apple Search Ads token when `collect` names `appleSearchAdsToken`.
 
@@ -100,7 +100,7 @@ The device id survives a reinstall by default (`ANDROID_ID` on Android, the firs
 The verdict can change once, from organic or fingerprint to deterministic:
 
 - The SDK re-reads a non-definitive Play referrer on up to five later launches and sends it as a claim when it arrives.
-- A link pasted through `DectogPasteButton` (iOS 16 and later, no system alert) is sent as a claim.
+- A link pasted through `AdtoPasteButton` (iOS 16 and later, no system alert) is sent as a claim.
 - A late Meta read is sent as a claim.
 
 Claims never run the fingerprint and never downgrade: a deterministic verdict is final, including one whose credit a blocked fraud rule withheld. A fingerprint match whose credit was withheld can still be upgraded. The response carries `claim: upgraded | unchanged | rejected` with a `claim_reason` (`click_reuse`, `click_not_found`, `no_signal`, `already_deterministic`, `stale_click`), and the SDK re-emits an upgraded verdict on `onAppInstalled`.

@@ -31,7 +31,7 @@ Where the route is used:
 - the interstitial's **Open app** button and the tap-to-store page's **Open in app** button (`myapp://products/42?color=black&dtg_click=<id>`);
 - the QR page's "Open in app" buttons (without `dtg_click`).
 
-The value is stored on the click as `link_params.deep_link` and returned to the app after an attributed install as `deep_link` (`DectogAppInstallResponse.deepLink`, also on `routing.deepLink` for medium-confidence routing). On a warm open the SDK exposes it as `DectogLinkClick.clickParams.deepLink`. Without a path, scheme links take the form `myapp://acme/welcome`.
+The value is stored on the click as `link_params.deep_link` and returned to the app after an attributed install as `deep_link` (`AdtoAppInstallResponse.deepLink`, also on `routing.deepLink` for medium-confidence routing). On a warm open the SDK exposes it as `AdtoLinkClick.clickParams.deepLink`. Without a path, scheme links take the form `myapp://acme/welcome`.
 
 ## Redirect and fallback parameters
 
@@ -69,7 +69,7 @@ Five free-form values are stored on the click and handed back to the app after a
 | `dec_creative` | The link's **Creative** |
 | `dec_tracker` | Nothing; it has no link-level default |
 
-Each value is trimmed; an empty value or one with control characters is dropped; longer values are truncated to 255 characters. The link's defaults are the Tracking fields of a permanent link (temporary links have none). The six stored values (`deep_link` plus the five above) live in the click's `link_params` and come back as `click_params` on the verdict and on the webhook, and as `DectogClickParams` in the SDK, with `deepLink`, `label`, `campaign`, `adgroup`, `creative` and `tracker`.
+Each value is trimmed; an empty value or one with control characters is dropped; longer values are truncated to 255 characters. The link's defaults are the Tracking fields of a permanent link (temporary links have none). The six stored values (`deep_link` plus the five above) live in the click's `link_params` and come back as `click_params` on the verdict and on the webhook, and as `AdtoClickParams` in the SDK, with `deepLink`, `label`, `campaign`, `adgroup`, `creative` and `tracker`.
 
 ## `dec_referrer`: who shared the link
 
@@ -100,7 +100,7 @@ So `https://shop.example.com/sale` behind a link with `utm_source=newsletter` op
 
 ## Your own parameters
 
-Keys without the `dec_` or `utm_` prefix are not read. A browser tap stores only its `dec_*` and `utm_*` values, so after a deferred install those are all that come back on the verdict: `?productId=42` on a shared link does not survive the trip through the store. On a warm open the SDK gives the app the whole opened URL, so `click.queryParameters['productId']` (`DectogLinkClickX`) works there, but only there, and the SDK reports none of those keys to the server.
+Keys without the `dec_` or `utm_` prefix are not read. A browser tap stores only its `dec_*` and `utm_*` values, so after a deferred install those are all that come back on the verdict: `?productId=42` on a shared link does not survive the trip through the store. On a warm open the SDK gives the app the whole opened URL, so `click.queryParameters['productId']` (`AdtoLinkClickX`) works there, but only there, and the SDK reports none of those keys to the server.
 
 To send a route that works on both paths, put it in `dec_deeplink`: `?dec_deeplink=products/42`. The prefix also keeps AdTo's keys apart from your website's own parameters. The reasons are in [Design decisions](/start/design-decisions/).
 

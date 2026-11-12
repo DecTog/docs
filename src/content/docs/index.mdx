@@ -43,7 +43,7 @@ import StepCards from '../../components/home/StepCards.astro';
 <StepCard title="Install the SDK" href="/sdk/installation/" link="Installation">
 
 ```bash
-flutter pub add flutter_dectog
+flutter pub add flutter_adto
 ```
 
 </StepCard>
@@ -55,12 +55,10 @@ flutter pub add flutter_dectog
 >
 
 ```dart
-final dectog = FlutterDectog();
+final adto = FlutterAdto();
 
-await dectog.initialize(DectogConfig(
+await adto.initialize(AdtoConfig(
   apiKey: 'dtg_pub_your_sdk_key',
-  baseUrl: 'https://app.adto.app',
-  linkRootDomain: 'adto.app',
 ));
 ```
 

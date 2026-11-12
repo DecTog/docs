@@ -160,7 +160,7 @@ How AdTo uses it:
 - On Android the scheme, together with the package, enables the `intent://` bounce described above.
 
 <Aside type="note" title="Scheme URLs and the SDK's parser">
-The SDK reads the link from `dtg_l`, never from the URL's shape, so `myapp://products/42?…&dtg_l=acme/launch` reports `acme` / `launch` and your app routes on the path from `DectogLinkClick.originalUrl`. A scheme URL without `dtg_l`, such as your app's own `myapp://products/42` from elsewhere, is not an AdTo link: it is emitted with an error and nothing is logged. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
+The SDK reads the link from `dtg_l`, never from the URL's shape, so `myapp://products/42?…&dtg_l=acme/launch` reports `acme` / `launch` and your app routes on the path from `AdtoLinkClick.originalUrl`. A scheme URL without `dtg_l`, such as your app's own `myapp://products/42` from elsewhere, is not an AdTo link: it is emitted with an error and nothing is logged. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 </Aside>
 
 ## Verify from the dashboard

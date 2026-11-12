@@ -12,7 +12,7 @@ Post-install events let the dashboard show leads and revenue per link. The SDK q
 Bind your own user id to this device's install, with optional contact fields:
 
 ```dart
-await dectog.identify(
+await adto.identify(
   customerId: user.id,
   name: user.name,     // optional
   email: user.email,   // optional
@@ -32,13 +32,13 @@ There is no lead call. The server records a `lead` event named `signup` automati
 ## Conversions
 
 ```dart
-await dectog.trackConversion(
+await adto.trackConversion(
   revenue: 9.99,
   currency: 'USD',
   productId: 'pro-monthly',
   transactionId: purchase.transactionId,
-  store: DectogStore.appStore,
-  purchaseType: DectogPurchaseType.subscription,
+  store: AdtoStore.appStore,
+  purchaseType: AdtoPurchaseType.subscription,
 );
 ```
 
@@ -47,7 +47,7 @@ await dectog.trackConversion(
 ## Custom events
 
 ```dart
-await dectog.trackEvent('level_up', data: {'level': 3});
+await adto.trackEvent('level_up', data: {'level': 3});
 ```
 
 `eventName` is required; `data` becomes the event's metadata.
@@ -55,7 +55,7 @@ await dectog.trackEvent('level_up', data: {'level': 3});
 ## Screen views
 
 ```dart
-await dectog.trackScreenView('product', params: {'id': 42});
+await adto.trackScreenView('product', params: {'id': 42});
 ```
 
 A screen view is an event of type `screen_view`, named by the screen. It counts in no event total: not in Leads, Revenue, the re-open counts or a customer's events. It feeds the links page's **Screens after open**, which lists the screens people reached in the 30 minutes after a link opened the app (see [Links](/dashboard/links/#screens-after-open)), and the **Screens** of a customer and of an install: their app sessions with the screens shown in each, in order (see [Customers](/dashboard/customers/#screens)). Sessions come from the SDK's session id, so screens sent before `identify` show on the customer too. The name is trimmed and cut to 200 characters, and an empty name sends nothing. `params` keeps strings (cut to 256 characters), finite numbers and booleans and drops the rest; the SDK adds the previous screen it reported as `previous_screen`.
@@ -64,10 +64,10 @@ To report every page route instead, add the observer to the navigator:
 
 ```dart
 MaterialApp(
-  navigatorObservers: [DectogNavigatorObserver()],
+  navigatorObservers: [AdtoNavigatorObserver()],
   // …
 );
-// go_router: GoRouter(observers: [DectogNavigatorObserver()], …)
+// go_router: GoRouter(observers: [AdtoNavigatorObserver()], …)
 ```
 
 It reports each page route the navigator shows, after a push, a replace or a pop, by `RouteSettings.name` (or `nameOf: (route) => …`); routes without a name, dialogs and sheets are skipped. A screen is reported once it has been on top for 350 ms (`debounce`), so a burst of transitions sends only the screen that settles, and the same screen twice in a row is sent once. Only the name goes unless `captureParams: {'id'}` allows route arguments, when `settings.arguments` is a map. Keep personal data out of screen names and parameters: they are stored like any event's metadata.
@@ -88,8 +88,8 @@ Events are appended to `.dectog_event_queue.jsonl` in the SDK's backup-excluded 
 | Time to live | 7 days: an event still undelivered after that is dropped unsent |
 
 ```dart
-await dectog.flush();   // send what is queued now
-await dectog.logout();  // flush, then forget the customer id
+await adto.flush();   // send what is queued now
+await adto.logout();  // flush, then forget the customer id
 ```
 
 Events queued by a previous launch are sent shortly after `initialize()`. `dispose()` makes a final flush attempt and keeps whatever did not go out for the next launch.
@@ -122,15 +122,15 @@ When an AdTo link opens the already-installed app, the SDK remembers it (`slug`,
 ## Turning collection off
 
 ```dart
-await dectog.setEnabled(false);
+await adto.setEnabled(false);
 ```
 
-Stops the sender and every other report: clicks, app opens, install registration and the device ping. Events tracked from then on are held in the on-disk queue with the ones already there, and go out after `setEnabled(true)`, unless they are older than 7 days by then. It is persisted; `isEnabled()` reads the flag. To start with collection off until the user agrees, pass `DectogConfig(enabled: false)`. See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
+Stops the sender and every other report: clicks, app opens, install registration and the device ping. Events tracked from then on are held in the on-disk queue with the ones already there, and go out after `setEnabled(true)`, unless they are older than 7 days by then. It is persisted; `isEnabled()` reads the flag. To start with collection off until the user agrees, pass `AdtoConfig(enabled: false)`. See [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent).
 
 ## Attribution re-pull
 
 ```dart
-final verdict = await dectog.getAttributionData();
+final verdict = await adto.getAttributionData();
 ```
 
 Returns the cached first-launch verdict, or re-pulls `GET /api/v1/attribution` by device id (device tier on) or by the persisted install id. An organic install comes back with `matched: false`; `null` means the server knows no install for this device. Re-pulled verdicts carry `lastOpen`, the latest link that opened the installed app, with `username`, `slug`, `clickId` and `openedAt`.

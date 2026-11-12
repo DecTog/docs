@@ -58,7 +58,7 @@ Testing on an emulator or a debug build? **Emulator** flags every simulator inst
 ### iOS specifics
 
 - The pasteboard read is on by default. It only attributes when the link was on the pasteboard: turn on iOS tap-to-store (Apps, Advanced) so the "Get the app" button copies the link before opening the App Store. See [Deterministic attribution](/sdk/deterministic-attribution/).
-- On iOS 16 and later the read shows the system "Allow paste from …?" alert when the pasteboard holds a URL. A user who declines leaves the install on the fingerprint. `willShowPasteboardPrompt()` tells you in advance; `DectogPasteButton` lets the user paste later and sends a late claim.
+- On iOS 16 and later the read shows the system "Allow paste from …?" alert when the pasteboard holds a URL. A user who declines leaves the install on the fingerprint. `willShowPasteboardPrompt()` tells you in advance; `AdtoPasteButton` lets the user paste later and sends a late claim.
 - Simulators cannot install from the App Store and do not open Universal Links. Test on a device.
 
 ### Check the SDK side
@@ -68,7 +68,7 @@ Testing on an emulator or a debug build? **Emulator** flags every simulator inst
 
 ## Check the app against the dashboard
 
-Call `FlutterDectog().diagnostics()` from a debug build. It reads the app's record from the server and reports a bundle ID or package that differs, an iOS URL scheme missing from `Info.plist`, and on Android 12 and newer each link host the system has not verified for App Links (`none` means verification failed or never ran). With `enableDebugLogging` the warnings are also printed.
+Call `FlutterAdto().diagnostics()` from a debug build. It reads the app's record from the server and reports a bundle ID or package that differs, an iOS URL scheme missing from `Info.plist`, and on Android 12 and newer each link host the system has not verified for App Links (`none` means verification failed or never ran). With `enableDebugLogging` the warnings are also printed.
 
 ## App Links do not verify (Android)
 
@@ -99,7 +99,7 @@ Until verification succeeds, taps from a Chrome-engine browser (user agent conta
 - The domain is not verified for the installed build: see the two sections above.
 - The tap came from an in-app browser. Android in-app browsers and WebViews get a plain 302 to the store, never the intent bounce. On iOS the tap-to-store page leads with "Open in app" inside Facebook, Instagram, Messenger, LINE, WeChat, Snapchat, TikTok and X when the app has an iOS scheme; otherwise the visitor gets the store.
 - The visitor is on a desktop user agent. Desktop never redirects to the target; it gets the QR page or a fallback URL. An iPad asks for desktop sites with a Mac user agent; its Safari tap counts as iOS only when the link's app is set up for iOS (a bundle ID, App Store URL or iOS scheme). See [How a tap is routed](/links/how-a-tap-is-routed/).
-- The SDK reports `Invalid AdTo URL format`: the tapped host does not match `baseUrl` and `linkRootDomain`. For AdTo set `baseUrl: 'https://app.adto.app'` and `linkRootDomain: 'adto.app'`: the released SDKs default to the old DecTog service.
+- The SDK reports `Invalid AdTo URL format`: the tapped host does not match `baseUrl` and `linkRootDomain`. For AdTo leave both unset: the SDKs default to `https://app.adto.app` and `adto.app`.
 - The app has no store URL: a phone without the app goes to the app's fallback URL, then the link target, then the QR page. Add the store URLs on the Apps page.
 
 ## 429 Too Many Requests

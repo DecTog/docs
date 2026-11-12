@@ -11,7 +11,7 @@ AdTo is small. Everything in the dashboard, the API and the SDK maps onto the ha
 
 An account is one tenant, one username and one link subdomain. The username is the first label of every link URL (`https://acme.adto.app/welcome` belongs to the account `acme`) and the value the SDK and the verdict call `username`. It cannot be renamed, and an account cannot be deleted from the dashboard.
 
-Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. A third kind, the site key (`dtg_site_` and 32 hex characters), sits in your web pages for [`dectog.js`](/sdk/web/) and works only from the origins it lists. All three kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
+Each account has an account key (`dtg_` and 32 hex characters) for servers and scripts, with every scope, and one or more SDK keys (`dtg_pub_` and 32 hex characters) for the apps it ships, which cannot change or delete links unless created with the links:write option. A client authenticates with a key as a Bearer token and signs every request with it. A third kind, the site key (`dtg_site_` and 32 hex characters), sits in your web pages for [`adto.js`](/sdk/web/) and works only from the origins it lists. All three kinds are managed under **Settings**. See [Authentication](/api/overview/#authentication).
 
 Everything an account stores is scoped to it. There is no cross-account view. Several people can work in one account, each with a team role: owner, member or viewer. Beyond the account, the only privilege is the platform owner role, held by the deployment's bootstrap account, which unlocks the Blog and Messages screens. See [Account and sign-in](/dashboard/account-and-sign-in/).
 
@@ -69,7 +69,7 @@ Bots and link unfurlers get a preview page and no click. Each click has a 16-cha
 
 ## Installs, verdicts and claims
 
-An install is the first launch of the app on a device, registered once by the SDK with an idempotent `install_attempt_id`. The server answers with a verdict, the same object the SDK exposes as `DectogAppInstallResponse` and the dashboard as an install:
+An install is the first launch of the app on a device, registered once by the SDK with an idempotent `install_attempt_id`. The server answers with a verdict, the same object the SDK exposes as `AdtoAppInstallResponse` and the dashboard as an install:
 
 | Field | Meaning |
 |---|---|
@@ -84,7 +84,7 @@ An install is the first launch of the app on a device, registered once by the SD
 | `fraud_flags` | [Fraud rule](/start/fraud-rules/) hits such as `emulator` or `click_reuse`. |
 | `apple_search_ads` | Always present; `null` until the SDK ever sent an AdServices token. |
 
-A claim is a deterministic signal that arrives after the first launch: a Play referrer the store delivered late, a link pasted through `DectogPasteButton`, a late Meta read. The SDK sends it to `POST /api/v1/app-installs/{id}/claim`; the verdict changes at most once, from organic or fingerprint to deterministic, and the SDK re-emits it with `claim: 'upgraded'`. [How attribution works](/start/how-attribution-works/) explains the signals and the confidence levels.
+A claim is a deterministic signal that arrives after the first launch: a Play referrer the store delivered late, a link pasted through `AdtoPasteButton`, a late Meta read. The SDK sends it to `POST /api/v1/app-installs/{id}/claim`; the verdict changes at most once, from organic or fingerprint to deterministic, and the SDK re-emits it with `claim: 'upgraded'`. [How attribution works](/start/how-attribution-works/) explains the signals and the confidence levels.
 
 ## Events, customers and app opens
 
@@ -106,7 +106,7 @@ An account can have any number of webhooks, each taking one app's events or ever
 
 | Object | Dashboard | API | SDK |
 |---|---|---|---|
-| Account, keys, link configuration | Settings | `/api/admin/settings`, `/api/admin/keys` (cookie session) | `DectogConfig(apiKey:)` takes an SDK key |
+| Account, keys, link configuration | Settings | `/api/admin/settings`, `/api/admin/keys` (cookie session) | `AdtoConfig(apiKey:)` takes an SDK key |
 | Apps | Apps | `/api/admin/apps` | |
 | Links, temporary links | Links | `/api/v1/links`, `/api/v1/temp-links`, `/api/v1/resolve/{username}/{slug}` | `createLink`, `createTempLink`, `resolveLink` |
 | Clicks | Overview, per-link numbers | `/api/v1/clicks` | Automatic |

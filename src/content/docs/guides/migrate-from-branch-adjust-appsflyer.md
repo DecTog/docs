@@ -10,21 +10,21 @@ This guide is for teams moving deep links and install attribution from Branch, A
 
 ## The verdict in their terms
 
-Every install report returns one `DectogAppInstallResponse`. This table places the vocabulary of the three products on its fields.
+Every install report returns one `AdtoAppInstallResponse`. This table places the vocabulary of the three products on its fields.
 
 | Concept | AdTo |
 |---|---|
 | The install came from a link (Branch `+clicked_branch_link`, AppsFlyer `af_status: Non-organic`, Adjust attribution with a tracker) | `matched: true`, `type: 'non-organic'`. `matched` is attribution credit. It is granted only at `matchConfidence` `guaranteed` or `high`. |
 | Deterministic match (Branch `+match_guaranteed`) | `matchConfidence: 'guaranteed'`, `matchSource` `referrer` or `clipboard`, and `referrerSource` naming the store: `google_play`, `huawei`, `samsung`, `xiaomi`, `vivo` or `meta`. |
 | Probabilistic match (AppsFlyer "probabilistic modeling", Branch "fingerprint") | `matchSource: 'fingerprint'`. `high` is credited. `medium` is not credited but returns a `routing` candidate (`slug`, `deepLink`, `clickParams`, `confidence`). `low` returns nothing. |
-| Deferred deep link (Branch `$deeplink_path`, Adjust deferred deep link callback, AppsFlyer `deep_link_value`) | `install.deepLink` (the `dec_deeplink` of the tapped URL) or `install.routing?.deepLink`. For the link's stored path call `dectog.resolveLink(username, slug)` and read `deepLinkPath`, the running platform's. |
+| Deferred deep link (Branch `$deeplink_path`, Adjust deferred deep link callback, AppsFlyer `deep_link_value`) | `install.deepLink` (the `dec_deeplink` of the tapped URL) or `install.routing?.deepLink`. For the link's stored path call `adto.resolveLink(username, slug)` and read `deepLinkPath`, the running platform's. |
 | First session (Branch `+is_first_session`, AppsFlyer `is_first_launch`) | The `onAppInstalled` emission itself. `installState` is `install`, `reinstall` or `update`. App updates never run the fingerprint. Reinstalls run the full ladder and carry `isReinstall: true`; the dashboard leaves them out of the Installs KPI and the per-link counts. |
 | Referring link (Branch `~referring_link`) | `install.link?.url` and `install.slug` |
 | Who invited the user (AppsFlyer `af_referrer_customer_id` or `deep_link_sub2`, Adjust `clickLabel` from `adj_label`, a Branch custom key such as `referring_user_id`) | `install.link?.referrerCustomerId`, from a link made by `createReferralLink`. The server reads it from the link, so editing the tapped URL cannot change it. See [Referral programs](/guides/referral-programs/). |
 | Campaign fields (Branch `~campaign`, `~channel`, `~feature`, `~tags`; Adjust `campaign`, `adgroup`, `creative`, `label`; AppsFlyer `pid`, `c`, `af_adset`, `af_ad`, `af_channel`) | The link's Tracking fields `label`, `campaign`, `adgroup`, `creative`, overridden per tap by `dec_label`, `dec_campaign`, `dec_adgroup`, `dec_creative`, plus `dec_tracker`. Returned as `install.clickParams`. `utm_*` is stored as well and feeds the Overview charts. |
 | Custom link data (Branch link data, AppsFlyer `deep_link_sub1` to `deep_link_sub10`) | Link `metadata` (any JSON), returned as `install.customParameters` |
-| Identity (Branch `setIdentity`, AppsFlyer `setCustomerUserId`) | `dectog.identify(customerId: ..., name: ..., email: ..., phone: ...)`; `dectog.logout()` forgets it |
-| Events (Branch `BranchEvent`, Adjust event tokens, AppsFlyer `logEvent` with `af_revenue`) | `dectog.trackConversion(revenue: ..., currency: ...)` and `dectog.trackEvent(name)`. The first `identify` of a new customer on a fresh install records the signup lead. See [Events](/sdk/events/). |
+| Identity (Branch `setIdentity`, AppsFlyer `setCustomerUserId`) | `adto.identify(customerId: ..., name: ..., email: ..., phone: ...)`; `adto.logout()` forgets it |
+| Events (Branch `BranchEvent`, Adjust event tokens, AppsFlyer `logEvent` with `af_revenue`) | `adto.trackConversion(revenue: ..., currency: ...)` and `adto.trackEvent(name)`. The first `identify` of a new customer on a fresh install records the signup lead. See [Events](/sdk/events/). |
 | Attribution read-back (AppsFlyer `onConversionDataSuccess`, Adjust attribution callback) | `onAppInstalled`, `currentAppInstall`, and `getAttributionData()`, which re-pulls `GET /api/v1/attribution` after a restart |
 | Server postback (Branch webhooks, Adjust callbacks, AppsFlyer Push API) | [Webhooks](/api/webhooks/): `app.installed`, `app.install_updated`, `event.conversion`, `event.lead`, `app.opened`, `referral.converted`, link changes and, opt-in, `click.recorded`. HMAC-SHA256 signed, logged, retried for about a day. |
 | Request signing (AppsFlyer `af_sig`) | Every SDK call carries `x-dectog-timestamp` and `x-dectog-signature`. Unsigned requests get 401. |
@@ -40,7 +40,7 @@ Every install report returns one `DectogAppInstallResponse`. This table places t
 | `$ios_url`, `$android_url` | `dec_redirect_ios` and `dec_redirect_android` per tap; the link's `redirect_url` for both platforms |
 | `$og_title`, `$og_description`, `$og_image_url` | `og_title`, `og_description`, `og_image_url` on the link, with the app's values as defaults |
 | `$web_only`, `$uri_redirect_mode` | No equivalent |
-| NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`DectogCollection.pasteboard`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `DectogPasteButton` renders `UIPasteControl` for late pastes. |
+| NativeLink (`checkPasteboardOnInstall`, `willShowPasteboardToast`) | The pasteboard read is on by default on iOS (`AdtoCollection.pasteboard`). `willShowPasteboardPrompt()` works before `initialize()`. The iOS tap-to-store page is the web side that copies the link. `AdtoPasteButton` renders `UIPasteControl` for late pastes. |
 | Install referrer readers (Play, Huawei, Samsung, Xiaomi) | Built in, with retries. Play, Huawei and vivo need no extra library. Samsung and Xiaomi activate when the host app adds their libraries. See [Deterministic attribution](/sdk/deterministic-attribution/). |
 | Reinstall event | `isReinstall: true`, `installState: 'reinstall'`. A reinstall goes through the ladder and the fingerprint like a first install; the dashboard leaves it out of the Installs KPI and the per-link counts. |
 | Data Export API | The [raw export](/api/export/) of clicks, installs, opens and events, with the account key |
@@ -62,7 +62,7 @@ Adjust's tracker URL parameters keep their names in AdTo with a `dec_` prefix.
 | LinkMe | The pasteboard read plus the iOS tap-to-store page |
 | Install referrer with retries | Up to three connection attempts, 3 seconds apart, for transient Play errors. The first-launch registration waits up to `installReferrerTimeout` (default 5 seconds); a referrer that arrives later is sent as a late claim and `onAppInstalled` emits again. |
 | `retry_in` | The SDK honors `Retry-After`: up to 10 seconds in-process, longer waits defer to the next launch |
-| Apple Search Ads through AdServices | `DectogCollection.appleSearchAdsToken` in `collect` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
+| Apple Search Ads through AdServices | `AdtoCollection.appleSearchAdsToken` in `collect` (off by default). The result is on `install.appleSearchAds`, on `getAttributionData()`, on the webhook and on the Overview card. |
 | Server callbacks | Webhooks |
 | Reattribution | No equivalent for installs: a late deterministic signal can upgrade an organic or fingerprint verdict; a credited install never changes link. Events within the re-engagement window after a link opens the installed app (7 days by default, per app) count for that link; see [Events](/sdk/events/#how-events-reach-a-link). |
 | SKAdNetwork, ad-network integrations | None |
@@ -94,7 +94,7 @@ AppsFlyer separates routing (UDL) from attribution data (GCD). AdTo separates th
 
 ## Running both for a while
 
-A migration is safer when both tools see the same traffic for a few weeks. Keep the MMP's SDK in the app next to flutter_dectog, point an AdTo link's **If the app isn't installed > Custom URL** (`redirect_url`) at the MMP's tracking link, and turn on **MMP click handoff** for the app on the Apps page. A tap then goes through AdTo, which records the click, and on to the MMP's link with AdTo's click id added:
+A migration is safer when both tools see the same traffic for a few weeks. Keep the MMP's SDK in the app next to flutter_adto, point an AdTo link's **If the app isn't installed > Custom URL** (`redirect_url`) at the MMP's tracking link, and turn on **MMP click handoff** for the app on the Apps page. A tap then goes through AdTo, which records the click, and on to the MMP's link with AdTo's click id added:
 
 | Destination host | Added |
 |---|---|
@@ -116,4 +116,4 @@ A `clickid` or `pid` already in the tracking link is kept. Store URLs, scheme li
 
 ## What AdTo does not do
 
-AdTo is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_dectog_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What AdTo does not do](/start/what-adto-does-not-do/).
+AdTo is not a mobile measurement partner: no SKAdNetwork or AdAttributionKit, no ad-network integrations or postbacks, advertising identifiers only through the optional `flutter_adto_adid` package, no re-attribution windows, and SDKs for Flutter, React Native and the web. The full list, with the probabilistic-matching limits and Apple's fingerprinting rules, is on [What AdTo does not do](/start/what-adto-does-not-do/).

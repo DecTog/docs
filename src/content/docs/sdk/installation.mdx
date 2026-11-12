@@ -1,13 +1,13 @@
 ---
 title: Installation
-description: Add flutter_dectog to a Flutter app, with the requirements, the dependency ranges, iOS packaging through Swift Package Manager or CocoaPods and the Android toolchain the plugin supports.
+description: Add flutter_adto to a Flutter app, with the requirements, the dependency ranges, iOS packaging through Swift Package Manager or CocoaPods and the Android toolchain the plugin supports.
 sidebar:
   order: 1
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-`flutter_dectog` is the AdTo SDK for Flutter. It opens AdTo links in your app, registers the first launch for install attribution, sends post-install events and can create links from the app. The package is MIT licensed.
+`flutter_adto` is the AdTo SDK for Flutter. It opens AdTo links in your app, registers the first launch for install attribution, sends post-install events and can create links from the app. The package is MIT licensed.
 
 ## Requirements
 
@@ -24,14 +24,14 @@ The SDK targets iOS and Android. On other platforms it compiles and the link API
 ## Add the package
 
 ```bash
-flutter pub add flutter_dectog
+flutter pub add flutter_adto
 ```
 
 or in `pubspec.yaml`:
 
 ```yaml title="pubspec.yaml"
 dependencies:
-  flutter_dectog: ^1.0.0
+  flutter_adto: ^1.0.0
 ```
 
 ### Dependency ranges
@@ -56,21 +56,21 @@ If your app pins one of these packages outside its range, `flutter pub get` repo
 <Tabs syncKey="platform">
 <TabItem label="iOS">
 
-The iOS side of the plugin is a Swift package in `ios/flutter_dectog` (`Package.swift`, Swift tools 5.9, platform iOS 15.0, library product `flutter-dectog`). Projects that resolve Flutter plugins through Swift Package Manager need no extra steps. Projects that build with CocoaPods get the same sources through `ios/flutter_dectog.podspec` (Swift 5.0, `s.dependency 'Flutter'`).
+The iOS side of the plugin is a Swift package in `ios/flutter_adto` (`Package.swift`, Swift tools 5.9, platform iOS 15.0, library product `flutter-adto`). Projects that resolve Flutter plugins through Swift Package Manager need no extra steps. Projects that build with CocoaPods get the same sources through `ios/flutter_adto.podspec` (Swift 5.0, `s.dependency 'Flutter'`).
 
 `Package.swift` declares no dependency on the Flutter framework package. This is deliberate. The Flutter tool vends the Flutter module to plugin packages through its generated package and framework search paths, so a manifest that depended on `../FlutterFramework` would only resolve inside the tool's generated package directory. It would also break CocoaPods builds that reference the package at its real path and pin host apps to Flutter 3.44 or newer. Several widely used plugins ship the same way.
 
 What the package links and bundles:
 
-- **AdServices** is linked for the Apple Search Ads attribution token (`linkedFramework` in Swift Package Manager, `weak_frameworks` in CocoaPods). The Swift code guards it with `canImport` and `#available(iOS 14.3, *)` and returns nothing on the simulator. It is only used when `collect` names `appleSearchAdsToken`. The advertising id is a separate package, `flutter_dectog_adid`; see [Device data and privacy](/sdk/device-data-and-privacy/#the-advertising-identifier).
-- **`PrivacyInfo.xcprivacy`**, the Apple privacy manifest, is processed as a package resource (Swift Package Manager) or shipped in the `flutter_dectog_privacy` resource bundle (CocoaPods). See [Device data and privacy](/sdk/device-data-and-privacy/) for its contents.
+- **AdServices** is linked for the Apple Search Ads attribution token (`linkedFramework` in Swift Package Manager, `weak_frameworks` in CocoaPods). The Swift code guards it with `canImport` and `#available(iOS 14.3, *)` and returns nothing on the simulator. It is only used when `collect` names `appleSearchAdsToken`. The advertising id is a separate package, `flutter_adto_adid`; see [Device data and privacy](/sdk/device-data-and-privacy/#the-advertising-identifier).
+- **`PrivacyInfo.xcprivacy`**, the Apple privacy manifest, is processed as a package resource (Swift Package Manager) or shipped in the `flutter_adto_privacy` resource bundle (CocoaPods). See [Device data and privacy](/sdk/device-data-and-privacy/) for its contents.
 
 There are no `Info.plist` or `AppDelegate` changes for the SDK itself. Universal Links and custom schemes are covered in [Platform setup](/sdk/platform-setup/).
 
 </TabItem>
 <TabItem label="Android">
 
-The Android module (`android/build.gradle`, namespace `app.dectog.flutter_dectog`) builds with `minSdk 24`, `compileSdk 36` and Java 17 source and target compatibility. The plugin requests no runtime permissions.
+The Android module (`android/build.gradle`, namespace `app.adto.flutter_adto`) builds with `minSdk 24`, `compileSdk 36` and Java 17 source and target compatibility. The plugin requests no runtime permissions.
 
 **Kotlin toolchain.** The module's Kotlin sources compile on every current toolchain without configuration:
 
@@ -108,10 +108,10 @@ The bundled example app sets `android.builtInKotlin=false` in its `gradle.proper
 
 ## For AI coding agents
 
-The package ships `llms.txt` at its root: every public type and member, the link URLs the SDK recognizes, how to route an install and the init snippet, in one file. An agent working in your app finds it offline in the pub cache, in the directory `.dart_tool/package_config.json` lists for `flutter_dectog`. It is generated from the same source as the [API reference](/sdk/api-reference/).
+The package ships `llms.txt` at its root: every public type and member, the link URLs the SDK recognizes, how to route an install and the init snippet, in one file. An agent working in your app finds it offline in the pub cache, in the directory `.dart_tool/package_config.json` lists for `flutter_adto`. It is generated from the same source as the [API reference](/sdk/api-reference/).
 
 ## Next steps
 
 1. [Platform setup](/sdk/platform-setup/): Universal Links, App Links and custom schemes.
-2. [Initialize and handle links](/sdk/initialize-and-handle-links/): `DectogConfig` and the link stream.
+2. [Initialize and handle links](/sdk/initialize-and-handle-links/): `AdtoConfig` and the link stream.
 3. [Install attribution](/sdk/install-attribution/): what `onAppInstalled` delivers.

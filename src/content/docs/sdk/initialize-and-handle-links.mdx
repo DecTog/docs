@@ -1,6 +1,6 @@
 ---
 title: Initialize and handle links
-description: Configure the SDK with DectogConfig, listen to the link stream, handle the cold-start link once, and understand which URLs the SDK recognizes, filters and reports.
+description: Configure the SDK with AdtoConfig, listen to the link stream, handle the cold-start link once, and understand which URLs the SDK recognizes, filters and reports.
 sidebar:
   order: 3
 ---
@@ -9,21 +9,19 @@ import { Aside } from '@astrojs/starlight/components';
 
 ## Initialize
 
-`FlutterDectog()` returns a singleton. Call `initialize` once, early in your app, with an SDK key:
+`FlutterAdto()` returns a singleton. Call `initialize` once, early in your app, with an SDK key:
 
 ```dart
-import 'package:flutter_dectog/flutter_dectog.dart';
+import 'package:flutter_adto/flutter_adto.dart';
 
-final dectog = FlutterDectog();
+final adto = FlutterAdto();
 
-await dectog.initialize(DectogConfig(
+await adto.initialize(AdtoConfig(
   apiKey: 'dtg_pub_your_sdk_key',
-  baseUrl: 'https://app.adto.app',
-  linkRootDomain: 'adto.app',
 ));
 ```
 
-That is the whole setup: the SDK talks to `https://app.adto.app` and recognizes links on `{username}.adto.app`. Name both hosts: flutter_dectog 1.0.x defaults to the old DecTog service (`https://app.dectog.com`, links on `dectog.com`), and with `baseUrl` alone it would expect links on the API host.
+That is the whole setup: the SDK talks to `https://app.adto.app` and recognizes links on `{username}.adto.app`. Those are the defaults, so AdTo apps name neither.
 
 What `initialize` does, in order:
 
@@ -34,38 +32,38 @@ What `initialize` does, in order:
 
 Rules:
 
-- A second `initialize` throws a `DectogError` of type `configuration` ("FlutterDectog is already initialized"). Concurrent calls during the first initialization share it.
-- A failed `initialize` throws `DectogError` ("Failed to initialize: …") and leaves the SDK uninitialized, so a corrected config can be retried without a restart.
+- A second `initialize` throws a `AdtoError` of type `configuration` ("FlutterAdto is already initialized"). Concurrent calls during the first initialization share it.
+- A failed `initialize` throws `AdtoError` ("Failed to initialize: …") and leaves the SDK uninitialized, so a corrected config can be retried without a restart.
 - Every other method throws a `configuration` error until `initialize` succeeded. `willShowPasteboardPrompt()` is the exception; it works before `initialize`.
 - On the first launch, `initialize` returns only after the install registration finished: the referrer wait (up to `installReferrerTimeout`), the pasteboard read (up to 6 seconds when the user has to answer the iOS alert) and up to two install requests of 15 seconds each. Do not block your first frame on the returned future. Start it, build the UI, and react to the streams.
 
-### DectogConfig
+### AdtoConfig
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
 | `apiKey` | `String` | required | An SDK key (`dtg_pub_…`, Settings → SDK keys). Every authenticated call is signed with it. |
-| `baseUrl` | `String?` | `null` → `https://app.dectog.com`, the old DecTog service | API base URL: `https://app.adto.app` for AdTo. Trailing slashes are stripped. |
-| `linkRootDomain` | `String?` | `null` → `dectog.com` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`): `adto.app` for AdTo. |
+| `baseUrl` | `String?` | `null` → `https://app.adto.app` | API base URL. Trailing slashes are stripped. |
+| `linkRootDomain` | `String?` | `null` → `adto.app` when `baseUrl` is unset, else the host of `baseUrl` | The domain tenant links hang off (`{username}.{root}/{slug}`). |
 | `linkDomains` | `List<String>` | `[]` | Your [custom link domains](/links/custom-domains/), like `go.yourbrand.com`: `https://go.yourbrand.com/{slug}` is a link of your account. The SDK also learns the active domain from the server after its first answer; listing it covers a link that opens the app on its very first start. |
 | `enableDebugLogging` | `bool` | `false` | Prints SDK activity with `print`. |
 | `installReferrerProvider` | `Future<String?> Function()?` | `null` | Replaces the built-in Android referrer readers with your own Play referrer string. |
 | `installReferrerTimeout` | `Duration` | 5 seconds | How long the first-launch registration waits for the Android install referrer. Android only. |
-| `collect` | `Set<DectogCollection>?` | `null` → the device tier on; the pasteboard (iOS) and the OEM referrers as the dashboard sets them; no Apple Search Ads token; the advertising id when a provider is set | What this build collects: `deviceTier`, `pasteboard`, `oemReferrers`, `appleSearchAdsToken`, `adId`. A set is exact. See [Device data and privacy](/sdk/device-data-and-privacy/#choosing-what-to-collect). |
-| `advertisingIdProvider` | `Future<DectogAdvertisingId?> Function()?` | `null` | Reads the IDFA or GAID; pass `DectogAdId.provider` from `flutter_dectog_adid`. |
+| `collect` | `Set<AdtoCollection>?` | `null` → the device tier on; the pasteboard (iOS) and the OEM referrers as the dashboard sets them; no Apple Search Ads token; the advertising id when a provider is set | What this build collects: `deviceTier`, `pasteboard`, `oemReferrers`, `appleSearchAdsToken`, `adId`. A set is exact. See [Device data and privacy](/sdk/device-data-and-privacy/#choosing-what-to-collect). |
+| `advertisingIdProvider` | `Future<AdtoAdvertisingId?> Function()?` | `null` | Reads the IDFA or GAID; pass `AdtoAdId.provider` from `flutter_adto_adid`. |
 | `fbAppId` | `String?` | `null` → the Facebook App ID saved in the dashboard | Your Facebook App ID. Enables Meta's on-device install referrer on Android. |
 | `persistDeviceId` | `bool` | `true` | Keep the first iOS IDFV in the Keychain so the device id survives reinstall. |
 | `enabled` | `bool` | `true` | Whether collection is on before the app calls `setEnabled`. `false` waits for consent; see [Waiting for consent](/sdk/device-data-and-privacy/#waiting-for-consent). |
-| `environment` | `DectogEnvironment?` | `null` | A check, not a switch: the key alone decides the account, and this changes nothing at runtime. The environment this build's key should belong to, `live` or `test`; when the app calls `diagnostics()`, it warns if the key belongs to the other one. See [Testing](/sdk/testing/). |
+| `environment` | `AdtoEnvironment?` | `null` | A check, not a switch: the key alone decides the account, and this changes nothing at runtime. The environment this build's key should belong to, `live` or `test`; when the app calls `diagnostics()`, it warns if the key belongs to the other one. See [Testing](/sdk/testing/). |
 
-The config also exposes `DectogConfig.defaultBaseUrl` (`https://app.dectog.com`), `DectogConfig.defaultLinkRootDomain` (`dectog.com`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
+The config also exposes `AdtoConfig.defaultBaseUrl` (`https://app.adto.app`), `AdtoConfig.defaultLinkRootDomain` (`adto.app`), the resolved getters `effectiveBaseUrl` and `effectiveLinkRootDomain`, and `readClipboardFor(isIOS:)`. `toString()` masks the API key.
 
 The attribution options are explained on [Install attribution](/sdk/install-attribution/), [Deterministic attribution](/sdk/deterministic-attribution/) and [Device data and privacy](/sdk/device-data-and-privacy/).
 
 ### Settings from the dashboard
 
-`initialize` also reads the app's settings from the server (`GET /api/v1/sdk-config`): the Facebook App ID, the OEM store referrers switch and the pasteboard setting saved on the Apps page, the app's custom schemes and identifiers, and the hosts its links live on. They apply wherever the corresponding `DectogConfig` field is left `null`, so a change in the dashboard reaches installed apps without a release. The SDK caches the answer for an hour: a launch with a fresh cache makes no request, the very first launch waits at most 1.5 seconds before registering the install, and a stale cache is refreshed in the background.
+`initialize` also reads the app's settings from the server (`GET /api/v1/sdk-config`): the Facebook App ID, the OEM store referrers switch and the pasteboard setting saved on the Apps page, the app's custom schemes and identifiers, and the hosts its links live on. They apply wherever the corresponding `AdtoConfig` field is left `null`, so a change in the dashboard reaches installed apps without a release. The SDK caches the answer for an hour: a launch with a fresh cache makes no request, the very first launch waits at most 1.5 seconds before registering the install, and a stale cache is refreshed in the background.
 
-`FlutterDectog().diagnostics()` compares the build with that record and returns warnings, also printed with `enableDebugLogging`: a bundle ID or package that differs from the dashboard's, an iOS URL scheme missing from `CFBundleURLTypes`, and on Android 12 and newer every link host the system has not verified for App Links. It never stops the SDK; call it from a debug screen or a test build.
+`FlutterAdto().diagnostics()` compares the build with that record and returns warnings, also printed with `enableDebugLogging`: a bundle ID or package that differs from the dashboard's, an iOS URL scheme missing from `CFBundleURLTypes`, and on Android 12 and newer every link host the system has not verified for App Links. It never stops the SDK; call it from a debug screen or a test build.
 
 ## Which URLs the SDK recognizes
 
@@ -78,7 +76,7 @@ An incoming URL is an AdTo link when it matches one of these forms. `baseHost` i
 | `{baseHost}/r/{username}/{slug}` | `http://localhost:8787/r/acme/launch` | Path mode (local development, path-mode deployments). |
 | any host containing `localhost` with `?user={username}/{slug}` | `https://localhost:3000?user=acme/launch` | Development query form. |
 | any non-http(s) scheme whose query carries `dtg_l={username}/{slug}` | `myapp://products/42?dtg_click=…&dtg_l=acme/launch` | Custom-scheme opens and the Android `intent://` bounce. The host and path are the app's own route; the link comes from `dtg_l`. |
-| `dectog://{username}/{slug}` | `dectog://acme/launch` | Development only: the `dectog` scheme without a tag. |
+| `dectog://{username}/{slug}` | `dectog://acme/launch` | Development only: the `adto` scheme without a tag. |
 
 For https forms only the first path segment is read as the slug; the rest of the path, the query and the fragment are kept on `originalUrl`. URLs that match none of these forms are still emitted (see below) but carry an error.
 
@@ -86,16 +84,16 @@ For https forms only the first path segment is read as the slug; the rest of the
 
 Two entry points deliver the same objects:
 
-- `onLinkClick`, a broadcast stream of `DectogLinkClick` for links that arrive while the app runs **and** for the cold-start link.
+- `onLinkClick`, a broadcast stream of `AdtoLinkClick` for links that arrive while the app runs **and** for the cold-start link.
 - `getInitialLink()`, a future with the link that launched the app, or `null`.
 
 ```dart
-dectog.onLinkClick.listen(_handleLink);
+adto.onLinkClick.listen(_handleLink);
 
-final initial = await dectog.getInitialLink();
+final initial = await adto.getInitialLink();
 if (initial != null) _handleLink(initial);
 
-void _handleLink(DectogLinkClick click) {
+void _handleLink(AdtoLinkClick click) {
   if (click.error != null) {
     // Not an AdTo link, or the SDK was not initialized yet.
     return;
@@ -109,7 +107,7 @@ void _handleLink(DectogLinkClick click) {
 }
 ```
 
-What a `DectogLinkClick` carries:
+What a `AdtoLinkClick` carries:
 
 | Field | Set when |
 |---|---|
@@ -120,13 +118,13 @@ What a `DectogLinkClick` carries:
 | `clickParams` (getter) | The URL carries `dec_*` parameters. `deepLink` is the raw `dec_deeplink` value as it appeared in the URL. |
 | `isResolved`, `targetUrl`, `linkType` (getters) | Convenience views on `linkResolution`. |
 
-The `DectogLinkClickX` extension adds `queryParameters`, `queryParameter(key)`, `path`, `host`, `scheme` and `fragment`, all read from `originalUrl`. `DectogLinkResolution` is described on the [API reference](/sdk/api-reference/); its `target` is `null` when the link inherits the app's fallback URL.
+The `AdtoLinkClickX` extension adds `queryParameters`, `queryParameter(key)`, `path`, `host`, `scheme` and `fragment`, all read from `originalUrl`. `AdtoLinkResolution` is described on the [API reference](/sdk/api-reference/); its `target` is `null` when the link inherits the app's fallback URL.
 
 ### The cold-start link is consumed once
 
 The link that launched the app is processed and emitted **once per process**, however it is delivered:
 
-- Android delivers the launch URL on both `getInitialLink()` and the link stream; the SDK folds the two into one `DectogLinkClick` object, so `onLinkClick` emits once and `getInitialLink()` returns the same object.
+- Android delivers the launch URL on both `getInitialLink()` and the link stream; the SDK folds the two into one `AdtoLinkClick` object, so `onLinkClick` emits once and `getInitialLink()` returns the same object.
 - A later `getInitialLink()` call (from another screen, for example) returns the same click again without logging anything.
 - An identical URL delivered twice within 10 seconds while the app runs is treated as one open.
 - On Android, a task relaunched from the recents screen replays the original intent. The SDK detects `FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY`, ignores that URL, and `getInitialLink()` returns `null` for that launch.
@@ -157,13 +155,13 @@ iOS and Android never hand a Universal Link or an App Link back to the app that 
 
 ```dart
 // In your own link tap handler:
-final click = await FlutterDectog().handleUrl(url);
+final click = await FlutterAdto().handleUrl(url);
 if (click == null) {
   await launchUrl(Uri.parse(url)); // not an AdTo link: open it as usual
 }
 ```
 
-`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `DectogLinkClick`. It counts as an app open, not as a click: the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not an AdTo link (including a custom domain the SDK does not know) and for an authentication callback.
+`handleUrl` routes the URL exactly like a link that opened the app: `onLinkClick` emits it (once, with `inApp: true`, so your existing handler takes it), the 10-second deduper and the sensitive-URL filter apply, and it returns the same `AdtoLinkClick`. It counts as an app open, not as a click: the Opens count goes up, the Clicks count does not. It returns `null` for a URL that is not an AdTo link (including a custom domain the SDK does not know) and for an authentication callback.
 
 ## Complete example
 
@@ -172,30 +170,28 @@ A small service that initializes the SDK, routes opens and reacts to install att
 ```dart
 import 'dart:async';
 
-import 'package:flutter_dectog/flutter_dectog.dart';
+import 'package:flutter_adto/flutter_adto.dart';
 
-class DectogService {
-  DectogService._();
-  static final DectogService instance = DectogService._();
+class AdtoService {
+  AdtoService._();
+  static final AdtoService instance = AdtoService._();
 
-  final FlutterDectog _dectog = FlutterDectog();
-  StreamSubscription<DectogLinkClick>? _links;
-  StreamSubscription<DectogAppInstallResponse>? _installs;
+  final FlutterAdto _adto = FlutterAdto();
+  StreamSubscription<AdtoLinkClick>? _links;
+  StreamSubscription<AdtoAppInstallResponse>? _installs;
 
   Future<void> start({required String apiKey}) async {
-    _links = _dectog.onLinkClick.listen(_onLink);
-    _installs = _dectog.onAppInstalled.listen(_onInstall);
-    await _dectog.initialize(DectogConfig(
+    _links = _adto.onLinkClick.listen(_onLink);
+    _installs = _adto.onAppInstalled.listen(_onInstall);
+    await _adto.initialize(AdtoConfig(
       apiKey: apiKey,
-      baseUrl: 'https://app.adto.app',
-      linkRootDomain: 'adto.app',
       enableDebugLogging: true,
     ));
     // The cold-start link was already delivered on onLinkClick; calling
     // getInitialLink() here returns the same object and logs nothing twice.
   }
 
-  void _onLink(DectogLinkClick click) {
+  void _onLink(AdtoLinkClick click) {
     if (click.error != null) return;
     final route = click.clickParams?.deepLink ??
         click.linkResolution?.deepLinkPath ??
@@ -203,7 +199,7 @@ class DectogService {
     _openRoute(route);
   }
 
-  void _onInstall(DectogAppInstallResponse install) {
+  void _onInstall(AdtoAppInstallResponse install) {
     // Route on any candidate (medium confidence or better) ...
     final route = install.routing?.deepLink ?? install.deepLink;
     if (route != null) _openRoute(route);
@@ -224,7 +220,7 @@ class DectogService {
   Future<void> stop() async {
     await _links?.cancel();
     await _installs?.cancel();
-    await _dectog.dispose();
+    await _adto.dispose();
   }
 }
 ```

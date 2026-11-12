@@ -5,7 +5,7 @@
 // frontmatter, without the source's comment and H1, and with links to this
 // site made relative so the link validator checks them.
 //
-//   npm run sync:sdk-reference              write the pages (needs ../flutter_dectog, ../react-native-dectog)
+//   npm run sync:sdk-reference              write the pages (needs ../flutter_adto, ../react-native-adto)
 //   npm run sync:sdk-reference -- --check   exit 1 when a page is out of date
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -15,21 +15,21 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const PAGES = [
   {
-    repo: 'flutter_dectog',
+    repo: 'flutter_adto',
     page: 'sdk/api-reference.md',
     frontmatter: `---
 title: API reference
-description: Every public class, method, field, stream and enum of flutter_dectog with its type, default and HTTP endpoint.
+description: Every public class, method, field, stream and enum of flutter_adto with its type, default and HTTP endpoint.
 sidebar:
   order: 10
 ---`,
   },
   {
-    repo: 'react-native-dectog',
+    repo: 'react-native-adto',
     page: 'react-native/api-reference.md',
     frontmatter: `---
 title: API reference
-description: Every export, method, option and type of react-native-dectog, the React Native and Expo SDK.
+description: Every export, method, option and type of react-native-adto, the React Native and Expo SDK.
 sidebar:
   order: 10
 ---`,
