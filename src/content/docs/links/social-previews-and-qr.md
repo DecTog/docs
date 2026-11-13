@@ -9,9 +9,11 @@ Two kinds of visitors never go through the normal routing: link unfurlers, which
 
 ## Who gets the preview page
 
-A request is treated as a bot when it is a `HEAD` request or when its user agent matches the bot list. The list is case-insensitive: the word `bot` on its own (so a Cubot phone does not match), `crawler`, `spider`, `facebookexternalhit`, `twitterbot`, `slackbot`, `whatsapp`, `telegrambot`, `linkedinbot`, `discordbot`, `googlebot`, `bingbot`, `applebot` (iMessage previews), `redditbot`, `pinterestbot`, `cardyb` (Bluesky), `mastodon/`, `embedly`, `iframely`, `skypeuripreview` (Teams and Skype), `preview`, `fetcher`, `monitor` and `headless`. Pinterest's crawler is matched under each of the three user agents it documents (`Pinterest/0.2 (+https://www.pinterest.com/bot.html)`, `Mozilla/5.0 (compatible; Pinterestbot/1.0; …)` and an Android-looking one that ends the same way). The Pinterest in-app browser, which real people use, says `[Pinterest/iOS]` without `bot` and is not matched.
+A request is treated as a bot when it is a `HEAD` request or when its user agent matches the bot list. The list is case-insensitive: the word `bot` on its own (so a Cubot phone does not match), `crawler`, `spider`, `facebookexternalhit`, `twitterbot`, `slackbot`, `whatsapp`, `telegrambot`, `linkedinbot`, `discordbot`, `googlebot`, `bingbot`, `applebot` (Apple's crawler for Siri and Spotlight), `redditbot`, `pinterestbot`, `cardyb` (Bluesky), `mastodon/`, `embedly`, `iframely`, `skypeuripreview` (Teams and Skype), `preview`, `fetcher`, `monitor` and `headless`. Pinterest's crawler is matched under each of the three user agents it documents (`Pinterest/0.2 (+https://www.pinterest.com/bot.html)`, `Mozilla/5.0 (compatible; Pinterestbot/1.0; …)` and an Android-looking one that ends the same way). The Pinterest in-app browser, which real people use, says `[Pinterest/iOS]` without `bot` and is not matched.
 
 Bots receive a `200` page with Open Graph tags and no redirect, and **no click is recorded**. A `HEAD` request gets the same status and headers with no body. The page is served for permanent and temporary links alike; an expired temporary link answers `410` even to bots, and an unknown slug `404`.
+
+Search engines are bots too: Google, Bing and the other crawlers on the list may read a link, but the page tells them not to index it, so links (an invite that carries its sender, for example) stay out of search results. The fetchers that social and chat platforms use to draw a card index nothing, and get the page without that instruction. A crawler the list does not know is treated as a visitor: it is redirected like one, or gets [the QR page](#the-qr-page), which says `noindex` as well.
 
 ## The tags
 
@@ -24,6 +26,7 @@ Bots receive a `200` page with Open Graph tags and no redirect, and **no click i
 | `og:type` | `article` when the title and the description both come from the link, the temporary link or the app; `website` when either one is the generic copy |
 | `og:site_name` | The app's name. Omitted for an account without an app. |
 | `twitter:card` | `summary_large_image` when an image exists, else `summary` |
+| `robots` | `noindex`, for every crawler except the platforms' link-preview fetchers: Facebook, X, LinkedIn, Pinterest, Slack, Discord, WhatsApp, iMessage, Telegram, Reddit, Bluesky, Mastodon, Embedly, Iframely, Teams and any agent that says `preview` |
 
 Each field falls back on its own, so a link with only a custom title still takes the app's image. The body holds a plain link to the target ("Redirecting to {target}") or, without one, "Open this link on your phone to continue in the app."; there is no meta refresh. The app used for the fallbacks is the link's app, or the account's default app for links without one and for temporary links.
 
@@ -109,5 +112,6 @@ Desktop visitors land on the QR page when no other destination applies: no `adto
 | Scheme buttons | **Open in the iOS app** and **Open in the Android app**, one per configured scheme, or a single **Open in app** when both platforms share a scheme (the Android deep-link path is preferred). These carry no `adto_click`. |
 | Continue link | "Continue to {host} on desktop", only when the link has a target or inherits an app fallback |
 | Footer | "Powered by AdTo" when the page is branded with an app name |
+| Search engines | The page says `noindex`, like every page a link shows people |
 
 The texts are in the visitor's language (English, German, French, Spanish or Italian), and which button the visitor took is recorded on the click; see [The link pages](/links/how-a-tap-is-routed/#the-link-pages). The page's own Open Graph tags come from the app only (title, description, image and the canonical `og:url`); link-level previews do not apply here, because unfurlers never reach this page. The scheme buttons use the link's deep-link paths or a `adto_deeplink` from the URL; without a path they open `scheme://acme/welcome`.
