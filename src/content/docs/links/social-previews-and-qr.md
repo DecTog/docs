@@ -29,13 +29,13 @@ Each field falls back on its own, so a link with only a custom title still takes
 
 ## Pinterest Rich Pins
 
-Pinterest saves a page as an **Article Rich Pin** when it says `og:type` `article` and has a title and a description: the Pin then carries that title and description, and Pinterest keeps them in step with the page. A link's preview page says exactly that once its title and description are yours, so there is nothing more to set up:
+Pinterest saves a page as an **Article Rich Pin** when it says `og:type` `article` and has a title and a description: the Pin then carries that title and description, and Pinterest keeps them in step with the page. A link's preview page says exactly that once its title and description are yours, so there is nothing more to set up in AdTo:
 
 - Give the link, or its app, a **title** and a **description**. With only the generic copy the page stays a `website`, which Pinterest saves as a plain Pin.
 - Give it an **image**. A Pin is a picture, so a link without one has nothing to save.
 - The site name Pinterest reads is the app's name (`og:site_name`).
 
-Pinterest reads the tags when someone saves the link, says a Pin can take up to 24 hours to pick them up, and decides for itself what it shows as an article. [Check the preview on each platform](#check-the-preview-on-each-platform) tells you whether a link meets the conditions. Product and recipe Rich Pins need a price or recipe markup, which a link page does not carry.
+Pinterest reads the tags when someone saves the link, says a Pin can take up to 24 hours to pick them up, and decides for itself what it shows as an article. Its help centre says pages with these tags become Rich Pins without a request, while its developer pages still speak of applying; if Pinterest asks you to validate a page, give it a link that has a title, a description and an image. [Check the preview on each platform](#check-the-preview-on-each-platform) tells you whether a link meets the conditions. Product and recipe Rich Pins need a price or recipe markup, which a link page does not carry.
 
 ## Setting the preview
 
