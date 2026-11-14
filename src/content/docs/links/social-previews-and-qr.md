@@ -101,7 +101,7 @@ Errors: "Enter a valid http(s) URL", "Enter a valid public http(s) URL", "Couldn
 
 ## Download a QR code
 
-Open a permanent link in **Links**, then choose **Download QR code**. The SVG can
+Open a permanent link in **Links** to preview its QR code, then choose **Download QR code**. The preview and download use the same SVG file. The SVG can
 be scaled for print or placed in a digital campaign. It encodes the public link,
 so changing the link's saved destination also changes where a printed code sends people.
 
