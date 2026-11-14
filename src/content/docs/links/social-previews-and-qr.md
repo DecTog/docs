@@ -101,13 +101,15 @@ Errors: "Enter a valid http(s) URL", "Enter a valid public http(s) URL", "Couldn
 
 ## Download a QR code
 
-Open a permanent link in **Links** to preview its QR code, then choose **Download QR code**. The preview and download use the same SVG file. The SVG can
+Open a permanent link in **Links** to preview its QR code, then choose **Download SVG** or **Download PNG**. The preview shows the SVG; both formats encode the same public link. The SVG can
 be scaled for print or placed in a digital campaign. It encodes the public link,
 so changing the link's saved destination also changes where a printed code sends people.
 
 Scripts can download the same file with a signed
 `GET /api/v1/links/{slug}/qr.svg` request using a key with `links:read` scope.
 The response is an `image/svg+xml` attachment named `{slug}-qr.svg`.
+Use `/qr.png` instead for a 1024 × 1024 PNG (`image/png`) named `{slug}-qr.png`,
+with the same signature and scope requirements.
 
 Downloading records no click. Scans count as ordinary taps, without a separate scan
 label or tracking-parameter override. Paused or expired links still follow their current
