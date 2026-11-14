@@ -42,6 +42,7 @@ The AdTo plugin for Claude Code bundles the same server with four skills: links 
 | Tool | What it does |
 |---|---|
 | `list_links` | One page of links, newest first, with click counts. Takes `limit` (1 to 200) and the `cursor` from the previous page. |
+| `list_link_templates` | List the account's templates with ids, app ids, defaults and link counts; use an id as `template_id` when creating links. Requires `links:read`. |
 | `get_link` | One link by slug. |
 | `create_link` | One link. Takes the fields of [`POST /api/v1/links`](/api/links/). |
 | `create_links` | Up to 100 links in one call. Each succeeds or fails on its own; the result lists `created` and `errors`, with the index, slug and error code of each failure. |
