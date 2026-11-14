@@ -114,8 +114,11 @@ with the same signature and scope requirements.
 Downloading records no click. Scans count as ordinary taps, without a separate scan
 label or tracking-parameter override. Paused or expired links still follow their current
 pause or expiry settings. Deleted and unknown links return 404. Downloads currently
-support permanent links, black on white, with a four-module margin; temporary links,
-logos, colour options and bulk downloads are not supported.
+support permanent links with a four-module margin. In
+[Settings → QR code style](/dashboard/settings/#qr-code-style), owners can change the
+pattern, corner borders and centers, colors, and PNG/JPG logo. The saved style applies
+to both downloads and the link drawer preview. Already downloaded images retain
+their design. Temporary links and bulk downloads are not supported.
 
 ## The QR page
 

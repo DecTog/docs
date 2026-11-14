@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-The Settings screen, at https://dashboard.adto.app/dashboard/settings, has up to eleven cards: **Account**, **Plan**, **Account key**, **SDK keys**, **Link configuration**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
+The Settings screen, at https://dashboard.adto.app/dashboard/settings, has up to twelve cards: **Account**, **Plan**, **Account key**, **SDK keys**, **Link configuration**, **QR code style**, **Site keys**, **Custom domain**, **Team**, **Test environment**, **Audit log** and **Flutter SDK quickstart**. Which you see depends on your [role](/dashboard/account-and-sign-in/#teams) in the account: **Account key** is for owners; **SDK keys**, **Team** and **Audit log** are hidden from viewers; only owners can change the revenue currency and the retention window. Messages appear in a banner under the title: green for a copied or regenerated key, red for an error.
 
 ## Account
 
@@ -130,3 +130,28 @@ await adto.initialize(AdtoConfig(
 
 The snippet uses your first active SDK key, never the account key. Without an SDK key it says "create an SDK key above". The SDKs default to AdTo's hosts, so the snippet names `baseUrl` and `linkRootDomain` only when this server's differ. See [Initialize and handle links](/sdk/initialize-and-handle-links/).
 
+
+
+## QR code style
+
+Owners can customize the account's link QR previews and downloads:
+
+- **Shape style:** square, rounded or dots for the QR pattern.
+- **Border style:** square, rounded or extra rounded for the three outer corner frames.
+- **Center style:** square, rounded or extra rounded for the inner corner squares.
+- **Color** and **Background color:** use a dark pattern on a light background. Low-contrast combinations are rejected.
+- **Logo (PNG or JPG):** upload a file up to 2 MB. AdTo resizes it to fit the center without stretching. **Remove logo** clears it.
+
+The live preview uses a sample link. Choose **Save QR style** to apply the design to
+new previews and SVG/PNG downloads across the account. **Reset to default** prepares
+black on white, square shapes and no logo; save to apply the reset. Members and
+viewers can view the style, but only owners can change it.
+
+PNG downloads remain 1024 × 1024 pixels. SVG downloads embed the logo, so you do
+not need to send a separate image file. The SVG pattern scales; an uploaded logo
+remains a raster image. Logos are normalized to PNG at up to 256 × 256 pixels.
+Styled codes use high error correction and retain a four-module quiet zone. Scan
+the downloaded code before printing, especially with a logo.
+
+Saving a style does not change the appearance of previously downloaded or printed
+codes, their destination, or the QR shown on the desktop fallback page.
